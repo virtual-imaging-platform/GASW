@@ -67,6 +67,8 @@ public class ScriptGenerator {
         sb.append("ENV=" + Configuration.ENV + "\n");
         sb.append("export SE=" + Configuration.SE + "\n");
         sb.append("export USE_CLOSE_SE=" + Configuration.USE_CLOSE_SE + "\n");
+        String path = new File("").getAbsolutePath();
+        sb.append("export MOTEUR_WORKFLOWID=" + path.substring(path.lastIndexOf("/") + 1) + "\n");
         sb.append("export $ENV;\n\n");
         sb.append("DIAG=/home/grid/session/`basename ${PWD}`.diag;\n");
         sb.append("DIRNAME=`basename $0 .sh`;\n");
