@@ -34,32 +34,35 @@
  */
 package fr.insalyon.creatis.gasw.dao;
 
-import fr.insalyon.creatis.gasw.dao.sqlite.JobData;
-import fr.insalyon.creatis.gasw.dao.sqlite.NodeData;
+import fr.insalyon.creatis.gasw.dao.derby.JobData;
+import fr.insalyon.creatis.gasw.dao.derby.NodeData;
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Rafael Silva
  */
-public class SQLiteDAOFactory extends DAOFactory {
+public class DerbyDAOFactory extends DAOFactory {
 
     private static DAOFactory instance;
-    private final String DRIVER = "org.sqlite.JDBC";
-    private final String DBURL = "jdbc:sqlite:jobs.db";
+    private final String DRIVER = "org.apache.derby.jdbc.ClientDriver";
+    private final String DBURL = "jdbc:derby://localhost:1527/";
     private Connection connection;
 
     protected static DAOFactory getInstance() {
         if (instance == null) {
-            instance = new SQLiteDAOFactory();
+            instance = new DerbyDAOFactory();
         }
         return instance;
     }
 
-    private SQLiteDAOFactory() {
+    private DerbyDAOFactory() {
         connect();
         createTables();
     }
@@ -68,56 +71,61 @@ public class SQLiteDAOFactory extends DAOFactory {
     protected void connect() {
         try {
             Class.forName(DRIVER);
-            connection = DriverManager.getConnection(DBURL);
+            connection = DriverManager.getConnection(DBURL + new File("").getAbsolutePath() + "/jobs.db;create=true");
             connection.setAutoCommit(true);
 
         } catch (SQLException ex) {
-            //TODO parse exeception
-            ex.printStackTrace();
+            try {
+                connection = DriverManager.getConnection(DBURL + new File("").getAbsolutePath() + "/jobs.db");
+                connection.setAutoCommit(true);
+                
+            } catch (SQLException ex1) {
+                ex1.printStackTrace();
+            }
         } catch (ClassNotFoundException ex) {
-            //TODO parse exeception
             ex.printStackTrace();
         }
+        
     }
 
     @Override
     protected void createTables() {
         try {
             Statement stat = connection.createStatement();
-            stat.executeUpdate("DROP TABLE IF EXISTS Nodes;");
+//            stat.executeUpdate("DROP TABLE IF EXISTS Nodes;");
             stat.executeUpdate("CREATE TABLE Nodes ("
-                    + "site STRING, "
-                    + "node_name STRING, "
-                    + "ncpus INTEGER, "
-                    + "cpu_model_name STRING, "
+                    + "site VARCHAR(255), "
+                    + "node_name VARCHAR(255), "
+                    + "ncpus INT, "
+                    + "cpu_model_name VARCHAR(255), "
                     + "cpu_mhz DOUBLE, "
-                    + "cpu_cache_size INTEGER, "
+                    + "cpu_cache_size INT, "
                     + "cpu_bogomips DOUBLE, "
-                    + "mem_total INTEGER, "
+                    + "mem_total INT, "
                     + "PRIMARY KEY (site, node_name)"
-                    + ");");
-            stat.executeUpdate("CREATE INDEX nodes_site_idx ON Nodes(site);");
+                    + ")");
+            stat.executeUpdate("CREATE INDEX nodes_site_idx ON Nodes(site)");
 
-            stat.executeUpdate("DROP TABLE IF EXISTS Jobs;");
+//            stat.executeUpdate("DROP TABLE IF EXISTS Jobs;");
             stat.executeUpdate("CREATE TABLE Jobs ("
-                    + "id STRING, "
-                    + "status STRING, "
-                    + "exit_code INTEGER, "
-                    + "creation INTEGER, "
-                    + "queued INTEGER, "
-                    + "download INTEGER, "
-                    + "running INTEGER, "
-                    + "upload INTEGER, "
-                    + "end INTEGER, "
-                    + "node_site STRING, "
-                    + "node_name STRING, "
-                    + "command STRING, "
-                    + "file_name STRING, "
+                    + "id VARCHAR(255), "
+                    + "status VARCHAR(255), "
+                    + "exit_code VARCHAR(255), "
+                    + "creation INT, "
+                    + "queued INT, "
+                    + "download INT, "
+                    + "running INT, "
+                    + "upload INT, "
+                    + "end_e INT, "
+                    + "node_site VARCHAR(255), "
+                    + "node_name VARCHAR(255), "
+                    + "command VARCHAR(255), "
+                    + "file_name VARCHAR(255), "
                     + "PRIMARY KEY (id), "
                     + "FOREIGN KEY(node_site, node_name) REFERENCES Nodes(site, node_name)"
-                    + ");");
-            stat.executeUpdate("CREATE INDEX jobs_status_idx ON Jobs(status);");
-            stat.executeUpdate("CREATE INDEX jobs_command_idx ON Jobs(command);");
+                    + ")");
+            stat.executeUpdate("CREATE INDEX jobs_status_idx ON Jobs(status)");
+            stat.executeUpdate("CREATE INDEX jobs_command_idx ON Jobs(command)");
 
         } catch (SQLException ex) {
             //TODO parse exeception

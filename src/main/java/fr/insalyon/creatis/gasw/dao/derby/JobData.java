@@ -32,7 +32,7 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.dao.sqlite;
+package fr.insalyon.creatis.gasw.dao.derby;
 
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.bean.Node;
@@ -72,8 +72,8 @@ public class JobData implements JobDAO {
         try {
             PreparedStatement ps = connection.prepareStatement("INSERT INTO Jobs "
                     + "(id, status, exit_code, creation, queued, download, running, "
-                    + "upload, end, command, file_name) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                    + "upload, end_e, command, file_name) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             ps.setString(1, job.getId());
             ps.setString(2, job.getStatus().toString());
@@ -98,8 +98,8 @@ public class JobData implements JobDAO {
         try {
             PreparedStatement ps = connection.prepareStatement("UPDATE Jobs SET "
                     + "status = ?, exit_code = ?, creation = ?, queued = ?, "
-                    + "download = ?, running = ?, upload = ?, end = ?, node_site = ?, "
-                    + "node_name = ? WHERE id = ?;");
+                    + "download = ?, running = ?, upload = ?, end_e = ?, node_site = ?, "
+                    + "node_name = ? WHERE id = ?");
 
             ps.setString(1, job.getStatus().toString());
             ps.setInt(2, job.getExitCode());
@@ -128,7 +128,7 @@ public class JobData implements JobDAO {
     public synchronized void remove(Job job) throws DAOException {
         try {
             PreparedStatement ps = connection.prepareStatement("DELETE FROM Jobs "
-                    + "WHERE id = ?;");
+                    + "WHERE id = ?");
 
             ps.setString(1, job.getId());
             ps.execute();
@@ -142,7 +142,7 @@ public class JobData implements JobDAO {
         try {
             PreparedStatement ps = connection.prepareStatement("SELECT "
                     + "id, status, exit_code, creation, queued, download, running, "
-                    + "upload, end, node_site, node_name, command, file_name "
+                    + "upload, end_e, node_site, node_name, command, file_name "
                     + "FROM Jobs WHERE id = ?");
 
             ps.setString(1, id);
@@ -152,7 +152,7 @@ public class JobData implements JobDAO {
             return new Job(rs.getString("id"), getStatus(rs.getString("status")),
                     rs.getInt("exit_code"), rs.getInt("creation"), rs.getInt("queued"),
                     rs.getInt("download"), rs.getInt("running"), rs.getInt("upload"),
-                    rs.getInt("end"), getNode(rs.getString("node_site"),
+                    rs.getInt("end_e"), getNode(rs.getString("node_site"),
                     rs.getString("node_name")), rs.getString("command"), rs.getString("file_name"));
 
         } catch (SQLException ex) {

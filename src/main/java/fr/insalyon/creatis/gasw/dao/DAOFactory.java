@@ -40,14 +40,14 @@ package fr.insalyon.creatis.gasw.dao;
  */
 public abstract class DAOFactory {
 
-    private static final int SQLITE = 1;
-    private static int factory = SQLITE;
+    private static final int DERBY = 1;
+    private static int factory = DERBY;
 
     public static DAOFactory getDAOFactory() {
 
         switch (factory) {
-            case SQLITE:
-                return SQLiteDAOFactory.getInstance();
+            case DERBY:
+                return DerbyDAOFactory.getInstance();
             default:
                 return null;
         }

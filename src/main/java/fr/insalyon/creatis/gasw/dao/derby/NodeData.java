@@ -32,7 +32,7 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.dao.sqlite;
+package fr.insalyon.creatis.gasw.dao.derby;
 
 import fr.insalyon.creatis.gasw.bean.Node;
 import fr.insalyon.creatis.gasw.dao.DAOException;
@@ -70,7 +70,7 @@ public class NodeData implements NodeDAO {
             PreparedStatement ps = connection.prepareStatement("INSERT INTO Nodes "
                     + "(site, node_name, ncpus, cpu_model_name, cpu_mhz, cpu_cache_size, "
                     + "cpu_bogomips, mem_total) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
             ps.setString(1, node.getSiteName());
             ps.setString(2, node.getNodeName());
