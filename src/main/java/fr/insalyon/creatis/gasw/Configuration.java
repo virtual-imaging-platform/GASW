@@ -63,8 +63,8 @@ public class Configuration {
     public static final String CACHE_DIR = "../cache";
     public static final String CACHE_FILE = "cache.txt";
     // DIRAC Configuration
-    public static final String NOTIFICATION_HOST = "kingkong.creatis.insa-lyon.fr";
-    public static final int NOTIFICATION_PORT = 9005;
+    public static String NOTIFICATION_HOST = "kingkong.grid.creatis.insa-lyon.fr";
+    public static int NOTIFICATION_PORT = 9005;
 
     public static void setUp() throws GaswException {
         try {
@@ -114,6 +114,16 @@ public class Configuration {
             String requirements = conf.getProperty("REQUIREMENTS");
             if (requirements != null && !requirements.equals("")) {
                 REQUIREMENTS = requirements;
+            }
+
+            String notificationHost = conf.getProperty("NOTIFICATION_HOST");
+            if (notificationHost != null && !notificationHost.equals("")) {
+                NOTIFICATION_HOST = notificationHost;
+            }
+
+            String notificationPort = conf.getProperty("NOTIFICATION_PORT");
+            if (notificationPort != null && !notificationPort.equals("")) {
+                NOTIFICATION_PORT = new Integer(notificationPort);
             }
 
         } catch (Exception ex) {
