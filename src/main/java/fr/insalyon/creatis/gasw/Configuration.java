@@ -55,6 +55,12 @@ public class Configuration {
     public static String REQUIREMENTS = "";
     public static int RETRY_COUNT = 3;
     public static int TIMEOUT = 100000;
+      // timeouts used in lcg-c*
+    public static int connectTimeout=10;
+    public static int sendReceiveTimeout=900;
+    public static int bdiiTimeout=10;
+    public static int srmTimeout=30;
+
     // Directories
     public static final String SCRIPT_ROOT = "./sh";
     public static final String JDL_ROOT = "./jdl";
@@ -62,6 +68,7 @@ public class Configuration {
     public static final String ERR_ROOT = "./err";
     public static final String CACHE_DIR = "../cache";
     public static final String CACHE_FILE = "cache.txt";
+
     // DIRAC Configuration
     public static String NOTIFICATION_HOST = "kingkong.grid.creatis.insa-lyon.fr";
     public static int NOTIFICATION_PORT = 9005;
