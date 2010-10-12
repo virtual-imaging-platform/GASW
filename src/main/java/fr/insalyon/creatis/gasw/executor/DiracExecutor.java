@@ -113,7 +113,7 @@ public class DiracExecutor extends Executor {
         sb.append(generator.header());
         sb.append(generator.hostConfiguration());
         sb.append(generator.background());
-        sb.append(generator.cleanup());
+        sb.append(generator.cleanupCommand());
         sb.append(generator.uploadTest(uploads));
         sb.append(generator.inputs(downloads));
         sb.append(generator.applicationExecution(command, parameters));
