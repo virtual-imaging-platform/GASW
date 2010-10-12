@@ -86,7 +86,7 @@ public class ScriptGenerator {
             return temp;
         }
         try {
-            String r = template.substring(0, template.indexOf("$rep-"));
+            String r = template.replaceAll("\\$rep-[0-9]*", "");
             return new URI(r);
         } catch (URISyntaxException e) {
             e.printStackTrace();
