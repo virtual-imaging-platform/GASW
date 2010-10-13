@@ -59,12 +59,12 @@
     <distributionManagement>
         <repository>
             <id>releases</id>
-            <url>http://kingkong.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
+            <url>http://kingkong.grid.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
         </repository>
         <snapshotRepository>
             <id>snapshots</id>
             <name>Internal Snapshots</name>
-            <url>http://kingkong.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
+            <url>http://kingkong.grid.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 </project>
