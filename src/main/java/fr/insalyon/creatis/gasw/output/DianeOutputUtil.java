@@ -42,6 +42,10 @@ import java.io.File;
  */
 public class DianeOutputUtil extends OutputUtil {
 
+    public DianeOutputUtil(int startTime) {
+        super(startTime);
+    }
+
     @Override
     public File[] getOutputs(String jobID) {
         throw new UnsupportedOperationException("Not supported yet.");

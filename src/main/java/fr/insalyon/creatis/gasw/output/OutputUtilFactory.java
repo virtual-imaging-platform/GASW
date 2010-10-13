@@ -43,14 +43,14 @@ import fr.insalyon.creatis.gasw.Configuration;
  */
 public class OutputUtilFactory {
 
-    public static OutputUtil getOutputUtil(String version) {
+    public static OutputUtil getOutputUtil(String version, int startTime) {
 
         if (version.equals("GRID")) {
             if (Configuration.GRID.equals("DIRAC")) {
-                return new DiracOutputUtil();
+                return new DiracOutputUtil(startTime);
             }
         } else if (version.equals("LOCAL")) {
-            return new LocalOutputUtil();
+            return new LocalOutputUtil(startTime);
         }
 
         return null;

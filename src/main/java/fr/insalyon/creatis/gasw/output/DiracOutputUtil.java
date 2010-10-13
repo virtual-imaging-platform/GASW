@@ -48,6 +48,10 @@ import java.io.IOException;
  */
 public class DiracOutputUtil extends OutputUtil {
 
+    public DiracOutputUtil(int startTime) {
+        super(startTime);
+    }
+
     public File[] getOutputs(String jobID) {
         try {
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();

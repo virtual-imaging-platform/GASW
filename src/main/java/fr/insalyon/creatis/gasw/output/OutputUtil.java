@@ -51,6 +51,12 @@ import java.io.InputStreamReader;
  */
 public abstract class OutputUtil {
 
+    private int startTime;
+
+    public OutputUtil(int startTime) {
+        this.startTime = startTime;
+    }
+
     /**
      * Gets the standard output and error files
      * @return Array with the standard output and error files respectively.
@@ -80,7 +86,7 @@ public abstract class OutputUtil {
 
             while ((strLine = br.readLine()) != null) {
                 if (strLine.startsWith("START date is")) {
-                    startExec = Integer.valueOf(strLine.split(" ")[3]).intValue() - job.getStartTime();
+                    startExec = Integer.valueOf(strLine.split(" ")[3]).intValue() - startTime;
                     job.setDownload(startExec);
 
                 } else if (strLine.startsWith("Input download time:")) {

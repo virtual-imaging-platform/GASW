@@ -32,7 +32,6 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
 package fr.insalyon.creatis.gasw.output;
 
 import java.io.File;
@@ -43,9 +42,12 @@ import java.io.File;
  */
 public class GliteOutputUtil extends OutputUtil {
 
+    public GliteOutputUtil(int startTime) {
+        super(startTime);
+    }
+
     @Override
     public File[] getOutputs(String jobID) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
 }

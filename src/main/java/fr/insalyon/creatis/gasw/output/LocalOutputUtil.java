@@ -47,16 +47,20 @@ import java.io.File;
  */
 public class LocalOutputUtil extends OutputUtil {
 
+    public LocalOutputUtil(int startTime) {
+        super(startTime);
+    }
+
     @Override
     public File[] getOutputs(String jobID) {
         try {
-            
+
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
             Job job = jobDAO.getJobByID(jobID);
 
-            return new File[] {
-                new File(Configuration.OUT_ROOT + "/" + job.getFileName() + ".sh.out"),
-                new File(Configuration.ERR_ROOT + "/" + job.getFileName() + ".sh.err")};
+            return new File[]{
+                        new File(Configuration.OUT_ROOT + "/" + job.getFileName() + ".sh.out"),
+                        new File(Configuration.ERR_ROOT + "/" + job.getFileName() + ".sh.err")};
 
         } catch (DAOException ex) {
             ex.printStackTrace();

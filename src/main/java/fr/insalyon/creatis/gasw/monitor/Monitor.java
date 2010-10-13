@@ -86,7 +86,7 @@ public abstract class Monitor extends Thread {
             }
             job.setStartTime(startTime);
             job.setCreation(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
-            
+
             fileName = fileName.substring(0, fileName.lastIndexOf("."));
             job.setFileName(fileName);
 
@@ -135,5 +135,9 @@ public abstract class Monitor extends Thread {
 
     public synchronized void terminate() {
         stop = true;
+    }
+
+    public int getStartTime() {
+        return startTime;
     }
 }

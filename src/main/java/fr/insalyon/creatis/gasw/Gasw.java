@@ -116,7 +116,9 @@ public class Gasw {
         if (finishedJobs != null) {
             for (String jobID : finishedJobs) {
                 String version = jobID.contains("Local-") ? "LOCAL" : "GRID";
-                File[] outputs = OutputUtilFactory.getOutputUtil(version).getOutputs(jobID.split("--")[0]);
+                File[] outputs = OutputUtilFactory.getOutputUtil(
+                        version,
+                        MonitorFactory.getMonitor(version).getStartTime()).getOutputs(jobID.split("--")[0]);
                 outputsMap.put(jobID, outputs);
                 jobsToRemove.add(jobID);
             }

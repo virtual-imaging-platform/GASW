@@ -46,6 +46,7 @@ import java.util.Map.Entry;
 /**
  *
  * @author Rafael Silva
+ * @author Tristan Glatard
  */
 public class ScriptGenerator {
 
@@ -163,7 +164,7 @@ public class ScriptGenerator {
         sb.append(" echo \"Cleaning up: rm * -Rf\"\n" + " \\rm * -Rf \n" + " if [ \"${BACKPID}\" != \"\" ]\n" + " then\n" + "  for i in `ps --ppid ${BACKPID} -o pid | grep -v PID`\n" + "  do\n" + "   echo \"Killing child of background script (pid ${i})\"\n" + "   kill -9 ${i}\n" + "  done\n" + "  echo \"Killing background script (pid ${BACKPID})\"\n" + "  kill -9 ${BACKPID}\n" + " fi\n" + " echo -n \"END date:\" \n" + " date +%s\n");
         sb.append(stopLogSection(sectionName));
         sb.append("}\n\n");
-        
+
         return sb.toString();
     }
 
@@ -188,7 +189,7 @@ public class ScriptGenerator {
         if (params != null) {
             for (Object obj : params.entrySet()) {
                 Entry e = (Entry) obj;
-                sb.append(" "+e.getKey() + "=\\\"" + e.getValue() + "\\\"");
+                sb.append(" " + e.getKey() + "=\\\"" + e.getValue() + "\\\"");
             }
         }
         sb.append(">\"");
@@ -348,7 +349,7 @@ public class ScriptGenerator {
     private String copyFromCacheCommand(URI lfn) {
         StringBuilder sb = new StringBuilder();
         String sectionName = "file_download_or_get_from_cache";
-        lfn=getTemplate(lfn);
+        lfn = getTemplate(lfn);
         HashMap m = new HashMap();
         m.put("lfn", lfn);
         sb.append(startLogSection(sectionName, m));
@@ -361,7 +362,7 @@ public class ScriptGenerator {
         sb.append("if [ \"${LOCALPATH}\" != \"\" ]\n" + "then\n" + " echo \"Copying file from cache: ${LOCALPATH}\"\n" + " \\cp -f ${LOCALPATH} " + name + "\n" + "else\n");
         sb.append(getDownloadCommand(lfn));
         sb.append(startLogSection("add_to_cache", m));
-        sb.append("addToCache " + removeLFCHost(lfn) + " " + name+"\n");
+        sb.append("addToCache " + removeLFCHost(lfn) + " " + name + "\n");
         sb.append(stopLogSection("add_to_cache"));
         sb.append("fi\n\n");
 
@@ -413,7 +414,7 @@ public class ScriptGenerator {
         sb.append("     done\n");
         sb.append("     echo \"Adding file ${FILE} to cache\" \n");
         sb.append("     \\cp -f ${FILE} ${NAME}\n");
-        sb.append("     echo \"${LFN} ${NAME}\" >> " + Configuration.CACHE_DIR +"/"+Configuration.CACHE_FILE+ "\n");
+        sb.append("     echo \"${LFN} ${NAME}\" >> " + Configuration.CACHE_DIR + "/" + Configuration.CACHE_FILE + "\n");
         sb.append("}\n");
         return sb.toString();
     }
@@ -537,7 +538,7 @@ public class ScriptGenerator {
         m.put("lfn", removeLFCHost(lfn));
         sb.append(startLogSection(sectionName, m));
 
-  
+
 
         if (test) {
             uploadTest = "-uploadTest";
@@ -589,16 +590,17 @@ public class ScriptGenerator {
     private String getLfnName(URI lfn) {
         return lfn.getPath().substring(lfn.getPath().lastIndexOf("/") + 1, lfn.getPath().length());
     }
-    
+
     /** removes the leading lfn://lfc-biomed.in2p3.fr/ added by VBrowser
      * 
      * @param lfn the LFN to tweak
      * @return the returned String (not a URI any more)
      */
-    private String removeLFCHost(URI lfn){
+    private String removeLFCHost(URI lfn) {
         return lfn.getPath().substring(lfn.getPath().indexOf("/grid"));
     }
-    private String removeLFCHost(String lfn){
+
+    private String removeLFCHost(String lfn) {
         return lfn.substring(lfn.indexOf("/grid"));
     }
 }
