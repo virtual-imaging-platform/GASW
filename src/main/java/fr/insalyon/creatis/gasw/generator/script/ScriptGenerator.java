@@ -601,6 +601,9 @@ public class ScriptGenerator {
     }
 
     private String removeLFCHost(String lfn) {
-        return lfn.substring(lfn.indexOf("/grid"));
+        if(lfn.contains("/grid"))
+            return lfn.substring(lfn.indexOf("/grid"));
+        else
+            return lfn;
     }
 }
