@@ -322,7 +322,7 @@ public class ScriptGenerator {
      */
     public String applicationExecution(String command, List<String> parameters) {
         StringBuilder sb = new StringBuilder();
-        String commandLine = "./" + command;
+        String commandLine = "export LD_LIBRARY_PATH=${PWD:${LD_LIBRARY_PATH}\n ./" + command;
         for (String param : parameters) {
             //removes trailing "$rep-" string
             if (param.contains("$rep-")) {
