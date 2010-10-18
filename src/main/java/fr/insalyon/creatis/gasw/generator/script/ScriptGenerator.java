@@ -645,7 +645,10 @@ public class ScriptGenerator {
      * @return the returned String (not a URI any more)
      */
     private String removeLFCHost(URI lfn) {
-        return lfn.getPath().substring(lfn.getPath().indexOf("/grid"));
+        if(lfn.toString().contains("/grid"))
+            return lfn.getPath().substring(lfn.getPath().indexOf("/grid"));
+        else
+            return lfn.toString();
     }
 
     private String removeLFCHost(String lfn) {
