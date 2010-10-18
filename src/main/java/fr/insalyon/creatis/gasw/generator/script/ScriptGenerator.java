@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -50,6 +51,7 @@ import java.util.Map.Entry;
  */
 public class ScriptGenerator {
 
+    private static final Logger log = Logger.getLogger(ScriptGenerator.class);
     public static ScriptGenerator instance;
 
     public static ScriptGenerator getInstance() {
@@ -72,7 +74,6 @@ public class ScriptGenerator {
             return 1;
         }
         String number = template.substring(template.lastIndexOf("-") + 1);
-        System.out.println("nrep is " + number);
         return Integer.parseInt(number);
     }
 
@@ -89,8 +90,13 @@ public class ScriptGenerator {
         try {
             String r = template.replaceAll("\\$rep-[0-9]*", "");
             return new URI(r);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
+        } catch (URISyntaxException ex) {
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
         return null;
     }
@@ -150,7 +156,12 @@ public class ScriptGenerator {
                 return sb.toString();
 
             } catch (URISyntaxException ex) {
-                ex.printStackTrace();
+                log.error(ex);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
                 return "";
             }
         } else {
@@ -577,8 +588,6 @@ public class ScriptGenerator {
         m.put("lfn", removeLFCHost(lfn));
         sb.append(startLogSection(sectionName, m));
 
-
-
         if (test) {
             uploadTest = "-uploadTest";
             name += uploadTest;
@@ -640,9 +649,10 @@ public class ScriptGenerator {
     }
 
     private String removeLFCHost(String lfn) {
-        if(lfn.contains("/grid"))
+        if (lfn.contains("/grid")) {
             return lfn.substring(lfn.indexOf("/grid"));
-        else
+        } else {
             return lfn;
+        }
     }
 }

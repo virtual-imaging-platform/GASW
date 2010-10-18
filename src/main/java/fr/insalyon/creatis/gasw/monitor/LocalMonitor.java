@@ -41,6 +41,7 @@ import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.executor.LocalExecutor;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -48,6 +49,7 @@ import java.util.List;
  */
 public class LocalMonitor extends Monitor {
 
+    private static final Logger log = Logger.getLogger(LocalMonitor.class);
     public static LocalMonitor instance;
 
     public synchronized static LocalMonitor getInstance() {
@@ -91,11 +93,26 @@ public class LocalMonitor extends Monitor {
                 }
 
             } catch (GaswException ex) {
-                ex.printStackTrace();
+                log.error(ex);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
             } catch (DAOException ex) {
-                ex.printStackTrace();
+                log.error(ex);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
             } catch (InterruptedException ex) {
-                ex.printStackTrace();
+                log.error(ex);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
             }
         }
     }

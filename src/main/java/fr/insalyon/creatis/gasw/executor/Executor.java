@@ -43,6 +43,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -50,6 +51,7 @@ import java.util.List;
  */
 public abstract class Executor {
 
+    private static final Logger log = Logger.getLogger(Executor.class);
     protected String version;
     protected String command;
     protected List<String> parameters;
@@ -124,7 +126,12 @@ public abstract class Executor {
             return fileName;
 
         } catch (IOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
             return null;
         }
     }
@@ -153,7 +160,12 @@ public abstract class Executor {
             return fileName;
 
         } catch (IOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
             return null;
         }
     }
@@ -195,7 +207,12 @@ public abstract class Executor {
             }
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
     }
 }

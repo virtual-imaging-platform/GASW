@@ -36,6 +36,7 @@ package fr.insalyon.creatis.gasw;
 
 import java.io.FileInputStream;
 import java.util.Properties;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -43,6 +44,7 @@ import java.util.Properties;
  */
 public class Configuration {
 
+    private static final Logger log = Logger.getLogger(Configuration.class);
     private static final String CONF_FILE = "./conf/settings.conf";
     private static Properties conf;
     // Properties
@@ -55,12 +57,11 @@ public class Configuration {
     public static String REQUIREMENTS = "";
     public static int RETRY_COUNT = 3;
     public static int TIMEOUT = 100000;
-      // timeouts used in lcg-c*
-    public static int connectTimeout=10;
-    public static int sendReceiveTimeout=900;
-    public static int bdiiTimeout=10;
-    public static int srmTimeout=30;
-
+    // timeouts used in lcg-c*
+    public static int connectTimeout = 10;
+    public static int sendReceiveTimeout = 900;
+    public static int bdiiTimeout = 10;
+    public static int srmTimeout = 30;
     // Directories
     public static final String SCRIPT_ROOT = "./sh";
     public static final String JDL_ROOT = "./jdl";
@@ -68,7 +69,6 @@ public class Configuration {
     public static final String ERR_ROOT = "./err";
     public static final String CACHE_DIR = "../cache";
     public static final String CACHE_FILE = "cache.txt";
-
     // DIRAC Configuration
     public static String NOTIFICATION_HOST = "kingkong.grid.creatis.insa-lyon.fr";
     public static int NOTIFICATION_PORT = 9005;
@@ -134,8 +134,12 @@ public class Configuration {
             }
 
         } catch (Exception ex) {
-            //TODO Catch exception
-            System.out.println("ERROR:" + ex.getMessage());
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
             throw new GaswException(ex.getMessage());
         }
     }

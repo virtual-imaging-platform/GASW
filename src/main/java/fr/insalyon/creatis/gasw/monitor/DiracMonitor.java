@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -52,6 +53,7 @@ import java.util.List;
  */
 public class DiracMonitor extends Monitor {
 
+    private static final Logger log = Logger.getLogger(DiracMonitor.class);
     private static DiracMonitor instance;
     private DataOutputStream dos;
     private DataInputStream dis;
@@ -73,7 +75,12 @@ public class DiracMonitor extends Monitor {
             dis = new DataInputStream(socket.getInputStream());
 
         } catch (IOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
     }
 
@@ -109,7 +116,7 @@ public class DiracMonitor extends Monitor {
                             job.setStatus(Status.ERROR);
                             setStatus(job);
                         }
-                        System.out.println(">>> Status: " + status); //TODO remove it
+                        log.info("Dirac Monitor: job \"" + job.getId() + "\" finished as \"" + status + "\"");
                         finishedJobs.add(job.getId() + "--" + job.getStatus());
                         isFinished = true;
                     }
@@ -119,11 +126,26 @@ public class DiracMonitor extends Monitor {
                 }
 
             } catch (GaswException ex) {
-                ex.printStackTrace();
+                log.error(ex);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
             } catch (DAOException ex) {
-                ex.printStackTrace();
+                log.error(ex);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
             } catch (IOException ex) {
-                ex.printStackTrace();
+                log.error(ex);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
             }
         }
     }
@@ -138,7 +160,12 @@ public class DiracMonitor extends Monitor {
             dos.writeUTF(jobID);
             dos.flush();
         } catch (IOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
     }
 
@@ -149,7 +176,12 @@ public class DiracMonitor extends Monitor {
             dis.close();
             instance = null;
         } catch (IOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
     }
 }

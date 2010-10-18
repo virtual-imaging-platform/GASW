@@ -40,12 +40,15 @@ import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import java.io.File;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author Rafael Silva
  */
 public class LocalOutputUtil extends OutputUtil {
+
+    private static final Logger log = Logger.getLogger(LocalOutputUtil.class);
 
     public LocalOutputUtil(int startTime) {
         super(startTime);
@@ -63,7 +66,12 @@ public class LocalOutputUtil extends OutputUtil {
                         new File(Configuration.ERR_ROOT + "/" + job.getFileName() + ".sh.err")};
 
         } catch (DAOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
         return null;
     }

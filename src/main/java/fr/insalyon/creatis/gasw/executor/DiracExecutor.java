@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -49,6 +50,8 @@ import java.util.List;
  */
 public class DiracExecutor extends Executor {
 
+    private static final Logger log = Logger.getLogger(DiracExecutor.class);
+    
     protected DiracExecutor(String version, String command, List<String> parameters, List<URI> downloads, List<URI> uploads) {
         super(version, command, parameters, downloads, uploads);
     }
@@ -82,21 +85,31 @@ public class DiracExecutor extends Executor {
                     execution.exitValue();
                     finished = true;
                 } catch (IllegalThreadStateException e) {
-                    System.out.println("not finished");
+                    // do nothing
                 }
             }
             String jobID = cout.substring(cout.lastIndexOf("=") + 2, cout.length()).trim();
             MonitorFactory.getMonitor(version).add(jobID, command, jdlName);
 
-            System.out.println(">>>>>>>> JOB_ID: " + jobID); //TODO: remove it
+            log.info("Dirac Executor Job ID: " + jobID);
 
             return jobID;
 
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
             return null;
         } catch (IOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
             return null;
         }
     }

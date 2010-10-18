@@ -46,6 +46,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -53,6 +54,7 @@ import java.util.Map;
  */
 public abstract class Monitor extends Thread {
 
+    private static final Logger log = Logger.getLogger(Monitor.class);
     protected Map<String, Status> jobsStatus;
     protected boolean stop;
     protected volatile int numJobs;
@@ -93,7 +95,12 @@ public abstract class Monitor extends Thread {
             jobDAO.add(job);
 
         } catch (DAOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
     }
 
@@ -108,7 +115,12 @@ public abstract class Monitor extends Thread {
                 logStatus(job);
 
             } catch (DAOException ex) {
-                ex.printStackTrace();
+                log.error(ex);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
             }
         }
     }
@@ -129,7 +141,12 @@ public abstract class Monitor extends Thread {
             bw.close();
 
         } catch (IOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
     }
 

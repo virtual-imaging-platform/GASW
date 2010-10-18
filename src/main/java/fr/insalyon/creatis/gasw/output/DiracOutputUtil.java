@@ -41,12 +41,15 @@ import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import java.io.File;
 import java.io.IOException;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author Rafael Silva
  */
 public class DiracOutputUtil extends OutputUtil {
+
+    private static final Logger log = Logger.getLogger(DiracOutputUtil.class);
 
     public DiracOutputUtil(int startTime) {
         super(startTime);
@@ -56,7 +59,7 @@ public class DiracOutputUtil extends OutputUtil {
         try {
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
             Job job = jobDAO.getJobByID(jobID);
-            
+
             String exec = "dirac-wms-job-get-output " + jobID;
             Process execution = Runtime.getRuntime().exec(exec);
             execution.waitFor();
@@ -71,11 +74,26 @@ public class DiracOutputUtil extends OutputUtil {
             return new File[]{stdOut, stdErr};
 
         } catch (DAOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
         return null;
     }

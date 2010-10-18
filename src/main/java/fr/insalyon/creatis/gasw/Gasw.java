@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -51,6 +52,7 @@ import java.util.Map;
  */
 public class Gasw {
 
+    private static final Logger log = Logger.getLogger(Gasw.class);
     private static Gasw instance;
     private GaswNotification notification;
     private Object client;
@@ -152,7 +154,12 @@ public class Gasw {
                 try {
                     sleep(10000);
                 } catch (InterruptedException ex) {
-                    ex.printStackTrace();
+                    log.error(ex);
+                    if (log.isDebugEnabled()) {
+                        for (StackTraceElement stack : ex.getStackTrace()) {
+                            log.debug(stack);
+                        }
+                    }
                 }
             }
         }

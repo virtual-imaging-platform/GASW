@@ -44,6 +44,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -51,6 +52,7 @@ import java.io.InputStreamReader;
  */
 public abstract class OutputUtil {
 
+    private static final Logger log = Logger.getLogger(OutputUtil.class);
     private int startTime;
 
     public OutputUtil(int startTime) {
@@ -142,9 +144,19 @@ public abstract class OutputUtil {
             DAOFactory.getDAOFactory().getJobDAO().update(job);
 
         } catch (DAOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
     }
 }

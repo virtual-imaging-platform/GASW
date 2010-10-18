@@ -41,8 +41,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -50,6 +49,7 @@ import java.util.logging.Logger;
  */
 public class DerbyDAOFactory extends DAOFactory {
 
+    private static final Logger log = Logger.getLogger(DerbyDAOFactory.class);
     private static DAOFactory instance;
     private final String DRIVER = "org.apache.derby.jdbc.ClientDriver";
     private final String DBURL = "jdbc:derby://localhost:1527/";
@@ -80,10 +80,20 @@ public class DerbyDAOFactory extends DAOFactory {
                 connection.setAutoCommit(true);
                 
             } catch (SQLException ex1) {
-                ex1.printStackTrace();
+                log.error(ex1);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex1.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
             }
         } catch (ClassNotFoundException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
         
     }
@@ -92,7 +102,6 @@ public class DerbyDAOFactory extends DAOFactory {
     protected void createTables() {
         try {
             Statement stat = connection.createStatement();
-//            stat.executeUpdate("DROP TABLE IF EXISTS Nodes;");
             stat.executeUpdate("CREATE TABLE Nodes ("
                     + "site VARCHAR(255), "
                     + "node_name VARCHAR(255), "
@@ -106,7 +115,6 @@ public class DerbyDAOFactory extends DAOFactory {
                     + ")");
             stat.executeUpdate("CREATE INDEX nodes_site_idx ON Nodes(site)");
 
-//            stat.executeUpdate("DROP TABLE IF EXISTS Jobs;");
             stat.executeUpdate("CREATE TABLE Jobs ("
                     + "id VARCHAR(255), "
                     + "status VARCHAR(255), "
@@ -128,8 +136,12 @@ public class DerbyDAOFactory extends DAOFactory {
             stat.executeUpdate("CREATE INDEX jobs_command_idx ON Jobs(command)");
 
         } catch (SQLException ex) {
-            //TODO parse exeception
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
     }
 

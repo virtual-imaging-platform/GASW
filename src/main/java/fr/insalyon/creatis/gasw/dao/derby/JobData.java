@@ -156,7 +156,6 @@ public class JobData implements JobDAO {
                     rs.getString("node_name")), rs.getString("command"), rs.getString("file_name"));
 
         } catch (SQLException ex) {
-            ex.printStackTrace();
             throw new DAOException(ex.getMessage());
         }
     }

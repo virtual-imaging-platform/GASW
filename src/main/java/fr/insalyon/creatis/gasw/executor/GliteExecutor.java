@@ -41,12 +41,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author Rafael Silva
  */
 public class GliteExecutor extends Executor {
+
+    private static final Logger log = Logger.getLogger(GliteExecutor.class);
 
     public GliteExecutor(String version, String command, List<String> parameters, List<URI> downloads, List<URI> uploads) {
         super(version, command, parameters, downloads, uploads);
@@ -81,20 +84,30 @@ public class GliteExecutor extends Executor {
                     execution.exitValue();
                     finished = true;
                 } catch (IllegalThreadStateException e) {
-                    System.out.println("not finished");
+                    // do nothing
                 }
             }
 
             String jobID = cout.substring(cout.lastIndexOf("https://"), cout.length()).trim();
             jobID = jobID.substring(0, jobID.indexOf("=")).trim();
-            System.out.println(">>>>>>>> JOB_ID: " + jobID); //TODO: remove it
+            log.info("Glite Executor Job ID: " + jobID);
             return jobID;
 
         } catch (InterruptedException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
             return null;
         } catch (IOException ex) {
-            ex.printStackTrace();
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
             return null;
         }
     }

@@ -46,6 +46,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -53,6 +54,7 @@ import java.util.Random;
  */
 public class LocalExecutor extends Executor {
 
+    private static final Logger log = Logger.getLogger(LocalExecutor.class);
     private String cerr;
     private String cout;
     private static List<String> finishedJobs = new ArrayList<String>();
@@ -74,7 +76,7 @@ public class LocalExecutor extends Executor {
         String jobID = "Local-" + random.nextInt(100000);
         new Execution(jobID).start();
 
-        System.out.println(">>>>>>>> JOB_ID: " + jobID); //TODO: remove it
+        log.info("Local Executor Job ID: " + jobID);
         return jobID;
     }
 
@@ -130,7 +132,7 @@ public class LocalExecutor extends Executor {
                         execution.exitValue();
                         finished = true;
                     } catch (IllegalThreadStateException e) {
-                        System.out.println("not finished");
+                        // do nothing
                     }
                 }
 
@@ -149,8 +151,8 @@ public class LocalExecutor extends Executor {
                     try {
                         exitValue = execution.exitValue();
                         finished = true;
-                    } catch (IllegalThreadStateException e) {
-                        System.out.println("not finished");
+                    } catch (IllegalThreadStateException ex) {
+                        // do nothing
                     }
                 }
 
@@ -169,9 +171,19 @@ public class LocalExecutor extends Executor {
                 }
 
             } catch (InterruptedException ex) {
-                ex.printStackTrace();
+                log.error(ex);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
             } catch (IOException ex) {
-                ex.printStackTrace();
+                log.error(ex);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
             }
         }
     }
