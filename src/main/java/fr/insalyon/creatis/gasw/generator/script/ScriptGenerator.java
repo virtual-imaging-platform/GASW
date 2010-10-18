@@ -115,7 +115,14 @@ public class ScriptGenerator {
         sb.append("DIAG=/home/grid/session/`basename ${PWD}`.diag;\n");
         sb.append("DIRNAME=`basename $0 .sh`;\n");
         sb.append("mkdir ${DIRNAME};\n");
-        sb.append("if [ $? = 0 ];\n" + "then\n" + "  echo \"cd ${DIRNAME}\";\n" + "  cd ${DIRNAME};\n" + "else\n" + "  echo \"unable to create directory ${DIRNAME}\";\n" + " echo \"Exiting with return value 7\"\n" + "  exit 7;\n" + "fi\n\n");
+        sb.append("if [ $? = 0 ];\n" + "then\n"
+                + "  echo \"cd ${DIRNAME}\";\n"
+                + "  cd ${DIRNAME};\n"
+                + "else\n"
+                + "  echo \"unable to create directory ${DIRNAME}\";\n"
+                + " echo \"Exiting with return value 7\"\n"
+                + "  exit 7;\n"
+                + "fi\n\n");
         sb.append("BACKPID=\"\"\n\n");
         sb.append(addToCacheCommand());
         sb.append(uploadFileCommand());
@@ -317,7 +324,11 @@ public class ScriptGenerator {
         sb.append(startLogSection(sectionName, null));
         sb.append("echo \"Executing " + commandLine + " ...\"\n");
         sb.append(commandLine + "\n");
-        sb.append("if [ $? -ne 0 ];\n" + "then\n" + " echo \"Exiting with return value 6\"\n" + " cleanup\n" + " exit 6;\n" + "fi;\n");
+        sb.append("if [ $? -ne 0 ];\n" + "then\n"
+                + " echo \"Exiting with return value 6\"\n"
+                + " cleanup\n"
+                + " exit 6;\n"
+                + "fi;\n");
         sb.append("BEFOREUPLOAD=`date +%s`;\n");
         sb.append("echo \"Execution time was `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}`s\"\n\n");
         sb.append(stopLogSection(sectionName));
@@ -337,7 +348,19 @@ public class ScriptGenerator {
             sb.append(getUploadCommand(false, lfn));
         }
         sb.append(stopLogSection(sectionName));
-        sb.append("cleanup;\n" + "STOP=`date +%s`\n" + "echo \"Stop date is ${STOP}\";" + "TOTAL=`expr $STOP - $START`\n" + "echo \"Total running time: $TOTAL seconds\"; " + "UPLOAD=`expr ${STOP} - ${BEFOREUPLOAD}`; " + "DOWNLOAD=`expr ${AFTERDOWNLOAD} - ${START}`; " + "echo \"Input download time: ${DOWNLOAD} seconds\"; " + "echo \"Execution time: `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}` seconds\"; " + "echo \"Results upload time: ${UPLOAD} seconds\"; " + "echo \"Exiting with return value 0 (HACK for ARC: writing it in ${DIAG})\"; " + "echo \"exitcode=0\" >> ${DIAG} ; " + "exit 0;");
+        sb.append("cleanup;\n"
+                + "STOP=`date +%s`\n"
+                + "echo \"Stop date is ${STOP}\";"
+                + "TOTAL=`expr $STOP - $START`\n"
+                + "echo \"Total running time: $TOTAL seconds\"; "
+                + "UPLOAD=`expr ${STOP} - ${BEFOREUPLOAD}`; "
+                + "DOWNLOAD=`expr ${AFTERDOWNLOAD} - ${START}`; "
+                + "echo \"Input download time: ${DOWNLOAD} seconds\"; "
+                + "echo \"Execution time: `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}` seconds\"; "
+                + "echo \"Results upload time: ${UPLOAD} seconds\"; "
+                + "echo \"Exiting with return value 0 (HACK for ARC: writing it in ${DIAG})\"; "
+                + "echo \"exitcode=0\" >> ${DIAG} ; "
+                + "exit 0;");
         return sb.toString();
     }
 
@@ -388,7 +411,21 @@ public class ScriptGenerator {
 
         sb.append("echo \"Downloading file " + lfn.getPath() + " on the Worker Node...\"\n");
         sb.append("lcg-cp -v --connect-timeout " + Configuration.connectTimeout + " --sendreceive-timeout " + Configuration.sendReceiveTimeout + " --bdii-timeout " + Configuration.bdiiTimeout + " " + "--srm-timeout " + Configuration.srmTimeout + " lfn:" + lfn.getPath() + " file:`pwd`/" + name + "\n");
-        sb.append("if [ $? = 0 ];\n" + "then\n" + "  echo \"lcg-cp worked fine\";\n" + "else\n" + "  echo \"lcg-cp failed: retrying once\";\n" + "  lcg-cp -v --connect-timeout " + Configuration.connectTimeout + " --sendreceive-timeout " + Configuration.sendReceiveTimeout + " --bdii-timeout " + Configuration.bdiiTimeout + " " + "--srm-timeout " + Configuration.srmTimeout + " lfn:" + lfn.getPath() + " file:`pwd`/" + name + "\n" + "  if [ $? != 0 ];\n" + "  then\n" + "    echo \"lcg-cp failed again\";\n" + "    echo \"Exiting with return value 1\"\n" + "    cleanup\n" + "    exit 1;\n" + "  else\n" + "    echo \"lcg-cp worked fine\";\n" + "  fi\n" + "fi\n\n");
+        sb.append("if [ $? = 0 ];\n"
+                + "then\n"
+                + "  echo \"lcg-cp worked fine\";\n"
+                + "else\n"
+                + "  echo \"lcg-cp failed: retrying once\";\n"
+                + "  lcg-cp -v --connect-timeout " + Configuration.connectTimeout + " --sendreceive-timeout " + Configuration.sendReceiveTimeout + " --bdii-timeout " + Configuration.bdiiTimeout + " " + "--srm-timeout " + Configuration.srmTimeout + " lfn:" + lfn.getPath() + " file:`pwd`/" + name + "\n"
+                + "  if [ $? != 0 ];\n"
+                + "  then\n"
+                + "    echo \"lcg-cp failed again\";\n"
+                + "    echo \"Exiting with return value 1\"\n"
+                + "    cleanup\n"
+                + "    exit 1;\n"
+                + "  else\n"
+                + "    echo \"lcg-cp worked fine\";\n"
+                + "  fi\n" + "fi\n\n");
 
         sb.append(stopLogSection(sectionName));
         return sb.toString();
@@ -429,90 +466,92 @@ public class ScriptGenerator {
     private String uploadFileCommand() {
         StringBuilder sb = new StringBuilder();
         sb.append("function nSEs {\n");
-        sb.append("i=0\n");
-        sb.append("for n in ${SELIST}\n");
-        sb.append("do\n");
-        sb.append("i=`expr $i + 1`\n");
-        sb.append("done\n");
-        sb.append("return $i\n");
+        sb.append("  i=0\n");
+        sb.append("  for n in ${SELIST}\n");
+        sb.append("  do\n");
+        sb.append("    i=`expr $i + 1`\n");
+        sb.append("  done\n");
+        sb.append("  return $i\n");
         sb.append("}\n\n");
+
         sb.append("function getAndRemoveSE {\n");
-        sb.append("   local index=$1\n");
-        sb.append("    local i=0\n");
-        sb.append("    local NSE=\"\"\n");
-        sb.append("    RESULT=\"\"\n");
-        sb.append("    for n in ${SELIST}\n");
-        sb.append("    do\n");
-        sb.append("           if [ \"$i\" = \"${index}\" ]\n");
-        sb.append("            then\n");
-        sb.append("                    RESULT=$n\n");
-        sb.append("                   echo \"result: $RESULT\"\n");
-        sb.append("            else\n");
-        sb.append("                   NSE=\"${NSE} $n\"\n");
-        sb.append("           fi\n");
-        sb.append("            i=`expr $i + 1`\n");
-        sb.append("    done\n");
-        sb.append("    SELIST=${NSE}\n");
-        sb.append("    return 0\n");
+        sb.append("  local index=$1\n");
+        sb.append("  local i=0\n");
+        sb.append("  local NSE=\"\"\n");
+        sb.append("  RESULT=\"\"\n");
+        sb.append("  for n in ${SELIST}\n");
+        sb.append("  do\n");
+        sb.append("    if [ \"$i\" = \"${index}\" ]\n");
+        sb.append("      then\n");
+        sb.append("        RESULT=$n\n");
+        sb.append("        echo \"result: $RESULT\"\n");
+        sb.append("      else\n");
+        sb.append("        NSE=\"${NSE} $n\"\n");
+        sb.append("      fi\n");
+        sb.append("    i=`expr $i + 1`\n");
+        sb.append("  done\n");
+        sb.append("  SELIST=${NSE}\n");
+        sb.append("  return 0\n");
         sb.append("}\n\n");
 
         sb.append("function chooseRandomSE {\n");
-        sb.append("    nSEs\n");
-        sb.append("    local n=$?\n");
-        sb.append("    if [ \"$n\" = \"0\" ]\n");
-        sb.append("    then\n");
-        sb.append("            echo \"SE list is empty\"\n");
-        sb.append("            RESULT=\"\"\n");
-        sb.append("    else\n");
-        sb.append("                local r=${RANDOM}\n");
-        sb.append("            local id=`expr $r  % $n`\n");
-        sb.append("                     getAndRemoveSE ${id}\n");
-        sb.append("   fi\n}\n\n");
+        sb.append("  nSEs\n");
+        sb.append("  local n=$?\n");
+        sb.append("  if [ \"$n\" = \"0\" ]\n");
+        sb.append("  then\n");
+        sb.append("    echo \"SE list is empty\"\n");
+        sb.append("    RESULT=\"\"\n");
+        sb.append("  else\n");
+        sb.append("    local r=${RANDOM}\n");
+        sb.append("    local id=`expr $r  % $n`\n");
+        sb.append("    getAndRemoveSE ${id}\n");
+        sb.append("  fi\n");
+        sb.append("}\n\n");
 
         sb.append("function uploadFile {\n");
-        sb.append("    local LFN=$1\n");
-        sb.append("    local FILE=$2\n");
-        sb.append("    local nrep=$3\n");
-        sb.append("    local SELIST=${SE}\n");
-        sb.append("    local OPTS=\"--connect-timeout " + Configuration.connectTimeout + " --sendreceive-timeout " + Configuration.sendReceiveTimeout + " --bdii-timeout " + Configuration.bdiiTimeout + " --srm-timeout " + Configuration.srmTimeout + "\"\n");
-        sb.append("    local DEST=\"\"\n");
-        sb.append("    if [ \"${USE_CLOSE_SE}\" = \"true\" ] && [ \"${VO_BIOMED_DEFAULT_SE}\" != \"\" ]\n");
-        sb.append("    then\n");
-        sb.append("            DEST=${VO_BIOMED_DEFAULT_SE}\n");
-        sb.append("    else\n");
-        sb.append("            chooseRandomSE\n");
-        sb.append("            DEST=${RESULT}\n");
-        sb.append("    fi\n");
-        sb.append("    done=0\n");
-        sb.append("    while [ $nrep -gt $done ] && [ \"${DEST}\" != \"\" ]\n");
-        sb.append("    do\n");
-        sb.append("            if [ \"${done}\" = \"0\" ]\n");
-        sb.append("            then\n");
-        sb.append("                    lcg-del -v -a ${OPTS} lfn:${LFN} &>/dev/null; lfc-ls ${LFN}; if [ \\$? = 0 ]; then lfc-rename ${LFN} ${LFN}-garbage-${HOSTNAME}-${PWD}; fi; lfc-mkdir -p `dirname ${LFN}`; lcg-cr -v ${OPTS} -d ${DEST} -l lfn:${LFN} file:${FILE}\n");
-        sb.append("            else\n");
-        sb.append("                    lcg-rep -v ${OPTS} -d ${DEST} lfn:${LFN}\n");
-        sb.append("            fi\n");
-        sb.append("           if [ $? = 0 ]\n");
-        sb.append("            then\n");
-        sb.append("                    echo \">>>>>>>>>> lcg-cr/rep of ${LFN} to SE ${DEST} worked fine <<<<<<<<<\"\n");
-        sb.append("                    done=`expr ${done} + 1`\n");
-        sb.append("                    else\n");
-        sb.append("                    echo \">>>>>>>>>> lcg-cr/rep of ${LFN} to SE ${DEST} failed <<<<<<<<<<<<\" \n");
-        sb.append("fi\n");
-        sb.append("            chooseRandomSE\n");
-        sb.append("            DEST=${RESULT}\n");
-        sb.append("done\n");
+        sb.append("  local LFN=$1\n");
+        sb.append("  local FILE=$2\n");
+        sb.append("  local nrep=$3\n");
+        sb.append("  local SELIST=${SE}\n");
+        sb.append("  local OPTS=\"--connect-timeout " + Configuration.connectTimeout + " --sendreceive-timeout " + Configuration.sendReceiveTimeout + " --bdii-timeout " + Configuration.bdiiTimeout + " --srm-timeout " + Configuration.srmTimeout + "\"\n");
+        sb.append("  local DEST=\"\"\n");
+        sb.append("  if [ \"${USE_CLOSE_SE}\" = \"true\" ] && [ \"${VO_BIOMED_DEFAULT_SE}\" != \"\" ]\n");
+        sb.append("  then\n");
+        sb.append("    DEST=${VO_BIOMED_DEFAULT_SE}\n");
+        sb.append("  else\n");
+        sb.append("    chooseRandomSE\n");
+        sb.append("    DEST=${RESULT}\n");
+        sb.append("  fi\n");
+        sb.append("  done=0\n");
+        sb.append("  while [ $nrep -gt $done ] && [ \"${DEST}\" != \"\" ]\n");
+        sb.append("  do\n");
         sb.append("    if [ \"${done}\" = \"0\" ]\n");
         sb.append("    then\n");
-        sb.append("            echo \"Cannot lcg-cr file ${FILE} to lfn ${LFN}: exiting with return value 2\"\n");
-        sb.append("            exit 2\n");
-        sb.append("     else\n"); //put file in cache
-        sb.append("     addToCache ${LFN} ${FILE}\n");
-        sb.append("    fi\n}\n");
+        sb.append("      lcg-del -v -a ${OPTS} lfn:${LFN} &>/dev/null; lfc-ls ${LFN}; if [ \\$? = 0 ]; then lfc-rename ${LFN} ${LFN}-garbage-${HOSTNAME}-${PWD}; fi; lfc-mkdir -p `dirname ${LFN}`; lcg-cr -v ${OPTS} -d ${DEST} -l lfn:${LFN} file:${FILE}\n");
+        sb.append("    else\n");
+        sb.append("      lcg-rep -v ${OPTS} -d ${DEST} lfn:${LFN}\n");
+        sb.append("    fi\n");
+        sb.append("    if [ $? = 0 ]\n");
+        sb.append("    then\n");
+        sb.append("      echo \">>>>>>>>>> lcg-cr/rep of ${LFN} to SE ${DEST} worked fine <<<<<<<<<\"\n");
+        sb.append("      done=`expr ${done} + 1`\n");
+        sb.append("    else\n");
+        sb.append("      echo \">>>>>>>>>> lcg-cr/rep of ${LFN} to SE ${DEST} failed <<<<<<<<<<<<\" \n");
+        sb.append("    fi\n");
+        sb.append("    chooseRandomSE\n");
+        sb.append("    DEST=${RESULT}\n");
+        sb.append("  done\n");
+        sb.append("  if [ \"${done}\" = \"0\" ]\n");
+        sb.append("  then\n");
+        sb.append("    echo \"Cannot lcg-cr file ${FILE} to lfn ${LFN}\"\n");
+        sb.append("    echo \"Exiting with return value 2\"\n");
+        sb.append("    exit 2\n");
+        sb.append("  else\n"); //put file in cache
+        sb.append("    addToCache ${LFN} ${FILE}\n");
+        sb.append("  fi\n");
+        sb.append("}\n");
 
         return sb.toString();
-
-
     }
 
     /** generates the command to upload a file from the worker node to the LFC. The generated code calls function uploadFile.
