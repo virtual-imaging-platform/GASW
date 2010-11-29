@@ -50,6 +50,9 @@ public class ExecutorFactory {
             if (Configuration.GRID.equals("DIRAC")) {
                 return new DiracExecutor(version, command, parameters, downloads, uploads);
             }
+            if (Configuration.GRID.equals("GLITE_WMS")) {
+                return new GliteExecutor(version, command, parameters, downloads, uploads);
+            }
         } else if (version.equals("LOCAL")) {
             return new LocalExecutor(version, command, parameters, downloads, uploads);
         }

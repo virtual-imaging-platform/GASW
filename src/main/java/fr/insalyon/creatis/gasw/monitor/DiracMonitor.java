@@ -92,7 +92,6 @@ public class DiracMonitor extends Monitor {
                 String message = dis.readUTF();
                 String[] jobStatusArray = message.split("##");
                 List<String> finishedJobs = new ArrayList<String>();
-                boolean isFinished = false;
 
                 for (String s : jobStatusArray) {
 
@@ -111,17 +110,18 @@ public class DiracMonitor extends Monitor {
                     } else {
                         if (status.equals("Done")) {
                             job.setStatus(Status.COMPLETED);
-                            setStatus(job);
-                        } else {
+                        } else if (status.equals("Failed")) {
                             job.setStatus(Status.ERROR);
-                            setStatus(job);
+                        } else {
+                            job.setStatus(Status.CANCELLED);
                         }
+                        setStatus(job);
                         log.info("Dirac Monitor: job \"" + job.getId() + "\" finished as \"" + status + "\"");
+                        System.out.println("****************** GASW JOB FINISHED: " + job.getId() + " - " + status);
                         finishedJobs.add(job.getId() + "--" + job.getStatus());
-                        isFinished = true;
                     }
                 }
-                if (isFinished) {
+                if (finishedJobs.size() > 0) {
                     Gasw.getInstance().addFinishedJob(finishedJobs);
                 }
 

@@ -176,6 +176,9 @@ public class JobData implements JobDAO {
         if (status.equals(Status.ERROR.toString())) {
             return Status.ERROR;
         }
+        if (status.equals(Status.CANCELLED.toString())) {
+            return Status.CANCELLED;
+        }
         return null;
     }
 

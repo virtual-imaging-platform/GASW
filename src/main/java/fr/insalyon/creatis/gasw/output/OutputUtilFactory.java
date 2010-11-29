@@ -49,6 +49,9 @@ public class OutputUtilFactory {
             if (Configuration.GRID.equals("DIRAC")) {
                 return new DiracOutputUtil(startTime);
             }
+            if (Configuration.GRID.equals("GLITE_WMS")) {
+                return new GliteOutputUtil(startTime);
+            }
         } else if (version.equals("LOCAL")) {
             return new LocalOutputUtil(startTime);
         }

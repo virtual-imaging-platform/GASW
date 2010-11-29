@@ -37,6 +37,7 @@ package fr.insalyon.creatis.gasw.executor;
 import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.generator.jdl.JdlGenerator;
 import fr.insalyon.creatis.gasw.generator.script.ScriptGenerator;
+import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -90,6 +91,7 @@ public class GliteExecutor extends Executor {
 
             String jobID = cout.substring(cout.lastIndexOf("https://"), cout.length()).trim();
             jobID = jobID.substring(0, jobID.indexOf("=")).trim();
+            MonitorFactory.getMonitor(version).add(jobID, command, jdlName);
             log.info("Glite Executor Job ID: " + jobID);
             return jobID;
 
@@ -100,7 +102,6 @@ public class GliteExecutor extends Executor {
                     log.debug(stack);
                 }
             }
-            return null;
         } catch (IOException ex) {
             log.error(ex);
             if (log.isDebugEnabled()) {
@@ -108,8 +109,8 @@ public class GliteExecutor extends Executor {
                     log.debug(stack);
                 }
             }
-            return null;
         }
+        return null;
     }
 
     /**

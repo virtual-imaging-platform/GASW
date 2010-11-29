@@ -48,6 +48,9 @@ public class MonitorFactory {
             if (Configuration.GRID.equals("DIRAC")) {
                 return DiracMonitor.getInstance();
             }
+            if (Configuration.GRID.equals("GLITE_WMS")) {
+                return GliteMonitor.getInstance();
+            }
         } else {
             return LocalMonitor.getInstance();
         }
@@ -57,6 +60,7 @@ public class MonitorFactory {
 
     public static void terminate() {
         DiracMonitor.getInstance().terminate();
+        GliteMonitor.getInstance().terminate();
         LocalMonitor.getInstance().terminate();
     }
 }

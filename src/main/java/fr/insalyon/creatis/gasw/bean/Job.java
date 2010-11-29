@@ -58,7 +58,7 @@ public class Job {
     private int startTime;
 
     public Job(String id, Monitor.Status status) {
-        this(id, status, 0, 0, 0, 0, 0, 0, 0, null, "", "");
+        this(id, status, -1, 0, 0, 0, 0, 0, 0, null, "", "");
     }
 
     public Job(String id, Status status, int exitCode, int creation, int queued, int download, int running, int upload, int end, Node node, String command, String fileName) {

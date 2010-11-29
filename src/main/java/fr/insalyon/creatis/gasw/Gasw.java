@@ -56,7 +56,8 @@ public class Gasw {
     private static Gasw instance;
     private GaswNotification notification;
     private Object client;
-    private List<String> finishedJobs;
+    private volatile List<String> finishedJobs;
+    private volatile boolean gettingOutputs;
 
     /**
      * Gets an instance of GASW
@@ -75,6 +76,7 @@ public class Gasw {
         finishedJobs = new ArrayList<String>();
         notification = new GaswNotification();
         notification.start();
+        gettingOutputs = false;
     }
 
     /**
@@ -103,7 +105,11 @@ public class Gasw {
      * @param finishedJobs
      */
     public synchronized void addFinishedJob(List<String> finishedJobs) {
-        this.finishedJobs.addAll(finishedJobs);
+        try {
+            this.finishedJobs.addAll(finishedJobs);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     /**
@@ -112,22 +118,32 @@ public class Gasw {
      */
     public synchronized Map<String, File[]> getOutputs() {
 
-        Map<String, File[]> outputsMap = new HashMap<String, File[]>();
-        List<String> jobsToRemove = new ArrayList<String>();
+        try {
+            gettingOutputs = true;
+            Map<String, File[]> outputsMap = new HashMap<String, File[]>();
+            List<String> jobsToRemove = new ArrayList<String>();
 
-        if (finishedJobs != null) {
-            for (String jobID : finishedJobs) {
-                String version = jobID.contains("Local-") ? "LOCAL" : "GRID";
-                File[] outputs = OutputUtilFactory.getOutputUtil(
-                        version,
-                        MonitorFactory.getMonitor(version).getStartTime()).getOutputs(jobID.split("--")[0]);
-                outputsMap.put(jobID, outputs);
-                jobsToRemove.add(jobID);
+            if (finishedJobs != null) {
+                for (String jobID : finishedJobs) {
+                    System.out.println(":::::::::::::::::::::::::::: GASW Getting Output for: " + jobID);
+                    String version = jobID.contains("Local-") ? "LOCAL" : "GRID";
+                    File[] outputs = OutputUtilFactory.getOutputUtil(
+                            version,
+                            MonitorFactory.getMonitor(version).getStartTime()).getOutputs(jobID.split("--")[0]);
+                    outputsMap.put(jobID, outputs);
+                    jobsToRemove.add(jobID);
+                }
+                finishedJobs.removeAll(jobsToRemove);
             }
-            finishedJobs.removeAll(jobsToRemove);
+            return outputsMap;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
         }
+    }
 
-        return outputsMap;
+    public synchronized void waitForNotification() {
+        gettingOutputs = false;
     }
 
     public synchronized void terminate() {
@@ -141,26 +157,33 @@ public class Gasw {
 
         @Override
         public void run() {
-            super.run();
+            try {
+                super.run();
 
-            while (!stop) {
-                synchronized (this) {
-                    if (finishedJobs != null && finishedJobs.size() > 0) {
-                        synchronized (client) {
-                            client.notify();
+                while (!stop) {
+                    if (!gettingOutputs) {
+                        synchronized (this) {
+                            if (finishedJobs != null && finishedJobs.size() > 0) {
+                                synchronized (client) {
+                                    System.out.println("****************** GASW NOTIFIES jGASW: " + finishedJobs);
+                                    client.notify();
+                                }
+                            }
+                        }
+                    }
+                    try {
+                        sleep(10000);
+                    } catch (InterruptedException ex) {
+                        log.error(ex);
+                        if (log.isDebugEnabled()) {
+                            for (StackTraceElement stack : ex.getStackTrace()) {
+                                log.debug(stack);
+                            }
                         }
                     }
                 }
-                try {
-                    sleep(10000);
-                } catch (InterruptedException ex) {
-                    log.error(ex);
-                    if (log.isDebugEnabled()) {
-                        for (StackTraceElement stack : ex.getStackTrace()) {
-                            log.debug(stack);
-                        }
-                    }
-                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
 

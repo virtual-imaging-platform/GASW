@@ -57,7 +57,6 @@ public abstract class Monitor extends Thread {
     private static final Logger log = Logger.getLogger(Monitor.class);
     protected Map<String, Status> jobsStatus;
     protected boolean stop;
-    protected volatile int numJobs;
     protected JobDAO jobDAO;
     protected NodeDAO nodeDAO;
     protected int startTime = -1;
@@ -65,24 +64,18 @@ public abstract class Monitor extends Thread {
     public static enum Status {
 
         COMPLETED, ERROR, RUNNING,
-        QUEUED, NOT_SUBMITTED, SUCCESSFULLY_SUBMITTED
+        QUEUED, NOT_SUBMITTED, SUCCESSFULLY_SUBMITTED, CANCELLED
     };
 
     protected Monitor() {
         jobsStatus = new HashMap<String, Status>();
         stop = false;
-        numJobs = -1;
         jobDAO = DAOFactory.getDAOFactory().getJobDAO();
         nodeDAO = DAOFactory.getDAOFactory().getNodeDAO();
     }
 
     protected synchronized void add(Job job, String fileName) {
         try {
-            if (numJobs == -1) {
-                numJobs = 1;
-            } else {
-                numJobs++;
-            }
             if (startTime == -1) {
                 startTime = Integer.valueOf("" + (System.currentTimeMillis() / 1000));
             }
@@ -105,9 +98,6 @@ public abstract class Monitor extends Thread {
     }
 
     protected synchronized void setStatus(Job job) {
-        if (job.getStatus() == Status.COMPLETED || job.getStatus() == Status.ERROR) {
-            numJobs--;
-        }
         if (jobsStatus.get(job.getId()) != job.getStatus()) {
             try {
                 jobsStatus.put(job.getId(), job.getStatus());

@@ -39,9 +39,11 @@ import fr.insalyon.creatis.gasw.bean.Node;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import org.apache.log4j.Logger;
@@ -158,5 +160,49 @@ public abstract class OutputUtil {
                 }
             }
         }
+    }
+
+    /**
+     *
+     * @param job Job object
+     * @param extension File extension
+     * @param outDir Output directory
+     * @return
+     */
+    protected File getKilledStdFile(Job job, String extension, String outDir) {
+        FileWriter fstream = null;
+        try {
+            File stdDir = new File(outDir);
+            if (!stdDir.exists()) {
+                stdDir.mkdir();
+            }
+            File stdFile = new File(outDir + "/" + job.getFileName() + ".sh" + extension);
+            fstream = new FileWriter(stdFile);
+            BufferedWriter out = new BufferedWriter(fstream);
+            out.write("Job Cancelled");
+            out.close();
+
+            return stdFile;
+
+        } catch (IOException ex) {
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
+        } finally {
+            try {
+                fstream.close();
+            } catch (IOException ex) {
+                log.error(ex);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

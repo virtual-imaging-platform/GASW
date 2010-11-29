@@ -39,6 +39,7 @@ import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
+import fr.insalyon.creatis.gasw.monitor.Monitor;
 import java.io.File;
 import java.io.IOException;
 import org.apache.log4j.Logger;
@@ -60,18 +61,27 @@ public class DiracOutputUtil extends OutputUtil {
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
             Job job = jobDAO.getJobByID(jobID);
 
-            String exec = "dirac-wms-job-get-output " + jobID;
-            Process execution = Runtime.getRuntime().exec(exec);
-            execution.waitFor();
+            if (job.getStatus() != Monitor.Status.CANCELLED) {
 
-            File stdOut = getStdFile(job, ".out", Configuration.OUT_ROOT);
-            File stdErr = getStdFile(job, ".err", Configuration.ERR_ROOT);
+                String exec = "dirac-wms-job-get-output " + jobID;
+                Process execution = Runtime.getRuntime().exec(exec);
+                execution.waitFor();
 
-            File outTempDir = new File("./" + jobID);
-            outTempDir.delete();
-            parseOutput(job, stdOut);
+                File stdOut = getStdFile(job, ".out", Configuration.OUT_ROOT);
+                File stdErr = getStdFile(job, ".err", Configuration.ERR_ROOT);
 
-            return new File[]{stdOut, stdErr};
+                File outTempDir = new File("./" + jobID);
+                outTempDir.delete();
+                parseOutput(job, stdOut);
+
+                return new File[]{stdOut, stdErr};
+
+            } else {
+                File stdOut = getKilledStdFile(job, ".out", Configuration.OUT_ROOT);
+                File stdErr = getKilledStdFile(job, ".err", Configuration.ERR_ROOT);
+
+                return new File[]{stdOut, stdErr};
+            }
 
         } catch (DAOException ex) {
             log.error(ex);
@@ -98,12 +108,20 @@ public class DiracOutputUtil extends OutputUtil {
         return null;
     }
 
+    /**
+     * 
+     * 
+     * @param job Job object
+     * @param extension File extension
+     * @param directory Output directory
+     * @return
+     */
     private File getStdFile(Job job, String extension, String directory) {
-        File stdFile = new File("./" + job.getId() + "/std" + extension);
         File stdDir = new File(directory);
         if (!stdDir.exists()) {
             stdDir.mkdir();
         }
+        File stdFile = new File("./" + job.getId() + "/std" + extension);
         File stdRenamed = new File(directory + "/" + job.getFileName() + ".sh" + extension);
         stdFile.renameTo(stdRenamed);
         return stdRenamed;

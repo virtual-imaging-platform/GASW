@@ -322,7 +322,7 @@ public class ScriptGenerator {
      */
     public String applicationExecution(String command, List<String> parameters) {
         StringBuilder sb = new StringBuilder();
-        String commandLine = "export LD_LIBRARY_PATH=${PWD:${LD_LIBRARY_PATH}\n ./" + command;
+        String commandLine = "export LD_LIBRARY_PATH=${PWD:${LD_LIBRARY_PATH}}\n ./" + command;
         for (String param : parameters) {
             //removes trailing "$rep-" string
             if (param.contains("$rep-")) {
@@ -337,6 +337,7 @@ public class ScriptGenerator {
         sb.append(commandLine + "\n");
         sb.append("if [ $? -ne 0 ];\n" + "then\n"
                 + " echo \"Exiting with return value 6\"\n"
+                + stopLogSection(sectionName)
                 + " cleanup\n"
                 + " exit 6;\n"
                 + "fi;\n");
