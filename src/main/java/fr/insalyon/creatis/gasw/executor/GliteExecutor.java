@@ -96,19 +96,9 @@ public class GliteExecutor extends Executor {
             return jobID;
 
         } catch (InterruptedException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         } catch (IOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         }
         return null;
     }

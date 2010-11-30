@@ -38,8 +38,9 @@ import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.generator.jdl.JdlGenerator;
 import fr.insalyon.creatis.gasw.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.List;
 import org.apache.log4j.Logger;
@@ -51,7 +52,7 @@ import org.apache.log4j.Logger;
 public class DiracExecutor extends Executor {
 
     private static final Logger log = Logger.getLogger(DiracExecutor.class);
-    
+
     protected DiracExecutor(String version, String command, List<String> parameters, List<URI> downloads, List<URI> uploads) {
         super(version, command, parameters, downloads, uploads);
     }
@@ -67,27 +68,17 @@ public class DiracExecutor extends Executor {
         super.submit();
         try {
             String exec = "dirac-wms-job-submit " + Configuration.JDL_ROOT + "/" + jdlName;
-            Process execution = Runtime.getRuntime().exec(exec);
-            execution.waitFor();
+            Process process = Runtime.getRuntime().exec(exec);
+            process.waitFor();
 
-            boolean finished = false;
+            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
             String cout = "";
-
-            while (!finished) {
-                InputStream is = execution.getInputStream();
-                int c;
-                while ((c = is.read()) != -1) {
-                    cout += (char) c;
-                }
-                is.close();
-
-                try {
-                    execution.exitValue();
-                    finished = true;
-                } catch (IllegalThreadStateException e) {
-                    // do nothing
-                }
+            String s = null;
+            while ((s = r.readLine()) != null) {
+                cout += s;
             }
+
             String jobID = cout.substring(cout.lastIndexOf("=") + 2, cout.length()).trim();
             MonitorFactory.getMonitor(version).add(jobID, command, jdlName);
 
@@ -96,20 +87,10 @@ public class DiracExecutor extends Executor {
             return jobID;
 
         } catch (InterruptedException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
             return null;
         } catch (IOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
             return null;
         }
     }

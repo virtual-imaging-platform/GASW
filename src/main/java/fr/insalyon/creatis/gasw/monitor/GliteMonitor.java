@@ -53,7 +53,7 @@ public class GliteMonitor extends Monitor {
 
     private static final Logger log = Logger.getLogger(GliteMonitor.class);
     private static GliteMonitor instance;
-    private List<String> monitoredJobs;
+    private volatile List<String> monitoredJobs;
 
     public synchronized static GliteMonitor getInstance() {
         if (instance == null) {
@@ -111,7 +111,7 @@ public class GliteMonitor extends Monitor {
                             job.setStatus(Status.QUEUED);
                             job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
                             setStatus(job);
-                        } else if (status.startsWith("Ready") 
+                        } else if (status.startsWith("Ready")
                                 || status.startsWith("Waiting")
                                 || status.startsWith("Submitted")) {
                             // do nothing
@@ -134,41 +134,19 @@ public class GliteMonitor extends Monitor {
                     }
                     if (finishedJobs.size() > 0) {
                         Gasw.getInstance().addFinishedJob(finishedJobs);
-                        synchronized (monitoredJobs) {
-                            monitoredJobs.removeAll(jobsToRemove);
-                        }
+                        monitoredJobs.removeAll(jobsToRemove);
                     }
                 }
                 sleep(10000);
 
             } catch (GaswException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             } catch (DAOException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             } catch (IOException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             } catch (InterruptedException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             }
         }
 
@@ -180,9 +158,7 @@ public class GliteMonitor extends Monitor {
         job.setCommand(command);
         add(job, fileName);
         setStatus(job);
-        synchronized (monitoredJobs) {
-            monitoredJobs.add(jobID);
-        }
+        monitoredJobs.add(jobID);
     }
 
     @Override

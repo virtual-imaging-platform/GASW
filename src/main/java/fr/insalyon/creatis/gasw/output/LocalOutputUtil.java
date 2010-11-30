@@ -66,12 +66,7 @@ public class LocalOutputUtil extends OutputUtil {
                         new File(Configuration.ERR_ROOT + "/" + job.getFileName() + ".sh.err")};
 
         } catch (DAOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         }
         return null;
     }

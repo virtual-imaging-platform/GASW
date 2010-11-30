@@ -94,7 +94,6 @@ public abstract class Executor {
         } else {
             firstExecution = false;
         }
-
         return null;
     }
 
@@ -126,12 +125,7 @@ public abstract class Executor {
             return fileName;
 
         } catch (IOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
             return null;
         }
     }
@@ -160,13 +154,17 @@ public abstract class Executor {
             return fileName;
 
         } catch (IOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
             return null;
+        }
+    }
+
+    protected void logException(Logger log, Exception ex) {
+        log.error(ex);
+        if (log.isDebugEnabled()) {
+            for (StackTraceElement stack : ex.getStackTrace()) {
+                log.debug(stack);
+            }
         }
     }
 
@@ -207,12 +205,7 @@ public abstract class Executor {
             }
 
         } catch (Exception ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         }
     }
 }

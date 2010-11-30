@@ -84,26 +84,11 @@ public class DiracOutputUtil extends OutputUtil {
             }
 
         } catch (DAOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         } catch (InterruptedException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         } catch (IOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         }
         return null;
     }

@@ -75,12 +75,7 @@ public class DiracMonitor extends Monitor {
             dis = new DataInputStream(socket.getInputStream());
 
         } catch (IOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         }
     }
 
@@ -126,26 +121,11 @@ public class DiracMonitor extends Monitor {
                 }
 
             } catch (GaswException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             } catch (DAOException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             } catch (IOException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             }
         }
     }
@@ -160,12 +140,7 @@ public class DiracMonitor extends Monitor {
             dos.writeUTF(jobID);
             dos.flush();
         } catch (IOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         }
     }
 
@@ -176,12 +151,7 @@ public class DiracMonitor extends Monitor {
             dis.close();
             instance = null;
         } catch (IOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         }
     }
 }

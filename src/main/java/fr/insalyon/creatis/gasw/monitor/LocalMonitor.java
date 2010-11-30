@@ -93,26 +93,11 @@ public class LocalMonitor extends Monitor {
                 }
 
             } catch (GaswException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             } catch (DAOException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             } catch (InterruptedException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             }
         }
     }

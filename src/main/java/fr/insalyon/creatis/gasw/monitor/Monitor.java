@@ -74,6 +74,11 @@ public abstract class Monitor extends Thread {
         nodeDAO = DAOFactory.getDAOFactory().getNodeDAO();
     }
 
+    /**
+     * 
+     * @param job
+     * @param fileName
+     */
     protected synchronized void add(Job job, String fileName) {
         try {
             if (startTime == -1) {
@@ -88,15 +93,14 @@ public abstract class Monitor extends Thread {
             jobDAO.add(job);
 
         } catch (DAOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         }
     }
 
+    /**
+     * 
+     * @param job
+     */
     protected synchronized void setStatus(Job job) {
         if (jobsStatus.get(job.getId()) != job.getStatus()) {
             try {
@@ -105,20 +109,35 @@ public abstract class Monitor extends Thread {
                 logStatus(job);
 
             } catch (DAOException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             }
         }
     }
 
+    /**
+     * 
+     * @param jobID
+     * @param command
+     * @param fileName
+     */
     public abstract void add(String jobID, String command, String fileName);
 
+    /**
+     * 
+     * @param jobID
+     * @return
+     */
     public Status getStatus(String jobID) {
         return jobsStatus.get(jobID);
+    }
+
+    protected void logException(Logger log, Exception ex) {
+        log.error(ex);
+        if (log.isDebugEnabled()) {
+            for (StackTraceElement stack : ex.getStackTrace()) {
+                log.debug(stack);
+            }
+        }
     }
 
     private void logStatus(Job job) {
@@ -131,12 +150,7 @@ public abstract class Monitor extends Thread {
             bw.close();
 
         } catch (IOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         }
     }
 

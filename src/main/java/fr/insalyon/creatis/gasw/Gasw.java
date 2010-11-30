@@ -105,11 +105,7 @@ public class Gasw {
      * @param finishedJobs
      */
     public synchronized void addFinishedJob(List<String> finishedJobs) {
-        try {
-            this.finishedJobs.addAll(finishedJobs);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        this.finishedJobs.addAll(finishedJobs);
     }
 
     /**
@@ -118,28 +114,23 @@ public class Gasw {
      */
     public synchronized Map<String, File[]> getOutputs() {
 
-        try {
-            gettingOutputs = true;
-            Map<String, File[]> outputsMap = new HashMap<String, File[]>();
-            List<String> jobsToRemove = new ArrayList<String>();
+        gettingOutputs = true;
+        Map<String, File[]> outputsMap = new HashMap<String, File[]>();
+        List<String> jobsToRemove = new ArrayList<String>();
 
-            if (finishedJobs != null) {
-                for (String jobID : finishedJobs) {
-                    System.out.println(":::::::::::::::::::::::::::: GASW Getting Output for: " + jobID);
-                    String version = jobID.contains("Local-") ? "LOCAL" : "GRID";
-                    File[] outputs = OutputUtilFactory.getOutputUtil(
-                            version,
-                            MonitorFactory.getMonitor(version).getStartTime()).getOutputs(jobID.split("--")[0]);
-                    outputsMap.put(jobID, outputs);
-                    jobsToRemove.add(jobID);
-                }
-                finishedJobs.removeAll(jobsToRemove);
+        if (finishedJobs != null) {
+            for (String jobID : finishedJobs) {
+                System.out.println(":::::::::::::::::::::::::::: GASW Getting Output for: " + jobID);
+                String version = jobID.contains("Local-") ? "LOCAL" : "GRID";
+                File[] outputs = OutputUtilFactory.getOutputUtil(
+                        version,
+                        MonitorFactory.getMonitor(version).getStartTime()).getOutputs(jobID.split("--")[0]);
+                outputsMap.put(jobID, outputs);
+                jobsToRemove.add(jobID);
             }
-            return outputsMap;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return null;
+            finishedJobs.removeAll(jobsToRemove);
         }
+        return outputsMap;
     }
 
     public synchronized void waitForNotification() {
@@ -157,33 +148,25 @@ public class Gasw {
 
         @Override
         public void run() {
-            try {
-                super.run();
-
-                while (!stop) {
-                    if (!gettingOutputs) {
-                        synchronized (this) {
-                            if (finishedJobs != null && finishedJobs.size() > 0) {
-                                synchronized (client) {
-                                    System.out.println("****************** GASW NOTIFIES jGASW: " + finishedJobs);
-                                    client.notify();
-                                }
-                            }
-                        }
-                    }
-                    try {
-                        sleep(10000);
-                    } catch (InterruptedException ex) {
-                        log.error(ex);
-                        if (log.isDebugEnabled()) {
-                            for (StackTraceElement stack : ex.getStackTrace()) {
-                                log.debug(stack);
-                            }
+            while (!stop) {
+                if (!gettingOutputs) {
+                    if (finishedJobs != null && finishedJobs.size() > 0) {
+                        synchronized (client) {
+                            System.out.println("****************** GASW NOTIFIES jGASW: " + finishedJobs);
+                            client.notify();
                         }
                     }
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
+                try {
+                    sleep(10000);
+                } catch (InterruptedException ex) {
+                    log.error(ex);
+                    if (log.isDebugEnabled()) {
+                        for (StackTraceElement stack : ex.getStackTrace()) {
+                            log.debug(stack);
+                        }
+                    }
+                }
             }
         }
 

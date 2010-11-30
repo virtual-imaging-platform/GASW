@@ -146,19 +146,9 @@ public abstract class OutputUtil {
             DAOFactory.getDAOFactory().getJobDAO().update(job);
 
         } catch (DAOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         } catch (IOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         }
     }
 
@@ -185,24 +175,23 @@ public abstract class OutputUtil {
             return stdFile;
 
         } catch (IOException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
+            logException(log, ex);
         } finally {
             try {
                 fstream.close();
             } catch (IOException ex) {
-                log.error(ex);
-                if (log.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex.getStackTrace()) {
-                        log.debug(stack);
-                    }
-                }
+                logException(log, ex);
             }
         }
         return null;
+    }
+
+    protected void logException(Logger log, Exception ex) {
+        log.error(ex);
+        if (log.isDebugEnabled()) {
+            for (StackTraceElement stack : ex.getStackTrace()) {
+                log.debug(stack);
+            }
+        }
     }
 }
