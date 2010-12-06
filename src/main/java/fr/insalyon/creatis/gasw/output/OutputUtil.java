@@ -74,8 +74,6 @@ public abstract class OutputUtil {
      */
     protected void parseOutput(Job job, File stdOut) {
         try {
-            System.out.println(">>>> PARSE OUTPUT: " + job.getStatus());
-
             if (job.getQueued() == 0) {
                 job.setQueued(job.getCreation());
             }

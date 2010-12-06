@@ -80,7 +80,6 @@ public class GliteOutputUtil extends OutputUtil {
 
                 String s = null;
                 while ((s = r.readLine()) != null) {
-                    System.out.println(s);
                     if (s.startsWith("/tmp/jobOutput")) {
                         outputPath = s.trim();
                     }

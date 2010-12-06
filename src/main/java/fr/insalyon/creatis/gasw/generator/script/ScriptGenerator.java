@@ -333,8 +333,10 @@ public class ScriptGenerator {
         }
         String sectionName = "application_execution";
         sb.append(startLogSection(sectionName, null));
+        sb.append("touch DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK\n");
         sb.append("echo \"Executing " + commandLine + " ...\"\n");
         sb.append(commandLine + "\n");
+        sb.append("rm -rf DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK\n");
         sb.append("if [ $? -ne 0 ];\n" + "then\n"
                 + " echo \"Exiting with return value 6\"\n"
                 + stopLogSection(sectionName)

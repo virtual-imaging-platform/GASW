@@ -40,7 +40,9 @@ import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.executor.LocalExecutor;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
@@ -50,7 +52,8 @@ import org.apache.log4j.Logger;
 public class LocalMonitor extends Monitor {
 
     private static final Logger log = Logger.getLogger(LocalMonitor.class);
-    public static LocalMonitor instance;
+    private static LocalMonitor instance;
+    private Map<String, Status> jobsStatus;
 
     public synchronized static LocalMonitor getInstance() {
         if (instance == null) {
@@ -62,6 +65,7 @@ public class LocalMonitor extends Monitor {
 
     private LocalMonitor() {
         super();
+        jobsStatus = new HashMap<String, Status>();
     }
 
     @Override

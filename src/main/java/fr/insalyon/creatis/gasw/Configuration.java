@@ -70,7 +70,7 @@ public class Configuration {
     public static final String CACHE_DIR = "../cache";
     public static final String CACHE_FILE = "cache.txt";
     // DIRAC Configuration
-    public static String NOTIFICATION_HOST = "kingkong.grid.creatis.insa-lyon.fr";
+    public static String NOTIFICATION_HOST = "ui.egee.creatis.insa-lyon.fr";
     public static int NOTIFICATION_PORT = 9005;
 
     public static void setUp() throws GaswException {

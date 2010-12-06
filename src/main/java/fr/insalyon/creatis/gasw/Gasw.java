@@ -90,7 +90,9 @@ public class Gasw {
      * @param uploads List of output files to be uploaded to a Storage Element.
      * @return Job identification
      */
-    public synchronized String submit(Object client, String version, String command, List<String> parameters, List<URI> downloads, List<URI> uploads) {
+    public synchronized String submit(Object client, String version, 
+            String command, List<String> parameters, List<URI> downloads,
+            List<URI> uploads) {
 
         if (this.client == null) {
             this.client = client;
@@ -120,7 +122,6 @@ public class Gasw {
 
         if (finishedJobs != null) {
             for (String jobID : finishedJobs) {
-                System.out.println(":::::::::::::::::::::::::::: GASW Getting Output for: " + jobID);
                 String version = jobID.contains("Local-") ? "LOCAL" : "GRID";
                 File[] outputs = OutputUtilFactory.getOutputUtil(
                         version,
@@ -152,7 +153,6 @@ public class Gasw {
                 if (!gettingOutputs) {
                     if (finishedJobs != null && finishedJobs.size() > 0) {
                         synchronized (client) {
-                            System.out.println("****************** GASW NOTIFIES jGASW: " + finishedJobs);
                             client.notify();
                         }
                     }

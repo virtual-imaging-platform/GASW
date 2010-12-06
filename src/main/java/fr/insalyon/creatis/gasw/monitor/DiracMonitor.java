@@ -96,12 +96,16 @@ public class DiracMonitor extends Monitor {
                     Job job = jobDAO.getJobByID(id);
 
                     if (status.equals("Running")) {
-                        job.setStatus(Status.RUNNING);
-                        setStatus(job);
+                        if (job.getStatus() != Status.RUNNING) {
+                            job.setStatus(Status.RUNNING);
+                            setStatus(job);
+                        }
                     } else if (status.equals("Waiting")) {
-                        job.setStatus(Status.QUEUED);
-                        job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
-                        setStatus(job);
+                        if (job.getStatus() != Status.QUEUED) {
+                            job.setStatus(Status.QUEUED);
+                            job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
+                            setStatus(job);
+                        }
                     } else {
                         if (status.equals("Done")) {
                             job.setStatus(Status.COMPLETED);
@@ -112,7 +116,6 @@ public class DiracMonitor extends Monitor {
                         }
                         setStatus(job);
                         log.info("Dirac Monitor: job \"" + job.getId() + "\" finished as \"" + status + "\"");
-                        System.out.println("****************** GASW JOB FINISHED: " + job.getId() + " - " + status);
                         finishedJobs.add(job.getId() + "--" + job.getStatus());
                     }
                 }

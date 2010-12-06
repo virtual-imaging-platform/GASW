@@ -44,8 +44,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
@@ -55,7 +53,7 @@ import org.apache.log4j.Logger;
 public abstract class Monitor extends Thread {
 
     private static final Logger log = Logger.getLogger(Monitor.class);
-    protected Map<String, Status> jobsStatus;
+//    protected Map<String, Status> jobsStatus;
     protected boolean stop;
     protected JobDAO jobDAO;
     protected NodeDAO nodeDAO;
@@ -68,7 +66,7 @@ public abstract class Monitor extends Thread {
     };
 
     protected Monitor() {
-        jobsStatus = new HashMap<String, Status>();
+//        jobsStatus = new HashMap<String, Status>();
         stop = false;
         jobDAO = DAOFactory.getDAOFactory().getJobDAO();
         nodeDAO = DAOFactory.getDAOFactory().getNodeDAO();
@@ -102,16 +100,16 @@ public abstract class Monitor extends Thread {
      * @param job
      */
     protected synchronized void setStatus(Job job) {
-        if (jobsStatus.get(job.getId()) != job.getStatus()) {
+//        if (jobsStatus.get(job.getId()) != job.getStatus()) {
             try {
-                jobsStatus.put(job.getId(), job.getStatus());
+//                jobsStatus.put(job.getId(), job.getStatus());
                 jobDAO.update(job);
                 logStatus(job);
 
             } catch (DAOException ex) {
                 logException(log, ex);
             }
-        }
+//        }
     }
 
     /**
@@ -127,9 +125,9 @@ public abstract class Monitor extends Thread {
      * @param jobID
      * @return
      */
-    public Status getStatus(String jobID) {
-        return jobsStatus.get(jobID);
-    }
+//    public Status getStatus(String jobID) {
+//        return jobsStatus.get(jobID);
+//    }
 
     protected void logException(Logger log, Exception ex) {
         log.error(ex);
