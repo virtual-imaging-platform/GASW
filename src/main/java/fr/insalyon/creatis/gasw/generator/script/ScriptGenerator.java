@@ -424,13 +424,13 @@ public class ScriptGenerator {
         sb.append(startLogSection(sectionName, m));
 
         sb.append("echo \"Downloading file " + lfn.getPath() + " on the Worker Node...\"\n");
-        sb.append("lcg-cp -v --connect-timeout " + Configuration.connectTimeout + " --sendreceive-timeout " + Configuration.sendReceiveTimeout + " --bdii-timeout " + Configuration.bdiiTimeout + " " + "--srm-timeout " + Configuration.srmTimeout + " lfn:" + lfn.getPath() + " file:`pwd`/" + name + "\n");
+        sb.append("lcg-cp -v --connect-timeout " + Configuration.CONNECT_TIMEOUT + " --sendreceive-timeout " + Configuration.SEND_RECEIVE_TIMEOUT + " --bdii-timeout " + Configuration.BDII_TIMEOUT + " " + "--srm-timeout " + Configuration.SRM_TIMEOUT + " lfn:" + lfn.getPath() + " file:`pwd`/" + name + "\n");
         sb.append("if [ $? = 0 ];\n"
                 + "then\n"
                 + "  echo \"lcg-cp worked fine\";\n"
                 + "else\n"
                 + "  echo \"lcg-cp failed: retrying once\";\n"
-                + "  lcg-cp -v --connect-timeout " + Configuration.connectTimeout + " --sendreceive-timeout " + Configuration.sendReceiveTimeout + " --bdii-timeout " + Configuration.bdiiTimeout + " " + "--srm-timeout " + Configuration.srmTimeout + " lfn:" + lfn.getPath() + " file:`pwd`/" + name + "\n"
+                + "  lcg-cp -v --connect-timeout " + Configuration.CONNECT_TIMEOUT + " --sendreceive-timeout " + Configuration.SEND_RECEIVE_TIMEOUT + " --bdii-timeout " + Configuration.BDII_TIMEOUT + " " + "--srm-timeout " + Configuration.SRM_TIMEOUT + " lfn:" + lfn.getPath() + " file:`pwd`/" + name + "\n"
                 + "  if [ $? != 0 ];\n"
                 + "  then\n"
                 + "    echo \"lcg-cp failed again\";\n"
@@ -527,7 +527,7 @@ public class ScriptGenerator {
         sb.append("  local FILE=$2\n");
         sb.append("  local nrep=$3\n");
         sb.append("  local SELIST=${SE}\n");
-        sb.append("  local OPTS=\"--connect-timeout " + Configuration.connectTimeout + " --sendreceive-timeout " + Configuration.sendReceiveTimeout + " --bdii-timeout " + Configuration.bdiiTimeout + " --srm-timeout " + Configuration.srmTimeout + "\"\n");
+        sb.append("  local OPTS=\"--connect-timeout " + Configuration.CONNECT_TIMEOUT + " --sendreceive-timeout " + Configuration.SEND_RECEIVE_TIMEOUT + " --bdii-timeout " + Configuration.BDII_TIMEOUT + " --srm-timeout " + Configuration.SRM_TIMEOUT + "\"\n");
         sb.append("  local DEST=\"\"\n");
         sb.append("  if [ \"${USE_CLOSE_SE}\" = \"true\" ] && [ \"${VO_BIOMED_DEFAULT_SE}\" != \"\" ]\n");
         sb.append("  then\n");

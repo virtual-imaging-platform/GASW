@@ -42,7 +42,9 @@ import fr.insalyon.creatis.gasw.dao.DAOException;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Socket;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.log4j.Logger;
@@ -54,9 +56,11 @@ import org.apache.log4j.Logger;
 public class DiracMonitor extends Monitor {
 
     private static final Logger log = Logger.getLogger(DiracMonitor.class);
+    private static final String SEPARATOR = "##";
     private static DiracMonitor instance;
     private DataOutputStream dos;
     private DataInputStream dis;
+    private String id;
 
     public synchronized static DiracMonitor getInstance() {
         if (instance == null) {
@@ -73,6 +77,7 @@ public class DiracMonitor extends Monitor {
                     Configuration.NOTIFICATION_PORT);
             dos = new DataOutputStream(socket.getOutputStream());
             dis = new DataInputStream(socket.getInputStream());
+            id = new BigInteger(60, new SecureRandom()).toString(32);
 
         } catch (IOException ex) {
             logException(log, ex);
@@ -85,7 +90,7 @@ public class DiracMonitor extends Monitor {
         while (!stop) {
             try {
                 String message = dis.readUTF();
-                String[] jobStatusArray = message.split("##");
+                String[] jobStatusArray = message.split(SEPARATOR);
                 List<String> finishedJobs = new ArrayList<String>();
 
                 for (String s : jobStatusArray) {
@@ -140,7 +145,7 @@ public class DiracMonitor extends Monitor {
             job.setCommand(command);
             add(job, fileName);
             setStatus(job);
-            dos.writeUTF(jobID);
+            dos.writeUTF(jobID + SEPARATOR + id);
             dos.flush();
         } catch (IOException ex) {
             logException(log, ex);

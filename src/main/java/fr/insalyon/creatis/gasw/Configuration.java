@@ -58,10 +58,10 @@ public class Configuration {
     public static int RETRY_COUNT = 3;
     public static int TIMEOUT = 100000;
     // timeouts used in lcg-c*
-    public static int connectTimeout = 10;
-    public static int sendReceiveTimeout = 900;
-    public static int bdiiTimeout = 10;
-    public static int srmTimeout = 30;
+    public static int CONNECT_TIMEOUT = 10;
+    public static int SEND_RECEIVE_TIMEOUT = 900;
+    public static int BDII_TIMEOUT = 10;
+    public static int SRM_TIMEOUT = 30;
     // Directories
     public static final String SCRIPT_ROOT = "./sh";
     public static final String JDL_ROOT = "./jdl";
