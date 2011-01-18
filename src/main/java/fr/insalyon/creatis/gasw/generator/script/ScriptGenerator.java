@@ -113,6 +113,7 @@ public class ScriptGenerator {
 
         sb.append("START=`date +%s`; echo \"START date is ${START}\"\n");
         sb.append("ENV=" + Configuration.ENV + "\n");
+        sb.append("__MOTEUR_ENV=" + Configuration.ENV + "\n");
         sb.append("SE=" + Configuration.SE + "\n");
         sb.append("USE_CLOSE_SE=" + Configuration.USE_CLOSE_SE + "\n");
         String path = new File("").getAbsolutePath();
@@ -296,21 +297,32 @@ public class ScriptGenerator {
     /** generates the code to download all the inputs
      *
      * @param downloads the list of URIs to be downloaded
-     * @return a string containig the code
+     * @return a string containing the code
      */
     public String inputs(List<URI> downloads) {
 
         StringBuilder sb = new StringBuilder();
 
         if (downloads.size() > 0) {
+            String edgesVar = "__MOTEUR_IN=\"";
             String sectionName = "inputs_download";
             sb.append(startLogSection(sectionName, null));
+            boolean first = true;
             for (URI lfn : downloads) {
                 sb.append(copyFromCacheCommand(lfn));
+                if (first) {
+                    edgesVar += lfn;
+                    first = false;
+                } else {
+                    edgesVar += ";" + lfn;
+                }
             }
+            edgesVar += "\"";
             sb.append("chmod 755 *; AFTERDOWNLOAD=`date +%s`;\n\n");
             sb.append(stopLogSection(sectionName));
+        sb.append(edgesVar+"\n");
         }
+ 
         return sb.toString();
     }
 
@@ -322,13 +334,15 @@ public class ScriptGenerator {
      */
     public String applicationExecution(String command, List<String> parameters) {
         StringBuilder sb = new StringBuilder();
+        String edgesVar = "__MOTEUR_ARGS=";
+        String edgesVar1 = "__MOTEUR_EXE=" + command;
         String commandLine = "export LD_LIBRARY_PATH=${PWD:${LD_LIBRARY_PATH}}\n ./" + command;
         for (String param : parameters) {
             //removes trailing "$rep-" string
             if (param.contains("$rep-")) {
                 param = param.substring(0, param.indexOf("$rep-"));
             }
-
+            edgesVar += " " + param;
             commandLine += " " + param;
         }
         String sectionName = "application_execution";
@@ -346,6 +360,8 @@ public class ScriptGenerator {
         sb.append("BEFOREUPLOAD=`date +%s`;\n");
         sb.append("echo \"Execution time was `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}`s\"\n\n");
         sb.append(stopLogSection(sectionName));
+        sb.append(edgesVar+"\n");
+        sb.append(edgesVar1+"\n");
         return sb.toString();
     }
 
@@ -356,11 +372,21 @@ public class ScriptGenerator {
      */
     public String resultsUpload(List<URI> uploads) {
         StringBuilder sb = new StringBuilder();
+        String edgesVar = "__MOTEUR_OUT=\"";
         String sectionName = "results_upload";
         sb.append(startLogSection(sectionName, null));
+        boolean first = true;
         for (URI lfn : uploads) {
+            if (first) {
+                first = false;
+                edgesVar += lfn;
+
+            } else {
+                edgesVar += ";" + lfn;
+            }
             sb.append(getUploadCommand(false, lfn));
         }
+        edgesVar += "\"";
         sb.append(stopLogSection(sectionName));
         sb.append("cleanup;\n"
                 + "STOP=`date +%s`\n"
@@ -375,6 +401,7 @@ public class ScriptGenerator {
                 + "echo \"Exiting with return value 0 (HACK for ARC: writing it in ${DIAG})\"; "
                 + "echo \"exitcode=0\" >> ${DIAG} ; "
                 + "exit 0;");
+        sb.append(edgesVar+"\n");
         return sb.toString();
     }
 
@@ -648,10 +675,11 @@ public class ScriptGenerator {
      * @return the returned String (not a URI any more)
      */
     private String removeLFCHost(URI lfn) {
-        if(lfn.toString().contains("/grid"))
+        if (lfn.toString().contains("/grid")) {
             return lfn.getPath().substring(lfn.getPath().indexOf("/grid"));
-        else
+        } else {
             return lfn.toString();
+        }
     }
 
     private String removeLFCHost(String lfn) {
