@@ -334,8 +334,8 @@ public class ScriptGenerator {
      */
     public String applicationExecution(String command, List<String> parameters) {
         StringBuilder sb = new StringBuilder();
-        String edgesVar = "__MOTEUR_ARGS=";
-        String edgesVar1 = "__MOTEUR_EXE=" + command;
+        String edgesVar = "__MOTEUR_ARGS=\"";
+        String edgesVar1 = "__MOTEUR_EXE=\"" + command;
         String commandLine = "export LD_LIBRARY_PATH=${PWD:${LD_LIBRARY_PATH}}\n ./" + command;
         for (String param : parameters) {
             //removes trailing "$rep-" string
@@ -360,8 +360,8 @@ public class ScriptGenerator {
         sb.append("BEFOREUPLOAD=`date +%s`;\n");
         sb.append("echo \"Execution time was `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}`s\"\n\n");
         sb.append(stopLogSection(sectionName));
-        sb.append(edgesVar+"\n");
-        sb.append(edgesVar1+"\n");
+        sb.append(edgesVar+"\"\n");
+        sb.append(edgesVar1+"\"\n");
         return sb.toString();
     }
 
@@ -372,7 +372,7 @@ public class ScriptGenerator {
      */
     public String resultsUpload(List<URI> uploads) {
         StringBuilder sb = new StringBuilder();
-        String edgesVar = "__MOTEUR_OUT=\"";
+        String edgesVar = "\n__MOTEUR_OUT=\"";
         String sectionName = "results_upload";
         sb.append(startLogSection(sectionName, null));
         boolean first = true;
