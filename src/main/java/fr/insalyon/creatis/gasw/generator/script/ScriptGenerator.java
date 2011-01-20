@@ -119,6 +119,7 @@ public class ScriptGenerator {
         String path = new File("").getAbsolutePath();
         sb.append("export MOTEUR_WORKFLOWID=" + path.substring(path.lastIndexOf("/") + 1) + "\n");
         sb.append("export $ENV;\n\n");
+        sb.append("export PATH=${VLET_INSTALL}/bin:$PATH\n\n");
         sb.append("DIAG=/home/grid/session/`basename ${PWD}`.diag;\n");
         sb.append("DIRNAME=`basename $0 .sh`;\n");
         sb.append("mkdir ${DIRNAME};\n");
