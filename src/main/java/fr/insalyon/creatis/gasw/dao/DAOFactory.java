@@ -53,6 +53,11 @@ public abstract class DAOFactory {
         }
     }
 
+    protected DAOFactory() {
+        connect();
+        createTables();
+    }
+
     protected abstract void connect();
 
     protected abstract void createTables();

@@ -69,6 +69,11 @@ public class Configuration {
     public static final String ERR_ROOT = "./err";
     public static final String CACHE_DIR = "../cache";
     public static final String CACHE_FILE = "cache.txt";
+    // Versions
+    public static final String VERSION_GRID = "GRID";
+    public static final String VERSION_LOCAL = "LOCAL";
+    public static final String GRID_DIRAC = "DIRAC";
+    public static final String GRID_GLITE = "GLITE_WMS";
     // DIRAC Configuration
     public static String NOTIFICATION_HOST = "ui.egee.creatis.insa-lyon.fr";
     public static int NOTIFICATION_PORT = 9005;

@@ -46,14 +46,14 @@ public class ExecutorFactory {
 
     public static Executor getExecutor(String version, String command, List<String> parameters, List<URI> downloads, List<URI> uploads) {
 
-        if (version.equals("GRID")) {
-            if (Configuration.GRID.equals("DIRAC")) {
+        if (version.equals(Configuration.VERSION_GRID)) {
+            if (Configuration.GRID.equals(Configuration.GRID_DIRAC)) {
                 return new DiracExecutor(version, command, parameters, downloads, uploads);
             }
-            if (Configuration.GRID.equals("GLITE_WMS")) {
+            if (Configuration.GRID.equals(Configuration.GRID_GLITE)) {
                 return new GliteExecutor(version, command, parameters, downloads, uploads);
             }
-        } else if (version.equals("LOCAL")) {
+        } else if (version.equals(Configuration.VERSION_LOCAL)) {
             return new LocalExecutor(version, command, parameters, downloads, uploads);
         }
 

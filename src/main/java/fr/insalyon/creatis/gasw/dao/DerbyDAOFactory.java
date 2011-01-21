@@ -63,8 +63,7 @@ public class DerbyDAOFactory extends DAOFactory {
     }
 
     private DerbyDAOFactory() {
-        connect();
-        createTables();
+        super();
     }
 
     @Override

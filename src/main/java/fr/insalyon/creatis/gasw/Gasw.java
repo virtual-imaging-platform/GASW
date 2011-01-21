@@ -97,7 +97,8 @@ public class Gasw {
         if (this.client == null) {
             this.client = client;
         }
-        Executor executor = ExecutorFactory.getExecutor(version, command, parameters, downloads, uploads);
+        Executor executor = ExecutorFactory.getExecutor(version, command,
+                parameters, downloads, uploads);
         executor.preProcess();
         return executor.submit();
     }

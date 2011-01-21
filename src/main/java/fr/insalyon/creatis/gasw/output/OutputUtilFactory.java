@@ -45,14 +45,14 @@ public class OutputUtilFactory {
 
     public static OutputUtil getOutputUtil(String version, int startTime) {
 
-        if (version.equals("GRID")) {
-            if (Configuration.GRID.equals("DIRAC")) {
+        if (version.equals(Configuration.VERSION_GRID)) {
+            if (Configuration.GRID.equals(Configuration.GRID_DIRAC)) {
                 return new DiracOutputUtil(startTime);
             }
-            if (Configuration.GRID.equals("GLITE_WMS")) {
+            if (Configuration.GRID.equals(Configuration.GRID_GLITE)) {
                 return new GliteOutputUtil(startTime);
             }
-        } else if (version.equals("LOCAL")) {
+        } else if (version.equals(Configuration.VERSION_LOCAL)) {
             return new LocalOutputUtil(startTime);
         }
 

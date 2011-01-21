@@ -44,11 +44,11 @@ public class MonitorFactory {
 
     public static Monitor getMonitor(String version) {
 
-        if (version.equals("GRID")) {
-            if (Configuration.GRID.equals("DIRAC")) {
+        if (version.equals(Configuration.VERSION_GRID)) {
+            if (Configuration.GRID.equals(Configuration.GRID_DIRAC)) {
                 return DiracMonitor.getInstance();
             }
-            if (Configuration.GRID.equals("GLITE_WMS")) {
+            if (Configuration.GRID.equals(Configuration.GRID_GLITE)) {
                 return GliteMonitor.getInstance();
             }
         } else {
