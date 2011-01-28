@@ -139,10 +139,10 @@ public class DiracMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(String jobID, String command, String fileName) {
+    public synchronized void add(String jobID, String symbolicName, String fileName) {
         try {
             Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
-            job.setCommand(command);
+            job.setCommand(symbolicName);
             add(job, fileName);
             setStatus(job);
             dos.writeUTF(jobID + SEPARATOR + id);

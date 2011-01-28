@@ -35,6 +35,8 @@
 package fr.insalyon.creatis.gasw.executor;
 
 import fr.insalyon.creatis.gasw.Configuration;
+import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.release.Release;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,7 +55,7 @@ public abstract class Executor {
 
     private static final Logger log = Logger.getLogger(Executor.class);
     protected String version;
-    protected String command;
+    protected Release release;
     protected List<String> parameters;
     protected List<URI> downloads;
     protected List<URI> uploads;
@@ -62,15 +64,16 @@ public abstract class Executor {
     private boolean firstExecution;
 
     /**
-     * 
-     * @param command Command to be performed.
+     *
+     * @param version
+     * @param release
      * @param parameters List of parameters associated with the command.
      * @param downloads List of input files to be downloaded in the worker node.
      * @param uploads List of output files to be uploaded to a Storage Element.
      */
-    public Executor(String version, String command, List<String> parameters, List<URI> downloads, List<URI> uploads) {
+    public Executor(String version, Release release, List<String> parameters, List<URI> downloads, List<URI> uploads) {
         this.version = version;
-        this.command = command;
+        this.release = release;
         this.parameters = parameters;
         this.downloads = downloads;
         this.uploads = uploads;
@@ -78,7 +81,7 @@ public abstract class Executor {
     }
 
     /**
-     * Generates the script and job files for the requested command accordingly
+     * Generates the script and job files for the requested release accordingly
      * to the Grid type defined in the configuration file.
      */
     public abstract void preProcess();
@@ -89,8 +92,8 @@ public abstract class Executor {
     public String submit() {
         long nanoTime = System.nanoTime();
         if (!firstExecution) {
-            scriptName = getNewName(scriptName, nanoTime, ".sh", Configuration.SCRIPT_ROOT);
-            jdlName = getNewName(jdlName, nanoTime, ".jdl", Configuration.JDL_ROOT);
+            scriptName = getNewName(scriptName, nanoTime, ".sh", Constants.SCRIPT_ROOT);
+            jdlName = getNewName(jdlName, nanoTime, ".jdl", Constants.JDL_ROOT);
         } else {
             firstExecution = false;
         }
@@ -99,25 +102,22 @@ public abstract class Executor {
 
     /**
      * 
-     * @param command Command to be performed.
+     * @param symbolicName Symbolic name of the execution.
      * @param script Generated script to be saved in a file.
      * @return Name of the script file.
      */
-    protected String publishScript(String command, String script) {
+    protected String publishScript(String symbolicName, String script) {
 
         try {
-            File scriptsDir = new File(Configuration.SCRIPT_ROOT);
+            File scriptsDir = new File(Constants.SCRIPT_ROOT);
             if (!scriptsDir.exists()) {
                 scriptsDir.mkdir();
             }
 
-            String fileName = command;
-            if (fileName.contains(".")) {
-                fileName = fileName.substring(0, fileName.lastIndexOf("."));
-            }
+            String fileName = symbolicName.replace(" ", "-");
             fileName += "-" + System.nanoTime() + ".sh";
 
-            FileWriter fstream = new FileWriter(Configuration.SCRIPT_ROOT + "/" + fileName);
+            FileWriter fstream = new FileWriter(Constants.SCRIPT_ROOT + "/" + fileName);
             BufferedWriter out = new BufferedWriter(fstream);
             out.write(script);
             out.close();
@@ -139,14 +139,14 @@ public abstract class Executor {
     protected String publishJdl(String scriptName, String jdl) {
 
         try {
-            File scriptsDir = new File(Configuration.JDL_ROOT);
+            File scriptsDir = new File(Constants.JDL_ROOT);
             if (!scriptsDir.exists()) {
                 scriptsDir.mkdir();
             }
 
             String fileName = scriptName.substring(0, scriptName.lastIndexOf(".")) + ".jdl";
 
-            FileWriter fstream = new FileWriter(Configuration.JDL_ROOT + "/" + fileName);
+            FileWriter fstream = new FileWriter(Constants.JDL_ROOT + "/" + fileName);
             BufferedWriter out = new BufferedWriter(fstream);
             out.write(jdl);
             out.close();
@@ -176,22 +176,18 @@ public abstract class Executor {
         return jdlName;
     }
 
-    public String getCommand() {
-        return command;
+    public Release getRelease() {
+        return release;
     }
 
     private String getNewName(String name, long nanoTime, String extension, String directory) {
-        String newName = name.substring(0, name.lastIndexOf("-") + 1) + nanoTime + extension;
-        copyFile(new File(directory + "/" + name), new File(directory + "/" + newName));
-        return newName;
-    }
-
-    private void copyFile(File in, File out) {
+        
         try {
+            String newName = name.substring(0, name.lastIndexOf("-") + 1) + nanoTime + extension;
             FileOutputStream fos = null;
-            FileInputStream fis = new FileInputStream(in);
+            FileInputStream fis = new FileInputStream( new File(directory + "/" + name) );
 
-            fos = new FileOutputStream(out);
+            fos = new FileOutputStream( new File(directory + "/" + newName) );
             byte[] buf = new byte[1024];
             int i = 0;
             while ((i = fis.read(buf)) != -1) {
@@ -203,9 +199,11 @@ public abstract class Executor {
             if (fos != null) {
                 fos.close();
             }
+            return newName;
 
         } catch (Exception ex) {
             logException(log, ex);
-        }
+            return null;
+        }       
     }
 }

@@ -153,9 +153,9 @@ public class GliteMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(String jobID, String command, String fileName) {
+    public synchronized void add(String jobID, String symbolicName, String fileName) {
         Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
-        job.setCommand(command);
+        job.setCommand(symbolicName);
         add(job, fileName);
         setStatus(job);
         monitoredJobs.add(jobID);

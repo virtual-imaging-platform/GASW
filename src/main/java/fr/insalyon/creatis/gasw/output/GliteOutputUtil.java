@@ -34,7 +34,7 @@
  */
 package fr.insalyon.creatis.gasw.output;
 
-import fr.insalyon.creatis.gasw.Configuration;
+import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
@@ -85,8 +85,8 @@ public class GliteOutputUtil extends OutputUtil {
                     }
                 }
 
-                File stdOut = getStdFile(job, ".out", Configuration.OUT_ROOT, outputPath);
-                File stdErr = getStdFile(job, ".err", Configuration.ERR_ROOT, outputPath);
+                File stdOut = getStdFile(job, ".out", Constants.OUT_ROOT, outputPath);
+                File stdErr = getStdFile(job, ".err", Constants.ERR_ROOT, outputPath);
 
                 File outTempDir = new File(outputPath);
                 outTempDir.delete();
@@ -95,8 +95,8 @@ public class GliteOutputUtil extends OutputUtil {
                 return new File[]{stdOut, stdErr};
 
             } else {
-                File stdOut = getKilledStdFile(job, ".out", Configuration.OUT_ROOT);
-                File stdErr = getKilledStdFile(job, ".err", Configuration.ERR_ROOT);
+                File stdOut = getKilledStdFile(job, ".out", Constants.OUT_ROOT);
+                File stdErr = getKilledStdFile(job, ".err", Constants.ERR_ROOT);
 
                 return new File[]{stdOut, stdErr};
             }

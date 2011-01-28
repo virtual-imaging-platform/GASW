@@ -32,31 +32,69 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
+package fr.insalyon.creatis.gasw.release;
 
-package fr.insalyon.creatis.gasw.output;
-
-import fr.insalyon.creatis.gasw.Configuration;
-import fr.insalyon.creatis.gasw.Constants;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author Rafael Silva
  */
-public class OutputUtilFactory {
+public class Release {
 
-    public static OutputUtil getOutputUtil(String version, int startTime) {
+    private String symbolicName;
+    private List<Infrastructure> infrastructures;
+    private List<EnvVariable> configurations;
+    private URI attachement;
 
-        if (version.equals(Constants.VERSION_GRID)) {
-            if (Configuration.GRID.equals(Constants.GRID_DIRAC)) {
-                return new DiracOutputUtil(startTime);
-            }
-            if (Configuration.GRID.equals(Constants.GRID_GLITE)) {
-                return new GliteOutputUtil(startTime);
-            }
-        } else if (version.equals(Constants.VERSION_LOCAL)) {
-            return new LocalOutputUtil(startTime);
+    public Release(String symbolicName, Infrastructure infrastructure,
+            List<EnvVariable> configurations, URI attachement) {
+
+        this.symbolicName = symbolicName;
+        this.infrastructures = new ArrayList<Infrastructure>();
+        this.infrastructures.add(infrastructure);
+        this.configurations = configurations;
+        this.attachement = attachement;
+    }
+
+    public Release(String symbolicName, List<Infrastructure> infrastructures,
+            List<EnvVariable> configurations, URI attachement) {
+
+        this.symbolicName = symbolicName;
+        this.infrastructures = infrastructures;
+        this.configurations = configurations;
+        this.attachement = attachement;
+    }
+
+    public String getSymbolicName() {
+        return symbolicName;
+    }
+
+    public URI getAttachement() {
+        return attachement;
+    }
+
+    public List<EnvVariable> getConfigurations() {
+        return configurations;
+    }
+
+    public List<Infrastructure> getInfrastructures() {
+        return infrastructures;
+    }
+
+    public boolean hasInfrastructures() {
+        if (infrastructures != null) {
+            return !infrastructures.isEmpty();
         }
+        return false;
+    }
 
-        return null;
+    public boolean hasConfigurations() {
+        if (configurations != null) {
+            return !configurations.isEmpty();
+        }
+        return false;
     }
 }

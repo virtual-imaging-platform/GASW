@@ -34,10 +34,11 @@
  */
 package fr.insalyon.creatis.gasw.executor;
 
-import fr.insalyon.creatis.gasw.Configuration;
-import fr.insalyon.creatis.gasw.generator.jdl.JdlGenerator;
-import fr.insalyon.creatis.gasw.generator.script.ScriptGenerator;
+import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.executor.generator.jdl.JdlGenerator;
+import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
+import fr.insalyon.creatis.gasw.release.Release;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -52,8 +53,8 @@ public class GliteExecutor extends Executor {
 
     private static final Logger log = Logger.getLogger(GliteExecutor.class);
 
-    public GliteExecutor(String version, String command, List<String> parameters, List<URI> downloads, List<URI> uploads) {
-        super(version, command, parameters, downloads, uploads);
+    public GliteExecutor(String version, Release release, List<String> parameters, List<URI> downloads, List<URI> uploads) {
+        super(version, release, parameters, downloads, uploads);
     }
 
     @Override
@@ -66,7 +67,7 @@ public class GliteExecutor extends Executor {
     public String submit() {
         try {
             super.submit();
-            String exec = "glite-wms-job-submit -a " + Configuration.JDL_ROOT + "/" + jdlName;
+            String exec = "glite-wms-job-submit -a " + Constants.JDL_ROOT + "/" + jdlName;
             Process execution = Runtime.getRuntime().exec(exec);
             execution.waitFor();
 
@@ -91,7 +92,7 @@ public class GliteExecutor extends Executor {
 
             String jobID = cout.substring(cout.lastIndexOf("https://"), cout.length()).trim();
             jobID = jobID.substring(0, jobID.indexOf("=")).trim();
-            MonitorFactory.getMonitor(version).add(jobID, command, jdlName);
+            MonitorFactory.getMonitor(version).add(jobID, release.getSymbolicName(), jdlName);
             log.info("Glite Executor Job ID: " + jobID);
             return jobID;
 
@@ -114,14 +115,16 @@ public class GliteExecutor extends Executor {
 
         sb.append(generator.header());
         sb.append(generator.hostConfiguration());
-        sb.append(generator.background());
+        sb.append(generator.backgroundScript());
         sb.append(generator.cleanupCommand());
         sb.append(generator.uploadTest(uploads));
-        sb.append(generator.inputs(downloads));
-        sb.append(generator.applicationExecution(command, parameters));
+        sb.append(generator.inputs(release, downloads));
+        sb.append(generator.applicationEnvironment(release));
+        sb.append(generator.applicationExecution(parameters));
         sb.append(generator.resultsUpload(uploads));
+        sb.append(generator.footer());
 
-        return publishScript(command, sb.toString());
+        return publishScript(release.getSymbolicName(), sb.toString());
     }
 
     /**

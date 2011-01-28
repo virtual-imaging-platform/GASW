@@ -32,31 +32,62 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
+package fr.insalyon.creatis.gasw.release;
 
-package fr.insalyon.creatis.gasw.output;
-
-import fr.insalyon.creatis.gasw.Configuration;
-import fr.insalyon.creatis.gasw.Constants;
+import java.net.URI;
+import java.util.List;
 
 /**
  *
  * @author Rafael Silva
  */
-public class OutputUtilFactory {
+public class Execution {
 
-    public static OutputUtil getOutputUtil(String version, int startTime) {
+    public enum JobType {
 
-        if (version.equals(Constants.VERSION_GRID)) {
-            if (Configuration.GRID.equals(Constants.GRID_DIRAC)) {
-                return new DiracOutputUtil(startTime);
-            }
-            if (Configuration.GRID.equals(Constants.GRID_GLITE)) {
-                return new GliteOutputUtil(startTime);
-            }
-        } else if (version.equals(Constants.VERSION_LOCAL)) {
-            return new LocalOutputUtil(startTime);
+        NORMAL,
+        MPI_LAM,
+        MPI_MPICH,
+        MPI_MPICH2
+    }
+    private JobType type;
+    private String target;
+    private List<EnvVariable> boundEnvironment;
+    private URI boundArtifact;
+
+    public Execution(String type, String target,
+            List<EnvVariable> boundEnvironment, URI boundArtifact) {
+
+        try {
+            this.type = JobType.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            this.type = JobType.NORMAL;
         }
+        this.target = target;
+        this.boundEnvironment = boundEnvironment;
+        this.boundArtifact = boundArtifact;
+    }
 
-        return null;
+    public JobType getType() {
+        return type;
+    }
+
+    public URI getBoundArtifact() {
+        return boundArtifact;
+    }
+
+    public List<EnvVariable> getBoundEnvironment() {
+        return boundEnvironment;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public boolean hasBoundEnvironment() {
+        if (boundEnvironment != null) {
+            return !boundEnvironment.isEmpty();
+        }
+        return false;
     }
 }

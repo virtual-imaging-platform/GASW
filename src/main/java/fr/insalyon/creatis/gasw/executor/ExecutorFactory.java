@@ -35,6 +35,8 @@
 package fr.insalyon.creatis.gasw.executor;
 
 import fr.insalyon.creatis.gasw.Configuration;
+import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.release.Release;
 import java.net.URI;
 import java.util.List;
 
@@ -44,17 +46,17 @@ import java.util.List;
  */
 public class ExecutorFactory {
 
-    public static Executor getExecutor(String version, String command, List<String> parameters, List<URI> downloads, List<URI> uploads) {
+    public static Executor getExecutor(String version, Release release, List<String> parameters, List<URI> downloads, List<URI> uploads) {
 
-        if (version.equals(Configuration.VERSION_GRID)) {
-            if (Configuration.GRID.equals(Configuration.GRID_DIRAC)) {
-                return new DiracExecutor(version, command, parameters, downloads, uploads);
+        if (version.equals(Constants.VERSION_GRID)) {
+            if (Configuration.GRID.equals(Constants.GRID_DIRAC)) {
+                return new DiracExecutor(version, release, parameters, downloads, uploads);
             }
-            if (Configuration.GRID.equals(Configuration.GRID_GLITE)) {
-                return new GliteExecutor(version, command, parameters, downloads, uploads);
+            if (Configuration.GRID.equals(Constants.GRID_GLITE)) {
+                return new GliteExecutor(version, release, parameters, downloads, uploads);
             }
-        } else if (version.equals(Configuration.VERSION_LOCAL)) {
-            return new LocalExecutor(version, command, parameters, downloads, uploads);
+        } else if (version.equals(Constants.VERSION_LOCAL)) {
+            return new LocalExecutor(version, release, parameters, downloads, uploads);
         }
 
         return null;

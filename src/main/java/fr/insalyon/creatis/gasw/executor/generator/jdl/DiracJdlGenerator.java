@@ -32,31 +32,29 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
-package fr.insalyon.creatis.gasw.output;
-
-import fr.insalyon.creatis.gasw.Configuration;
-import fr.insalyon.creatis.gasw.Constants;
+package fr.insalyon.creatis.gasw.executor.generator.jdl;
 
 /**
  *
  * @author Rafael Silva
  */
-public class OutputUtilFactory {
+public class DiracJdlGenerator {
 
-    public static OutputUtil getOutputUtil(String version, int startTime) {
+    public static DiracJdlGenerator instance;
 
-        if (version.equals(Constants.VERSION_GRID)) {
-            if (Configuration.GRID.equals(Constants.GRID_DIRAC)) {
-                return new DiracOutputUtil(startTime);
-            }
-            if (Configuration.GRID.equals(Constants.GRID_GLITE)) {
-                return new GliteOutputUtil(startTime);
-            }
-        } else if (version.equals(Constants.VERSION_LOCAL)) {
-            return new LocalOutputUtil(startTime);
+    public static DiracJdlGenerator getInstance() {
+        if (instance == null) {
+            instance = new DiracJdlGenerator();
         }
+        return instance;
+    }
 
-        return null;
+    private DiracJdlGenerator() {
+    }
+
+    public String parseRequirement(String requirement) {
+        StringBuilder sb = new StringBuilder();
+
+        return sb.toString();
     }
 }

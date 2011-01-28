@@ -32,31 +32,27 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
-package fr.insalyon.creatis.gasw.output;
-
-import fr.insalyon.creatis.gasw.Configuration;
-import fr.insalyon.creatis.gasw.Constants;
+package fr.insalyon.creatis.gasw.release;
 
 /**
  *
  * @author Rafael Silva
  */
-public class OutputUtilFactory {
+public class EnvVariable {
 
-    public static OutputUtil getOutputUtil(String version, int startTime) {
+    private String name;
+    private String value;
 
-        if (version.equals(Constants.VERSION_GRID)) {
-            if (Configuration.GRID.equals(Constants.GRID_DIRAC)) {
-                return new DiracOutputUtil(startTime);
-            }
-            if (Configuration.GRID.equals(Constants.GRID_GLITE)) {
-                return new GliteOutputUtil(startTime);
-            }
-        } else if (version.equals(Constants.VERSION_LOCAL)) {
-            return new LocalOutputUtil(startTime);
-        }
+    public EnvVariable(String name, String value) {
+        this.name = name;
+        this.value = value;
+    }
 
-        return null;
+    public String getName() {
+        return name;
+    }
+
+    public String getValue() {
+        return value;
     }
 }

@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw.output;
 
 import fr.insalyon.creatis.gasw.Configuration;
+import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
@@ -67,8 +68,8 @@ public class DiracOutputUtil extends OutputUtil {
                 Process execution = Runtime.getRuntime().exec(exec);
                 execution.waitFor();
 
-                File stdOut = getStdFile(job, ".out", Configuration.OUT_ROOT);
-                File stdErr = getStdFile(job, ".err", Configuration.ERR_ROOT);
+                File stdOut = getStdFile(job, ".out", Constants.OUT_ROOT);
+                File stdErr = getStdFile(job, ".err", Constants.ERR_ROOT);
 
                 File outTempDir = new File("./" + jobID);
                 outTempDir.delete();
@@ -77,8 +78,8 @@ public class DiracOutputUtil extends OutputUtil {
                 return new File[]{stdOut, stdErr};
 
             } else {
-                File stdOut = getKilledStdFile(job, ".out", Configuration.OUT_ROOT);
-                File stdErr = getKilledStdFile(job, ".err", Configuration.ERR_ROOT);
+                File stdOut = getKilledStdFile(job, ".out", Constants.OUT_ROOT);
+                File stdErr = getKilledStdFile(job, ".err", Constants.ERR_ROOT);
 
                 return new File[]{stdOut, stdErr};
             }

@@ -32,31 +32,49 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
+package fr.insalyon.creatis.gasw.executor.generator.script;
 
-package fr.insalyon.creatis.gasw.output;
-
-import fr.insalyon.creatis.gasw.Configuration;
-import fr.insalyon.creatis.gasw.Constants;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  *
  * @author Rafael Silva
  */
-public class OutputUtilFactory {
+public abstract class AbstractGenerator {
 
-    public static OutputUtil getOutputUtil(String version, int startTime) {
-
-        if (version.equals(Constants.VERSION_GRID)) {
-            if (Configuration.GRID.equals(Constants.GRID_DIRAC)) {
-                return new DiracOutputUtil(startTime);
+    /** starts a log section
+     *
+     * @return
+     */
+    protected String startLogSection(String sectionType, Map params) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("echo \"<" + sectionType);
+        if (params != null) {
+            for (Object obj : params.entrySet()) {
+                Entry e = (Entry) obj;
+                sb.append(" " + e.getKey() + "=\\\"" + e.getValue() + "\\\"");
             }
-            if (Configuration.GRID.equals(Constants.GRID_GLITE)) {
-                return new GliteOutputUtil(startTime);
-            }
-        } else if (version.equals(Constants.VERSION_LOCAL)) {
-            return new LocalOutputUtil(startTime);
         }
+        sb.append(">\"");
+        String out = sb.toString() + ">&1\n";
+        String err = sb.toString() + ">&2\n\n";
 
-        return null;
+        return out + err;
+    }
+
+    /** stops a log section
+     *
+     * @return
+     */
+    protected String stopLogSection(String sectionType) {
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("echo \"</" + sectionType + ">\">&1\n");
+        sb.append("echo \"</" + sectionType + ">\">&2\n");
+        sb.append("\n");
+
+        return sb.toString();
     }
 }

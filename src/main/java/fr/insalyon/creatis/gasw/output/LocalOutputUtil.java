@@ -34,7 +34,7 @@
  */
 package fr.insalyon.creatis.gasw.output;
 
-import fr.insalyon.creatis.gasw.Configuration;
+import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
@@ -62,8 +62,8 @@ public class LocalOutputUtil extends OutputUtil {
             Job job = jobDAO.getJobByID(jobID);
 
             return new File[]{
-                        new File(Configuration.OUT_ROOT + "/" + job.getFileName() + ".sh.out"),
-                        new File(Configuration.ERR_ROOT + "/" + job.getFileName() + ".sh.err")};
+                        new File(Constants.OUT_ROOT + "/" + job.getFileName() + ".sh.out"),
+                        new File(Constants.ERR_ROOT + "/" + job.getFileName() + ".sh.err")};
 
         } catch (DAOException ex) {
             logException(log, ex);

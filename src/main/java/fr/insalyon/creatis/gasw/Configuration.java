@@ -34,7 +34,10 @@
  */
 package fr.insalyon.creatis.gasw;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Properties;
 import org.apache.log4j.Logger;
 
@@ -57,23 +60,6 @@ public class Configuration {
     public static String REQUIREMENTS = "";
     public static int RETRY_COUNT = 3;
     public static int TIMEOUT = 100000;
-    // timeouts used in lcg-c*
-    public static int CONNECT_TIMEOUT = 10;
-    public static int SEND_RECEIVE_TIMEOUT = 900;
-    public static int BDII_TIMEOUT = 10;
-    public static int SRM_TIMEOUT = 30;
-    // Directories
-    public static final String SCRIPT_ROOT = "./sh";
-    public static final String JDL_ROOT = "./jdl";
-    public static final String OUT_ROOT = "./out";
-    public static final String ERR_ROOT = "./err";
-    public static final String CACHE_DIR = "../cache";
-    public static final String CACHE_FILE = "cache.txt";
-    // Versions
-    public static final String VERSION_GRID = "GRID";
-    public static final String VERSION_LOCAL = "LOCAL";
-    public static final String GRID_DIRAC = "DIRAC";
-    public static final String GRID_GLITE = "GLITE_WMS";
     // DIRAC Configuration
     public static String NOTIFICATION_HOST = "ui.egee.creatis.insa-lyon.fr";
     public static int NOTIFICATION_PORT = 9005;
@@ -138,14 +124,38 @@ public class Configuration {
                 NOTIFICATION_PORT = new Integer(notificationPort);
             }
 
-        } catch (Exception ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
+        } catch (IOException ex) {
+
+            System.out.println("Failing to setup trying to create file");
+            try {
+                conf.setProperty("GRID", GRID);
+                conf.setProperty("VO", VO);
+                conf.setProperty("ENV", ENV);
+                conf.setProperty("SE", SE);
+                conf.setProperty("USE_CLOSE_SE", USE_CLOSE_SE);
+                conf.setProperty("BACKGROUND_SCRIPT", BACKGROUND_SCRIPT);
+                conf.setProperty("RETRYCOUNT", RETRY_COUNT + "");
+                conf.setProperty("TIMEOUT", TIMEOUT + "");
+                conf.setProperty("REQUIREMENTS", REQUIREMENTS);
+                conf.setProperty("NOTIFICATION_HOST", NOTIFICATION_HOST);
+                conf.setProperty("NOTIFICATION_PORT", NOTIFICATION_PORT + "");
+
+                File confDir = new File("./conf");
+                if (!confDir.exists()) {
+                    confDir.mkdir();
                 }
+                conf.store(new FileOutputStream(CONF_FILE), "");
+
+            } catch (IOException ex1) {
+                log.error(ex1);
+                if (log.isDebugEnabled()) {
+                    for (StackTraceElement stack : ex1.getStackTrace()) {
+                        log.debug(stack);
+                    }
+                }
+                throw new GaswException(ex1.getMessage());
             }
-            throw new GaswException(ex.getMessage());
+
         }
     }
 }

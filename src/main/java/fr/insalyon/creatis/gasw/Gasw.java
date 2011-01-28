@@ -38,6 +38,9 @@ import fr.insalyon.creatis.gasw.executor.Executor;
 import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import fr.insalyon.creatis.gasw.output.OutputUtilFactory;
+import fr.insalyon.creatis.gasw.release.Execution;
+import fr.insalyon.creatis.gasw.release.Infrastructure;
+import fr.insalyon.creatis.gasw.release.Release;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
@@ -80,7 +83,29 @@ public class Gasw {
     }
 
     /**
-     * Performs the execution of the command.
+     *
+     * @param client
+     * @param version
+     * @param release
+     * @param parameters List of parameters associated with the command.
+     * @param downloads List of input files to be downloaded in the worker node.
+     * @param uploads List of output files to be uploaded to a Storage Element.
+     * @return Job identification
+     */
+    public synchronized String submit(Object client, Release release,
+            List<String> parameters, List<URI> downloads, List<URI> uploads) {
+
+        if (this.client == null) {
+            this.client = client;
+        }
+        Executor executor = ExecutorFactory.getExecutor("GRID", release,
+                parameters, downloads, uploads);
+        executor.preProcess();
+        return executor.submit();
+    }
+
+    /**
+     * Performs the execution of the command (this method will be supported until this version).
      *
      * @param client
      * @param version
@@ -90,17 +115,16 @@ public class Gasw {
      * @param uploads List of output files to be uploaded to a Storage Element.
      * @return Job identification
      */
-    public synchronized String submit(Object client, String version, 
+    @Deprecated
+    public synchronized String submit(Object client, String version,
             String command, List<String> parameters, List<URI> downloads,
             List<URI> uploads) {
 
-        if (this.client == null) {
-            this.client = client;
-        }
-        Executor executor = ExecutorFactory.getExecutor(version, command,
-                parameters, downloads, uploads);
-        executor.preProcess();
-        return executor.submit();
+        Execution execution = new Execution(Execution.JobType.NORMAL.name(), command, null, null);
+        Infrastructure infrastructure = new Infrastructure("GRID", execution, null, null);
+        Release release = new Release(command, infrastructure, null, null);
+
+        return submit(client, release, parameters, downloads, uploads);
     }
 
     /**

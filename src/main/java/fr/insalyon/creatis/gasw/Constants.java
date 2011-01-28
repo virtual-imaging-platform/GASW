@@ -32,31 +32,29 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
-package fr.insalyon.creatis.gasw.output;
-
-import fr.insalyon.creatis.gasw.Configuration;
-import fr.insalyon.creatis.gasw.Constants;
+package fr.insalyon.creatis.gasw;
 
 /**
  *
  * @author Rafael Silva
  */
-public class OutputUtilFactory {
+public class Constants {
 
-    public static OutputUtil getOutputUtil(String version, int startTime) {
-
-        if (version.equals(Constants.VERSION_GRID)) {
-            if (Configuration.GRID.equals(Constants.GRID_DIRAC)) {
-                return new DiracOutputUtil(startTime);
-            }
-            if (Configuration.GRID.equals(Constants.GRID_GLITE)) {
-                return new GliteOutputUtil(startTime);
-            }
-        } else if (version.equals(Constants.VERSION_LOCAL)) {
-            return new LocalOutputUtil(startTime);
-        }
-
-        return null;
-    }
+    // timeouts used in lcg-c*
+    public static int CONNECT_TIMEOUT = 10;
+    public static int SEND_RECEIVE_TIMEOUT = 900;
+    public static int BDII_TIMEOUT = 10;
+    public static int SRM_TIMEOUT = 30;
+    // Directories
+    public static final String SCRIPT_ROOT = "./sh";
+    public static final String JDL_ROOT = "./jdl";
+    public static final String OUT_ROOT = "./out";
+    public static final String ERR_ROOT = "./err";
+    public static final String CACHE_DIR = "../cache";
+    public static final String CACHE_FILE = "cache.txt";
+    // Versions
+    public static final String VERSION_GRID = "GRID";
+    public static final String VERSION_LOCAL = "LOCAL";
+    public static final String GRID_DIRAC = "DIRAC";
+    public static final String GRID_GLITE = "GLITE_WMS";
 }

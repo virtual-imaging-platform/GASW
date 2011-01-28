@@ -32,31 +32,39 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
+package fr.insalyon.creatis.gasw.executor.generator.jdl;
 
-package fr.insalyon.creatis.gasw.output;
-
-import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
+import java.io.File;
 
 /**
  *
  * @author Rafael Silva
  */
-public class OutputUtilFactory {
+public class JdlGenerator {
 
-    public static OutputUtil getOutputUtil(String version, int startTime) {
+    public static JdlGenerator instance;
 
-        if (version.equals(Constants.VERSION_GRID)) {
-            if (Configuration.GRID.equals(Constants.GRID_DIRAC)) {
-                return new DiracOutputUtil(startTime);
-            }
-            if (Configuration.GRID.equals(Constants.GRID_GLITE)) {
-                return new GliteOutputUtil(startTime);
-            }
-        } else if (version.equals(Constants.VERSION_LOCAL)) {
-            return new LocalOutputUtil(startTime);
+    public static JdlGenerator getInstance() {
+        if (instance == null) {
+            instance = new JdlGenerator();
         }
+        return instance;
+    }
 
-        return null;
+    private JdlGenerator() {
+    }
+
+    public String generate(String scriptName) {
+        StringBuilder sb = new StringBuilder();
+        String scriptPath = new File(Constants.SCRIPT_ROOT).getAbsolutePath();
+
+        sb.append("Executable\t= \"" + scriptName + "\";\n");
+        sb.append("StdOutput\t= \"std.out\";\n");
+        sb.append("StdError\t= \"std.err\";\n");
+        sb.append("InputSandbox\t= {\"" + scriptPath + "/" + scriptName + "\"};\n");
+        sb.append("OutputSandbox\t= {\"std.out\", \"std.err\"};\n");
+
+        return sb.toString();
     }
 }

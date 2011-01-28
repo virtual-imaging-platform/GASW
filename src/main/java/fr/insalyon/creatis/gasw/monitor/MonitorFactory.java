@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw.monitor;
 
 import fr.insalyon.creatis.gasw.Configuration;
+import fr.insalyon.creatis.gasw.Constants;
 
 /**
  *
@@ -44,11 +45,11 @@ public class MonitorFactory {
 
     public static Monitor getMonitor(String version) {
 
-        if (version.equals(Configuration.VERSION_GRID)) {
-            if (Configuration.GRID.equals(Configuration.GRID_DIRAC)) {
+        if (version.equals(Constants.VERSION_GRID)) {
+            if (Configuration.GRID.equals(Constants.GRID_DIRAC)) {
                 return DiracMonitor.getInstance();
             }
-            if (Configuration.GRID.equals(Configuration.GRID_GLITE)) {
+            if (Configuration.GRID.equals(Constants.GRID_GLITE)) {
                 return GliteMonitor.getInstance();
             }
         } else {

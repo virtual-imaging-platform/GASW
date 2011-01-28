@@ -4,7 +4,7 @@
     <groupId>fr.insalyon.creatis</groupId>
     <artifactId>gasw</artifactId>
     <packaging>jar</packaging>
-    <version>0.3</version>
+    <version>0.5</version>
     <name>GASW</name>
     <url>http://maven.apache.org</url>
     <build>

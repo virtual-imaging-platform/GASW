@@ -34,10 +34,11 @@
  */
 package fr.insalyon.creatis.gasw.executor;
 
-import fr.insalyon.creatis.gasw.Configuration;
-import fr.insalyon.creatis.gasw.generator.jdl.JdlGenerator;
-import fr.insalyon.creatis.gasw.generator.script.ScriptGenerator;
+import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.executor.generator.jdl.JdlGenerator;
+import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
+import fr.insalyon.creatis.gasw.release.Release;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -53,8 +54,8 @@ public class DiracExecutor extends Executor {
 
     private static final Logger log = Logger.getLogger(DiracExecutor.class);
 
-    protected DiracExecutor(String version, String command, List<String> parameters, List<URI> downloads, List<URI> uploads) {
-        super(version, command, parameters, downloads, uploads);
+    protected DiracExecutor(String version, Release release, List<String> parameters, List<URI> downloads, List<URI> uploads) {
+        super(version, release, parameters, downloads, uploads);
     }
 
     @Override
@@ -67,7 +68,7 @@ public class DiracExecutor extends Executor {
     public String submit() {
         super.submit();
         try {
-            String exec = "dirac-wms-job-submit " + Configuration.JDL_ROOT + "/" + jdlName;
+            String exec = "dirac-wms-job-submit " + Constants.JDL_ROOT + "/" + jdlName;
             Process process = Runtime.getRuntime().exec(exec);
             process.waitFor();
 
@@ -80,7 +81,7 @@ public class DiracExecutor extends Executor {
             }
 
             String jobID = cout.substring(cout.lastIndexOf("=") + 2, cout.length()).trim();
-            MonitorFactory.getMonitor(version).add(jobID, command, jdlName);
+            MonitorFactory.getMonitor(version).add(jobID, release.getSymbolicName(), jdlName);
 
             log.info("Dirac Executor Job ID: " + jobID);
 
@@ -106,14 +107,16 @@ public class DiracExecutor extends Executor {
 
         sb.append(generator.header());
         sb.append(generator.hostConfiguration());
-        sb.append(generator.background());
+        sb.append(generator.backgroundScript());
         sb.append(generator.cleanupCommand());
         sb.append(generator.uploadTest(uploads));
-        sb.append(generator.inputs(downloads));
-        sb.append(generator.applicationExecution(command, parameters));
+        sb.append(generator.inputs(release, downloads));
+        sb.append(generator.applicationEnvironment(release));
+        sb.append(generator.applicationExecution(parameters));
         sb.append(generator.resultsUpload(uploads));
+        sb.append(generator.footer());
 
-        return publishScript(command, sb.toString());
+        return publishScript(release.getSymbolicName(), sb.toString());
     }
 
     /**
@@ -125,7 +128,7 @@ public class DiracExecutor extends Executor {
 
         StringBuilder sb = new StringBuilder();
         JdlGenerator generator = JdlGenerator.getInstance();
-
+        
         sb.append(generator.generate(scriptName));
 
         return publishJdl(scriptName, sb.toString());

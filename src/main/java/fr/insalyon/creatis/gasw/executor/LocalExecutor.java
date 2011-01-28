@@ -34,9 +34,10 @@
  */
 package fr.insalyon.creatis.gasw.executor;
 
-import fr.insalyon.creatis.gasw.Configuration;
-import fr.insalyon.creatis.gasw.generator.script.ScriptGenerator;
+import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
+import fr.insalyon.creatis.gasw.release.Release;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -59,8 +60,8 @@ public class LocalExecutor extends Executor {
     private String cout;
     private static List<String> finishedJobs = new ArrayList<String>();
 
-    protected LocalExecutor(String version, String command, List<String> parameters, List<URI> downloads, List<URI> uploads) {
-        super(version, command, parameters, downloads, uploads);
+    protected LocalExecutor(String version, Release release, List<String> parameters, List<URI> downloads, List<URI> uploads) {
+        super(version, release, parameters, downloads, uploads);
     }
 
     @Override
@@ -87,14 +88,16 @@ public class LocalExecutor extends Executor {
 
         sb.append(generator.header());
         sb.append(generator.hostConfiguration());
-        sb.append(generator.background());
+        sb.append(generator.backgroundScript());
         sb.append(generator.cleanupCommand());
         sb.append(generator.uploadTest(uploads));
-        sb.append(generator.inputs(downloads));
-        sb.append(generator.applicationExecution(command, parameters));
+        sb.append(generator.inputs(release, downloads));
+        sb.append(generator.applicationEnvironment(release));
+        sb.append(generator.applicationExecution(parameters));
         sb.append(generator.resultsUpload(uploads));
+        sb.append(generator.footer());
 
-        return publishScript(command, sb.toString());
+        return publishScript(release.getSymbolicName(), sb.toString());
     }
 
     class Execution extends Thread {
@@ -109,8 +112,8 @@ public class LocalExecutor extends Executor {
         public void run() {
 
             try {
-                MonitorFactory.getMonitor(version).add(jobID, command, jdlName);
-                String exec = Configuration.SCRIPT_ROOT + "/" + scriptName;
+                MonitorFactory.getMonitor(version).add(jobID, release.getSymbolicName(), jdlName);
+                String exec = Constants.SCRIPT_ROOT + "/" + scriptName;
                 Process execution = Runtime.getRuntime().exec("chmod +x " + exec);
                 execution.waitFor();
 
@@ -156,12 +159,12 @@ public class LocalExecutor extends Executor {
                     }
                 }
 
-                File stdOut = new File(Configuration.OUT_ROOT + "/" + scriptName + ".out");
+                File stdOut = new File(Constants.OUT_ROOT + "/" + scriptName + ".out");
                 BufferedWriter out = new BufferedWriter(new FileWriter(stdOut));
                 out.write(cout);
                 out.close();
 
-                File stdErr = new File(Configuration.ERR_ROOT + "/" + scriptName + ".err");
+                File stdErr = new File(Constants.ERR_ROOT + "/" + scriptName + ".err");
                 BufferedWriter err = new BufferedWriter(new FileWriter(stdErr));
                 err.write(cerr);
                 err.close();
