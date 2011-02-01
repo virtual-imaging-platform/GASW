@@ -34,6 +34,7 @@
  */
 package fr.insalyon.creatis.gasw.output;
 
+import fr.insalyon.creatis.gasw.bean.GaswOutput;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.bean.Node;
 import fr.insalyon.creatis.gasw.dao.DAOException;
@@ -56,23 +57,29 @@ public abstract class OutputUtil {
 
     private static final Logger log = Logger.getLogger(OutputUtil.class);
     private int startTime;
+    private StringBuilder appStdOut;
 
     public OutputUtil(int startTime) {
         this.startTime = startTime;
+        appStdOut = new StringBuilder();
     }
 
     /**
-     * Gets the standard output and error files
+     * Gets the standard output and error files and exit code.
+     *
      * @return Array with the standard output and error files respectively.
      */
-    public abstract File[] getOutputs(String jobID);
+    public abstract GaswOutput getOutputs(String jobID);
 
     /**
      *
      * @param jobID Job identification
      * @param stdOut Standard output file
+     * @return Exit code
      */
-    protected void parseOutput(Job job, File stdOut) {
+    protected int parseStdOut(Job job, File stdOut) {
+
+        int exitCode = 6;
         try {
             if (job.getQueued() == 0) {
                 job.setQueued(job.getCreation());
@@ -85,8 +92,22 @@ public abstract class OutputUtil {
             Node node = new Node();
 
             int startExec = 0;
+            boolean isAppExec = false;
 
             while ((strLine = br.readLine()) != null) {
+
+                // Application Output
+                if (strLine.contains("<application_execution>")) {
+                    isAppExec = true;
+                }
+                if (strLine.contains("</application_execution>")) {
+                    isAppExec = false;
+                }
+                if (isAppExec) {
+                    appStdOut.append(strLine);
+                    appStdOut.append("\n");
+                }
+
                 if (strLine.startsWith("START date is")) {
                     startExec = Integer.valueOf(strLine.split(" ")[3]).intValue() - startTime;
                     job.setDownload(startExec);
@@ -104,7 +125,7 @@ public abstract class OutputUtil {
                     job.setEnd(job.getUpload() + uploadTime);
 
                 } else if (strLine.startsWith("Exiting with return value")) {
-                    int exitCode = Integer.valueOf(strLine.split("\\s+")[4]).intValue();
+                    exitCode = Integer.valueOf(strLine.split("\\s+")[4]).intValue();
                     job.setExitCode(exitCode);
 
                 } else if (strLine.startsWith("GLOBUS_CE")) {
@@ -148,26 +169,64 @@ public abstract class OutputUtil {
         } catch (IOException ex) {
             logException(log, ex);
         }
+        return exitCode;
+    }
+
+    /**
+     * 
+     * @param stdErr Standard error file
+     * @return Application standard error
+     */
+    protected String parseStdErr(File stdErr) {
+
+        try {
+            DataInputStream in = new DataInputStream(new FileInputStream(stdErr));
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+
+            String strLine;
+            boolean isAppExec = false;
+            StringBuilder appStdErr = new StringBuilder();
+
+            while ((strLine = br.readLine()) != null) {
+
+                if (strLine.contains("<application_execution>")) {
+                    isAppExec = true;
+                }
+                if (strLine.contains("</application_execution>")) {
+                    break;
+                }
+                if (isAppExec) {
+                    appStdErr.append(strLine);
+                    appStdErr.append("\n");
+                }
+            }
+            return appStdErr.toString();
+            
+        } catch (IOException ex) {
+            logException(log, ex);
+        }
+        return null;
     }
 
     /**
      *
      * @param job Job object
      * @param extension File extension
-     * @param outDir Output directory
+     * @param dir Output directory
+     * @param content File content
      * @return
      */
-    protected File getKilledStdFile(Job job, String extension, String outDir) {
+    protected File saveFile(Job job, String extension, String dir, String content) {
         FileWriter fstream = null;
         try {
-            File stdDir = new File(outDir);
+            File stdDir = new File(dir);
             if (!stdDir.exists()) {
                 stdDir.mkdir();
             }
-            File stdFile = new File(outDir + "/" + job.getFileName() + ".sh" + extension);
+            File stdFile = new File(dir + "/" + job.getFileName() + ".sh" + extension);
             fstream = new FileWriter(stdFile);
             BufferedWriter out = new BufferedWriter(fstream);
-            out.write("Job Cancelled");
+            out.write(content);
             out.close();
 
             return stdFile;
@@ -182,6 +241,15 @@ public abstract class OutputUtil {
             }
         }
         return null;
+    }
+
+    /**
+     * Gets the application execution log
+     *
+     * @return The application execution log.
+     */
+    protected String getAppStdOut() {
+        return appStdOut.toString();
     }
 
     protected void logException(Logger log, Exception ex) {

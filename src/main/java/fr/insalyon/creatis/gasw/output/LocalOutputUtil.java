@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw.output;
 
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.bean.GaswOutput;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
@@ -54,16 +55,21 @@ public class LocalOutputUtil extends OutputUtil {
         super(startTime);
     }
 
-    @Override
-    public File[] getOutputs(String jobID) {
+    public GaswOutput getOutputs(String jobID) {
         try {
 
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
             Job job = jobDAO.getJobByID(jobID);
 
-            return new File[]{
-                        new File(Constants.OUT_ROOT + "/" + job.getFileName() + ".sh.out"),
-                        new File(Constants.ERR_ROOT + "/" + job.getFileName() + ".sh.err")};
+            File stdOut = new File(Constants.OUT_ROOT + "/" + job.getFileName() + ".sh.out");
+            File stdErr = new File(Constants.ERR_ROOT + "/" + job.getFileName() + ".sh.err");
+
+            int exitCode = parseStdOut(job, stdOut);
+
+            File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
+            File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, parseStdErr(stdErr));
+
+            return new GaswOutput(exitCode, appStdOut, appStdErr, stdOut, stdErr);
 
         } catch (DAOException ex) {
             logException(log, ex);

@@ -34,6 +34,7 @@
  */
 package fr.insalyon.creatis.gasw;
 
+import fr.insalyon.creatis.gasw.bean.GaswOutput;
 import fr.insalyon.creatis.gasw.executor.Executor;
 import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
@@ -136,9 +137,39 @@ public class Gasw {
     }
 
     /**
-     * Gets the standard output and error files of all finished jobs
-     * @return Map with the standard output and error files respectively for each job.
+     * Gets the list of output objects of all finished jobs
+     * 
+     * @return List of output objects of finished jobs.
      */
+    public synchronized List<GaswOutput> getFinishedJobs() {
+
+        gettingOutputs = true;
+        List<GaswOutput> outputsList = new ArrayList<GaswOutput>();
+        List<String> jobsToRemove = new ArrayList<String>();
+
+        if (finishedJobs != null) {
+            for (String jobID : finishedJobs) {
+                String version = jobID.contains("Local-") ? "LOCAL" : "GRID";
+                int startTime = MonitorFactory.getMonitor(version).getStartTime();
+                outputsList.add(OutputUtilFactory.getOutputUtil(
+                        version, startTime).getOutputs(jobID.split("--")[0]));
+
+                jobsToRemove.add(jobID);
+            }
+            finishedJobs.removeAll(jobsToRemove);
+        }
+
+        return outputsList;
+    }
+
+    /**
+     * Gets the standard output and error files of all finished jobs
+     * (this method will be supported until this version)
+     *
+     * @return Map with the standard output and error files respectively for each job.
+     * @see getFinishedJobs()
+     */
+    @Deprecated
     public synchronized Map<String, File[]> getOutputs() {
 
         gettingOutputs = true;
@@ -148,10 +179,11 @@ public class Gasw {
         if (finishedJobs != null) {
             for (String jobID : finishedJobs) {
                 String version = jobID.contains("Local-") ? "LOCAL" : "GRID";
-                File[] outputs = OutputUtilFactory.getOutputUtil(
+                GaswOutput output = OutputUtilFactory.getOutputUtil(
                         version,
                         MonitorFactory.getMonitor(version).getStartTime()).getOutputs(jobID.split("--")[0]);
-                outputsMap.put(jobID, outputs);
+
+                outputsMap.put(jobID, new File[]{output.getStdOut(), output.getStdErr()});
                 jobsToRemove.add(jobID);
             }
             finishedJobs.removeAll(jobsToRemove);

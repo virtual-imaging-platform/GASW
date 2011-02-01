@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw.output;
 
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.bean.GaswOutput;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
@@ -58,8 +59,7 @@ public class GliteOutputUtil extends OutputUtil {
         super(startTime);
     }
 
-    @Override
-    public File[] getOutputs(String jobID) {
+    public GaswOutput getOutputs(String jobID) {
         try {
             File outputDir = new File("/tmp/jobOutput");
             if (!outputDir.exists()) {
@@ -90,15 +90,21 @@ public class GliteOutputUtil extends OutputUtil {
 
                 File outTempDir = new File(outputPath);
                 outTempDir.delete();
-                parseOutput(job, stdOut);
 
-                return new File[]{stdOut, stdErr};
+                int exitCode = parseStdOut(job, stdOut);
+
+                File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
+                File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, parseStdErr(stdErr));
+
+                return new GaswOutput(exitCode, appStdOut, appStdErr, stdOut, stdErr);
 
             } else {
-                File stdOut = getKilledStdFile(job, ".out", Constants.OUT_ROOT);
-                File stdErr = getKilledStdFile(job, ".err", Constants.ERR_ROOT);
+                File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Job Cancelled");
+                File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Job Cancelled");
 
-                return new File[]{stdOut, stdErr};
+                GaswOutput output = new GaswOutput(null, null, stdOut, stdErr);
+
+                return output;
             }
 
         } catch (DAOException ex) {

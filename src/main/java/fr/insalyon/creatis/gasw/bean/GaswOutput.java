@@ -32,39 +32,59 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.release;
+package fr.insalyon.creatis.gasw.bean;
+
+import java.io.File;
 
 /**
  *
  * @author Rafael Silva
  */
-public class EnvVariable {
+public class GaswOutput {
 
-    public enum Category {
+    private int exitCode;
+    private File appStdOut;
+    private File appStdErr;
+    private File stdOut;
+    private File stdErr;
 
-        INFRASTRUCTURE,
-        SYSTEM
-    }
-    private Category category;
-    private String name;
-    private String value;
-
-    public EnvVariable(String category, String name, String value) {
-        this.name = name;
-        this.value = value;
-
-        try {
-            this.category = Category.valueOf(category.toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            this.category = Category.SYSTEM;
-        }
+    /**
+     * Creates an output object with default exit code set to "0".
+     * 
+     * @param appStdOut
+     * @param appStdErr
+     * @param stdOut
+     * @param stdErr
+     */
+    public GaswOutput(File appStdOut, File appStdErr, File stdOut, File stdErr) {
+        this(0, appStdOut, appStdErr, stdOut, stdErr);
     }
 
-    public String getName() {
-        return name;
+    public GaswOutput(int exitCode, File appStdOut, File appStdErr, File stdOut, File stdErr) {
+        this.exitCode = exitCode;
+        this.appStdOut = appStdOut;
+        this.appStdErr = appStdErr;
+        this.stdOut = stdOut;
+        this.stdErr = stdErr;
     }
 
-    public String getValue() {
-        return value;
+    public int getExitCode() {
+        return exitCode;
+    }
+
+    public File getAppStdErr() {
+        return appStdErr;
+    }
+
+    public File getAppStdOut() {
+        return appStdOut;
+    }
+
+    public File getStdErr() {
+        return stdErr;
+    }
+
+    public File getStdOut() {
+        return stdOut;
     }
 }
