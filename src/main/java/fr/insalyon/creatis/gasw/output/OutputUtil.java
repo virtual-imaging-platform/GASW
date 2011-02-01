@@ -34,7 +34,7 @@
  */
 package fr.insalyon.creatis.gasw.output;
 
-import fr.insalyon.creatis.gasw.bean.GaswOutput;
+import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.bean.Node;
 import fr.insalyon.creatis.gasw.dao.DAOException;

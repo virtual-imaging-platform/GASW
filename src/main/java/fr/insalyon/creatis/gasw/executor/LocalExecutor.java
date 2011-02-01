@@ -35,15 +35,14 @@
 package fr.insalyon.creatis.gasw.executor;
 
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
-import fr.insalyon.creatis.gasw.release.Release;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -60,8 +59,8 @@ public class LocalExecutor extends Executor {
     private String cout;
     private static List<String> finishedJobs = new ArrayList<String>();
 
-    protected LocalExecutor(String version, Release release, List<String> parameters, List<URI> downloads, List<URI> uploads) {
-        super(version, release, parameters, downloads, uploads);
+    protected LocalExecutor(String version, GaswInput gaswInput) {
+        super(version, gaswInput);
     }
 
     @Override
@@ -90,14 +89,14 @@ public class LocalExecutor extends Executor {
         sb.append(generator.hostConfiguration());
         sb.append(generator.backgroundScript());
         sb.append(generator.cleanupCommand());
-        sb.append(generator.uploadTest(uploads));
-        sb.append(generator.inputs(release, downloads));
-        sb.append(generator.applicationEnvironment(release));
-        sb.append(generator.applicationExecution(parameters));
-        sb.append(generator.resultsUpload(uploads));
+        sb.append(generator.uploadTest(gaswInput.getUploads()));
+        sb.append(generator.inputs(gaswInput.getRelease(), gaswInput.getDownloads()));
+        sb.append(generator.applicationEnvironment(gaswInput.getRelease()));
+        sb.append(generator.applicationExecution(gaswInput.getParameters()));
+        sb.append(generator.resultsUpload(gaswInput.getUploads()));
         sb.append(generator.footer());
 
-        return publishScript(release.getSymbolicName(), sb.toString());
+        return publishScript(gaswInput.getRelease().getSymbolicName(), sb.toString());
     }
 
     class Execution extends Thread {
@@ -112,7 +111,7 @@ public class LocalExecutor extends Executor {
         public void run() {
 
             try {
-                MonitorFactory.getMonitor(version).add(jobID, release.getSymbolicName(), jdlName);
+                MonitorFactory.getMonitor(version).add(jobID, gaswInput.getRelease().getSymbolicName(), jdlName);
                 String exec = Constants.SCRIPT_ROOT + "/" + scriptName;
                 Process execution = Runtime.getRuntime().exec("chmod +x " + exec);
                 execution.waitFor();

@@ -34,7 +34,6 @@
  */
 package fr.insalyon.creatis.gasw;
 
-import fr.insalyon.creatis.gasw.bean.GaswOutput;
 import fr.insalyon.creatis.gasw.executor.Executor;
 import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
@@ -84,23 +83,17 @@ public class Gasw {
     }
 
     /**
-     *
+     * 
      * @param client
-     * @param version
-     * @param release
-     * @param parameters List of parameters associated with the command.
-     * @param downloads List of input files to be downloaded in the worker node.
-     * @param uploads List of output files to be uploaded to a Storage Element.
-     * @return Job identification
+     * @param gaswInput
+     * @return
      */
-    public synchronized String submit(Object client, Release release,
-            List<String> parameters, List<URI> downloads, List<URI> uploads) {
+    public synchronized String submit(Object client, GaswInput gaswInput) {
 
         if (this.client == null) {
             this.client = client;
         }
-        Executor executor = ExecutorFactory.getExecutor("GRID", release,
-                parameters, downloads, uploads);
+        Executor executor = ExecutorFactory.getExecutor("GRID", gaswInput);
         executor.preProcess();
         return executor.submit();
     }
@@ -125,7 +118,7 @@ public class Gasw {
         Infrastructure infrastructure = new Infrastructure("GRID", execution, null, null);
         Release release = new Release(command, infrastructure, null, null);
 
-        return submit(client, release, parameters, downloads, uploads);
+        return submit(client, new GaswInput(release, parameters, downloads, uploads));
     }
 
     /**

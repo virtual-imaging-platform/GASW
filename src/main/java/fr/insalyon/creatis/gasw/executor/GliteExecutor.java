@@ -35,14 +35,12 @@
 package fr.insalyon.creatis.gasw.executor;
 
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.JdlGenerator;
 import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
-import fr.insalyon.creatis.gasw.release.Release;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
@@ -53,8 +51,8 @@ public class GliteExecutor extends Executor {
 
     private static final Logger log = Logger.getLogger(GliteExecutor.class);
 
-    public GliteExecutor(String version, Release release, List<String> parameters, List<URI> downloads, List<URI> uploads) {
-        super(version, release, parameters, downloads, uploads);
+    public GliteExecutor(String version, GaswInput gaswInput) {
+        super(version, gaswInput);
     }
 
     @Override
@@ -92,7 +90,7 @@ public class GliteExecutor extends Executor {
 
             String jobID = cout.substring(cout.lastIndexOf("https://"), cout.length()).trim();
             jobID = jobID.substring(0, jobID.indexOf("=")).trim();
-            MonitorFactory.getMonitor(version).add(jobID, release.getSymbolicName(), jdlName);
+            MonitorFactory.getMonitor(version).add(jobID, gaswInput.getRelease().getSymbolicName(), jdlName);
             log.info("Glite Executor Job ID: " + jobID);
             return jobID;
 
@@ -117,14 +115,14 @@ public class GliteExecutor extends Executor {
         sb.append(generator.hostConfiguration());
         sb.append(generator.backgroundScript());
         sb.append(generator.cleanupCommand());
-        sb.append(generator.uploadTest(uploads));
-        sb.append(generator.inputs(release, downloads));
-        sb.append(generator.applicationEnvironment(release));
-        sb.append(generator.applicationExecution(parameters));
-        sb.append(generator.resultsUpload(uploads));
+        sb.append(generator.uploadTest(gaswInput.getUploads()));
+        sb.append(generator.inputs(gaswInput.getRelease(), gaswInput.getDownloads()));
+        sb.append(generator.applicationEnvironment(gaswInput.getRelease()));
+        sb.append(generator.applicationExecution(gaswInput.getParameters()));
+        sb.append(generator.resultsUpload(gaswInput.getUploads()));
         sb.append(generator.footer());
 
-        return publishScript(release.getSymbolicName(), sb.toString());
+        return publishScript(gaswInput.getRelease().getSymbolicName(), sb.toString());
     }
 
     /**

@@ -34,8 +34,8 @@
  */
 package fr.insalyon.creatis.gasw.executor;
 
-import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.release.Release;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -43,8 +43,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URI;
-import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
@@ -55,10 +53,7 @@ public abstract class Executor {
 
     private static final Logger log = Logger.getLogger(Executor.class);
     protected String version;
-    protected Release release;
-    protected List<String> parameters;
-    protected List<URI> downloads;
-    protected List<URI> uploads;
+    protected GaswInput gaswInput;
     protected String scriptName;
     protected String jdlName;
     private boolean firstExecution;
@@ -71,12 +66,9 @@ public abstract class Executor {
      * @param downloads List of input files to be downloaded in the worker node.
      * @param uploads List of output files to be uploaded to a Storage Element.
      */
-    public Executor(String version, Release release, List<String> parameters, List<URI> downloads, List<URI> uploads) {
+    public Executor(String version, GaswInput gaswInput) {
         this.version = version;
-        this.release = release;
-        this.parameters = parameters;
-        this.downloads = downloads;
-        this.uploads = uploads;
+        this.gaswInput = gaswInput;
         this.firstExecution = true;
     }
 
@@ -177,7 +169,7 @@ public abstract class Executor {
     }
 
     public Release getRelease() {
-        return release;
+        return gaswInput.getRelease();
     }
 
     private String getNewName(String name, long nanoTime, String extension, String directory) {
