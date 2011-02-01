@@ -96,13 +96,13 @@ public class GliteOutputUtil extends OutputUtil {
                 File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
                 File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, parseStdErr(stdErr));
 
-                return new GaswOutput(exitCode, appStdOut, appStdErr, stdOut, stdErr);
+                return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
 
             } else {
                 File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Job Cancelled");
                 File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Job Cancelled");
 
-                GaswOutput output = new GaswOutput(null, null, stdOut, stdErr);
+                GaswOutput output = new GaswOutput(jobID, stdOut, stdErr, stdOut, stdErr);
 
                 return output;
             }

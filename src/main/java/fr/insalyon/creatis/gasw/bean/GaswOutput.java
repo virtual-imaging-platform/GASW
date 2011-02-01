@@ -42,6 +42,7 @@ import java.io.File;
  */
 public class GaswOutput {
 
+    private String jobID;
     private int exitCode;
     private File appStdOut;
     private File appStdErr;
@@ -56,16 +57,23 @@ public class GaswOutput {
      * @param stdOut
      * @param stdErr
      */
-    public GaswOutput(File appStdOut, File appStdErr, File stdOut, File stdErr) {
-        this(0, appStdOut, appStdErr, stdOut, stdErr);
+    public GaswOutput(String jobID, File appStdOut, File appStdErr,
+            File stdOut, File stdErr) {
+        this(jobID, 0, appStdOut, appStdErr, stdOut, stdErr);
     }
 
-    public GaswOutput(int exitCode, File appStdOut, File appStdErr, File stdOut, File stdErr) {
+    public GaswOutput(String jobID, int exitCode, File appStdOut,
+            File appStdErr, File stdOut, File stdErr) {
+
         this.exitCode = exitCode;
         this.appStdOut = appStdOut;
         this.appStdErr = appStdErr;
         this.stdOut = stdOut;
         this.stdErr = stdErr;
+    }
+
+    public String getJobID() {
+        return jobID;
     }
 
     public int getExitCode() {

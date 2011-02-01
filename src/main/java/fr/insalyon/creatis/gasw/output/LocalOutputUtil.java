@@ -69,7 +69,7 @@ public class LocalOutputUtil extends OutputUtil {
             File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
             File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, parseStdErr(stdErr));
 
-            return new GaswOutput(exitCode, appStdOut, appStdErr, stdOut, stdErr);
+            return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
 
         } catch (DAOException ex) {
             logException(log, ex);
