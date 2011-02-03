@@ -210,22 +210,22 @@ public class DataManagement extends AbstractGenerator {
 
         sb.append("  echo \"Downloading file " + lfn.getPath() + " on the Worker Node...\"\n");
         sb.append(command);
-        sb.append("  if [ $? = 0 ];\n"
-                + "  then\n"
-                + "    echo \"lcg-cp worked fine\";\n"
-                + "  else\n"
-                + "    echo \"lcg-cp failed: retrying once\";\n"
-                + "  " + command
-                + "    if [ $? != 0 ];\n"
-                + "    then\n"
-                + "      echo \"lcg-cp failed again\";\n"
-                + "      echo \"Exiting with return value 1\"\n"
-                + "      cleanup\n"
-                + "      exit 1;\n"
-                + "    else\n"
-                + "      echo \"lcg-cp worked fine\";\n"
-                + "    fi\n"
-                + "  fi\n");
+        sb.append("  if [ $? = 0 ];\n");
+        sb.append("  then\n");
+        sb.append("    echo \"lcg-cp worked fine\";\n");
+        sb.append("  else\n");
+        sb.append("    echo \"lcg-cp failed: retrying once\";\n");
+        sb.append("  " + command);
+        sb.append("    if [ $? != 0 ];\n");
+        sb.append("    then\n");
+        sb.append("      echo \"lcg-cp failed again\";\n");
+        sb.append("      echo \"Exiting with return value 1\"\n");
+        sb.append("      cleanup\n");
+        sb.append("      exit 1;\n");
+        sb.append("    else\n");
+        sb.append("      echo \"lcg-cp worked fine\";\n");
+        sb.append("    fi\n");
+        sb.append("  fi\n");
 
         sb.append(stopLogSection(sectionName));
         return sb.toString();

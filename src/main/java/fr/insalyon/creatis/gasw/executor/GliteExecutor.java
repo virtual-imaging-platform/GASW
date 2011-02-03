@@ -120,6 +120,7 @@ public class GliteExecutor extends Executor {
         sb.append(generator.applicationEnvironment(gaswInput.getRelease()));
         sb.append(generator.applicationExecution(gaswInput.getParameters()));
         sb.append(generator.resultsUpload(gaswInput.getUploads()));
+        sb.append(generator.regexUpload(gaswInput.getRegexUploads()));
         sb.append(generator.footer());
 
         return publishScript(gaswInput.getRelease().getSymbolicName(), sb.toString());

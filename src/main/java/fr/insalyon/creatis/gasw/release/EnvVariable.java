@@ -67,4 +67,8 @@ public class EnvVariable {
     public String getValue() {
         return value;
     }
+
+    public Category getCategory() {
+        return category;
+    }
 }

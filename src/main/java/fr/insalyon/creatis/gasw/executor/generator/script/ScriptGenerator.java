@@ -111,7 +111,8 @@ public class ScriptGenerator extends AbstractGenerator {
         // Creates execution directory
         sb.append("  DIRNAME=`basename $0 .sh`;\n");
         sb.append("  mkdir ${DIRNAME};\n");
-        sb.append("  if [ $? = 0 ];\n" + "then\n"
+        sb.append("  if [ $? = 0 ];\n" 
+                + "  then\n"
                 + "    echo \"cd ${DIRNAME}\";\n"
                 + "    cd ${DIRNAME};\n"
                 + "  else\n"
@@ -275,34 +276,23 @@ public class ScriptGenerator extends AbstractGenerator {
         String sectionName = "inputs_download";
         sb.append(startLogSection(sectionName, null));
 
-        try {
-            for (Infrastructure i : release.getInfrastructures()) {
-                sb.append("  if [[ $GASW_EXEC_ENV == \"" + i.getType().name() + "\" ]]\n");
-                sb.append("  then\n");
-                for (Execution e : i.getExecutions()) {
-                    sb.append("    if [[ $GASW_JOB_ENV == \"" + e.getType().name() + "\" ]]\n");
-                    sb.append("    then\n");
-                    URI lfn = new URI(e.getTarget());
-                    sb.append(dataManagement.copyFromCacheCommand(lfn));
-                    sb.append("      export GASW_EXEC_URL=\"" + lfn + "\"\n");
-                    File file = new File(lfn.getRawPath());
-                    sb.append("      export GASW_EXEC_COMMAND=\"" + file.getName() + "\"\n");
-                    sb.append("    fi\n");
-                }
-                sb.append("  fi\n");
+        for (Infrastructure i : release.getInfrastructures()) {
+            sb.append("  if [[ $GASW_EXEC_ENV == \"" + i.getType().name() + "\" ]]\n");
+            sb.append("  then\n");
+            for (Execution e : i.getExecutions()) {
+                sb.append("    if [[ $GASW_JOB_ENV == \"" + e.getType().name() + "\" ]]\n");
+                sb.append("    then\n");
+                URI lfn = e.getBoundArtifact();
+                sb.append(dataManagement.copyFromCacheCommand(lfn));
+                sb.append("      export GASW_EXEC_URL=\"" + lfn + "\"\n");
+                File file = new File(lfn.getRawPath());
+                sb.append("      export GASW_EXEC_BUNDLE=\"" + file.getName() + "\"\n");
+                sb.append("      export GASW_EXEC_COMMAND=\"" + e.getTarget() + "\"\n");
+                sb.append("    fi\n");
             }
-
-        } catch (URISyntaxException ex) {
-            sb.append("      echo \"Exception parsing URI.\"");
-            sb.append("    fi\n");
             sb.append("  fi\n");
-            log.error(ex);
-            if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
-                }
-            }
         }
+
         sb.append("\n");
 
         for (URI lfn : downloads) {
@@ -332,7 +322,9 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append(startLogSection(sectionName, null));
 
         for (EnvVariable v : release.getConfigurations()) {
-            sb.append("  export " + v.getName() + "=\"" + v.getValue() + "\"\n");
+            if (v.getCategory() == EnvVariable.Category.SYSTEM) {
+                sb.append("  export " + v.getName() + "=\"" + v.getValue() + "\"\n");
+            }
         }
 
         for (Infrastructure i : release.getInfrastructures()) {
@@ -342,12 +334,16 @@ public class ScriptGenerator extends AbstractGenerator {
                 sb.append("    if [[ $GASW_JOB_ENV == \"" + e.getType().name() + "\" ]]\n");
                 sb.append("    then\n");
                 for (EnvVariable v : e.getBoundEnvironment()) {
-                    sb.append("      export " + v.getName() + "=\"" + v.getValue() + "\"\n");
+                    if (v.getCategory() == EnvVariable.Category.SYSTEM) {
+                        sb.append("      export " + v.getName() + "=\"" + v.getValue() + "\"\n");
+                    }
                 }
                 sb.append("    fi\n");
             }
             for (EnvVariable v : i.getSharedEnvironment()) {
-                sb.append("    export " + v.getName() + "=\"" + v.getValue() + "\"\n");
+                if (v.getCategory() == EnvVariable.Category.SYSTEM) {
+                    sb.append("    export " + v.getName() + "=\"" + v.getValue() + "\"\n");
+                }
             }
             sb.append("  fi\n");
         }
@@ -378,16 +374,18 @@ public class ScriptGenerator extends AbstractGenerator {
         }
         String sectionName = "application_execution";
         sb.append(startLogSection(sectionName, null));
+        sb.append("  unzip $GASW_EXEC_BUNDLE\n");
         sb.append("  touch DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK\n");
         sb.append("  echo \"Executing " + commandLine + " ...\"\n");
         sb.append(commandLine + "\n");
-        sb.append("  rm -rf DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK\n");
-        sb.append("  if [ $? -ne 0 ];\n" + "then\n"
+        sb.append("  if [ $? -ne 0 ];\n" 
+                + "  then\n"
                 + "    echo \"Exiting with return value 6\"\n"
                 + stopLogSection(sectionName)
                 + "    cleanup\n"
                 + "    exit 6;\n"
                 + "  fi;\n");
+        sb.append("  rm -rf DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK\n");
         sb.append("  BEFOREUPLOAD=`date +%s`;\n");
         sb.append("  echo \"Execution time was `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}`s\"\n");
         sb.append(edgesVar + "\"\n");
@@ -424,6 +422,31 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append(edgesVar + "\n");
 
         sb.append(stopLogSection(sectionName));
+        return sb.toString();
+    }
+
+    /**
+     * Generates the code to upload the results according to regular expressions.
+     *
+     * @param regexUploads The list of regular expressions to match
+     * @return A string containing the code
+     */
+    public String regexUpload(List<String> regexUploads) {
+
+        StringBuilder sb = new StringBuilder();
+//        if (!regexUploads.isEmpty()) {
+//            String sectionName = "regex_upload";
+//            sb.append(startLogSection(sectionName, null));
+//
+//            for (String regex : regexUploads) {
+//                sb.append("  for file in `ls -a | grep \"" + regex + "\"`\n");
+//                sb.append("  do\n");
+//                sb.append("    `\n");
+//                sb.append("  done\n\n");
+//            }
+//
+//            sb.append(stopLogSection(sectionName));
+//        }
         return sb.toString();
     }
 
