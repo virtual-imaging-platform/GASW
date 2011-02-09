@@ -99,11 +99,9 @@ public abstract class OutputUtil {
                 // Application Output
                 if (strLine.contains("<application_execution>")) {
                     isAppExec = true;
-                }
-                if (strLine.contains("</application_execution>")) {
+                } else if (strLine.contains("</application_execution>")) {
                     isAppExec = false;
-                }
-                if (isAppExec) {
+                } else if (isAppExec) {
                     appStdOut.append(strLine);
                     appStdOut.append("\n");
                 }
@@ -201,7 +199,7 @@ public abstract class OutputUtil {
                 }
             }
             return appStdErr.toString();
-            
+
         } catch (IOException ex) {
             logException(log, ex);
         }
