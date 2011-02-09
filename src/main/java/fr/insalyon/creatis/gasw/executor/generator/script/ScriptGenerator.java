@@ -101,7 +101,7 @@ public class ScriptGenerator extends AbstractGenerator {
 
         // if the execution environment is a cluster, the vlet binaries
         // should be added to the path
-        sb.append("  if [[ $GASW_EXEC_ENV == \"PBS\" ]]\n"
+        sb.append("  if [[ \"$GASW_EXEC_ENV\" == \"PBS\" ]]\n"
                 + "  then\n"
                 + "    export PATH=${VLET_INSTALL}/bin:$PATH\n"
                 + "  fi\n\n");
@@ -277,10 +277,10 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append(startLogSection(sectionName, null));
 
         for (Infrastructure i : release.getInfrastructures()) {
-            sb.append("  if [[ $GASW_EXEC_ENV == \"" + i.getType().name() + "\" ]]\n");
+            sb.append("  if [[ \"$GASW_EXEC_ENV\" == \"" + i.getType().name() + "\" ]]\n");
             sb.append("  then\n");
             for (Execution e : i.getExecutions()) {
-                sb.append("    if [[ $GASW_JOB_ENV == \"" + e.getType().name() + "\" ]]\n");
+                sb.append("    if [[ \"$GASW_JOB_ENV\" == \"" + e.getType().name() + "\" ]]\n");
                 sb.append("    then\n");
                 URI lfn = e.getBoundArtifact();
                 sb.append(dataManagement.copyFromCacheCommand(lfn));
@@ -301,7 +301,6 @@ public class ScriptGenerator extends AbstractGenerator {
         }
         edgesVar += "\"";
 
-        sb.append("  chmod 755 *;\n");
         sb.append("  AFTERDOWNLOAD=`date +%s`;\n");
         sb.append(edgesVar + "\n\n");
 
@@ -328,11 +327,13 @@ public class ScriptGenerator extends AbstractGenerator {
         }
 
         for (Infrastructure i : release.getInfrastructures()) {
-            sb.append("  if [[ $GASW_EXEC_ENV == \"" + i.getType().name() + "\" ]]\n");
+            sb.append("  if [[ \"$GASW_EXEC_ENV\" == \"" + i.getType().name() + "\" ]]\n");
             sb.append("  then\n");
+            sb.append("    echo \"Exporting variables to " + i.getType().name() + "\"\n");
             for (Execution e : i.getExecutions()) {
-                sb.append("    if [[ $GASW_JOB_ENV == \"" + e.getType().name() + "\" ]]\n");
+                sb.append("    if [[ \"$GASW_JOB_ENV\" == \"" + e.getType().name() + "\" ]]\n");
                 sb.append("    then\n");
+                sb.append("      echo \"Exporting variables to " + e.getType().name() + "\"\n");
                 for (EnvVariable v : e.getBoundEnvironment()) {
                     if (v.getCategory() == EnvVariable.Category.SYSTEM) {
                         sb.append("      export " + v.getName() + "=\"" + v.getValue() + "\"\n");
@@ -374,7 +375,8 @@ public class ScriptGenerator extends AbstractGenerator {
         }
         String sectionName = "application_execution";
         sb.append(startLogSection(sectionName, null));
-        sb.append("  unzip $GASW_EXEC_BUNDLE\n");
+        sb.append("  tar -zxf $GASW_EXEC_BUNDLE\n");
+        sb.append("  chmod 755 *;\n");
         sb.append("  touch DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK\n");
         sb.append("  echo \"Executing " + commandLine + " ...\"\n");
         sb.append(commandLine + "\n");

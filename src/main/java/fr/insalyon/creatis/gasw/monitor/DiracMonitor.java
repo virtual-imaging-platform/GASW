@@ -39,9 +39,10 @@ import fr.insalyon.creatis.gasw.Gasw;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.security.SecureRandom;
@@ -56,10 +57,10 @@ import org.apache.log4j.Logger;
 public class DiracMonitor extends Monitor {
 
     private static final Logger log = Logger.getLogger(DiracMonitor.class);
+    private static String END_OF_MESSAGE = "EOF_DA";
     private static final String SEPARATOR = "##";
     private static DiracMonitor instance;
-    private DataOutputStream dos;
-    private DataInputStream dis;
+    private Communication communication;
     private String id;
 
     public synchronized static DiracMonitor getInstance() {
@@ -75,8 +76,7 @@ public class DiracMonitor extends Monitor {
         try {
             Socket socket = new Socket(Configuration.NOTIFICATION_HOST,
                     Configuration.NOTIFICATION_PORT);
-            dos = new DataOutputStream(socket.getOutputStream());
-            dis = new DataInputStream(socket.getInputStream());
+            communication = new Communication(socket);
             id = new BigInteger(60, new SecureRandom()).toString(32);
 
         } catch (IOException ex) {
@@ -89,13 +89,12 @@ public class DiracMonitor extends Monitor {
 
         while (!stop) {
             try {
-                String message = dis.readUTF();
-                String[] jobStatusArray = message.split(SEPARATOR);
                 List<String> finishedJobs = new ArrayList<String>();
 
-                for (String s : jobStatusArray) {
+                String message;
+                while (!(message = communication.getMessage()).equals(END_OF_MESSAGE)) {
 
-                    String[] jobArray = s.split("--");
+                    String[] jobArray = message.split("--");
                     String id = jobArray[0];
                     String status = jobArray[1];
                     Job job = jobDAO.getJobByID(id);
@@ -132,34 +131,72 @@ public class DiracMonitor extends Monitor {
                 logException(log, ex);
             } catch (DAOException ex) {
                 logException(log, ex);
-            } catch (IOException ex) {
-                logException(log, ex);
             }
         }
     }
 
     @Override
     public synchronized void add(String jobID, String symbolicName, String fileName) {
-        try {
-            Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
-            job.setCommand(symbolicName);
-            add(job, fileName);
-            setStatus(job);
-            dos.writeUTF(jobID + SEPARATOR + id);
-            dos.flush();
-        } catch (IOException ex) {
-            logException(log, ex);
-        }
+        Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
+        job.setCommand(symbolicName);
+        add(job, fileName);
+        setStatus(job);
+        communication.sendMessage(jobID + SEPARATOR + id);
+        communication.sendMessage(END_OF_MESSAGE);
     }
 
     @Override
     public synchronized void terminate() {
-        try {
-            super.terminate();
-            dis.close();
-            instance = null;
-        } catch (IOException ex) {
-            logException(log, ex);
+        super.terminate();
+        instance = null;
+        communication.close();
+    }
+
+    private class Communication {
+
+        private BufferedReader in;
+        private PrintWriter out;
+
+        public Communication(Socket socket) {
+
+            try {
+                this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                this.out = new PrintWriter(socket.getOutputStream(), true);
+            } catch (IOException ex) {
+                logException(ex);
+            }
+        }
+
+        public void sendMessage(String message) {
+            out.println(message);
+            out.flush();
+        }
+
+        public String getMessage() {
+            try {
+                return in.readLine();
+
+            } catch (IOException ex) {
+                logException(ex);
+                return null;
+            }
+        }
+
+        public void close() {
+            try {
+                in.close();
+            } catch (IOException ex) {
+                logException(ex);
+            }
+        }
+
+        private void logException(Exception ex) {
+            log.error(ex.getMessage());
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
         }
     }
 }

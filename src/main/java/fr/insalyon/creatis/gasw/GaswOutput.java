@@ -65,6 +65,7 @@ public class GaswOutput {
     public GaswOutput(String jobID, int exitCode, File appStdOut,
             File appStdErr, File stdOut, File stdErr) {
 
+        this.jobID = jobID;
         this.exitCode = exitCode;
         this.appStdOut = appStdOut;
         this.appStdErr = appStdErr;

@@ -6,7 +6,17 @@
     <packaging>jar</packaging>
     <version>0.5</version>
     <name>GASW</name>
-    <url>http://maven.apache.org</url>
+    <licenses>
+        <license>
+            <name>CeCILL-B, Version 1.0</name>
+            <url>http://www.cecill.info/</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <organization>
+        <name>CREATIS</name>
+        <url>http://www.creatis.insa-lyon.fr/</url>
+    </organization>
     <build>
         <plugins>
             <plugin>
