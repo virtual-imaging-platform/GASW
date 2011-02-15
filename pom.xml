@@ -37,7 +37,7 @@
                     <configuration>
                         <archive>
                             <manifest>
-                                <mainClass>fully.qualified.MainClass</mainClass>
+                                <mainClass>fr.insalyon.creatis.gasw.Gasw</mainClass>
                             </manifest>
                         </archive>
                         <descriptorRefs>
