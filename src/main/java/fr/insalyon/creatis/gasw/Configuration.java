@@ -47,7 +47,7 @@ import org.apache.log4j.Logger;
  */
 public class Configuration {
 
-    private static final Logger log = Logger.getLogger(Configuration.class);
+    private static final Logger logger = Logger.getLogger(Configuration.class);
     private static final String CONF_FILE = "./conf/settings.conf";
     private static Properties conf;
     // Properties
@@ -126,7 +126,7 @@ public class Configuration {
 
         } catch (IOException ex) {
 
-            System.out.println("Failing to setup trying to create file");
+            logger.info("Failing to setup trying to create file");
             try {
                 conf.setProperty("GRID", GRID);
                 conf.setProperty("VO", VO);
@@ -147,10 +147,10 @@ public class Configuration {
                 conf.store(new FileOutputStream(CONF_FILE), "");
 
             } catch (IOException ex1) {
-                log.error(ex1);
-                if (log.isDebugEnabled()) {
+                logger.error(ex1);
+                if (logger.isDebugEnabled()) {
                     for (StackTraceElement stack : ex1.getStackTrace()) {
-                        log.debug(stack);
+                        logger.debug(stack);
                     }
                 }
                 throw new GaswException(ex1.getMessage());
