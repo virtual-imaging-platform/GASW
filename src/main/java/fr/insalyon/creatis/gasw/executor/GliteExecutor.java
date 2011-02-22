@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw.executor;
 
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.JdlGenerator;
 import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
@@ -62,7 +63,7 @@ public class GliteExecutor extends Executor {
     }
 
     @Override
-    public String submit() {
+    public String submit() throws GaswException {
         try {
             super.submit();
             String exec = "glite-wms-job-submit -a " + Constants.JDL_ROOT + "/" + jdlName;

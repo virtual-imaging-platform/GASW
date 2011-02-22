@@ -50,18 +50,15 @@ public class GaswOutput {
     private File stdErr;
 
     /**
-     * Creates an output object with default exit code set to "0".
+     * Creates an output object.
      * 
-     * @param appStdOut
-     * @param appStdErr
-     * @param stdOut
-     * @param stdErr
+     * @param jobID Job identification
+     * @param exitCode Exit code
+     * @param appStdOut Application standard output file
+     * @param appStdErr Application standard error file
+     * @param stdOut Job standard output file
+     * @param stdErr Job standard error file
      */
-    public GaswOutput(String jobID, File appStdOut, File appStdErr,
-            File stdOut, File stdErr) {
-        this(jobID, 0, appStdOut, appStdErr, stdOut, stdErr);
-    }
-
     public GaswOutput(String jobID, int exitCode, File appStdOut,
             File appStdErr, File stdOut, File stdErr) {
 

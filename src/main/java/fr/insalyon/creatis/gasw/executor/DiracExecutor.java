@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw.executor;
 
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.JdlGenerator;
 import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
@@ -63,7 +64,7 @@ public class DiracExecutor extends Executor {
     }
 
     @Override
-    public String submit() {
+    public String submit() throws GaswException {
         super.submit();
         try {
             String exec = "dirac-wms-job-submit " + Constants.JDL_ROOT + "/" + jdlName;
@@ -79,6 +80,11 @@ public class DiracExecutor extends Executor {
             }
 
             String jobID = cout.substring(cout.lastIndexOf("=") + 2, cout.length()).trim();
+            try {
+                new Integer(jobID);
+            } catch (NumberFormatException ex) {
+                throw new GaswException("Unable to submit job. DIRAC Error: " + cout);
+            }
             MonitorFactory.getMonitor(version).add(jobID, gaswInput.getRelease().getSymbolicName(), jdlName);
 
             log.info("Dirac Executor Job ID: " + jobID);

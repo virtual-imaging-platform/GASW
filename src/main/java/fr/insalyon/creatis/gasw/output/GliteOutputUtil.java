@@ -102,7 +102,7 @@ public class GliteOutputUtil extends OutputUtil {
                 File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Job Cancelled");
                 File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Job Cancelled");
 
-                GaswOutput output = new GaswOutput(jobID, stdOut, stdErr, stdOut, stdErr);
+                GaswOutput output = new GaswOutput(jobID, 0, stdOut, stdErr, stdOut, stdErr);
 
                 return output;
             }

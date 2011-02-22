@@ -56,7 +56,7 @@ import org.apache.log4j.Logger;
  */
 public class DiracMonitor extends Monitor {
 
-    private static final Logger log = Logger.getLogger(DiracMonitor.class);
+    private static final Logger logger = Logger.getLogger(DiracMonitor.class);
     private static String END_OF_MESSAGE = "EOF_DA";
     private static final String SEPARATOR = "##";
     private static DiracMonitor instance;
@@ -80,7 +80,7 @@ public class DiracMonitor extends Monitor {
             id = new BigInteger(60, new SecureRandom()).toString(32);
 
         } catch (IOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         }
     }
 
@@ -94,6 +94,7 @@ public class DiracMonitor extends Monitor {
                 String message;
                 while (!(message = communication.getMessage()).equals(END_OF_MESSAGE)) {
 
+                    logger.info("Received: " + message);
                     String[] jobArray = message.split("--");
                     String id = jobArray[0];
                     String status = jobArray[1];
@@ -115,11 +116,13 @@ public class DiracMonitor extends Monitor {
                             job.setStatus(Status.COMPLETED);
                         } else if (status.equals("Failed")) {
                             job.setStatus(Status.ERROR);
-                        } else {
+                        } else if (status.equals("Killed")) {
                             job.setStatus(Status.CANCELLED);
+                        } else {
+                            job.setStatus(Status.STALLED);
                         }
                         setStatus(job);
-                        log.info("Dirac Monitor: job \"" + job.getId() + "\" finished as \"" + status + "\"");
+                        logger.info("Dirac Monitor: job \"" + job.getId() + "\" finished as \"" + status + "\"");
                         finishedJobs.add(job.getId() + "--" + job.getStatus());
                     }
                 }
@@ -128,9 +131,9 @@ public class DiracMonitor extends Monitor {
                 }
 
             } catch (GaswException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             } catch (DAOException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             }
         }
     }
@@ -191,10 +194,10 @@ public class DiracMonitor extends Monitor {
         }
 
         private void logException(Exception ex) {
-            log.error(ex.getMessage());
-            if (log.isDebugEnabled()) {
+            logger.error(ex.getMessage());
+            if (logger.isDebugEnabled()) {
                 for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
+                    logger.debug(stack);
                 }
             }
         }

@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw.executor;
 
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.release.Release;
 import java.io.BufferedWriter;
@@ -81,7 +82,7 @@ public abstract class Executor {
     /**
      * Submits a job to a grid or local execution.
      */
-    public String submit() {
+    public String submit() throws GaswException {
         long nanoTime = System.nanoTime();
         if (!firstExecution) {
             scriptName = getNewName(scriptName, nanoTime, ".sh", Constants.SCRIPT_ROOT);

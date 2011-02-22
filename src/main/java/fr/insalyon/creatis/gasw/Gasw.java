@@ -88,7 +88,7 @@ public class Gasw {
      * @param gaswInput
      * @return
      */
-    public synchronized String submit(Object client, GaswInput gaswInput) {
+    public synchronized String submit(Object client, GaswInput gaswInput) throws GaswException {
 
         if (this.client == null) {
             this.client = client;
@@ -114,11 +114,15 @@ public class Gasw {
             String command, List<String> parameters, List<URI> downloads,
             List<URI> uploads) {
 
-        Execution execution = new Execution(Execution.JobType.NORMAL.name(), command, null, null);
-        Infrastructure infrastructure = new Infrastructure("GRID", execution, null, null);
-        Release release = new Release(command, infrastructure, null, null);
+        try {
+            Execution execution = new Execution(Execution.JobType.NORMAL.name(), command, null, null);
+            Infrastructure infrastructure = new Infrastructure("GRID", execution, null, null);
+            Release release = new Release(command, infrastructure, null, null);
 
-        return submit(client, new GaswInput(release, parameters, downloads, uploads));
+            return submit(client, new GaswInput(release, parameters, downloads, uploads));
+        } catch (GaswException ex) {
+            return null;
+        }
     }
 
     /**

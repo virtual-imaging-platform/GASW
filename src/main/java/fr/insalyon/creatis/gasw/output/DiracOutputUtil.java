@@ -62,7 +62,7 @@ public class DiracOutputUtil extends OutputUtil {
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
             Job job = jobDAO.getJobByID(jobID);
 
-            if (job.getStatus() != Monitor.Status.CANCELLED) {
+            if (job.getStatus() != Monitor.Status.CANCELLED && job.getStatus() != Monitor.Status.STALLED) {
 
                 String exec = "dirac-wms-job-get-output " + jobID;
                 Process execution = Runtime.getRuntime().exec(exec);
@@ -82,10 +82,21 @@ public class DiracOutputUtil extends OutputUtil {
                 return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
 
             } else {
-                File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Job Cancelled");
-                File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Job Cancelled");
 
-                GaswOutput output = new GaswOutput(jobID, stdOut, stdErr, stdOut, stdErr);
+                String message = "";
+                int exitCode = 0;
+                
+                if (job.getStatus() == Monitor.Status.CANCELLED) {
+                    message = "Job Cancelled";
+                } else {
+                    message = "Job Stalled";
+                    exitCode = 6;
+                }
+
+                File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, message);
+                File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, message);
+
+                GaswOutput output = new GaswOutput(jobID, exitCode, stdOut, stdErr, stdOut, stdErr);
                 
                 return output;
             }

@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw.executor;
 
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
@@ -70,7 +71,7 @@ public class LocalExecutor extends Executor {
     }
 
     @Override
-    public String submit() {
+    public String submit() throws GaswException {
         super.submit();
         Random random = new Random(System.nanoTime());
         String jobID = "Local-" + random.nextInt(100000);

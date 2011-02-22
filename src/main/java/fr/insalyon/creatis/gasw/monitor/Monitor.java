@@ -52,7 +52,7 @@ import org.apache.log4j.Logger;
  */
 public abstract class Monitor extends Thread {
 
-    private static final Logger log = Logger.getLogger(Monitor.class);
+    private static final Logger logger = Logger.getLogger(Monitor.class);
     protected boolean stop;
     protected JobDAO jobDAO;
     protected NodeDAO nodeDAO;
@@ -61,7 +61,8 @@ public abstract class Monitor extends Thread {
     public static enum Status {
 
         COMPLETED, ERROR, RUNNING,
-        QUEUED, NOT_SUBMITTED, SUCCESSFULLY_SUBMITTED, CANCELLED
+        QUEUED, NOT_SUBMITTED, SUCCESSFULLY_SUBMITTED, 
+        CANCELLED, STALLED
     };
 
     protected Monitor() {
@@ -89,7 +90,7 @@ public abstract class Monitor extends Thread {
             jobDAO.add(job);
 
         } catch (DAOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         }
     }
 
@@ -111,7 +112,7 @@ public abstract class Monitor extends Thread {
             logStatus(job);
 
         } catch (DAOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         }
     }
 
@@ -139,7 +140,7 @@ public abstract class Monitor extends Thread {
             bw.close();
 
         } catch (IOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         }
     }
 
