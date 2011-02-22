@@ -87,6 +87,7 @@ public class ScriptGenerator extends AbstractGenerator {
                 + "    export GASW_EXEC_ENV=EGEE\n"
                 + "  else\n"
                 + "    export GASW_EXEC_ENV=PBS\n"
+                + "    export X509_USER_PROXY=$CLUSTER_PROXY\n"
                 + "  fi\n\n");
 
         // Builds the custom environment
