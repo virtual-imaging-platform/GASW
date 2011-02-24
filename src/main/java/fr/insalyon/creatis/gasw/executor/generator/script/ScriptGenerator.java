@@ -241,7 +241,8 @@ public class ScriptGenerator extends AbstractGenerator {
                 sb.append("    checkCacheDownloadAndCacheLFN " + dataManagement.removeLFCHost(lfn) + "\n");
                 sb.append("    if [ $? != 0 ]\n"
                         + "      then\n"
-                        + "      error \"Cannot download file, exiting with return code 1\"\n"
+                        + "      error \"Cannot download file\"\n"
+                        + "      error \"Exiting with return value 1\"\n"
                         + "      exit 1\n"
                         + "    fi\n");
                 sb.append("    export GASW_EXEC_URL=\"" + lfn + "\"\n");
@@ -259,7 +260,8 @@ public class ScriptGenerator extends AbstractGenerator {
             sb.append("checkCacheDownloadAndCacheLFN " + dataManagement.removeLFCHost(lfn) + "\n");
             sb.append("if [ $? != 0 ]\n"
                     + "then\n"
-                    + "  error \"Cannot download file, exiting with return code 1\"\n"
+                    + "  error \"Cannot download file\"\n"
+                    + "  error \"Exiting with return value 1\"\n"
                     + "  exit 1\n"
                     + "fi\n");
             edgesVar += ";" + lfn;
