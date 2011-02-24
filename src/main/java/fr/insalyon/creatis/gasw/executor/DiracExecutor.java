@@ -38,7 +38,6 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.JdlGenerator;
-import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -98,30 +97,6 @@ public class DiracExecutor extends Executor {
             logException(log, ex);
             return null;
         }
-    }
-
-    /**
-     * 
-     * @return
-     */
-    private String generateScript() {
-
-        StringBuilder sb = new StringBuilder();
-        ScriptGenerator generator = ScriptGenerator.getInstance();
-
-        sb.append(generator.header());
-        sb.append(generator.hostConfiguration());
-        sb.append(generator.backgroundScript());
-        sb.append(generator.cleanupCommand());
-        sb.append(generator.uploadTest(gaswInput.getUploads()));
-        sb.append(generator.inputs(gaswInput.getRelease(), gaswInput.getDownloads()));
-        sb.append(generator.applicationEnvironment(gaswInput.getRelease()));
-        sb.append(generator.applicationExecution(gaswInput.getParameters()));
-        sb.append(generator.resultsUpload(gaswInput.getUploads()));
-        sb.append(generator.regexUpload(gaswInput.getRegexUploads()));
-        sb.append(generator.footer());
-
-        return publishScript(gaswInput.getRelease().getSymbolicName(), sb.toString());
     }
 
     /**

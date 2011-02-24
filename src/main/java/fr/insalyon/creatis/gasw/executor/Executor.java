@@ -37,6 +37,7 @@ package fr.insalyon.creatis.gasw.executor;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
+import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.release.Release;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -91,6 +92,21 @@ public abstract class Executor {
             firstExecution = false;
         }
         return null;
+    }
+
+    /**
+     *
+     * @return
+     */
+    protected String generateScript() {
+
+        String script = ScriptGenerator.getInstance().generateScript(
+                gaswInput.getRelease(),
+                gaswInput.getDownloads(),
+                gaswInput.getUploads(),
+                gaswInput.getParameters());
+
+        return publishScript(gaswInput.getRelease().getSymbolicName(), script);
     }
 
     /**
@@ -174,13 +190,13 @@ public abstract class Executor {
     }
 
     private String getNewName(String name, long nanoTime, String extension, String directory) {
-        
+
         try {
             String newName = name.substring(0, name.lastIndexOf("-") + 1) + nanoTime + extension;
             FileOutputStream fos = null;
-            FileInputStream fis = new FileInputStream( new File(directory + "/" + name) );
+            FileInputStream fis = new FileInputStream(new File(directory + "/" + name));
 
-            fos = new FileOutputStream( new File(directory + "/" + newName) );
+            fos = new FileOutputStream(new File(directory + "/" + newName));
             byte[] buf = new byte[1024];
             int i = 0;
             while ((i = fis.read(buf)) != -1) {
@@ -197,6 +213,6 @@ public abstract class Executor {
         } catch (Exception ex) {
             logException(log, ex);
             return null;
-        }       
+        }
     }
 }

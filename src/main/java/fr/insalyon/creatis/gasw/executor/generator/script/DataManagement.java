@@ -37,7 +37,6 @@ package fr.insalyon.creatis.gasw.executor.generator.script;
 import fr.insalyon.creatis.gasw.Constants;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import org.apache.log4j.Logger;
 
 /**
@@ -46,7 +45,7 @@ import org.apache.log4j.Logger;
  */
 public class DataManagement extends AbstractGenerator {
 
-    private static final Logger log = Logger.getLogger(DataManagement.class);
+    private static final Logger logger = Logger.getLogger(DataManagement.class);
     private static DataManagement instance;
 
     public static DataManagement getInstance() {
@@ -59,17 +58,135 @@ public class DataManagement extends AbstractGenerator {
     private DataManagement() {
     }
 
+    public String checkCacheDownloadAndCacheLFNFunction() {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("function checkCacheDownloadAndCacheLFN {\n");
+        sb.append("local LFN=$1\n");
+        sb.append("#the LFN is assumed to be in the /grid/biomed/... format (no leading lfn://lfc-biomed.in2p3.fr:5010/)\n");
+        sb.append("#this variable is true <=> the file has to be downloaded again\n");
+        sb.append("local download=\"true\"\n");
+        sb.append("#first check if the file is already in cache\n");
+        sb.append("local LOCALPATH=`awk -v L=${LFN} '$1==L {print $2}' " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "`\n");
+        sb.append("if [ \"${LOCALPATH}\" != \"\" ]\n");
+        sb.append("      then\n");
+        sb.append("        info \"There is an entry in the cache: test if the local file still here\"\n");
+        sb.append("        local TIMESTAMP_LOCAL=\"\"\n");
+        sb.append("        local TIMESTAMP_GRID=\"\"\n");
+        sb.append("        local date_local=\"\"\n");
+        sb.append("        test -f ${LOCALPATH}\n");
+        sb.append("        if [ $? = 0 ]\n");
+        sb.append("            then\n");
+        sb.append("               info \"The file exists: checking if it was modified since it was added to the cache\"\n");
+        sb.append("               local YEAR=`date +%Y`\n");
+        sb.append("               local YEARBEFORE=`expr ${YEAR} - 1`\n");
+        sb.append("               local currentDate=`date +%s`\n");
+        sb.append("               local TIMESTAMP_CACHE=`awk -v L=${LFN} '$1==L {print $3}' " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "`\n");
+        sb.append("               local LOCALMONTH=`ls -la ${LOCALPATH} | awk -F' ' '{print $6}'`\n");
+        sb.append("               local MONTHTIME=`date -d \"${LOCALMONTH} 1 00:00\" +%s`\n");
+        sb.append("               date_local=`ls -la ${LOCALPATH} | awk -F' ' '{print $6, $7, $8}'`\n");
+        sb.append("               if [ \"${MONTHTIME}\" -gt \"${currentDate}\" ]\n");
+        sb.append("                   then\n");
+        sb.append("                   TIMESTAMP_LOCAL=`date -d \"${date_local} ${YEARBEFORE}\" +%s`\n");
+        sb.append("               else\n");
+        sb.append("                   TIMESTAMP_LOCAL=`date -d \"${date_local} ${YEAR}\" +%s`\n");
+        sb.append("               fi\n");
+        sb.append("               if [ \"${TIMESTAMP_CACHE}\" = \"${TIMESTAMP_LOCAL}\" ]\n");
+        sb.append("                   then\n");
+        sb.append("                     info \"The file was not touched since it was added to the cache: test if it is up up-to-date\"\n");
+        sb.append("                     local date_grid_s=`lfc-ls -l ${LFN} | awk -F' ' '{print $6, $7, $8}'`\n");
+        sb.append("                     local MONTHGRID=`echo ${date_grid_s} | awk -F' ' '{print $1}'`\n");
+        sb.append("                     MONTHTIME=`date -d \"${MONTHGRID} 1 00:00\" +%s`\n");
+        sb.append("                     if [ \"${MONTHTIME}\" != \"\" ] && [ \"${date_grid_s}\" != \"\" ]\n");
+        sb.append("                     then\n");
+        sb.append("                       if [ \"${MONTHTIME}\" -gt \"${currentDate}\" ]\n");
+        sb.append("                           then\n");
+        sb.append("                                #it must be last year\n");
+        sb.append("                                TIMESTAMP_GRID=`date -d \"${date_grid_s} ${YEARBEFORE}\" +%s`\n");
+        sb.append("                           else\n");
+        sb.append("                                TIMESTAMP_GRID=`date -d \"${date_grid_s} ${YEAR}\" +%s`\n");
+        sb.append("                       fi\n");
+        sb.append("                       if [ \"${TIMESTAMP_LOCAL}\" -gt \"${TIMESTAMP_GRID}\" ]\n");
+        sb.append("                           then\n");
+        sb.append("                                  info \"The file is up-to-date ; there is no need to download it again\"\n");
+        sb.append("                                  download=\"false\"\n");
+        sb.append("                       else\n");
+        sb.append("                             warning \"The cache entry is outdated (local modification date is ${TIMESTAMP_LOCAL} - ${date_local} while grid is ${TIMESTAMP_GRID} ${date_grid_s})\"\n");
+        sb.append("                       fi\n");
+        sb.append("                     else\n");
+        sb.append("                        warning \"Cannot determine file timestamp on the LFC\"\n");
+        sb.append("                      fi\n");
+        sb.append("                  else\n");
+        sb.append("                   warning \"The cache entry was modified since it was created (cache time is ${TIMESTAMP_CACHE} and file time is ${TIMESTAMP_LOCAL} - ${date_local})\"\n");
+        sb.append("               fi\n");
+        sb.append("        else\n");
+        sb.append("            warning \"The cache entry disappeared\"\n");
+        sb.append("        fi\n");
+        sb.append("    else\n");
+        sb.append("        info \"There is no entry in the cache\"\n");
+        sb.append("    fi\n");
+        sb.append("    if [ \"${download}\" = \"false\" ]\n");
+        sb.append("        then\n");
+        sb.append("        info \"Linking file from cache: ${LOCALPATH}\"\n");
+        sb.append("        BASE=`basename ${LFN}`\n");
+        sb.append("        info \"ln -s ${LOCALPATH} ./${BASE}\"\n");
+        sb.append("        ln -s  ${LOCALPATH} ./${BASE}\n");
+        sb.append("        return 0\n");
+        sb.append("    fi\n");
+        sb.append("\n    if [ \"${download}\" = \"true\" ]\n");
+        sb.append("        then\n");
+        sb.append("           downloadLFN ${LFN} ; if  [ $? != 0 ]; then return 1; fi\n");
+        sb.append("           addToCache ${LFN} `basename ${LFN}`\n");
+        sb.append("        return 0\n");
+        sb.append("    fi\n");
+        sb.append("}\n");
+        sb.append("export -f checkCacheDownloadAndCacheLFN\n\n");
+        return sb.toString();
+    }
+
+    public String downloadFunction() {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("function downloadLFN {\n");
+        sb.append("  local LFN=$1\n");
+        sb.append("  local LOCAL=${PWD}/`basename ${LFN}`\n");
+        sb.append("  info \"Removing file ${LOCAL} in case it is already here\"\n");
+        sb.append("  \\rm -f ${LOCAL}\n");
+        sb.append("  info \"Downloading file ${LFN}...\"\n");
+        sb.append("  LINE=\"lcg-cp -v --connect-timeout " + Constants.CONNECT_TIMEOUT 
+                + " --sendreceive-timeout " + Constants.SEND_RECEIVE_TIMEOUT
+                + " --bdii-timeout " + Constants.BDII_TIMEOUT
+                + " --srm-timeout " + Constants.SRM_TIMEOUT
+                + " lfn:${LFN} file:`pwd`/`basename ${LFN}`\"\n");
+        sb.append("  info ${LINE}\n");
+        sb.append("  ${LINE}\n");
+        sb.append("  if [ $? = 0 ];\n");
+        sb.append("  then\n");
+        sb.append("    info \"lcg-cp worked fine\";\n");
+        sb.append("  else\n");
+        sb.append("    error \"lcg-cp failed\"\n");
+        sb.append("  return 1\n");
+        sb.append("  fi\n");
+        sb.append("}\nexport -f downloadLFN\n");
+        return sb.toString();
+    }
+
     /**
      * Generates the code of the function to add a file to the cache
      *
      * @return A string containing the code
      */
     protected String addToCacheCommand() {
+
         StringBuilder sb = new StringBuilder();
         sb.append("function addToCache {\n");
+        sb.append("  mkdir -p  " + Constants.CACHE_DIR + "\n");
+        sb.append("  touch " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "\n");
         sb.append("  local LFN=$1\n");
         sb.append("  local FILE=`basename $2`\n");
-        sb.append("  i=0; exist=\"true\";\n");
+        sb.append("  local i=0\n");
+        sb.append("  local exist=\"true\";\n");
+        sb.append("  local NAME=\"\"\n");
         sb.append("  while [ \"${exist}\" = \"true\" ]; do\n");
         sb.append("    NAME=\"" + Constants.CACHE_DIR + "/${FILE}-cache-${i}\"\n");
         sb.append("    test -f ${NAME}\n");
@@ -78,17 +195,27 @@ public class DataManagement extends AbstractGenerator {
         sb.append("    fi\n");
         sb.append("    i=`expr $i + 1`\n");
         sb.append("  done\n");
-        sb.append("  echo \"Adding file ${FILE} to cache\" \n");
+        sb.append("  info \"Removing all cache entries for ${LFN} (files will stay locally in case anyone else needs them)\"\n");
+        sb.append("  local TEMP=`mktemp temp.XXXXXX`\n");
+        sb.append("  awk -v L=${LFN} '$1!=L {print}' " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + " > ${TEMP}\n");
+        sb.append("  \\mv -f ${TEMP} " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "\n"); //CHECK THIS
+        sb.append("  info \"Adding file ${FILE} to cache and setting the timestamp\"\n");
         sb.append("  \\cp -f ${FILE} ${NAME}\n");
-        sb.append("  echo \"${LFN} ${NAME}\" >> " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "\n");
-        sb.append("}\n\n");
+        sb.append("  local date_local=`ls -la ${NAME} | awk -F' ' '{print $6, $7, $8}'`\n");
+        sb.append("  local TIMESTAMP=`date -d \"${date_local}\" +%s`\n");
+        sb.append("  echo \"${LFN} ${NAME} ${TIMESTAMP}\" >> " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "\n");
+        sb.append("}\n");
+        sb.append("export -f addToCache\n\n");
         return sb.toString();
     }
 
     /**
-     * Generates a few functions to upload a file to the LFC. Each output file has a number of replicas as defined in the GASW descriptor.
-     * If USE_CLOSE_SE is set to true then function uploadFile will try to upload the file on the site's closest SE, as defined by variable VO_BIOMED_DEFAULT_SE.
-     * Then uploadFile will randomly pick SEs from the list (defined in MOTEUR's settings.conf) until the file is replicated as wished.
+     * Generates a few functions to upload a file to the LFC. Each output file
+     * has a number of replicas as defined in the GASW descriptor.
+     * If USE_CLOSE_SE is set to true then function uploadFile will try to upload
+     * the file on the site's closest SE, as defined by variable VO_BIOMED_DEFAULT_SE.
+     * Then uploadFile will randomly pick SEs from the list (defined in MOTEUR's
+     * settings.conf) until the file is replicated as wished.
      * An error is raised in case the file couldn't be copied at least once.
      *
      * @return A string containing the code
@@ -113,12 +240,12 @@ public class DataManagement extends AbstractGenerator {
         sb.append("  for n in ${SELIST}\n");
         sb.append("  do\n");
         sb.append("    if [ \"$i\" = \"${index}\" ]\n");
-        sb.append("    then\n");
-        sb.append("      RESULT=$n\n");
-        sb.append("      echo \"result: $RESULT\"\n");
-        sb.append("    else\n");
-        sb.append("      NSE=\"${NSE} $n\"\n");
-        sb.append("    fi\n");
+        sb.append("      then\n");
+        sb.append("        RESULT=$n\n");
+        sb.append("        info \"result: $RESULT\"\n");
+        sb.append("      else\n");
+        sb.append("        NSE=\"${NSE} $n\"\n");
+        sb.append("      fi\n");
         sb.append("    i=`expr $i + 1`\n");
         sb.append("  done\n");
         sb.append("  SELIST=${NSE}\n");
@@ -130,7 +257,7 @@ public class DataManagement extends AbstractGenerator {
         sb.append("  local n=$?\n");
         sb.append("  if [ \"$n\" = \"0\" ]\n");
         sb.append("  then\n");
-        sb.append("    echo \"SE list is empty\"\n");
+        sb.append("    info \"SE list is empty\"\n");
         sb.append("    RESULT=\"\"\n");
         sb.append("  else\n");
         sb.append("    local r=${RANDOM}\n");
@@ -144,7 +271,10 @@ public class DataManagement extends AbstractGenerator {
         sb.append("  local FILE=$2\n");
         sb.append("  local nrep=$3\n");
         sb.append("  local SELIST=${SE}\n");
-        sb.append("  local OPTS=\"--connect-timeout " + Constants.CONNECT_TIMEOUT + " --sendreceive-timeout " + Constants.SEND_RECEIVE_TIMEOUT + " --bdii-timeout " + Constants.BDII_TIMEOUT + " --srm-timeout " + Constants.SRM_TIMEOUT + "\"\n");
+        sb.append("  local OPTS=\"--connect-timeout " + Constants.CONNECT_TIMEOUT
+                + " --sendreceive-timeout " + Constants.SEND_RECEIVE_TIMEOUT
+                + " --bdii-timeout " + Constants.BDII_TIMEOUT
+                + " --srm-timeout " + Constants.SRM_TIMEOUT + "\"\n");
         sb.append("  local DEST=\"\"\n");
         sb.append("  if [ \"${USE_CLOSE_SE}\" = \"true\" ] && [ \"${VO_BIOMED_DEFAULT_SE}\" != \"\" ]\n");
         sb.append("  then\n");
@@ -164,70 +294,24 @@ public class DataManagement extends AbstractGenerator {
         sb.append("    fi\n");
         sb.append("    if [ $? = 0 ]\n");
         sb.append("    then\n");
-        sb.append("      echo \">>>>>>>>>> lcg-cr/rep of ${LFN} to SE ${DEST} worked fine <<<<<<<<<\"\n");
+        sb.append("      info \"lcg-cr/rep of ${LFN} to SE ${DEST} worked fine\"\n");
         sb.append("      done=`expr ${done} + 1`\n");
         sb.append("    else\n");
-        sb.append("      echo \">>>>>>>>>> lcg-cr/rep of ${LFN} to SE ${DEST} failed <<<<<<<<<<<<\" \n");
+        sb.append("      warning \"lcg-cr/rep of ${LFN} to SE ${DEST} failed\" \n");
         sb.append("    fi\n");
         sb.append("    chooseRandomSE\n");
         sb.append("    DEST=${RESULT}\n");
         sb.append("  done\n");
         sb.append("  if [ \"${done}\" = \"0\" ]\n");
         sb.append("  then\n");
-        sb.append("    echo \"Cannot lcg-cr file ${FILE} to lfn ${LFN}\"\n");
-        sb.append("    echo \"Exiting with return value 2\"\n");
+        sb.append("    error \"Cannot lcg-cr file ${FILE} to lfn ${LFN}\"\n");
+        sb.append("    error \"Exiting with return value 2\"\n");
         sb.append("    exit 2\n");
         sb.append("  else\n"); //put file in cache
         sb.append("    addToCache ${LFN} ${FILE}\n");
         sb.append("  fi\n");
         sb.append("}\n\n");
-
-        return sb.toString();
-    }
-
-    /**
-     * Generates the code to download an LFN
-     *
-     * @param lfn The file to download
-     * @return A string containing the code
-     */
-    protected String getDownloadCommand(URI lfn) {
-        lfn = getTemplate(lfn);
-        String name = getLfnName(lfn);
-        StringBuilder sb = new StringBuilder();
-
-        String sectionName = "file_download";
-        HashMap m = new HashMap();
-        m.put("lfn", lfn);
-        sb.append(startLogSection(sectionName, m));
-
-        String command = "  lcg-cp -v --connect-timeout " + Constants.CONNECT_TIMEOUT
-                + " --sendreceive-timeout " + Constants.SEND_RECEIVE_TIMEOUT
-                + " --bdii-timeout " + Constants.BDII_TIMEOUT
-                + " --srm-timeout " + Constants.SRM_TIMEOUT
-                + " lfn:" + lfn.getPath()
-                + " file:`pwd`/" + name + "\n";
-
-        sb.append("  echo \"Downloading file " + lfn.getPath() + " on the Worker Node...\"\n");
-        sb.append(command);
-        sb.append("  if [ $? = 0 ];\n");
-        sb.append("  then\n");
-        sb.append("    echo \"lcg-cp worked fine\";\n");
-        sb.append("  else\n");
-        sb.append("    echo \"lcg-cp failed: retrying once\";\n");
-        sb.append("  " + command);
-        sb.append("    if [ $? != 0 ];\n");
-        sb.append("    then\n");
-        sb.append("      echo \"lcg-cp failed again\";\n");
-        sb.append("      echo \"Exiting with return value 1\"\n");
-        sb.append("      cleanup\n");
-        sb.append("      exit 1;\n");
-        sb.append("    else\n");
-        sb.append("      echo \"lcg-cp worked fine\";\n");
-        sb.append("    fi\n");
-        sb.append("  fi\n");
-
-        sb.append(stopLogSection(sectionName));
+        
         return sb.toString();
     }
 
@@ -250,10 +334,7 @@ public class DataManagement extends AbstractGenerator {
 
         StringBuilder sb = new StringBuilder();
 
-        String sectionName = "file_upload";
-        HashMap m = new HashMap();
-        m.put("lfn", removeLFCHost(lfn));
-        sb.append(startLogSection(sectionName, m));
+        sb.append("startLog file_upload lfn=\"" + removeLFCHost(lfn) + "\"\n");
 
         if (test) {
             name += "-uploadTest";
@@ -266,10 +347,10 @@ public class DataManagement extends AbstractGenerator {
         }
         sb.append(" ${PWD}/" + name + " " + nreplicas + "\n");
         if (test) {
-            sb.append("  rm -f " + name + "-uploadTest\n");
+            sb.append("  \\rm -f " + name + "-uploadTest\n");
         }
 
-        sb.append(stopLogSection(sectionName));
+        sb.append("stopLog file_upload\n");
         return sb.toString();
     }
 
@@ -282,55 +363,17 @@ public class DataManagement extends AbstractGenerator {
      */
     protected String getDeleteCommand(boolean testUpload, URI lfn) {
 
-        lfn = getTemplate(lfn);
         String uploadTest = "";
         StringBuilder sb = new StringBuilder();
-        String sectionName = "file_delete";
-        HashMap m = new HashMap();
-        m.put("lfn", lfn);
-        sb.append(startLogSection(sectionName, m));
+        sb.append("startLog file_delete lfn=\"" + lfn + "\"\n");
+        lfn = getTemplate(lfn);
 
         if (testUpload) {
             uploadTest = "-uploadTest";
         }
-        sb.append("  echo \"Deleting file " + lfn.getPath() + uploadTest + "...\"\n");
-        sb.append("  lcg-del -a lfn:" + lfn.getPath() + uploadTest + "\n");
-
-        sb.append(stopLogSection(sectionName));
-        return sb.toString();
-    }
-
-    /** 
-     * Generates the code to copy an LFN from the cache (if there) or from the LFC
-     *
-     * @param lfn The LFN to be copied
-     * @return A string containing the code
-     */
-    protected String copyFromCacheCommand(URI lfn) {
-        StringBuilder sb = new StringBuilder();
-        String sectionName = "file_download_or_get_from_cache";
-        lfn = getTemplate(lfn);
-        HashMap m = new HashMap();
-        m.put("lfn", lfn);
-        sb.append(startLogSection(sectionName, m));
-
-        String name = getLfnName(lfn);
-
-        sb.append("  mkdir -p " + Constants.CACHE_DIR + "\n");
-        sb.append("  touch " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "\n");
-        sb.append("  LOCALPATH=`awk '$1==\"" + removeLFCHost(lfn) + "\" {print $2}' " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "`\n");
-        sb.append("  if [ \"${LOCALPATH}\" != \"\" ]\n");
-        sb.append("  then\n"
-                + "    echo \"Copying file from cache: ${LOCALPATH}\"\n"
-                + "    \\cp -f ${LOCALPATH} " + name + "\n"
-                + "  else\n");
-        sb.append(getDownloadCommand(lfn));
-        sb.append("  " + startLogSection("add_to_cache", m));
-        sb.append("  addToCache " + removeLFCHost(lfn) + " " + name + "\n");
-        sb.append("  " + stopLogSection("add_to_cache"));
-        sb.append("  fi\n");
-
-        sb.append(stopLogSection(sectionName));
+        sb.append("info \"Deleting file " + lfn.getPath() + uploadTest + "...\"\n");
+        sb.append("lcg-del -a lfn:" + lfn.getPath() + uploadTest + "\n");
+        sb.append("stopLog file_delete\n");
         return sb.toString();
     }
 
@@ -365,10 +408,10 @@ public class DataManagement extends AbstractGenerator {
             String r = template.replaceAll("\\$rep-[0-9]*", "");
             return new URI(r);
         } catch (URISyntaxException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
+            logger.error(ex);
+            if (logger.isDebugEnabled()) {
                 for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
+                    logger.debug(stack);
                 }
             }
         }
@@ -392,7 +435,7 @@ public class DataManagement extends AbstractGenerator {
      * @param lfn The LFN to tweak
      * @return The returned String (not a URI any more)
      */
-    private String removeLFCHost(URI lfn) {
+    public String removeLFCHost(URI lfn) {
         if (lfn.toString().contains("/grid")) {
             return lfn.getPath().substring(lfn.getPath().indexOf("/grid"));
         } else {

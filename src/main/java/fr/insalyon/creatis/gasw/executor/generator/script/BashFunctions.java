@@ -34,47 +34,60 @@
  */
 package fr.insalyon.creatis.gasw.executor.generator.script;
 
-import java.util.Map;
-import java.util.Map.Entry;
+import fr.insalyon.creatis.gasw.Constants;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author Rafael Silva
  */
-public abstract class AbstractGenerator {
+public class BashFunctions extends AbstractGenerator {
 
-    /** 
-     * Generates the code of the log functions
-     *
-     * @return a String containing the code
-     */
-    public String logFunctions() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("function info {\n local D=`date`\n echo [ INFO - $D ] $*\n}\n");
-        sb.append("function warning {\n local D=`date`\n echo [ WARN - $D ] $*\n}\n");
-        sb.append("function error {\n local D=`date`\n echo [ ERROR - $D ] $* >&2\n}\n");
-        return sb.toString();
+    private static final Logger logger = Logger.getLogger(BashFunctions.class);
+    private static BashFunctions instance;
+
+    public static BashFunctions getInstance() {
+        if (instance == null) {
+            instance = new BashFunctions();
+        }
+        return instance;
+    }
+
+    private BashFunctions() {
     }
 
     /**
-     * Starts a log section
+     * Returns the code of the cleanup function
      *
-     * @return a String containing the bash function code
+     * @return a string containing the code
      */
-    public String startLogFunction() {
+    public String cleanupCommand() {
         StringBuilder sb = new StringBuilder();
-        sb.append("function startLog {\n echo \"<$*>\" >&1; \n echo \"<$*>\" >&2;\n}\n");
-        return sb.toString();
-    }
+        sb.append("function cleanup\n{\n");
+        sb.append("startLog cleanup");
+        sb.append("info \"=== ls -a ===\" \n");
+        sb.append("ls -a \n");
+        sb.append("info \"=== ls " + Constants.CACHE_DIR + " ===\" \n");
+        sb.append("ls " + Constants.CACHE_DIR + "\n");
+        sb.append("info \"=== cat " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + " === \"\n");
+        sb.append("cat " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "\n");
+        sb.append("info \"Cleaning up: rm * -Rf\"\n");
+        sb.append("\\rm * -Rf \n");
+        sb.append("if [ \"${BACKPID}\" != \"\" ]\n"
+                + "then\n"
+                + "  for i in `ps --ppid ${BACKPID} -o pid | grep -v PID`\n"
+                + "  do\n"
+                + "    info \"Killing child of background script (pid ${i})\"\n"
+                + "    kill -9 ${i}\n"
+                + "  done\n"
+                + "  info \"Killing background script (pid ${BACKPID})\"\n"
+                + "  kill -9 ${BACKPID}\n"
+                + "fi\n");
+        sb.append("info -n \"END date:\"\n");
+        sb.append("date +%s\n");
+        sb.append("stopLog cleanup");
+        sb.append("\n}\n\n");
 
-    /**
-     * Stops a log section
-     *
-     * @return
-     */
-    public String stopLogFunction() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("function stopLog {\n local logName=$1\n echo \"</${logName}>\" >&1\n echo \"</${logName}>\" >&2\n}\n");
         return sb.toString();
     }
 }
