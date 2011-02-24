@@ -51,7 +51,7 @@ import org.apache.log4j.Logger;
  */
 public class DiracOutputUtil extends OutputUtil {
 
-    private static final Logger log = Logger.getLogger(DiracOutputUtil.class);
+    private static final Logger logger = Logger.getLogger(DiracOutputUtil.class);
 
     public DiracOutputUtil(int startTime) {
         super(startTime);
@@ -75,9 +75,10 @@ public class DiracOutputUtil extends OutputUtil {
                 outTempDir.delete();
 
                 int exitCode = parseStdOut(job, stdOut);
+                exitCode = parseStdErr(job, stdErr, exitCode);
 
                 File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
-                File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, parseStdErr(stdErr));
+                File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
 
                 return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
 
@@ -96,17 +97,15 @@ public class DiracOutputUtil extends OutputUtil {
                 File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, message);
                 File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, message);
 
-                GaswOutput output = new GaswOutput(jobID, exitCode, stdOut, stdErr, stdOut, stdErr);
-                
-                return output;
+                return new GaswOutput(jobID, exitCode, stdOut, stdErr, stdOut, stdErr);
             }
 
         } catch (DAOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         } catch (InterruptedException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         } catch (IOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         }
         return null;
     }

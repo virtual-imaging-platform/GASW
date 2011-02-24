@@ -88,7 +88,7 @@ public class ScriptGenerator extends AbstractGenerator {
         StringBuilder sb = new StringBuilder();
         sb.append("startLog header\n");
 
-        sb.append("START=`date +%s`; echo \"START date is ${START}\"\n\n");
+        sb.append("START=`date +%s`; info \"START date is ${START}\"\n\n");
 
         // Determines if the execution environment is a grid or a cluster
         sb.append("export GASW_JOB_ENV=NORMAL\n");
@@ -399,16 +399,16 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append("startLog footer\n");
         sb.append("cleanup;\n");
         sb.append("STOP=`date +%s`\n");
-        sb.append("echo \"Stop date is ${STOP}\";\n");
+        sb.append("info \"Stop date is ${STOP}\";\n");
         sb.append("TOTAL=`expr $STOP - $START`\n");
-        sb.append("echo \"Total running time: $TOTAL seconds\";\n");
+        sb.append("info \"Total running time: $TOTAL seconds\";\n");
         sb.append("UPLOAD=`expr ${STOP} - ${BEFOREUPLOAD}`;\n");
         sb.append("DOWNLOAD=`expr ${AFTERDOWNLOAD} - ${START}`;\n");
-        sb.append("echo \"Input download time: ${DOWNLOAD} seconds\";\n");
-        sb.append("echo \"Execution time: `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}` seconds\";\n");
-        sb.append("echo \"Results upload time: ${UPLOAD} seconds\";\n");
-        sb.append("echo \"Exiting with return value 0 (HACK for ARC: writing it in ${DIAG})\";\n");
-        sb.append("echo \"exitcode=0\" >> ${DIAG};\n");
+        sb.append("info \"Input download time: ${DOWNLOAD} seconds\";\n");
+        sb.append("info \"Execution time: `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}` seconds\";\n");
+        sb.append("info \"Results upload time: ${UPLOAD} seconds\";\n");
+        sb.append("info \"Exiting with return value 0 (HACK for ARC: writing it in ${DIAG})\";\n");
+        sb.append("info \"exitcode=0\" >> ${DIAG};\n");
         sb.append("exit 0;\n");
         sb.append("stopLog footer\n");
         return sb.toString();
@@ -447,6 +447,7 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append(inputs(release, downloads));
         sb.append(applicationExecution(parameters));
         sb.append(resultsUpload(uploads));
+        sb.append(footer());
 
         return sb.toString();
     }

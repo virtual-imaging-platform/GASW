@@ -34,9 +34,6 @@
  */
 package fr.insalyon.creatis.gasw.executor.generator.script;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
 /**
  *
  * @author Rafael Silva

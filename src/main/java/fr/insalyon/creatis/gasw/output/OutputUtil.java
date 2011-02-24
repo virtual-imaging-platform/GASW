@@ -55,13 +55,15 @@ import org.apache.log4j.Logger;
  */
 public abstract class OutputUtil {
 
-    private static final Logger log = Logger.getLogger(OutputUtil.class);
+    private static final Logger logger = Logger.getLogger(OutputUtil.class);
     private int startTime;
     private StringBuilder appStdOut;
+    private StringBuilder appStdErr;
 
     public OutputUtil(int startTime) {
         this.startTime = startTime;
         appStdOut = new StringBuilder();
+        appStdErr = new StringBuilder();
     }
 
     /**
@@ -73,13 +75,13 @@ public abstract class OutputUtil {
 
     /**
      *
-     * @param jobID Job identification
+     * @param job Job object
      * @param stdOut Standard output file
      * @return Exit code
      */
     protected int parseStdOut(Job job, File stdOut) {
 
-        int exitCode = 6;
+        int exitCode = -1;
         try {
             if (job.getQueued() == 0) {
                 job.setQueued(job.getCreation());
@@ -106,24 +108,24 @@ public abstract class OutputUtil {
                     appStdOut.append("\n");
                 }
 
-                if (strLine.startsWith("START date is")) {
-                    startExec = Integer.valueOf(strLine.split(" ")[3]).intValue() - startTime;
+                if (strLine.contains("START date is")) {
+                    startExec = Integer.valueOf(strLine.split(" ")[13]).intValue() - startTime;
                     job.setDownload(startExec);
 
-                } else if (strLine.startsWith("Input download time:")) {
-                    int downloadTime = Integer.valueOf(strLine.split(" ")[3]).intValue();
+                } else if (strLine.contains("Input download time:")) {
+                    int downloadTime = Integer.valueOf(strLine.split(" ")[13]).intValue();
                     job.setRunning(startExec + downloadTime);
 
-                } else if (strLine.startsWith("Execution time:")) {
-                    int executionTime = Integer.valueOf(strLine.split(" ")[2]).intValue();
+                } else if (strLine.contains("Execution time:")) {
+                    int executionTime = Integer.valueOf(strLine.split(" ")[12]).intValue();
                     job.setUpload(job.getRunning() + executionTime);
 
-                } else if (strLine.startsWith("Results upload time:")) {
-                    int uploadTime = Integer.valueOf(strLine.split(" ")[3]).intValue();
+                } else if (strLine.contains("Results upload time:")) {
+                    int uploadTime = Integer.valueOf(strLine.split(" ")[13]).intValue();
                     job.setEnd(job.getUpload() + uploadTime);
 
-                } else if (strLine.startsWith("Exiting with return value")) {
-                    exitCode = Integer.valueOf(strLine.split("\\s+")[4]).intValue();
+                } else if (strLine.contains("Exiting with return value")) {
+                    exitCode = Integer.valueOf(strLine.split("\\s+")[14]).intValue();
                     job.setExitCode(exitCode);
 
                 } else if (strLine.startsWith("GLOBUS_CE")) {
@@ -163,19 +165,20 @@ public abstract class OutputUtil {
             DAOFactory.getDAOFactory().getJobDAO().update(job);
 
         } catch (DAOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         } catch (IOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         }
         return exitCode;
     }
 
     /**
-     * 
+     *
+     * @param job Job object
      * @param stdErr Standard error file
-     * @return Application standard error
+     * @return Exit code
      */
-    protected String parseStdErr(File stdErr) {
+    protected int parseStdErr(Job job, File stdErr, int exitCode) {
 
         try {
             DataInputStream in = new DataInputStream(new FileInputStream(stdErr));
@@ -183,27 +186,34 @@ public abstract class OutputUtil {
 
             String strLine;
             boolean isAppExec = false;
-            StringBuilder appStdErr = new StringBuilder();
 
             while ((strLine = br.readLine()) != null) {
 
+                // Application Error
                 if (strLine.contains("<application_execution>")) {
                     isAppExec = true;
-                }
-                if (strLine.contains("</application_execution>")) {
-                    break;
-                }
-                if (isAppExec) {
+                    
+                } else if (strLine.contains("</application_execution>")) {
+                    isAppExec = false;
+
+                } else if (isAppExec) {
                     appStdErr.append(strLine);
                     appStdErr.append("\n");
+
+                } else if (strLine.contains("Exiting with return value")) {
+                    exitCode = Integer.valueOf(strLine.split("\\s+")[14]).intValue();
+                    job.setExitCode(exitCode);
                 }
             }
-            return appStdErr.toString();
+            DAOFactory.getDAOFactory().getJobDAO().update(job);
 
+        } catch (DAOException ex) {
+            logException(logger, ex);
+            
         } catch (IOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         }
-        return null;
+        return exitCode;
     }
 
     /**
@@ -230,12 +240,12 @@ public abstract class OutputUtil {
             return stdFile;
 
         } catch (IOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         } finally {
             try {
                 fstream.close();
             } catch (IOException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             }
         }
         return null;
@@ -250,11 +260,25 @@ public abstract class OutputUtil {
         return appStdOut.toString();
     }
 
-    protected void logException(Logger log, Exception ex) {
-        log.error(ex);
-        if (log.isDebugEnabled()) {
+    /**
+     * Gets the application execution error log
+     *
+     * @return The application execution error log.
+     */
+    protected String getAppStdErr() {
+        return appStdErr.toString();
+    }
+
+    /**
+     * 
+     * @param logger
+     * @param ex
+     */
+    protected void logException(Logger logger, Exception ex) {
+        logger.error(ex);
+        if (logger.isDebugEnabled()) {
             for (StackTraceElement stack : ex.getStackTrace()) {
-                log.debug(stack);
+                logger.debug(stack);
             }
         }
     }

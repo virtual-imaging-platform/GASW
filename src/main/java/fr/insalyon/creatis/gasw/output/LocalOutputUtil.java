@@ -49,7 +49,7 @@ import org.apache.log4j.Logger;
  */
 public class LocalOutputUtil extends OutputUtil {
 
-    private static final Logger log = Logger.getLogger(LocalOutputUtil.class);
+    private static final Logger logger = Logger.getLogger(LocalOutputUtil.class);
 
     public LocalOutputUtil(int startTime) {
         super(startTime);
@@ -65,14 +65,15 @@ public class LocalOutputUtil extends OutputUtil {
             File stdErr = new File(Constants.ERR_ROOT + "/" + job.getFileName() + ".sh.err");
 
             int exitCode = parseStdOut(job, stdOut);
+            exitCode = parseStdErr(job, stdErr, exitCode);
 
             File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
-            File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, parseStdErr(stdErr));
+            File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
 
             return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
 
         } catch (DAOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         }
         return null;
     }
