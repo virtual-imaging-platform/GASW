@@ -66,14 +66,14 @@ public class GliteExecutor extends Executor {
         try {
             super.submit();
             String exec = "glite-wms-job-submit -a " + Constants.JDL_ROOT + "/" + jdlName;
-            Process execution = Runtime.getRuntime().exec(exec);
-            execution.waitFor();
+            Process process = Runtime.getRuntime().exec(exec);
+            process.waitFor();
 
             boolean finished = false;
             String cout = "";
 
             while (!finished) {
-                InputStream is = execution.getInputStream();
+                InputStream is = process.getInputStream();
                 int c;
                 while ((c = is.read()) != -1) {
                     cout += (char) c;
@@ -81,11 +81,15 @@ public class GliteExecutor extends Executor {
                 is.close();
 
                 try {
-                    execution.exitValue();
+                    process.exitValue();
                     finished = true;
                 } catch (IllegalThreadStateException e) {
                     // do nothing
                 }
+            }
+
+            if (process.exitValue() != 0) {
+                throw new GaswException("Unable to submit job.");
             }
 
             String jobID = cout.substring(cout.lastIndexOf("https://"), cout.length()).trim();

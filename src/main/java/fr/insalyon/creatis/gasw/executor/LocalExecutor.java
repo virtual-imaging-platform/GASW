@@ -94,17 +94,17 @@ public class LocalExecutor extends Executor {
             try {
                 MonitorFactory.getMonitor(version).add(jobID, gaswInput.getRelease().getSymbolicName(), jdlName);
                 String exec = Constants.SCRIPT_ROOT + "/" + scriptName;
-                Process execution = Runtime.getRuntime().exec("chmod +x " + exec);
-                execution.waitFor();
+                Process process = Runtime.getRuntime().exec("chmod +x " + exec);
+                process.waitFor();
 
-                execution = Runtime.getRuntime().exec(exec);
-                execution.waitFor();
+                process = Runtime.getRuntime().exec(exec);
+                process.waitFor();
 
                 boolean finished = false;
                 cout = "";
 
                 while (!finished) {
-                    InputStream is = execution.getInputStream();
+                    InputStream is = process.getInputStream();
                     int c;
                     while ((c = is.read()) != -1) {
                         cout += (char) c;
@@ -112,7 +112,7 @@ public class LocalExecutor extends Executor {
                     is.close();
 
                     try {
-                        execution.exitValue();
+                        process.exitValue();
                         finished = true;
                     } catch (IllegalThreadStateException e) {
                         // do nothing
@@ -124,7 +124,7 @@ public class LocalExecutor extends Executor {
                 cerr = "";
 
                 while (!finished) {
-                    InputStream is = execution.getErrorStream();
+                    InputStream is = process.getErrorStream();
                     int c;
                     while ((c = is.read()) != -1) {
                         cerr += (char) c;
@@ -132,7 +132,7 @@ public class LocalExecutor extends Executor {
                     is.close();
 
                     try {
-                        exitValue = execution.exitValue();
+                        exitValue = process.exitValue();
                         finished = true;
                     } catch (IllegalThreadStateException ex) {
                         // do nothing

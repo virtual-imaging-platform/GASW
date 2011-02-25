@@ -69,6 +69,10 @@ public class DiracExecutor extends Executor {
             String exec = "dirac-wms-job-submit " + Constants.JDL_ROOT + "/" + jdlName;
             Process process = Runtime.getRuntime().exec(exec);
             process.waitFor();
+            
+            if (process.exitValue() != 0) {
+                throw new GaswException("Unable to submit job.");
+            }
 
             BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
