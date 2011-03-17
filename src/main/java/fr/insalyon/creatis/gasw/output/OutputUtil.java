@@ -192,15 +192,16 @@ public abstract class OutputUtil {
                 // Application Error
                 if (strLine.contains("<application_execution>")) {
                     isAppExec = true;
-                    
+
                 } else if (strLine.contains("</application_execution>")) {
                     isAppExec = false;
 
                 } else if (isAppExec) {
                     appStdErr.append(strLine);
                     appStdErr.append("\n");
-
-                } else if (strLine.contains("Exiting with return value")) {
+                }
+                
+                if (strLine.contains("Exiting with return value")) {
                     exitCode = Integer.valueOf(strLine.split("\\s+")[14]).intValue();
                     job.setExitCode(exitCode);
                 }
@@ -209,7 +210,7 @@ public abstract class OutputUtil {
 
         } catch (DAOException ex) {
             logException(logger, ex);
-            
+
         } catch (IOException ex) {
             logException(logger, ex);
         }

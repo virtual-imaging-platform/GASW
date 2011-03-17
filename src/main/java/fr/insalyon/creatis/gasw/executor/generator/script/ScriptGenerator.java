@@ -92,7 +92,7 @@ public class ScriptGenerator extends AbstractGenerator {
 
         // Determines if the execution environment is a grid or a cluster
         sb.append("export GASW_JOB_ENV=NORMAL\n");
-        sb.append("if [[ -n \"${GRID_ENV_LOCATION:+x}\" ]]\n"
+        sb.append("if [[ -n \"${GLITE_WMS_LOCATION:+x}\" ]]\n"
                 + "then\n"
                 + "  export GASW_EXEC_ENV=EGEE\n"
                 + "else\n"
