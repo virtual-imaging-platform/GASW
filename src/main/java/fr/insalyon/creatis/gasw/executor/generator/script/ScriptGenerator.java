@@ -331,7 +331,7 @@ public class ScriptGenerator extends AbstractGenerator {
         StringBuilder sb = new StringBuilder();
         String edgesVar = "__MOTEUR_ARGS=\"";
         String edgesVar1 = "__MOTEUR_EXE=\"$GASW_EXEC_COMMAND";
-        String commandLine = "export LD_LIBRARY_PATH=${PWD:${LD_LIBRARY_PATH}}\n  ./$GASW_EXEC_COMMAND";
+        String commandLine = "export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}\n  ./$GASW_EXEC_COMMAND";
         for (String param : parameters) {
             //removes trailing "$rep-" string
             if (param.contains("$rep-")) {
