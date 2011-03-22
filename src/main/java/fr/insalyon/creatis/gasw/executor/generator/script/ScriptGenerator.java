@@ -230,6 +230,7 @@ public class ScriptGenerator extends AbstractGenerator {
         StringBuilder sb = new StringBuilder();
         String edgesVar = "__MOTEUR_IN=\"$GASW_EXEC_URL";
         sb.append("startLog inputs_download\n");
+        sb.append("touch DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK\n");
 
         for (Infrastructure i : release.getInfrastructures()) {
             sb.append("if [[ \"$GASW_EXEC_ENV\" == \"" + i.getType().name() + "\" ]]\n");
@@ -343,7 +344,6 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append("startLog application_execution\n");
         sb.append("tar -zxf $GASW_EXEC_BUNDLE\n");
         sb.append("chmod 755 *;\n");
-        sb.append("touch DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK\n");
         sb.append("info \"Executing " + commandLine + " ...\"\n");
         sb.append(commandLine + "\n");
         sb.append("if [ $? -ne 0 ];\n"
