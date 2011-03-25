@@ -155,6 +155,7 @@ public class DiracMonitor extends Monitor {
 
             } catch (GaswException ex) {
                 logException(logger, ex);
+                stop = true;
             } catch (DAOException ex) {
                 logException(logger, ex);
             }
@@ -197,13 +198,13 @@ public class DiracMonitor extends Monitor {
             out.flush();
         }
 
-        public String getMessage() {
+        public String getMessage() throws GaswException {
             try {
                 return in.readLine();
 
             } catch (IOException ex) {
                 logException(ex);
-                return null;
+                throw new GaswException(ex.getMessage());
             }
         }
 
