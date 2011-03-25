@@ -48,6 +48,7 @@ import java.net.Socket;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
@@ -92,40 +93,62 @@ public class DiracMonitor extends Monitor {
                 List<String> finishedJobs = new ArrayList<String>();
 
                 String message;
+                Map<Status, String> jobStatus = getNewJobStatusMap();
+
                 while (!(message = communication.getMessage()).equals(END_OF_MESSAGE)) {
 
                     logger.info("Received: " + message);
                     String[] jobArray = message.split("--");
-                    String id = jobArray[0];
+                    String jobId = jobArray[0];
                     String status = jobArray[1];
-                    Job job = jobDAO.getJobByID(id);
 
                     if (status.equals("Running")) {
-                        if (job.getStatus() != Status.RUNNING) {
-                            job.setStatus(Status.RUNNING);
-                            setStatus(job);
-                        }
+                        String list = jobStatus.get(Status.RUNNING);
+                        list = list.isEmpty() ? jobId : list + "," + jobId;
+                        jobStatus.put(Status.RUNNING, list);
+
                     } else if (status.equals("Waiting")) {
+                        Job job = jobDAO.getJobByID(jobId);
                         if (job.getStatus() != Status.QUEUED) {
-                            job.setStatus(Status.QUEUED);
                             job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
-                            setStatus(job);
+                            jobDAO.update(job);
                         }
+                        String list = jobStatus.get(Status.QUEUED);
+                        list = list.isEmpty() ? jobId : list + "," + jobId;
+                        jobStatus.put(Status.QUEUED, list);
+
                     } else {
+                        Status st = null;
                         if (status.equals("Done")) {
-                            job.setStatus(Status.COMPLETED);
+                            String list = jobStatus.get(Status.COMPLETED);
+                            list = list.isEmpty() ? jobId : list + "," + jobId;
+                            jobStatus.put(Status.COMPLETED, list);
+                            st = Status.COMPLETED;
+
                         } else if (status.equals("Failed")) {
-                            job.setStatus(Status.ERROR);
+                            String list = jobStatus.get(Status.ERROR);
+                            list = list.isEmpty() ? jobId : list + "," + jobId;
+                            jobStatus.put(Status.ERROR, list);
+                            st = Status.ERROR;
+
                         } else if (status.equals("Killed")) {
-                            job.setStatus(Status.CANCELLED);
+                            String list = jobStatus.get(Status.CANCELLED);
+                            list = list.isEmpty() ? jobId : list + "," + jobId;
+                            jobStatus.put(Status.CANCELLED, list);
+                            st = Status.CANCELLED;
+
                         } else {
-                            job.setStatus(Status.STALLED);
+                            String list = jobStatus.get(Status.STALLED);
+                            list = list.isEmpty() ? jobId : list + "," + jobId;
+                            jobStatus.put(Status.STALLED, list);
+                            st = Status.STALLED;
                         }
-                        setStatus(job);
-                        logger.info("Dirac Monitor: job \"" + job.getId() + "\" finished as \"" + status + "\"");
-                        finishedJobs.add(job.getId() + "--" + job.getStatus());
+                        logger.info("Dirac Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
+                        finishedJobs.add(jobId + "--" + st);
                     }
                 }
+                setStatus(jobStatus);
+
                 if (finishedJobs.size() > 0) {
                     Gasw.getInstance().addFinishedJob(finishedJobs);
                 }
@@ -143,7 +166,6 @@ public class DiracMonitor extends Monitor {
         Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
         job.setCommand(symbolicName);
         add(job, fileName);
-        setStatus(job);
         communication.sendMessage(jobID + SEPARATOR + id);
         communication.sendMessage(END_OF_MESSAGE);
     }

@@ -44,6 +44,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.EnumMap;
+import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
@@ -61,7 +63,7 @@ public abstract class Monitor extends Thread {
     public static enum Status {
 
         COMPLETED, ERROR, RUNNING,
-        QUEUED, NOT_SUBMITTED, SUCCESSFULLY_SUBMITTED, 
+        QUEUED, NOT_SUBMITTED, SUCCESSFULLY_SUBMITTED,
         CANCELLED, STALLED
     };
 
@@ -69,6 +71,7 @@ public abstract class Monitor extends Thread {
         stop = false;
         jobDAO = DAOFactory.getDAOFactory().getJobDAO();
         nodeDAO = DAOFactory.getDAOFactory().getNodeDAO();
+
     }
 
     /**
@@ -104,12 +107,11 @@ public abstract class Monitor extends Thread {
 
     /**
      * 
-     * @param job
+     * @param jobStatus
      */
-    protected synchronized void setStatus(Job job) {
+    protected synchronized void setStatus(Map<Status, String> jobStatus) {
         try {
-            jobDAO.update(job);
-            logStatus(job);
+            jobDAO.updateStatus(jobStatus);
 
         } catch (DAOException ex) {
             logException(logger, ex);
@@ -130,7 +132,7 @@ public abstract class Monitor extends Thread {
         }
     }
 
-    private void logStatus(Job job) {
+    protected void logStatus(Job job) {
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter("./jdl/" + job.getFileName() + ".jdl.log", true));
             SimpleDateFormat f = new SimpleDateFormat("dd:MM:yyyy:HH:mm:ss");
@@ -142,6 +144,19 @@ public abstract class Monitor extends Thread {
         } catch (IOException ex) {
             logException(logger, ex);
         }
+    }
+
+    protected Map<Status, String> getNewJobStatusMap() {
+        Map<Status, String> jobStatusMap = new EnumMap<Status, String>(Status.class);
+        jobStatusMap.put(Status.CANCELLED, "");
+        jobStatusMap.put(Status.COMPLETED, "");
+        jobStatusMap.put(Status.ERROR, "");
+        jobStatusMap.put(Status.NOT_SUBMITTED, "");
+        jobStatusMap.put(Status.QUEUED, "");
+        jobStatusMap.put(Status.RUNNING, "");
+        jobStatusMap.put(Status.STALLED, "");
+        jobStatusMap.put(Status.SUCCESSFULLY_SUBMITTED, "");
+        return jobStatusMap;
     }
 
     public synchronized void terminate() {

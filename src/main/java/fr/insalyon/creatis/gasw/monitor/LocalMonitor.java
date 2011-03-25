@@ -87,7 +87,7 @@ public class LocalMonitor extends Monitor {
                     } else {
                         job.setStatus(Status.ERROR);
                     }
-                    setStatus(job);
+                    jobDAO.update(job);
                     finishedJobs.add(job.getId() + "--" + job.getStatus());
                 }
                 if (isFinished) {
@@ -108,13 +108,16 @@ public class LocalMonitor extends Monitor {
 
     @Override
     public void add(String jobID, String command, String fileName) {
-        if (jobsStatus.get(jobID) == null) {
-            Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
-            job.setCommand(command);
-            add(job, fileName);
-            setStatus(job);
-            job.setStatus(Status.RUNNING);
-            setStatus(job);
+        try {
+            if (jobsStatus.get(jobID) == null) {
+                Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
+                job.setCommand(command);
+                add(job, fileName);
+                job.setStatus(Status.RUNNING);
+                jobDAO.update(job);
+            }
+        } catch (DAOException ex) {
+            logException(log, ex);
         }
     }
 

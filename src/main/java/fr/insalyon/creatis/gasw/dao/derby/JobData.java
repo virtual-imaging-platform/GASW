@@ -44,6 +44,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 
 /**
  *
@@ -187,6 +188,37 @@ public class JobData implements JobDAO {
             return DAOFactory.getDAOFactory().getNodeDAO().getNodeBySiteAndNodeName(siteName, nodeName);
         } else {
             return null;
+        }
+    }
+
+    public void updateStatus(Map<Status, String> jobStatus) throws DAOException {
+        try {
+
+            for (Status status : jobStatus.keySet()) {
+                String list = jobStatus.get(status);
+                StringBuilder sb = new StringBuilder();
+
+                int n = 0;
+                String[] ids = list.split(",");
+                for (String id : ids) {
+                    if (n > 0) {
+                        sb.append(" OR ");
+                    }
+                    sb.append("id = ?");
+                    n++;
+                }
+                PreparedStatement ps = connection.prepareStatement("UPDATE Jobs SET "
+                        + "status = ? WHERE " + sb.toString());
+
+                ps.setString(1, status.toString());
+
+                for (int i = 0; i < n; i++) {
+                    ps.setString(i + 2, ids[i]);
+                }
+                ps.execute();
+            }
+        } catch (SQLException ex) {
+            throw new DAOException(ex.getMessage());
         }
     }
 }

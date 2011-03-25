@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
@@ -98,40 +99,61 @@ public class GliteMonitor extends Monitor {
                     String[] gliteIds = ids.split(" ");
                     List<String> finishedJobs = new ArrayList<String>();
                     List<String> jobsToRemove = new ArrayList<String>();
+                    Map<Status, String> jobStatus = getNewJobStatusMap();
 
                     for (int i = 0; i < gliteIds.length; i++) {
                         String status = gliteStatus[i];
-                        String jobID = gliteIds[i];
-                        Job job = jobDAO.getJobByID(jobID);
+                        String jobId = gliteIds[i];
 
                         if (status.startsWith("Running")) {
-                            job.setStatus(Status.RUNNING);
-                            setStatus(job);
+                            String list = jobStatus.get(Status.RUNNING);
+                            list = list.isEmpty() ? jobId : list + "," + jobId;
+                            jobStatus.put(Status.RUNNING, list);
+
                         } else if (status.startsWith("Scheduled")) {
-                            job.setStatus(Status.QUEUED);
-                            job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
-                            setStatus(job);
+                            Job job = jobDAO.getJobByID(jobId);
+                            if (job.getStatus() != Status.QUEUED) {
+                                job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
+                                jobDAO.update(job);
+                            }
+                            String list = jobStatus.get(Status.QUEUED);
+                            list = list.isEmpty() ? jobId : list + "," + jobId;
+                            jobStatus.put(Status.QUEUED, list);
+
                         } else if (status.startsWith("Ready")
                                 || status.startsWith("Waiting")
                                 || status.startsWith("Submitted")) {
                             // do nothing
                         } else {
+                            Status st = null;
                             if (status.contains("Failed")
                                     || status.contains("Error")
                                     || status.contains("!=")) {
-                                job.setStatus(Status.ERROR);
+                                String list = jobStatus.get(Status.ERROR);
+                                list = list.isEmpty() ? jobId : list + "," + jobId;
+                                jobStatus.put(Status.ERROR, list);
+                                st = Status.ERROR;
+
                             } else if (status.contains("Success")) {
-                                job.setStatus(Status.COMPLETED);
+                                String list = jobStatus.get(Status.COMPLETED);
+                                list = list.isEmpty() ? jobId : list + "," + jobId;
+                                jobStatus.put(Status.COMPLETED, list);
+                                st = Status.COMPLETED;
+
                             } else if (status.startsWith("Aborted")
                                     || status.startsWith("Cancelled")) {
-                                job.setStatus(Status.CANCELLED);
+                                String list = jobStatus.get(Status.CANCELLED);
+                                list = list.isEmpty() ? jobId : list + "," + jobId;
+                                jobStatus.put(Status.CANCELLED, list);
+                                st = Status.CANCELLED;
                             }
-                            setStatus(job);
-                            log.info("Glite Monitor: job \"" + job.getId() + "\" finished as \"" + status + "\"");
-                            finishedJobs.add(job.getId() + "--" + job.getStatus());
-                            jobsToRemove.add(job.getId());
+                            log.info("Glite Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
+                            finishedJobs.add(jobId + "--" + st);
+                            jobsToRemove.add(jobId);
                         }
                     }
+                    setStatus(jobStatus);
+                    
                     if (finishedJobs.size() > 0) {
                         Gasw.getInstance().addFinishedJob(finishedJobs);
                         monitoredJobs.removeAll(jobsToRemove);
@@ -149,7 +171,6 @@ public class GliteMonitor extends Monitor {
                 logException(log, ex);
             }
         }
-
     }
 
     @Override
@@ -157,7 +178,6 @@ public class GliteMonitor extends Monitor {
         Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
         job.setCommand(symbolicName);
         add(job, fileName);
-        setStatus(job);
         monitoredJobs.add(jobID);
     }
 
