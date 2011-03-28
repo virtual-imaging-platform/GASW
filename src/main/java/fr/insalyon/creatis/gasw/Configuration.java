@@ -63,6 +63,9 @@ public class Configuration {
     // DIRAC Configuration
     public static String NOTIFICATION_HOST = "ui.egee.creatis.insa-lyon.fr";
     public static int NOTIFICATION_PORT = 9005;
+    // Derby Configuraiton
+    public static String DERBY_HOST = "localhost";
+    public static int DERBY_PORT = 1527;
 
     public static void setUp() throws GaswException {
         try {
@@ -124,6 +127,16 @@ public class Configuration {
                 NOTIFICATION_PORT = new Integer(notificationPort);
             }
 
+            String derbyHost = conf.getProperty("DERBY_HOST");
+            if (derbyHost != null && !derbyHost.equals("")) {
+                DERBY_HOST = derbyHost;
+            }
+
+            String derbyPort = conf.getProperty("DERBY_PORT");
+            if (derbyPort != null && !derbyPort.equals("")) {
+                DERBY_PORT = new Integer(derbyPort);
+            }
+
         } catch (IOException ex) {
 
             logger.info("Failing to setup trying to create file");
@@ -139,6 +152,8 @@ public class Configuration {
                 conf.setProperty("REQUIREMENTS", REQUIREMENTS);
                 conf.setProperty("NOTIFICATION_HOST", NOTIFICATION_HOST);
                 conf.setProperty("NOTIFICATION_PORT", NOTIFICATION_PORT + "");
+                conf.setProperty("DERBY_HOST", DERBY_HOST);
+                conf.setProperty("DERBY_PORT", DERBY_PORT + "");
 
                 File confDir = new File("./conf");
                 if (!confDir.exists()) {

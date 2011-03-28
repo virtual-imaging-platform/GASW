@@ -34,6 +34,7 @@
  */
 package fr.insalyon.creatis.gasw.dao;
 
+import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.dao.derby.JobData;
 import fr.insalyon.creatis.gasw.dao.derby.NodeData;
 import java.io.File;
@@ -52,7 +53,8 @@ public class DerbyDAOFactory extends DAOFactory {
     private static final Logger log = Logger.getLogger(DerbyDAOFactory.class);
     private static DAOFactory instance;
     private final String DRIVER = "org.apache.derby.jdbc.ClientDriver";
-    private final String DBURL = "jdbc:derby://localhost:1527/";
+    private final String DBURL = "jdbc:derby://" + Configuration.DERBY_HOST
+            + ":" + Configuration.DERBY_PORT + "/";
     private Connection connection;
 
     protected static DAOFactory getInstance() {
