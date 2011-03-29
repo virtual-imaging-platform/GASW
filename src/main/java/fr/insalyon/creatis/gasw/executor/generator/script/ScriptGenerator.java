@@ -409,7 +409,8 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append("info \"Input download time: ${DOWNLOAD} seconds\";\n");
         sb.append("info \"Execution time: `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}` seconds\";\n");
         sb.append("info \"Results upload time: ${UPLOAD} seconds\";\n");
-        sb.append("info \"Exiting with return value 0 (HACK for ARC: writing it in ${DIAG})\";\n");
+        sb.append("info \"Exiting with return value 0\";\n");
+        sb.append("info \"(HACK for ARC: writing it in ${DIAG})\";\n");
         sb.append("info \"exitcode=0\" >> ${DIAG};\n");
         sb.append("exit 0;\n");
         sb.append("stopLog footer\n");
