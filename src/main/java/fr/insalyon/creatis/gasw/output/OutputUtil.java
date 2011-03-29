@@ -125,7 +125,8 @@ public abstract class OutputUtil {
                     job.setEnd(job.getUpload() + uploadTime);
 
                 } else if (strLine.contains("Exiting with return value")) {
-                    exitCode = Integer.valueOf(strLine.split("\\s+")[14]).intValue();
+                    String[] errmsg = strLine.split("\\s+");
+                    exitCode = Integer.valueOf(errmsg[errmsg.length - 1]).intValue();
                     job.setExitCode(exitCode);
 
                 } else if (strLine.startsWith("GLOBUS_CE")) {
@@ -202,7 +203,8 @@ public abstract class OutputUtil {
                 }
                 
                 if (strLine.contains("Exiting with return value")) {
-                    exitCode = Integer.valueOf(strLine.split("\\s+")[14]).intValue();
+                    String[] errmsg = strLine.split("\\s+");
+                    exitCode = Integer.valueOf(errmsg[errmsg.length - 1]).intValue();
                     job.setExitCode(exitCode);
                 }
             }
