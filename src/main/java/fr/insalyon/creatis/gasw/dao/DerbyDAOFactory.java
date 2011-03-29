@@ -53,8 +53,7 @@ public class DerbyDAOFactory extends DAOFactory {
     private static final Logger log = Logger.getLogger(DerbyDAOFactory.class);
     private static DAOFactory instance;
     private final String DRIVER = "org.apache.derby.jdbc.ClientDriver";
-    private final String DBURL = "jdbc:derby://" + Configuration.DERBY_HOST
-            + ":" + Configuration.DERBY_PORT + "/";
+    private final String DBURL = "jdbc:derby://";
     private Connection connection;
 
     protected static DAOFactory getInstance() {
@@ -72,12 +71,14 @@ public class DerbyDAOFactory extends DAOFactory {
     protected void connect() {
         try {
             Class.forName(DRIVER);
-            connection = DriverManager.getConnection(DBURL + new File("").getAbsolutePath() + "/jobs.db;create=true");
+            connection = DriverManager.getConnection(DBURL + Configuration.DERBY_HOST
+            + ":" + Configuration.DERBY_PORT + "/" + new File("").getAbsolutePath() + "/jobs.db;create=true");
             connection.setAutoCommit(true);
 
         } catch (SQLException ex) {
             try {
-                connection = DriverManager.getConnection(DBURL + new File("").getAbsolutePath() + "/jobs.db");
+                connection = DriverManager.getConnection(DBURL + Configuration.DERBY_HOST
+            + ":" + Configuration.DERBY_PORT + "/" + new File("").getAbsolutePath() + "/jobs.db");
                 connection.setAutoCommit(true);
                 
             } catch (SQLException ex1) {
