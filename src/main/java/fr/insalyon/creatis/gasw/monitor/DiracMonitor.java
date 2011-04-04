@@ -174,8 +174,10 @@ public class DiracMonitor extends Monitor {
     @Override
     public synchronized void terminate() {
         super.terminate();
-        instance = null;
-        communication.close();
+        if (instance != null) {
+            instance = null;
+            communication.close();
+        }
     }
 
     private class Communication {
