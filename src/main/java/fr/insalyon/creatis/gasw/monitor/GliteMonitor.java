@@ -107,12 +107,12 @@ public class GliteMonitor extends Monitor {
                         String status = gliteStatus[i];
                         String jobId = gliteIds[i];
 
-                        if (status.startsWith("Running")) {
+                        if (status.contains("Running")) {
                             String list = jobStatus.get(Status.RUNNING);
                             list = list.isEmpty() ? jobId : list + "," + jobId;
                             jobStatus.put(Status.RUNNING, list);
 
-                        } else if (status.startsWith("Scheduled")) {
+                        } else if (status.contains("Scheduled")) {
                             Job job = jobDAO.getJobByID(jobId);
                             if (job.getStatus() != Status.QUEUED) {
                                 job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
@@ -122,15 +122,16 @@ public class GliteMonitor extends Monitor {
                             list = list.isEmpty() ? jobId : list + "," + jobId;
                             jobStatus.put(Status.QUEUED, list);
 
-                        } else if (status.startsWith("Ready")
-                                || status.startsWith("Waiting")
-                                || status.startsWith("Submitted")) {
+                        } else if (status.contains("Ready")
+                                || status.contains("Waiting")
+                                || status.contains("Submitted")) {
                             // do nothing
                         } else {
                             Status st = null;
                             if (status.contains("Failed")
                                     || status.contains("Error")
-                                    || status.contains("!=")) {
+                                    || status.contains("!=")
+                                    || status.contains("Aborted")) {
                                 String list = jobStatus.get(Status.ERROR);
                                 list = list.isEmpty() ? jobId : list + "," + jobId;
                                 jobStatus.put(Status.ERROR, list);
@@ -142,8 +143,7 @@ public class GliteMonitor extends Monitor {
                                 jobStatus.put(Status.COMPLETED, list);
                                 st = Status.COMPLETED;
 
-                            } else if (status.startsWith("Aborted")
-                                    || status.startsWith("Cancelled")) {
+                            } else if (status.contains("Cancelled")) {
                                 String list = jobStatus.get(Status.CANCELLED);
                                 list = list.isEmpty() ? jobId : list + "," + jobId;
                                 jobStatus.put(Status.CANCELLED, list);
