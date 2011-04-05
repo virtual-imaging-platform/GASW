@@ -95,7 +95,6 @@ public class LocalMonitor extends Monitor {
                 } else {
                     Thread.sleep(5000);
                 }
-
             } catch (GaswException ex) {
                 logException(log, ex);
             } catch (DAOException ex) {
@@ -122,8 +121,14 @@ public class LocalMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void terminate() {
+    protected synchronized void terminate() {
         super.terminate();
         instance = null;
+    }
+
+    public static void finish() {
+        if (instance != null) {
+            instance.terminate();
+        }
     }
 }

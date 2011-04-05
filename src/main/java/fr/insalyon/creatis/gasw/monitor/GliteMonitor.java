@@ -74,7 +74,7 @@ public class GliteMonitor extends Monitor {
         while (!stop) {
             try {
 
-                sleep(10000);             
+                sleep(10000);
                 // Getting Status
                 String ids = "";
                 for (String jobID : monitoredJobs) {
@@ -189,8 +189,14 @@ public class GliteMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void terminate() {
+    protected synchronized void terminate() {
         super.terminate();
         instance = null;
+    }
+
+    public static void finish() {
+        if (instance != null) {
+            instance.terminate();
+        }
     }
 }

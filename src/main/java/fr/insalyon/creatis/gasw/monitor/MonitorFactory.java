@@ -60,7 +60,7 @@ public class MonitorFactory {
     }
 
     public static void terminate() {
-        DiracMonitor.getInstance().terminate();
+        DiracMonitor.finish();
         GliteMonitor.getInstance().terminate();
         LocalMonitor.getInstance().terminate();
     }

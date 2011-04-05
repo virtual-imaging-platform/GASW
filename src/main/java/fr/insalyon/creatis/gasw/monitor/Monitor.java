@@ -71,7 +71,6 @@ public abstract class Monitor extends Thread {
         stop = false;
         jobDAO = DAOFactory.getDAOFactory().getJobDAO();
         nodeDAO = DAOFactory.getDAOFactory().getNodeDAO();
-
     }
 
     /**
@@ -159,7 +158,7 @@ public abstract class Monitor extends Thread {
         return jobStatusMap;
     }
 
-    public synchronized void terminate() {
+    protected synchronized void terminate() {
         stop = true;
     }
 
