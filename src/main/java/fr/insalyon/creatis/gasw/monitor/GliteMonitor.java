@@ -34,6 +34,7 @@
  */
 package fr.insalyon.creatis.gasw.monitor;
 
+import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Gasw;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.bean.Job;
@@ -74,7 +75,7 @@ public class GliteMonitor extends Monitor {
         while (!stop) {
             try {
 
-                sleep(10000);
+                sleep(Configuration.SLEEPTIME);
                 // Getting Status
                 String ids = "";
                 for (String jobID : monitoredJobs) {

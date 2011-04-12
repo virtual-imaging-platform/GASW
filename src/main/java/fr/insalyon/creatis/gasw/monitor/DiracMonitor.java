@@ -39,13 +39,6 @@ import fr.insalyon.creatis.gasw.Gasw;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.math.BigInteger;
-import java.net.Socket;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,11 +51,8 @@ import org.apache.log4j.Logger;
 public class DiracMonitor extends Monitor {
 
     private static final Logger logger = Logger.getLogger(DiracMonitor.class);
-    private static String END_OF_MESSAGE = "EOF_DA";
-    private static final String SEPARATOR = "##";
     private static DiracMonitor instance;
-    private Communication communication;
-    private String id;
+    private volatile List<String> jobsID;
 
     public synchronized static DiracMonitor getInstance() {
         if (instance == null) {
@@ -74,15 +64,7 @@ public class DiracMonitor extends Monitor {
 
     private DiracMonitor() {
         super();
-        try {
-            Socket socket = new Socket(Configuration.NOTIFICATION_HOST,
-                    Configuration.NOTIFICATION_PORT);
-            communication = new Communication(socket);
-            id = new BigInteger(60, new SecureRandom()).toString(32);
-
-        } catch (IOException ex) {
-            logException(logger, ex);
-        }
+        this.jobsID = new ArrayList<String>();
     }
 
     @Override
@@ -90,73 +72,78 @@ public class DiracMonitor extends Monitor {
 
         while (!stop) {
             try {
-                List<String> finishedJobs = new ArrayList<String>();
+                if (!jobsID.isEmpty()) {
+                    
+                    List<String> finishedJobs = new ArrayList<String>();
+                    List<String> finishedJobsId = new ArrayList<String>();
+                    Map<Status, String> jobStatus = getNewJobStatusMap();
+                    Map<String, String> jobsStatus = DiracDatabase.getInstance().getJobsStatus(jobsID);
 
-                String message;
-                Map<Status, String> jobStatus = getNewJobStatusMap();
+                    for (String jobId : jobsStatus.keySet()) {
 
-                while (!(message = communication.getMessage()).equals(END_OF_MESSAGE)) {
+                        String status = jobsStatus.get(jobId);
 
-                    logger.info("Received: " + message);
-                    String[] jobArray = message.split("--");
-                    String jobId = jobArray[0];
-                    String status = jobArray[1];
-
-                    if (status.equals("Running")) {
-                        String list = jobStatus.get(Status.RUNNING);
-                        list = list.isEmpty() ? jobId : list + "," + jobId;
-                        jobStatus.put(Status.RUNNING, list);
-
-                    } else if (status.equals("Waiting")) {
-                        Job job = jobDAO.getJobByID(jobId);
-                        if (job.getStatus() != Status.QUEUED) {
-                            job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
-                            jobDAO.update(job);
-                        }
-                        String list = jobStatus.get(Status.QUEUED);
-                        list = list.isEmpty() ? jobId : list + "," + jobId;
-                        jobStatus.put(Status.QUEUED, list);
-
-                    } else {
-                        Status st = null;
-                        if (status.equals("Done")) {
-                            String list = jobStatus.get(Status.COMPLETED);
+                        if (status.equals("Running")) {
+                            String list = jobStatus.get(Status.RUNNING);
                             list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(Status.COMPLETED, list);
-                            st = Status.COMPLETED;
+                            jobStatus.put(Status.RUNNING, list);
 
-                        } else if (status.equals("Failed")) {
-                            String list = jobStatus.get(Status.ERROR);
+                        } else if (status.equals("Waiting")) {
+                            Job job = jobDAO.getJobByID(jobId);
+                            if (job.getStatus() != Status.QUEUED) {
+                                job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
+                                jobDAO.update(job);
+                            }
+                            String list = jobStatus.get(Status.QUEUED);
                             list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(Status.ERROR, list);
-                            st = Status.ERROR;
-
-                        } else if (status.equals("Killed")) {
-                            String list = jobStatus.get(Status.CANCELLED);
-                            list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(Status.CANCELLED, list);
-                            st = Status.CANCELLED;
+                            jobStatus.put(Status.QUEUED, list);
 
                         } else {
-                            String list = jobStatus.get(Status.STALLED);
-                            list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(Status.STALLED, list);
-                            st = Status.STALLED;
-                        }
-                        logger.info("Dirac Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
-                        finishedJobs.add(jobId + "--" + st);
-                    }
-                }
-                setStatus(jobStatus);
+                            Status st = null;
+                            if (status.equals("Done")) {
+                                String list = jobStatus.get(Status.COMPLETED);
+                                list = list.isEmpty() ? jobId : list + "," + jobId;
+                                jobStatus.put(Status.COMPLETED, list);
+                                st = Status.COMPLETED;
 
-                if (finishedJobs.size() > 0) {
-                    Gasw.getInstance().addFinishedJob(finishedJobs);
+                            } else if (status.equals("Failed")) {
+                                String list = jobStatus.get(Status.ERROR);
+                                list = list.isEmpty() ? jobId : list + "," + jobId;
+                                jobStatus.put(Status.ERROR, list);
+                                st = Status.ERROR;
+
+                            } else if (status.equals("Killed")) {
+                                String list = jobStatus.get(Status.CANCELLED);
+                                list = list.isEmpty() ? jobId : list + "," + jobId;
+                                jobStatus.put(Status.CANCELLED, list);
+                                st = Status.CANCELLED;
+
+                            } else {
+                                String list = jobStatus.get(Status.STALLED);
+                                list = list.isEmpty() ? jobId : list + "," + jobId;
+                                jobStatus.put(Status.STALLED, list);
+                                st = Status.STALLED;
+                            }
+                            logger.info("Dirac Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
+                            finishedJobs.add(jobId + "--" + st);
+                            finishedJobsId.add(jobId);
+                        }
+                    }
+                    setStatus(jobStatus);
+
+                    if (finishedJobs.size() > 0) {
+                        Gasw.getInstance().addFinishedJob(finishedJobs);
+                    }
+                    jobsID.removeAll(finishedJobsId);
                 }
+                Thread.sleep(Configuration.SLEEPTIME);
 
             } catch (GaswException ex) {
                 logException(logger, ex);
                 stop = true;
             } catch (DAOException ex) {
+                logException(logger, ex);
+            } catch (InterruptedException ex) {
                 logException(logger, ex);
             }
         }
@@ -167,70 +154,18 @@ public class DiracMonitor extends Monitor {
         Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
         job.setCommand(symbolicName);
         add(job, fileName);
-        communication.sendMessage(jobID + SEPARATOR + id);
-        communication.sendMessage(END_OF_MESSAGE);
+        this.jobsID.add(jobID);
     }
 
     @Override
     protected synchronized void terminate() {
         super.terminate();
         instance = null;
-        if (communication != null) {
-            communication.close();
-        }
     }
 
     public static void finish() {
         if (instance != null) {
             instance.terminate();
-        }
-    }
-
-    private class Communication {
-
-        private BufferedReader in;
-        private PrintWriter out;
-
-        public Communication(Socket socket) {
-
-            try {
-                this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                this.out = new PrintWriter(socket.getOutputStream(), true);
-            } catch (IOException ex) {
-                logException(ex);
-            }
-        }
-
-        public void sendMessage(String message) {
-            out.println(message);
-            out.flush();
-        }
-
-        public String getMessage() throws GaswException {
-            try {
-                return in.readLine();
-
-            } catch (IOException ex) {
-                logException(ex);
-                throw new GaswException(ex.getMessage());
-            }
-        }
-
-        public void close() {
-            try {
-                in.close();
-            } catch (IOException ex) {
-                logException(ex);
-            }
-        }
-
-        private void logException(Exception ex) {
-            logger.error(ex.getMessage());
-            if (logger.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    logger.debug(stack);
-                }
-            }
         }
     }
 }

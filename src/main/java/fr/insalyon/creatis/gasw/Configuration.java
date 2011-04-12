@@ -60,9 +60,11 @@ public class Configuration {
     public static String REQUIREMENTS = "";
     public static int RETRY_COUNT = 3;
     public static int TIMEOUT = 100000;
+    public static int SLEEPTIME = 20000;
     // DIRAC Configuration
-    public static String NOTIFICATION_HOST = "ui.egee.creatis.insa-lyon.fr";
-    public static int NOTIFICATION_PORT = 9005;
+    public static String MYSQL_HOST = "localhost";
+    public static int MYSQL_PORT = 3306;
+    public static String MYSQL_DB_USER = "gasw";
     // Derby Configuraiton
     public static String DERBY_HOST = "localhost";
     public static int DERBY_PORT = 1527;
@@ -112,19 +114,29 @@ public class Configuration {
                 TIMEOUT = new Integer(timeout);
             }
 
+            String sleeptime = conf.getProperty("SLEEPTIME");
+            if (sleeptime != null && !sleeptime.equals("")) {
+                SLEEPTIME = new Integer(sleeptime) * 1000;
+            }
+
             String requirements = conf.getProperty("REQUIREMENTS");
             if (requirements != null && !requirements.equals("")) {
                 REQUIREMENTS = requirements;
             }
 
-            String notificationHost = conf.getProperty("NOTIFICATION_HOST");
-            if (notificationHost != null && !notificationHost.equals("")) {
-                NOTIFICATION_HOST = notificationHost;
+            String mysqlHost = conf.getProperty("MYSQL_HOST");
+            if (mysqlHost != null && !mysqlHost.equals("")) {
+                MYSQL_HOST = mysqlHost;
             }
 
-            String notificationPort = conf.getProperty("NOTIFICATION_PORT");
-            if (notificationPort != null && !notificationPort.equals("")) {
-                NOTIFICATION_PORT = new Integer(notificationPort);
+            String mysqlPort = conf.getProperty("MYSQL_PORT");
+            if (mysqlPort != null && !mysqlPort.equals("")) {
+                MYSQL_PORT = new Integer(mysqlPort);
+            }
+
+            String mysqlDbUser = conf.getProperty("MYSQL_DB_USER");
+            if (mysqlDbUser != null && !mysqlDbUser.equals("")) {
+                MYSQL_DB_USER = mysqlDbUser;
             }
 
             String derbyHost = conf.getProperty("DERBY_HOST");
@@ -149,9 +161,11 @@ public class Configuration {
                 conf.setProperty("BACKGROUND_SCRIPT", BACKGROUND_SCRIPT);
                 conf.setProperty("RETRYCOUNT", RETRY_COUNT + "");
                 conf.setProperty("TIMEOUT", TIMEOUT + "");
+                conf.setProperty("SLEEPTIME", (SLEEPTIME / 1000) + "");
                 conf.setProperty("REQUIREMENTS", REQUIREMENTS);
-                conf.setProperty("NOTIFICATION_HOST", NOTIFICATION_HOST);
-                conf.setProperty("NOTIFICATION_PORT", NOTIFICATION_PORT + "");
+                conf.setProperty("MYSQL_HOST", MYSQL_HOST);
+                conf.setProperty("MYSQL_PORT", MYSQL_PORT + "");
+                conf.setProperty("MYSQL_DB_USER", MYSQL_DB_USER);
                 conf.setProperty("DERBY_HOST", DERBY_HOST);
                 conf.setProperty("DERBY_PORT", DERBY_PORT + "");
 
