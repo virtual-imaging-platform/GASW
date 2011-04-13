@@ -150,7 +150,6 @@ public class GliteMonitor extends Monitor {
                                 jobStatus.put(Status.CANCELLED, list);
                                 st = Status.CANCELLED;
                             }
-                            System.out.println("[GASW] Glite Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
                             log.info("Glite Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
                             finishedJobs.add(jobId + "--" + st);
                             jobsToRemove.add(jobId);
@@ -165,7 +164,7 @@ public class GliteMonitor extends Monitor {
                 } else {
                     r = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                     while ((s = r.readLine()) != null) {
-                        System.out.println("[GASW] ERROR:" + s);
+                        log.error("[GASW] ERROR:" + s);
                     }
                 }
             } catch (GaswException ex) {
@@ -182,7 +181,7 @@ public class GliteMonitor extends Monitor {
 
     @Override
     public synchronized void add(String jobID, String symbolicName, String fileName) {
-        System.out.println("[GASW] Adding job: " + jobID);
+        log.info("[GASW] Adding job: " + jobID);
         Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
         job.setCommand(symbolicName);
         add(job, fileName);

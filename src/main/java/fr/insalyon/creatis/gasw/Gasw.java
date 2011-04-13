@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 /**
  *
@@ -75,6 +76,8 @@ public class Gasw {
     }
 
     private Gasw() throws GaswException {
+        PropertyConfigurator.configure(Gasw.class.getClassLoader()
+                    .getResource("gaswLog4j.properties"));
         Configuration.setUp();
         finishedJobs = new ArrayList<String>();
         notification = new GaswNotification();
