@@ -64,7 +64,7 @@ public class DiracDatabase {
         connect();
     }
 
-    public Map<String, String> getJobsStatus(List<String> idsList) {
+    public synchronized Map<String, String> getJobsStatus(List<String> idsList) {
         try {
             if (connection.isClosed() || !connection.isValid(10)) {
                 connect();
