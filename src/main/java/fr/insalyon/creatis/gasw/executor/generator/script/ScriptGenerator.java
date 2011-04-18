@@ -341,10 +341,10 @@ public class ScriptGenerator extends AbstractGenerator {
             edgesVar += " " + param;
             commandLine += " " + param;
         }
-        sb.append("startLog application_execution\n");
         sb.append("tar -zxf $GASW_EXEC_BUNDLE\n");
         sb.append("chmod 755 *;\n");
         sb.append("info \"Executing " + commandLine + " ...\"\n");
+        sb.append("startLog application_execution\n");
         sb.append(commandLine + "\n");
         sb.append("if [ $? -ne 0 ];\n"
                 + "then\n"
@@ -355,8 +355,8 @@ public class ScriptGenerator extends AbstractGenerator {
                 + "fi;\n");
         sb.append("rm -rf DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK\n");
         sb.append("BEFOREUPLOAD=`date +%s`;\n");
-        sb.append("info \"Execution time was `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}`s\"\n");
         sb.append("stopLog application_execution\n");
+        sb.append("info \"Execution time was `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}`s\"\n");
         sb.append(edgesVar + "\"\n");
         sb.append(edgesVar1 + "\"\n\n");
         return sb.toString();
