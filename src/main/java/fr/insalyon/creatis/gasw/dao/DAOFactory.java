@@ -62,6 +62,8 @@ public abstract class DAOFactory {
 
     protected abstract void createTables();
 
+    public abstract void close();
+
     public abstract JobDAO getJobDAO();
 
     public abstract NodeDAO getNodeDAO();

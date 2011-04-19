@@ -147,6 +147,21 @@ public class DerbyDAOFactory extends DAOFactory {
         }
     }
 
+    public void close() {
+        try {
+            if (connection.isValid(10)) {
+                connection.close();
+            }
+        } catch (SQLException ex) {
+            log.error(ex);
+            if (log.isDebugEnabled()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
+                    log.debug(stack);
+                }
+            }
+        }
+    }
+
     @Override
     public JobDAO getJobDAO() {
         JobData jobData = JobData.getInstance();

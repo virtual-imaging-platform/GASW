@@ -34,6 +34,7 @@
  */
 package fr.insalyon.creatis.gasw;
 
+import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.executor.Executor;
 import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
@@ -198,6 +199,7 @@ public class Gasw {
     public synchronized void terminate() {
         MonitorFactory.terminate();
         notification.terminate();
+        DAOFactory.getDAOFactory().close();
     }
 
     private class GaswNotification extends Thread {
