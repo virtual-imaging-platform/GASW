@@ -135,6 +135,12 @@ public abstract class OutputUtil {
                 } else if (strLine.startsWith("SITE_NAME") && node.getSiteName() == null) {
                     node.setSiteName(strLine.split("=")[1]);
 
+                } else if (strLine.startsWith("PBS_SERVER") && node.getSiteName() == null) {
+                    node.setSiteName(strLine.split("=")[1]);
+
+                } else if (strLine.startsWith("PBS_O_HOST") && node.getSiteName() == null) {
+                    node.setSiteName(strLine.split("=")[1]);
+
                 } else if (strLine.startsWith("===== uname =====")) {
                     strLine = br.readLine();
                     node.setNodeName(strLine.split(" ")[1]);
@@ -201,7 +207,7 @@ public abstract class OutputUtil {
                     appStdErr.append(strLine);
                     appStdErr.append("\n");
                 }
-                
+
                 if (strLine.contains("Exiting with return value")) {
                     String[] errmsg = strLine.split("\\s+");
                     exitCode = Integer.valueOf(errmsg[errmsg.length - 1]).intValue();
