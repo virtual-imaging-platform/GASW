@@ -180,10 +180,9 @@ public class GliteMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(String jobID, String symbolicName, String fileName) {
+    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters) {
         log.info("[GASW] Adding job: " + jobID);
-        Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
-        job.setCommand(symbolicName);
+        Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
         add(job, fileName);
         monitoredJobs.add(jobID);
     }

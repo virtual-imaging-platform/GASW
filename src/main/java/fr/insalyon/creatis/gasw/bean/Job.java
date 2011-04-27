@@ -56,12 +56,16 @@ public class Job {
     private String command;
     private String fileName;
     private int startTime;
+    private String parameters;
 
-    public Job(String id, Monitor.Status status) {
-        this(id, status, -1, 0, 0, 0, 0, 0, 0, null, "", "");
+    public Job(String id, Monitor.Status status, String parameters, String command) {
+        this(id, status, -1, 0, 0, 0, 0, 0, 0, null, command, "", parameters);
     }
 
-    public Job(String id, Status status, int exitCode, int creation, int queued, int download, int running, int upload, int end, Node node, String command, String fileName) {
+    public Job(String id, Status status, int exitCode, int creation, int queued,
+            int download, int running, int upload, int end, Node node,
+            String command, String fileName, String parameters) {
+
         this.id = id;
         this.status = status;
         this.exitCode = exitCode;
@@ -74,6 +78,7 @@ public class Job {
         this.node = node;
         this.command = command;
         this.fileName = fileName;
+        this.parameters = parameters;
     }
 
     public int getCreation() {
@@ -110,10 +115,6 @@ public class Job {
 
     public String getId() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public Node getNode() {
@@ -160,10 +161,6 @@ public class Job {
         return command;
     }
 
-    public void setCommand(String command) {
-        this.command = command;
-    }
-
     public String getFileName() {
         return fileName;
     }
@@ -178,5 +175,9 @@ public class Job {
 
     public void setStartTime(int startTime) {
         this.startTime = startTime;
+    }
+
+    public String getParameters() {
+        return parameters;
     }
 }

@@ -69,7 +69,7 @@ public class DiracExecutor extends Executor {
             String exec = "dirac-wms-job-submit " + Constants.JDL_ROOT + "/" + jdlName;
             Process process = Runtime.getRuntime().exec(exec);
             process.waitFor();
-            
+
             if (process.exitValue() != 0) {
                 throw new GaswException("Unable to submit job.");
             }
@@ -88,10 +88,9 @@ public class DiracExecutor extends Executor {
             } catch (NumberFormatException ex) {
                 throw new GaswException("Unable to submit job. DIRAC Error: " + cout);
             }
-            MonitorFactory.getMonitor(version).add(jobID, gaswInput.getRelease().getSymbolicName(), jdlName);
-
+            
+            addJobToMonitor(jobID);
             log.info("Dirac Executor Job ID: " + jobID);
-
             return jobID;
 
         } catch (InterruptedException ex) {
@@ -112,7 +111,7 @@ public class DiracExecutor extends Executor {
 
         StringBuilder sb = new StringBuilder();
         JdlGenerator generator = JdlGenerator.getInstance();
-        
+
         sb.append(generator.generate(scriptName));
 
         return publishJdl(scriptName, sb.toString());

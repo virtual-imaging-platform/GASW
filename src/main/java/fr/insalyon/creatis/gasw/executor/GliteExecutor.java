@@ -94,7 +94,8 @@ public class GliteExecutor extends Executor {
 
             String jobID = cout.substring(cout.lastIndexOf("https://"), cout.length()).trim();
             jobID = jobID.substring(0, jobID.indexOf("=")).trim();
-            MonitorFactory.getMonitor(version).add(jobID, gaswInput.getRelease().getSymbolicName(), jdlName);
+            
+            addJobToMonitor(jobID);
             log.info("Glite Executor Job ID: " + jobID);
             return jobID;
 

@@ -39,15 +39,8 @@ import fr.insalyon.creatis.gasw.executor.Executor;
 import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import fr.insalyon.creatis.gasw.output.OutputUtilFactory;
-import fr.insalyon.creatis.gasw.release.Execution;
-import fr.insalyon.creatis.gasw.release.Infrastructure;
-import fr.insalyon.creatis.gasw.release.Release;
-import java.io.File;
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -102,33 +95,6 @@ public class Gasw {
     }
 
     /**
-     * Performs the execution of the command (this method will be supported until this version).
-     *
-     * @param client
-     * @param version
-     * @param command Command to be performed.
-     * @param parameters List of parameters associated with the command.
-     * @param downloads List of input files to be downloaded in the worker node.
-     * @param uploads List of output files to be uploaded to a Storage Element.
-     * @return Job identification
-     */
-    @Deprecated
-    public synchronized String submit(Object client, String version,
-            String command, List<String> parameters, List<URI> downloads,
-            List<URI> uploads) {
-
-        try {
-            Execution execution = new Execution(Execution.JobType.NORMAL.name(), command, null, null);
-            Infrastructure infrastructure = new Infrastructure("GRID", execution, null, null);
-            Release release = new Release(command, infrastructure, null, null);
-
-            return submit(client, new GaswInput(release, parameters, downloads, uploads));
-        } catch (GaswException ex) {
-            return null;
-        }
-    }
-
-    /**
      * 
      * @param finishedJobs
      */
@@ -160,35 +126,6 @@ public class Gasw {
         }
 
         return outputsList;
-    }
-
-    /**
-     * Gets the standard output and error files of all finished jobs
-     * (this method will be supported until this version)
-     *
-     * @return Map with the standard output and error files respectively for each job.
-     * @see getFinishedJobs()
-     */
-    @Deprecated
-    public synchronized Map<String, File[]> getOutputs() {
-
-        gettingOutputs = true;
-        Map<String, File[]> outputsMap = new HashMap<String, File[]>();
-        List<String> jobsToRemove = new ArrayList<String>();
-
-        if (finishedJobs != null) {
-            for (String jobID : finishedJobs) {
-                String version = jobID.contains("Local-") ? "LOCAL" : "GRID";
-                GaswOutput output = OutputUtilFactory.getOutputUtil(
-                        version,
-                        MonitorFactory.getMonitor(version).getStartTime()).getOutputs(jobID.split("--")[0]);
-
-                outputsMap.put(jobID, new File[]{output.getStdOut(), output.getStdErr()});
-                jobsToRemove.add(jobID);
-            }
-            finishedJobs.removeAll(jobsToRemove);
-        }
-        return outputsMap;
     }
 
     public synchronized void waitForNotification() {

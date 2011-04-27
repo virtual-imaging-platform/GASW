@@ -150,9 +150,8 @@ public class DiracMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(String jobID, String symbolicName, String fileName) {
-        Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
-        job.setCommand(symbolicName);
+    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters) {
+        Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
         add(job, fileName);
         this.jobsID.add(jobID);
     }

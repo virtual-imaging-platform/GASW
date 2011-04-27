@@ -69,8 +69,8 @@ public class JobData extends AbstractData implements JobDAO {
         try {
             PreparedStatement ps = prepareStatement("INSERT INTO Jobs "
                     + "(id, status, exit_code, creation, queued, download, running, "
-                    + "upload, end_e, command, file_name) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    + "upload, end_e, command, file_name, parameters) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             ps.setString(1, job.getId());
             ps.setString(2, job.getStatus().toString());
@@ -83,6 +83,7 @@ public class JobData extends AbstractData implements JobDAO {
             ps.setInt(9, job.getEnd());
             ps.setString(10, job.getCommand());
             ps.setString(11, job.getFileName());
+            ps.setString(12, job.getParameters());
 
             execute(ps);
 
@@ -95,8 +96,9 @@ public class JobData extends AbstractData implements JobDAO {
         try {
             PreparedStatement ps = prepareStatement("UPDATE Jobs SET "
                     + "status = ?, exit_code = ?, creation = ?, queued = ?, "
-                    + "download = ?, running = ?, upload = ?, end_e = ?, node_site = ?, "
-                    + "node_name = ? WHERE id = ?");
+                    + "download = ?, running = ?, upload = ?, end_e = ?, "
+                    + "node_site = ?, node_name = ? "
+                    + "WHERE id = ?");
 
             ps.setString(1, job.getStatus().toString());
             ps.setInt(2, job.getExitCode());
@@ -139,7 +141,8 @@ public class JobData extends AbstractData implements JobDAO {
         try {
             PreparedStatement ps = prepareStatement("SELECT "
                     + "id, status, exit_code, creation, queued, download, running, "
-                    + "upload, end_e, node_site, node_name, command, file_name "
+                    + "upload, end_e, node_site, node_name, command, file_name, "
+                    + "parameters "
                     + "FROM Jobs WHERE id = ?");
 
             ps.setString(1, id);
@@ -150,7 +153,8 @@ public class JobData extends AbstractData implements JobDAO {
                     rs.getInt("exit_code"), rs.getInt("creation"), rs.getInt("queued"),
                     rs.getInt("download"), rs.getInt("running"), rs.getInt("upload"),
                     rs.getInt("end_e"), getNode(rs.getString("node_site"),
-                    rs.getString("node_name")), rs.getString("command"), rs.getString("file_name"));
+                    rs.getString("node_name")), rs.getString("command"), 
+                    rs.getString("file_name"), rs.getString("parameters"));
 
         } catch (SQLException ex) {
             throw new DAOException(ex);

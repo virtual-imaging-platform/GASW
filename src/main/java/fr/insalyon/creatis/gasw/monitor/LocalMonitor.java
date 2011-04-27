@@ -106,11 +106,10 @@ public class LocalMonitor extends Monitor {
     }
 
     @Override
-    public void add(String jobID, String command, String fileName) {
+    public void add(String jobID, String command, String fileName, String parameters) {
         try {
             if (jobsStatus.get(jobID) == null) {
-                Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED);
-                job.setCommand(command);
+                Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED, parameters, command);
                 add(job, fileName);
                 job.setStatus(Status.RUNNING);
                 jobDAO.update(job);

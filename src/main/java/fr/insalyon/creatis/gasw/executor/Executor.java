@@ -38,6 +38,7 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
+import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import fr.insalyon.creatis.gasw.release.Release;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -125,11 +126,7 @@ public abstract class Executor {
 
             String fileName = symbolicName.replace(" ", "-");
             fileName += "-" + System.nanoTime() + ".sh";
-
-            FileWriter fstream = new FileWriter(Constants.SCRIPT_ROOT + "/" + fileName);
-            BufferedWriter out = new BufferedWriter(fstream);
-            out.write(script);
-            out.close();
+            writeToFile(Constants.SCRIPT_ROOT + "/" + fileName, script);
 
             return fileName;
 
@@ -152,14 +149,9 @@ public abstract class Executor {
             if (!scriptsDir.exists()) {
                 scriptsDir.mkdir();
             }
-
             String fileName = scriptName.substring(0, scriptName.lastIndexOf(".")) + ".jdl";
-
-            FileWriter fstream = new FileWriter(Constants.JDL_ROOT + "/" + fileName);
-            BufferedWriter out = new BufferedWriter(fstream);
-            out.write(jdl);
-            out.close();
-
+            writeToFile(Constants.JDL_ROOT + "/" + fileName, jdl);
+            
             return fileName;
 
         } catch (IOException ex) {
@@ -168,27 +160,44 @@ public abstract class Executor {
         }
     }
 
-    protected void logException(Logger log, Exception ex) {
-        log.error(ex);
-        if (log.isDebugEnabled()) {
+    /**
+     * 
+     * @param jobID Job identification.
+     */
+    protected void addJobToMonitor(String jobID) {
+        StringBuilder params = new StringBuilder();
+        for (String p : gaswInput.getParameters()) {
+            params.append(p);
+            params.append(" ");
+        }
+        MonitorFactory.getMonitor(version).add(jobID,
+                gaswInput.getRelease().getSymbolicName(),
+                jdlName, params.toString());
+    }
+
+    /**
+     * Logs an exception
+     * 
+     * @param logger
+     * @param ex 
+     */
+    protected void logException(Logger logger, Exception ex) {
+        logger.error(ex);
+        if (logger.isDebugEnabled()) {
             for (StackTraceElement stack : ex.getStackTrace()) {
-                log.debug(stack);
+                logger.debug(stack);
             }
         }
     }
 
     /**
      * 
-     * @return
+     * @param name
+     * @param nanoTime
+     * @param extension
+     * @param directory
+     * @return 
      */
-    public String getJdlName() {
-        return jdlName;
-    }
-
-    public Release getRelease() {
-        return gaswInput.getRelease();
-    }
-
     private String getNewName(String name, long nanoTime, String extension, String directory) {
 
         try {
@@ -214,5 +223,19 @@ public abstract class Executor {
             logException(log, ex);
             return null;
         }
+    }
+
+    /**
+     * Writes a string to a file.
+     * 
+     * @param filePath Absolute file path.
+     * @param contents String to be written.
+     * @throws IOException 
+     */
+    private void writeToFile(String filePath, String contents) throws IOException {
+        FileWriter fstream = new FileWriter(filePath);
+        BufferedWriter out = new BufferedWriter(fstream);
+        out.write(contents);
+        out.close();
     }
 }

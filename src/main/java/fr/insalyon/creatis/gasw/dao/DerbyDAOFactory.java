@@ -130,6 +130,7 @@ public class DerbyDAOFactory extends DAOFactory {
                     + "node_name VARCHAR(255), "
                     + "command VARCHAR(255), "
                     + "file_name VARCHAR(255), "
+                    + "parameters LONG VARCHAR, "
                     + "PRIMARY KEY (id), "
                     + "FOREIGN KEY(node_site, node_name) REFERENCES Nodes(site, node_name)"
                     + ")");

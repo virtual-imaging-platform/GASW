@@ -92,7 +92,8 @@ public class LocalExecutor extends Executor {
         public void run() {
 
             try {
-                MonitorFactory.getMonitor(version).add(jobID, gaswInput.getRelease().getSymbolicName(), jdlName);
+                addJobToMonitor(jobID);
+
                 String exec = Constants.SCRIPT_ROOT + "/" + scriptName;
                 Process process = Runtime.getRuntime().exec("chmod +x " + exec);
                 process.waitFor();
@@ -152,7 +153,6 @@ public class LocalExecutor extends Executor {
                 synchronized (this) {
                     finishedJobs.add(jobID + "--" + exitValue);
                 }
-
             } catch (InterruptedException ex) {
                 logException(log, ex);
             } catch (IOException ex) {

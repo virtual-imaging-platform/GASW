@@ -102,7 +102,7 @@ public abstract class Monitor extends Thread {
      * @param symbolicName
      * @param fileName
      */
-    public abstract void add(String jobID, String symbolicName, String fileName);
+    public abstract void add(String jobID, String symbolicName, String fileName, String parameters);
 
     /**
      * 

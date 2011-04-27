@@ -83,7 +83,7 @@ public class BashFunctions extends AbstractGenerator {
                 + "  info \"Killing background script (pid ${BACKPID})\"\n"
                 + "  kill -9 ${BACKPID}\n"
                 + "fi\n");
-        sb.append("info -n \"END date:\"\n");
+        sb.append("info \"END date:\"\n");
         sb.append("date +%s\n");
         sb.append("stopLog cleanup");
         sb.append("\n}\n\n");
