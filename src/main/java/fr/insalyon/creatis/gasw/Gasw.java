@@ -77,8 +77,7 @@ public class Gasw {
     }
 
     private Gasw() throws GaswException {
-        PropertyConfigurator.configure(Gasw.class.getClassLoader()
-                    .getResource("gaswLog4j.properties"));
+        PropertyConfigurator.configure(Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
         Configuration.setUp();
         finishedJobs = new ArrayList<String>();
         notification = new GaswNotification();
