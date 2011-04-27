@@ -34,6 +34,9 @@
  */
 package fr.insalyon.creatis.gasw.dao;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 /**
  *
  * @author Rafael Silva
@@ -42,6 +45,7 @@ public abstract class DAOFactory {
 
     private static final int DERBY = 1;
     private static int factory = DERBY;
+    protected Connection connection;
 
     public static DAOFactory getDAOFactory() {
 
@@ -54,15 +58,17 @@ public abstract class DAOFactory {
     }
 
     protected DAOFactory() {
-        connect();
-        createTables();
     }
 
-    protected abstract void connect();
-
+    public abstract void connect() throws SQLException;
+    
     protected abstract void createTables();
 
     public abstract void close();
+    
+    public Connection getConnection() {
+        return connection;
+    }
 
     public abstract JobDAO getJobDAO();
 

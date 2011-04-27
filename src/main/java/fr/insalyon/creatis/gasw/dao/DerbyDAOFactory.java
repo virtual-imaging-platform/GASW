@@ -38,7 +38,6 @@ import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.dao.derby.JobData;
 import fr.insalyon.creatis.gasw.dao.derby.NodeData;
 import java.io.File;
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -54,7 +53,6 @@ public class DerbyDAOFactory extends DAOFactory {
     private static DAOFactory instance;
     private final String DRIVER = "org.apache.derby.jdbc.ClientDriver";
     private final String DBURL = "jdbc:derby://";
-    private Connection connection;
 
     protected static DAOFactory getInstance() {
         if (instance == null) {
@@ -64,31 +62,32 @@ public class DerbyDAOFactory extends DAOFactory {
     }
 
     private DerbyDAOFactory() {
-        super();
-    }
-
-    @Override
-    protected void connect() {
         try {
-            Class.forName(DRIVER);
-            connection = DriverManager.getConnection(DBURL + Configuration.DERBY_HOST
-            + ":" + Configuration.DERBY_PORT + "/" + new File("").getAbsolutePath() + "/jobs.db;create=true");
-            connection.setAutoCommit(true);
-
+            connect();
+            createTables();
         } catch (SQLException ex) {
-            try {
-                connection = DriverManager.getConnection(DBURL + Configuration.DERBY_HOST
-            + ":" + Configuration.DERBY_PORT + "/" + new File("").getAbsolutePath() + "/jobs.db");
-                connection.setAutoCommit(true);
-                
-            } catch (SQLException ex1) {
-                log.error(ex1);
+            log.error(ex);
             if (log.isDebugEnabled()) {
-                for (StackTraceElement stack : ex1.getStackTrace()) {
+                for (StackTraceElement stack : ex.getStackTrace()) {
                     log.debug(stack);
                 }
             }
-            }
+        }
+    }
+
+    @Override
+    public void connect() throws SQLException {
+        try {
+            Class.forName(DRIVER);
+            connection = DriverManager.getConnection(DBURL + Configuration.DERBY_HOST
+                    + ":" + Configuration.DERBY_PORT + "/" + new File("").getAbsolutePath() + "/jobs.db;create=true");
+            connection.setAutoCommit(true);
+
+        } catch (SQLException ex) {
+                connection = DriverManager.getConnection(DBURL + Configuration.DERBY_HOST
+                        + ":" + Configuration.DERBY_PORT + "/" + new File("").getAbsolutePath() + "/jobs.db");
+                connection.setAutoCommit(true);
+
         } catch (ClassNotFoundException ex) {
             log.error(ex);
             if (log.isDebugEnabled()) {
@@ -97,7 +96,7 @@ public class DerbyDAOFactory extends DAOFactory {
                 }
             }
         }
-        
+
     }
 
     @Override
@@ -147,6 +146,7 @@ public class DerbyDAOFactory extends DAOFactory {
         }
     }
 
+    @Override
     public void close() {
         try {
             if (connection.isValid(10)) {
@@ -165,14 +165,12 @@ public class DerbyDAOFactory extends DAOFactory {
     @Override
     public JobDAO getJobDAO() {
         JobData jobData = JobData.getInstance();
-        jobData.setConnection(connection);
         return jobData;
     }
 
     @Override
     public NodeDAO getNodeDAO() {
         NodeData nodeData = NodeData.getInstance();
-        nodeData.setConnection(connection);
         return nodeData;
     }
 }

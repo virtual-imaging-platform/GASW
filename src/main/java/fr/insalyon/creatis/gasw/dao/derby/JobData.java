@@ -34,13 +34,13 @@
  */
 package fr.insalyon.creatis.gasw.dao.derby;
 
+import fr.insalyon.creatis.gasw.dao.AbstractData;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.bean.Node;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.monitor.Monitor.Status;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -50,10 +50,9 @@ import java.util.Map;
  *
  * @author Rafael Silva
  */
-public class JobData implements JobDAO {
+public class JobData extends AbstractData implements JobDAO {
 
     private static JobData instance;
-    private Connection connection;
 
     public static JobData getInstance() {
         if (instance == null) {
@@ -63,15 +62,12 @@ public class JobData implements JobDAO {
     }
 
     private JobData() {
-    }
-
-    public void setConnection(Connection connection) {
-        this.connection = connection;
+        super();
     }
 
     public synchronized void add(Job job) throws DAOException {
         try {
-            PreparedStatement ps = connection.prepareStatement("INSERT INTO Jobs "
+            PreparedStatement ps = prepareStatement("INSERT INTO Jobs "
                     + "(id, status, exit_code, creation, queued, download, running, "
                     + "upload, end_e, command, file_name) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -88,16 +84,16 @@ public class JobData implements JobDAO {
             ps.setString(10, job.getCommand());
             ps.setString(11, job.getFileName());
 
-            ps.execute();
+            execute(ps);
 
         } catch (SQLException ex) {
-            throw new DAOException(ex.getMessage());
+            throw new DAOException(ex);
         }
     }
 
     public synchronized void update(Job job) throws DAOException {
         try {
-            PreparedStatement ps = connection.prepareStatement("UPDATE Jobs SET "
+            PreparedStatement ps = prepareStatement("UPDATE Jobs SET "
                     + "status = ?, exit_code = ?, creation = ?, queued = ?, "
                     + "download = ?, running = ?, upload = ?, end_e = ?, node_site = ?, "
                     + "node_name = ? WHERE id = ?");
@@ -119,35 +115,35 @@ public class JobData implements JobDAO {
             }
             ps.setString(11, job.getId());
 
-            ps.execute();
+            execute(ps);
 
         } catch (SQLException ex) {
-            throw new DAOException(ex.getMessage());
+            throw new DAOException(ex);
         }
     }
 
     public synchronized void remove(Job job) throws DAOException {
         try {
-            PreparedStatement ps = connection.prepareStatement("DELETE FROM Jobs "
+            PreparedStatement ps = prepareStatement("DELETE FROM Jobs "
                     + "WHERE id = ?");
 
             ps.setString(1, job.getId());
-            ps.execute();
+            execute(ps);
 
         } catch (SQLException ex) {
-            throw new DAOException(ex.getMessage());
+            throw new DAOException(ex);
         }
     }
 
     public synchronized Job getJobByID(String id) throws DAOException {
         try {
-            PreparedStatement ps = connection.prepareStatement("SELECT "
+            PreparedStatement ps = prepareStatement("SELECT "
                     + "id, status, exit_code, creation, queued, download, running, "
                     + "upload, end_e, node_site, node_name, command, file_name "
                     + "FROM Jobs WHERE id = ?");
 
             ps.setString(1, id);
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = executeQuery(ps);
             rs.next();
 
             return new Job(rs.getString("id"), getStatus(rs.getString("status")),
@@ -157,7 +153,7 @@ public class JobData implements JobDAO {
                     rs.getString("node_name")), rs.getString("command"), rs.getString("file_name"));
 
         } catch (SQLException ex) {
-            throw new DAOException(ex.getMessage());
+            throw new DAOException(ex);
         }
     }
 
@@ -207,7 +203,7 @@ public class JobData implements JobDAO {
                     sb.append("id = ?");
                     n++;
                 }
-                PreparedStatement ps = connection.prepareStatement("UPDATE Jobs SET "
+                PreparedStatement ps = prepareStatement("UPDATE Jobs SET "
                         + "status = ? WHERE " + sb.toString());
 
                 ps.setString(1, status.toString());
@@ -215,10 +211,10 @@ public class JobData implements JobDAO {
                 for (int i = 0; i < n; i++) {
                     ps.setString(i + 2, ids[i]);
                 }
-                ps.execute();
+                execute(ps);
             }
         } catch (SQLException ex) {
-            throw new DAOException(ex.getMessage());
+            throw new DAOException(ex);
         }
     }
 }

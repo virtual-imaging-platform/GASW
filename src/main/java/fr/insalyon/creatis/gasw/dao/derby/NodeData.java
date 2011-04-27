@@ -34,10 +34,10 @@
  */
 package fr.insalyon.creatis.gasw.dao.derby;
 
+import fr.insalyon.creatis.gasw.dao.AbstractData;
 import fr.insalyon.creatis.gasw.bean.Node;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.NodeDAO;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -46,10 +46,9 @@ import java.sql.SQLException;
  *
  * @author Rafael Silva
  */
-public class NodeData implements NodeDAO {
+public class NodeData extends AbstractData implements NodeDAO {
 
     private static NodeData instance;
-    private Connection connection;
 
     public static NodeData getInstance() {
         if (instance == null) {
@@ -59,15 +58,12 @@ public class NodeData implements NodeDAO {
     }
 
     private NodeData() {
-    }
-
-    public void setConnection(Connection connection) {
-        this.connection = connection;
+        super();
     }
 
     public synchronized void add(Node node) throws DAOException {
         try {
-            PreparedStatement ps = connection.prepareStatement("INSERT INTO Nodes "
+            PreparedStatement ps = prepareStatement("INSERT INTO Nodes "
                     + "(site, node_name, ncpus, cpu_model_name, cpu_mhz, cpu_cache_size, "
                     + "cpu_bogomips, mem_total) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -81,10 +77,10 @@ public class NodeData implements NodeDAO {
             ps.setDouble(7, node.getCpuBogoMips());
             ps.setInt(8, node.getMemTotal());
 
-            ps.execute();
+            execute(ps);
 
         } catch (SQLException ex) {
-            //throw new DAOException(ex.getMessage());
+            throw new DAOException(ex);
         }
     }
 
@@ -98,14 +94,14 @@ public class NodeData implements NodeDAO {
 
     public synchronized Node getNodeBySiteAndNodeName(String site, String nodeName) throws DAOException {
         try {
-            PreparedStatement ps = connection.prepareStatement("SELECT "
+            PreparedStatement ps = prepareStatement("SELECT "
                     + "site, node_name, ncpus, cpu_model_name, "
                     + "cpu_mhz, cpu_cache_size, cpu_bogomips, mem_total "
                     + "FROM Nodes WHERE site = ? AND node_name = ?");
 
             ps.setString(1, site);
             ps.setString(2, nodeName);
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = executeQuery(ps);
             rs.next();
 
             return new Node(rs.getString("site"),
@@ -115,7 +111,7 @@ public class NodeData implements NodeDAO {
                     rs.getInt("mem_total"));
 
         } catch (SQLException ex) {
-            throw new DAOException(ex.getMessage());
+            throw new DAOException(ex);
         }
     }
 }

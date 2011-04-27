@@ -40,6 +40,10 @@ package fr.insalyon.creatis.gasw.dao;
  */
 public class DAOException extends Exception {
 
+    public DAOException(Exception ex) {
+        super(ex);
+    }
+    
     public DAOException(String message) {
         super(message);
     }
