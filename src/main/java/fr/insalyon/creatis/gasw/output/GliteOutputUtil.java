@@ -45,6 +45,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
@@ -59,7 +62,11 @@ public class GliteOutputUtil extends OutputUtil {
         super(startTime);
     }
 
-    public GaswOutput getOutputs(String jobID) {
+    public GaswOutput getOutputs(String jobID){
+        return getOutputs(jobID,"");
+    }
+
+    public GaswOutput getOutputs(String jobID, String proxyFile) {
         try {
             File outputDir = new File("/tmp/jobOutput");
             if (!outputDir.exists()) {
@@ -71,8 +78,19 @@ public class GliteOutputUtil extends OutputUtil {
 
             if (job.getStatus() != Monitor.Status.CANCELLED) {
 
-                String exec = "glite-wms-job-output --noint " + jobID;
-                Process process = Runtime.getRuntime().exec(exec);
+                List exec = new ArrayList();
+                exec.add("glite-wms-job-output");
+                exec.add("--noint " + jobID);
+                ProcessBuilder builder = new ProcessBuilder(exec);
+                builder.redirectErrorStream(false);
+                Map<String, String> environment = builder.environment();
+
+                if (!proxyFile.isEmpty() && proxyFile != null){
+                    environment.put("X509_USER_PROXY", proxyFile);
+                }
+
+                Process process = builder.start();
+
                 process.waitFor();
 
                 BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -85,19 +103,23 @@ public class GliteOutputUtil extends OutputUtil {
                     }
                 }
 
-                File stdOut = getStdFile(job, ".out", Constants.OUT_ROOT, outputPath);
-                File stdErr = getStdFile(job, ".err", Constants.ERR_ROOT, outputPath);
+                if (process.exitValue() == 0) {
+                    File stdOut = getStdFile(job, ".out", Constants.OUT_ROOT, outputPath);
+                    File stdErr = getStdFile(job, ".err", Constants.ERR_ROOT, outputPath);
 
-                File outTempDir = new File(outputPath);
-                outTempDir.delete();
+                    File outTempDir = new File(outputPath);
+                    outTempDir.delete();
 
-                int exitCode = parseStdOut(job, stdOut);
-                exitCode = parseStdErr(job, stdErr, exitCode);
+                    int exitCode = parseStdOut(job, stdOut);
+                    exitCode = parseStdErr(job, stdErr, exitCode);
 
-                File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
-                File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
+                    File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
+                    File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
 
-                return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
+                    return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
+                } else {
+                    logger.info("Output files does not exist. Job was not executed! - jobID " + jobID);
+                }
 
             } else {
 

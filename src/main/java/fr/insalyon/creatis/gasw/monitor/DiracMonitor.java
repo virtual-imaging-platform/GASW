@@ -40,7 +40,7 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.log4j.Logger;
 
@@ -52,7 +52,7 @@ public class DiracMonitor extends Monitor {
 
     private static final Logger logger = Logger.getLogger(DiracMonitor.class);
     private static DiracMonitor instance;
-    private volatile List<String> jobsID;
+    private volatile Map<String, String> monitoredJobs;
 
     public synchronized static DiracMonitor getInstance() {
         if (instance == null) {
@@ -64,7 +64,7 @@ public class DiracMonitor extends Monitor {
 
     private DiracMonitor() {
         super();
-        this.jobsID = new ArrayList<String>();
+        this.monitoredJobs = new HashMap<String, String>();
     }
 
     @Override
@@ -72,12 +72,11 @@ public class DiracMonitor extends Monitor {
 
         while (!stop) {
             try {
-                if (!jobsID.isEmpty()) {
+                if (!monitoredJobs.isEmpty()) {
                     
-                    List<String> finishedJobs = new ArrayList<String>();
-                    List<String> finishedJobsId = new ArrayList<String>();
+                    Map <String, String> finishedJobs = new HashMap<String, String>();
                     Map<Status, String> jobStatus = getNewJobStatusMap();
-                    Map<String, String> jobsStatus = DiracDatabase.getInstance().getJobsStatus(jobsID);
+                    Map<String, String> jobsStatus = DiracDatabase.getInstance().getJobsStatus(new ArrayList(monitoredJobs.keySet()));
 
                     for (String jobId : jobsStatus.keySet()) {
 
@@ -125,8 +124,8 @@ public class DiracMonitor extends Monitor {
                                 st = Status.STALLED;
                             }
                             logger.info("Dirac Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
-                            finishedJobs.add(jobId + "--" + st);
-                            finishedJobsId.add(jobId);
+                            finishedJobs.put(jobId + "--" + st, monitoredJobs.get(jobId));
+                            monitoredJobs.remove(jobId);
                         }
                     }
                     setStatus(jobStatus);
@@ -134,7 +133,6 @@ public class DiracMonitor extends Monitor {
                     if (finishedJobs.size() > 0) {
                         Gasw.getInstance().addFinishedJob(finishedJobs);
                     }
-                    jobsID.removeAll(finishedJobsId);
                 }
                 Thread.sleep(Configuration.SLEEPTIME);
 
@@ -150,10 +148,10 @@ public class DiracMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters) {
+    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, String userProxy) {
         Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
         add(job, fileName);
-        this.jobsID.add(jobID);
+        this.monitoredJobs.put(jobID, userProxy);
     }
 
     @Override

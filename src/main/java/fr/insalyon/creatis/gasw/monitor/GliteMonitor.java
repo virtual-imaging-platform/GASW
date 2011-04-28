@@ -43,6 +43,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
@@ -55,7 +56,7 @@ public class GliteMonitor extends Monitor {
 
     private static final Logger log = Logger.getLogger(GliteMonitor.class);
     private static GliteMonitor instance;
-    private volatile List<String> monitoredJobs;
+    private volatile Map<String, String> monitoredJobs;
 
     public synchronized static GliteMonitor getInstance() {
         if (instance == null) {
@@ -67,7 +68,7 @@ public class GliteMonitor extends Monitor {
 
     private GliteMonitor() {
         super();
-        monitoredJobs = new ArrayList<String>();
+        monitoredJobs = new HashMap<String, String>();
     }
 
     @Override
@@ -78,7 +79,7 @@ public class GliteMonitor extends Monitor {
                 sleep(Configuration.SLEEPTIME);
                 // Getting Status
                 String ids = "";
-                for (String jobID : monitoredJobs) {
+                for (String jobID : monitoredJobs.keySet()) {
                     ids += jobID + " ";
                 }
 
@@ -100,7 +101,7 @@ public class GliteMonitor extends Monitor {
                 if (!cout.equals("")) {
                     String[] gliteStatus = cout.split("-");
                     String[] gliteIds = ids.split(" ");
-                    List<String> finishedJobs = new ArrayList<String>();
+                    Map<String, String> finishedJobs = new HashMap<String, String>();
                     List<String> jobsToRemove = new ArrayList<String>();
                     Map<Status, String> jobStatus = getNewJobStatusMap();
 
@@ -151,7 +152,7 @@ public class GliteMonitor extends Monitor {
                                 st = Status.CANCELLED;
                             }
                             log.info("Glite Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
-                            finishedJobs.add(jobId + "--" + st);
+                            finishedJobs.put(jobId + "--" + st, monitoredJobs.get(jobId));
                             jobsToRemove.add(jobId);
                         }
                     }
@@ -159,7 +160,9 @@ public class GliteMonitor extends Monitor {
 
                     if (finishedJobs.size() > 0) {
                         Gasw.getInstance().addFinishedJob(finishedJobs);
-                        monitoredJobs.removeAll(jobsToRemove);
+                        for (String jobID : jobsToRemove) {
+                            monitoredJobs.remove(jobID);
+                        }
                     }
                 } else {
                     r = new BufferedReader(new InputStreamReader(process.getErrorStream()));
@@ -178,13 +181,13 @@ public class GliteMonitor extends Monitor {
             }
         }
     }
-
+    
     @Override
-    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters) {
+    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, String userProxy) {
         log.info("[GASW] Adding job: " + jobID);
         Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
         add(job, fileName);
-        monitoredJobs.add(jobID);
+        monitoredJobs.put(jobID, userProxy);
     }
 
     @Override

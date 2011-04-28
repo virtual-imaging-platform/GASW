@@ -40,7 +40,9 @@ import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import fr.insalyon.creatis.gasw.output.OutputUtilFactory;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -54,7 +56,8 @@ public class Gasw {
     private static Gasw instance;
     private GaswNotification notification;
     private Object client;
-    private volatile List<String> finishedJobs;
+    // Map<Job ID, userProxy> userProxy is NULL in case using default proxy
+    private volatile Map<String, String> finishedJobs;
     private volatile boolean gettingOutputs;
 
     /**
@@ -72,25 +75,38 @@ public class Gasw {
     private Gasw() throws GaswException {
         PropertyConfigurator.configure(Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
         Configuration.setUp();
-        finishedJobs = new ArrayList<String>();
+        finishedJobs = new HashMap<String, String>();
         notification = new GaswNotification();
         notification.start();
         gettingOutputs = false;
     }
 
     /**
-     * 
+     *
      * @param client
      * @param gaswInput
      * @return
      */
     public synchronized String submit(Object client, GaswInput gaswInput) throws GaswException {
 
+        return submit(client, gaswInput, "");
+    }
+
+    /**
+     * 
+     * @param client
+     * @param gaswInput
+     * @param proxy user's proxy
+     * @return
+     */
+    public synchronized String submit(Object client, GaswInput gaswInput, String userProxy) throws GaswException {
+
         if (this.client == null) {
             this.client = client;
         }
         Executor executor = ExecutorFactory.getExecutor("GRID", gaswInput);
         executor.preProcess();
+        executor.setUserProxy(userProxy);
         return executor.submit();
     }
 
@@ -98,8 +114,8 @@ public class Gasw {
      * 
      * @param finishedJobs
      */
-    public synchronized void addFinishedJob(List<String> finishedJobs) {
-        this.finishedJobs.addAll(finishedJobs);
+    public synchronized void addFinishedJob(Map<String, String> finishedJobs) {
+        this.finishedJobs.putAll(finishedJobs);
     }
 
     /**
@@ -114,15 +130,17 @@ public class Gasw {
         List<String> jobsToRemove = new ArrayList<String>();
 
         if (finishedJobs != null) {
-            for (String jobID : finishedJobs) {
+            for (String jobID : finishedJobs.keySet()) {
                 String version = jobID.contains("Local-") ? "LOCAL" : "GRID";
                 int startTime = MonitorFactory.getMonitor(version).getStartTime();
                 outputsList.add(OutputUtilFactory.getOutputUtil(
-                        version, startTime).getOutputs(jobID.split("--")[0]));
+                        version, startTime).getOutputs(jobID.split("--")[0], finishedJobs.get(jobID)));
 
                 jobsToRemove.add(jobID);
             }
-            finishedJobs.removeAll(jobsToRemove);
+            for (String jobID : jobsToRemove) {
+                finishedJobs.remove(jobID);
+            }
         }
 
         return outputsList;

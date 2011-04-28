@@ -38,10 +38,12 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.JdlGenerator;
-import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
@@ -66,8 +68,18 @@ public class DiracExecutor extends Executor {
     public String submit() throws GaswException {
         super.submit();
         try {
-            String exec = "dirac-wms-job-submit " + Constants.JDL_ROOT + "/" + jdlName;
-            Process process = Runtime.getRuntime().exec(exec);
+            List exec = new ArrayList();
+            exec.add("dirac-wms-job-submit");
+            exec.add(Constants.JDL_ROOT + "/" + jdlName);
+            ProcessBuilder builder = new ProcessBuilder(exec);
+            builder.redirectErrorStream(false);
+            Map<String, String> environment = builder.environment();
+            if (!userProxy.isEmpty() && userProxy != null){
+                environment.put("X509_USER_PROXY", userProxy);
+            }
+
+            Process process = builder.start();
+
             process.waitFor();
 
             if (process.exitValue() != 0) {
@@ -89,7 +101,11 @@ public class DiracExecutor extends Executor {
                 throw new GaswException("Unable to submit job. DIRAC Error: " + cout);
             }
             
-            addJobToMonitor(jobID);
+            if (!userProxy.isEmpty() && userProxy != null)
+                addJobToMonitor(jobID, userProxy);
+            else 
+                addJobToMonitor(jobID);
+            
             log.info("Dirac Executor Job ID: " + jobID);
             return jobID;
 

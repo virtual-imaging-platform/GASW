@@ -66,12 +66,15 @@ public abstract class OutputUtil {
         appStdErr = new StringBuilder();
     }
 
+    public abstract GaswOutput getOutputs(String jobID);
     /**
      * Gets the standard output and error files and exit code.
-     *
+     * @param jobID job identification
+     * @param proxy associated proxy (null in case using default proxy)
      * @return Array with the standard output and error files respectively.
+     *
      */
-    public abstract GaswOutput getOutputs(String jobID);
+    public abstract GaswOutput getOutputs(String jobID, String proxy);
 
     /**
      *

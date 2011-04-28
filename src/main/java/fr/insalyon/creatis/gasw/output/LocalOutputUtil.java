@@ -55,6 +55,10 @@ public class LocalOutputUtil extends OutputUtil {
         super(startTime);
     }
 
+    public GaswOutput getOutputs(String jobID, String proxyFile){
+        return getOutputs(jobID);
+    }
+    
     public GaswOutput getOutputs(String jobID) {
         try {
 

@@ -37,7 +37,6 @@ package fr.insalyon.creatis.gasw.executor;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
-import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;

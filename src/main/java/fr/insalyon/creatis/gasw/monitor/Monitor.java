@@ -97,12 +97,13 @@ public abstract class Monitor extends Thread {
     }
 
     /**
-     * 
+     *
      * @param jobID
      * @param symbolicName
      * @param fileName
+     * @param userProxy user proxy (null in case of using default proxy or local execution)
      */
-    public abstract void add(String jobID, String symbolicName, String fileName, String parameters);
+    public abstract void add(String jobID, String symbolicName, String fileName, String parameters, String userProxy);
 
     /**
      * 

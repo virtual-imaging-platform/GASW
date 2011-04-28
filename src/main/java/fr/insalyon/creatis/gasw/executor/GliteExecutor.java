@@ -38,9 +38,11 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.JdlGenerator;
-import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
@@ -63,10 +65,21 @@ public class GliteExecutor extends Executor {
 
     @Override
     public String submit() throws GaswException {
+
+        super.submit();
         try {
-            super.submit();
-            String exec = "glite-wms-job-submit -a " + Constants.JDL_ROOT + "/" + jdlName;
-            Process process = Runtime.getRuntime().exec(exec);
+            List exec = new ArrayList();
+            exec.add("glite-wms-job-submit");
+            exec.add("-a " + Constants.JDL_ROOT + "/" + jdlName);
+            ProcessBuilder builder = new ProcessBuilder(exec);
+            builder.redirectErrorStream(false);
+            Map<String, String> environment = builder.environment();
+            if (!userProxy.isEmpty() && userProxy != null){
+                environment.put("X509_USER_PROXY", userProxy);
+            }
+
+            Process process = builder.start();
+
             process.waitFor();
 
             boolean finished = false;
@@ -94,8 +107,11 @@ public class GliteExecutor extends Executor {
 
             String jobID = cout.substring(cout.lastIndexOf("https://"), cout.length()).trim();
             jobID = jobID.substring(0, jobID.indexOf("=")).trim();
+            if (!userProxy.isEmpty() && userProxy != null)
+                addJobToMonitor(jobID, userProxy);
+            else 
+                addJobToMonitor(jobID);
             
-            addJobToMonitor(jobID);
             log.info("Glite Executor Job ID: " + jobID);
             return jobID;
 

@@ -59,8 +59,9 @@ public abstract class Executor {
     protected GaswInput gaswInput;
     protected String scriptName;
     protected String jdlName;
+    protected String userProxy;
     private boolean firstExecution;
-
+    
     /**
      *
      * @param version
@@ -73,6 +74,7 @@ public abstract class Executor {
         this.version = version;
         this.gaswInput = gaswInput;
         this.firstExecution = true;
+        this.userProxy = "";
     }
 
     /**
@@ -160,19 +162,32 @@ public abstract class Executor {
         }
     }
 
+    
+    protected void addJobToMonitor(String jobID) {
+        addJobToMonitor(jobID, "");
+    }
+    
     /**
      * 
      * @param jobID Job identification.
      */
-    protected void addJobToMonitor(String jobID) {
+    protected void addJobToMonitor(String jobID, String userProxy) {
         StringBuilder params = new StringBuilder();
         for (String p : gaswInput.getParameters()) {
             params.append(p);
             params.append(" ");
         }
-        MonitorFactory.getMonitor(version).add(jobID,
+        if (!userProxy.isEmpty() && userProxy != null){
+                MonitorFactory.getMonitor(version).add(jobID,
                 gaswInput.getRelease().getSymbolicName(),
-                jdlName, params.toString());
+                jdlName, params.toString(), userProxy);
+            }else{
+                MonitorFactory.getMonitor(version).add(jobID,
+                gaswInput.getRelease().getSymbolicName(),
+                jdlName, params.toString(), "");
+            }
+        
+        
     }
 
     /**
@@ -198,6 +213,14 @@ public abstract class Executor {
      * @param directory
      * @return 
      */
+    public String getUserProxy() {
+        return userProxy;
+    }
+
+    public void setUserProxy(String userProxy) {
+        this.userProxy = userProxy;
+    }
+
     private String getNewName(String name, long nanoTime, String extension, String directory) {
 
         try {
