@@ -39,6 +39,7 @@ import fr.insalyon.creatis.gasw.executor.Executor;
 import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import fr.insalyon.creatis.gasw.output.OutputUtilFactory;
+import fr.insalyon.creatis.gasw.release.EnvVariable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -103,6 +104,12 @@ public class Gasw {
 
         if (this.client == null) {
             this.client = client;
+        }
+        for (EnvVariable v : gaswInput.getRelease().getConfigurations()) {
+            if (v.getCategory() == EnvVariable.Category.SYSTEM 
+                    && v.getName().equals("gridTarget")) {
+                Configuration.GRID = v.getValue();
+            }
         }
         Executor executor = ExecutorFactory.getExecutor("GRID", gaswInput);
         executor.preProcess();

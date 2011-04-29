@@ -38,11 +38,10 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.JdlGenerator;
+import fr.insalyon.creatis.gasw.release.EnvVariable;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.io.InputStreamReader;
 import org.apache.log4j.Logger;
 
 /**
@@ -51,7 +50,7 @@ import org.apache.log4j.Logger;
  */
 public class GliteExecutor extends Executor {
 
-    private static final Logger log = Logger.getLogger(GliteExecutor.class);
+    private static final Logger logger = Logger.getLogger(GliteExecutor.class);
 
     public GliteExecutor(String version, GaswInput gaswInput) {
         super(version, gaswInput);
@@ -68,57 +67,46 @@ public class GliteExecutor extends Executor {
 
         super.submit();
         try {
-            List exec = new ArrayList();
-            exec.add("glite-wms-job-submit");
-            exec.add("-a " + Constants.JDL_ROOT + "/" + jdlName);
-            ProcessBuilder builder = new ProcessBuilder(exec);
-            builder.redirectErrorStream(false);
-            Map<String, String> environment = builder.environment();
-            if (!userProxy.isEmpty() && userProxy != null){
-                environment.put("X509_USER_PROXY", userProxy);
+            ProcessBuilder builder = new ProcessBuilder(
+                    "glite-wms-job-submit",
+                    "-a", Constants.JDL_ROOT + "/" + jdlName);
+
+            builder.redirectErrorStream(true);
+
+            if (!userProxy.isEmpty() && userProxy != null) {
+                builder.environment().put("X509_USER_PROXY", userProxy);
             }
 
             Process process = builder.start();
-
             process.waitFor();
 
-            boolean finished = false;
+            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String cout = "";
-
-            while (!finished) {
-                InputStream is = process.getInputStream();
-                int c;
-                while ((c = is.read()) != -1) {
-                    cout += (char) c;
-                }
-                is.close();
-
-                try {
-                    process.exitValue();
-                    finished = true;
-                } catch (IllegalThreadStateException e) {
-                    // do nothing
-                }
+            String s = null;
+            while ((s = r.readLine()) != null) {
+                cout += s;
             }
 
             if (process.exitValue() != 0) {
+                logger.error(cout);
                 throw new GaswException("Unable to submit job.");
             }
 
             String jobID = cout.substring(cout.lastIndexOf("https://"), cout.length()).trim();
             jobID = jobID.substring(0, jobID.indexOf("=")).trim();
-            if (!userProxy.isEmpty() && userProxy != null)
+            if (!userProxy.isEmpty() && userProxy != null) {
                 addJobToMonitor(jobID, userProxy);
-            else 
+            } else {
                 addJobToMonitor(jobID);
-            
-            log.info("Glite Executor Job ID: " + jobID);
+            }
+
+            logger.info("Glite Executor Job ID: " + jobID);
             return jobID;
 
         } catch (InterruptedException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         } catch (IOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         }
         return null;
     }
@@ -134,6 +122,12 @@ public class GliteExecutor extends Executor {
         JdlGenerator generator = JdlGenerator.getInstance();
 
         sb.append(generator.generate(scriptName));
+        for (EnvVariable v : gaswInput.getRelease().getConfigurations()) {
+            if (v.getCategory() == EnvVariable.Category.SYSTEM
+                    && v.getName().equals("nodeNumber")) {
+                sb.append("NodeNumber\t= " + v.getValue() + ";\n");
+            }
+        }
 
         return publishJdl(scriptName, sb.toString());
     }

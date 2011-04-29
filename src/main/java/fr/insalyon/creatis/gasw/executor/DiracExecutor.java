@@ -68,30 +68,28 @@ public class DiracExecutor extends Executor {
     public String submit() throws GaswException {
         super.submit();
         try {
-            List exec = new ArrayList();
-            exec.add("dirac-wms-job-submit");
-            exec.add(Constants.JDL_ROOT + "/" + jdlName);
-            ProcessBuilder builder = new ProcessBuilder(exec);
-            builder.redirectErrorStream(false);
-            Map<String, String> environment = builder.environment();
+            ProcessBuilder builder = new ProcessBuilder(
+                    "dirac-wms-job-submit", Constants.JDL_ROOT + "/" + jdlName);
+            
+            builder.redirectErrorStream(true);
+            
             if (!userProxy.isEmpty() && userProxy != null){
-                environment.put("X509_USER_PROXY", userProxy);
+                builder.environment().put("X509_USER_PROXY", userProxy);
             }
 
             Process process = builder.start();
-
             process.waitFor();
 
-            if (process.exitValue() != 0) {
-                throw new GaswException("Unable to submit job.");
-            }
-
             BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
             String cout = "";
             String s = null;
             while ((s = r.readLine()) != null) {
                 cout += s;
+            }
+
+            if (process.exitValue() != 0) {
+                log.error(cout);
+                throw new GaswException("Unable to submit job.");
             }
 
             String jobID = cout.substring(cout.lastIndexOf("=") + 2, cout.length()).trim();

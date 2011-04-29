@@ -37,11 +37,13 @@ package fr.insalyon.creatis.gasw.executor;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -93,51 +95,26 @@ public class LocalExecutor extends Executor {
             try {
                 addJobToMonitor(jobID);
 
-                String exec = Constants.SCRIPT_ROOT + "/" + scriptName;
-                Process process = Runtime.getRuntime().exec("chmod +x " + exec);
-                process.waitFor();
+                ProcessBuilder builder = new ProcessBuilder(
+                        "chmod", "+x", Constants.SCRIPT_ROOT + "/" + scriptName);
 
-                process = Runtime.getRuntime().exec(exec);
-                process.waitFor();
+                builder.redirectErrorStream(true);
 
-                boolean finished = false;
-                cout = "";
-
-                while (!finished) {
-                    InputStream is = process.getInputStream();
-                    int c;
-                    while ((c = is.read()) != -1) {
-                        cout += (char) c;
-                    }
-                    is.close();
-
-                    try {
-                        process.exitValue();
-                        finished = true;
-                    } catch (IllegalThreadStateException e) {
-                        // do nothing
-                    }
+                if (!userProxy.isEmpty() && userProxy != null) {
+                    builder.environment().put("X509_USER_PROXY", userProxy);
                 }
 
-                finished = false;
-                int exitValue = -1;
-                cerr = "";
+                Process process = builder.start();
+                process.waitFor();
 
-                while (!finished) {
-                    InputStream is = process.getErrorStream();
-                    int c;
-                    while ((c = is.read()) != -1) {
-                        cerr += (char) c;
-                    }
-                    is.close();
-
-                    try {
-                        exitValue = process.exitValue();
-                        finished = true;
-                    } catch (IllegalThreadStateException ex) {
-                        // do nothing
-                    }
+                BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String cout = "";
+                String s = null;
+                while ((s = r.readLine()) != null) {
+                    cout += s;
                 }
+
+                int exitValue = process.exitValue();
 
                 File stdOut = new File(Constants.OUT_ROOT + "/" + scriptName + ".out");
                 BufferedWriter out = new BufferedWriter(new FileWriter(stdOut));
