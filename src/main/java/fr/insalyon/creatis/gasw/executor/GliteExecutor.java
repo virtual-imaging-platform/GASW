@@ -122,11 +122,25 @@ public class GliteExecutor extends Executor {
         JdlGenerator generator = JdlGenerator.getInstance();
 
         sb.append(generator.generate(scriptName));
+        StringBuilder requirements = new StringBuilder();
+
         for (EnvVariable v : gaswInput.getRelease().getConfigurations()) {
+            
             if (v.getCategory() == EnvVariable.Category.SYSTEM
                     && v.getName().equals("nodeNumber")) {
                 sb.append("NodeNumber\t= " + v.getValue() + ";\n");
+            
+            } else if (v.getCategory() == EnvVariable.Category.INFRASTRUCTURE
+                    && v.getName().equals("gLiteRequirement")) {
+                if (requirements.length() > 0) {
+                    requirements.append(" && ");
+                }
+                requirements.append(v.getValue());
             }
+        }
+        
+        if (requirements.length() > 0) {
+            sb.append("Requirements\t= " + requirements.toString() + ";\n");
         }
 
         return publishJdl(scriptName, sb.toString());

@@ -45,9 +45,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
@@ -62,45 +59,42 @@ public class GliteOutputUtil extends OutputUtil {
         super(startTime);
     }
 
-    public GaswOutput getOutputs(String jobID){
-        return getOutputs(jobID,"");
+    @Override
+    public GaswOutput getOutputs(String jobID) {
+        return getOutputs(jobID, "");
     }
 
+    @Override
     public GaswOutput getOutputs(String jobID, String proxyFile) {
         try {
-            File outputDir = new File("/tmp/jobOutput");
-            if (!outputDir.exists()) {
-                outputDir.mkdir();
-            }
-
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
             Job job = jobDAO.getJobByID(jobID);
 
             if (job.getStatus() != Monitor.Status.CANCELLED) {
 
-                List exec = new ArrayList();
-                exec.add("glite-wms-job-output");
-                exec.add("--noint " + jobID);
-                ProcessBuilder builder = new ProcessBuilder(exec);
-                builder.redirectErrorStream(false);
-                Map<String, String> environment = builder.environment();
+                String dir = "out";
+                ProcessBuilder builder = new ProcessBuilder(
+                        "glite-wms-job-output", "--dir", 
+                        dir, jobID);
 
-                if (!proxyFile.isEmpty() && proxyFile != null){
-                    environment.put("X509_USER_PROXY", proxyFile);
+                builder.redirectErrorStream(true);
+
+                if (!proxyFile.isEmpty() && proxyFile != null) {
+                    builder.environment().put("X509_USER_PROXY", proxyFile);
                 }
 
                 Process process = builder.start();
-
                 process.waitFor();
 
                 BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String outputPath = "";
-
+                String cout = "";
                 String s = null;
                 while ((s = r.readLine()) != null) {
-                    if (s.startsWith("/tmp/jobOutput")) {
+                    if (s.contains("/" + dir + "/")) {
                         outputPath = s.trim();
                     }
+                    cout += s + "\n";
                 }
 
                 if (process.exitValue() == 0) {
@@ -117,18 +111,24 @@ public class GliteOutputUtil extends OutputUtil {
                     File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
 
                     return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
+
                 } else {
-                    logger.info("Output files does not exist. Job was not executed! - jobID " + jobID);
+                    logger.error(cout);
+                    logger.error("Output files does not exist. Job ID: " + jobID);
+
+                    File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Output files does not exist.");
+                    File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Output files does not exist.");
+                    File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "");
+                    File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "");
+
+                    return new GaswOutput(jobID, 6, appStdOut, appStdErr, stdOut, stdErr);
                 }
-
             } else {
-
                 File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Job Cancelled");
                 File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Job Cancelled");
 
                 return new GaswOutput(jobID, 0, stdOut, stdErr, stdOut, stdErr);
             }
-
         } catch (DAOException ex) {
             logException(logger, ex);
         } catch (InterruptedException ex) {
@@ -140,7 +140,6 @@ public class GliteOutputUtil extends OutputUtil {
     }
 
     /**
-     *
      *
      * @param job Job object
      * @param extension File extension
@@ -155,7 +154,7 @@ public class GliteOutputUtil extends OutputUtil {
         }
         File stdFile = new File(srcDir + "/std" + extension);
         File stdRenamed = new File(outDir + "/" + job.getFileName() + ".sh" + extension);
-        stdFile.renameTo(stdRenamed);
+            stdFile.renameTo(stdRenamed);
         return stdRenamed;
     }
 }

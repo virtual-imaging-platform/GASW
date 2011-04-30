@@ -41,10 +41,10 @@ import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.monitor.Monitor;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.InputStreamReader;
 import java.util.Map;
 import org.apache.log4j.Logger;
 
@@ -60,10 +60,10 @@ public class DiracOutputUtil extends OutputUtil {
         super(startTime);
     }
 
-    public GaswOutput getOutputs(String jobID){
+    public GaswOutput getOutputs(String jobID) {
         return getOutputs(jobID, "");
     }
-    
+
     public GaswOutput getOutputs(String jobID, String proxyFile) {
         try {
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
@@ -71,19 +71,16 @@ public class DiracOutputUtil extends OutputUtil {
 
             if (job.getStatus() != Monitor.Status.CANCELLED && job.getStatus() != Monitor.Status.STALLED) {
 
-                List exec = new ArrayList();
-                exec.add("dirac-wms-job-get-output");
-                exec.add(jobID);
-                ProcessBuilder builder = new ProcessBuilder(exec);
-                builder.redirectErrorStream(false);
-                Map<String, String> environment = builder.environment();
+                ProcessBuilder builder = new ProcessBuilder(
+                        "dirac-wms-job-get-output", jobID);
 
-                if (!proxyFile.isEmpty() && proxyFile != null){
-                    environment.put("X509_USER_PROXY", proxyFile);
+                builder.redirectErrorStream(true);
+
+                if (!proxyFile.isEmpty() && proxyFile != null) {
+                    builder.environment().put("X509_USER_PROXY", proxyFile);
                 }
 
                 Process process = builder.start();
-
                 process.waitFor();
 
                 if (process.exitValue() == 0) {
@@ -100,15 +97,32 @@ public class DiracOutputUtil extends OutputUtil {
                     File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
 
                     return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
-                } else{
-                   logger.info("Output files does not exist. Job was not executed! - jobID " + jobID);
+                    
+                } else {
+                    
+                    BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                    String cout = "";
+                    String s = null;
+                    while ((s = r.readLine()) != null) {
+                        cout += s;
+                    }
+                    
+                    logger.error(cout);
+                    logger.error("Output files does not exist. Job ID: " + jobID);
+
+                    File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Output files does not exist.");
+                    File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Output files does not exist.");
+                    File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "");
+                    File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "");
+
+                    return new GaswOutput(jobID, 6, appStdOut, appStdErr, stdOut, stdErr);
                 }
 
             } else {
 
                 String message = "";
                 int exitCode = 0;
-                
+
                 if (job.getStatus() == Monitor.Status.CANCELLED) {
                     message = "Job Cancelled";
                 } else {

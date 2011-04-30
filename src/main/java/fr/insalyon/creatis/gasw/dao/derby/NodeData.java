@@ -80,7 +80,9 @@ public class NodeData extends AbstractData implements NodeDAO {
             execute(ps);
 
         } catch (SQLException ex) {
-            throw new DAOException(ex);
+            if (!ex.getMessage().contains("duplicate key value")) {
+                throw new DAOException(ex);
+            }
         }
     }
 
