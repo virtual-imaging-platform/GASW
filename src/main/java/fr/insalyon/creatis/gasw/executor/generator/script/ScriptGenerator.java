@@ -233,7 +233,7 @@ public class ScriptGenerator extends AbstractGenerator {
      * @param release 
      * @param downloads The list of URIs to be downloaded
      * @return A string containing the code
-     */
+                     */
     public String inputs(Release release, List<URI> downloads) {
 
         StringBuilder sb = new StringBuilder();
@@ -352,7 +352,9 @@ public class ScriptGenerator extends AbstractGenerator {
         }
         sb.append("tar -zxf $GASW_EXEC_BUNDLE\n");
         sb.append("chmod 755 *\n");
-        sb.append("touch BEFORE_EXECUTION_REFERENCE_FILE\n");
+        // the 1s delay is needed to ensure that the time between this file creation and the command line outputs
+        // files creation is sufficient, and the subsequent "find -newer" call succeeds
+        sb.append("touch BEFORE_EXECUTION_REFERENCE_FILE; sleep 1\n");
         sb.append("info \"Executing " + commandLine + " ...\"\n");
         sb.append("startLog application_execution\n");
         sb.append(commandLine + "\n");
@@ -403,8 +405,8 @@ public class ScriptGenerator extends AbstractGenerator {
             dir = dir.replaceFirst("lfn://[^/]+", "");
         }
         for(String regexp : regexs) {
-            sb.append("  for f in `ls -A | grep -P '" + regexp + "'`\n");
-            //sb.append("  for f in `find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '\\.$' | sed 's#./##' | grep -P '" + regexp + "'`\n");
+            //sb.append("  for f in `ls -A | grep -P '" + regexp + "'`\n");
+            sb.append("  for f in `find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '\\.$' | sed 's#./##' | grep -P '" + regexp + "'`\n");
             sb.append("  do\n");
             sb.append("    uploadFile " + dir + "${f} ${PWD}/${f} 1\n");
             sb.append("    if [ \"x$__MOTEUR_OUT\" == \"x\" ]\n");
