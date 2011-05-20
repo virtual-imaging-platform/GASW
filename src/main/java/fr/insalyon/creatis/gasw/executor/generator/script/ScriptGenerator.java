@@ -196,19 +196,28 @@ public class ScriptGenerator extends AbstractGenerator {
      * Generates the code to perform an upload test before the job is executed
      *
      * @param uploads the list of URIs to be uploaded
+     * @param regexs list of regular expressions to match with results
+     * @param defaultDir default directory to store files matched against regexp
      * @return the code, in a String
      */
-    public String uploadTest(List<URI> uploads) {
+    public String uploadTest(List<URI> uploads, List<String> regexs, String defaultDir) {
         StringBuilder sb = new StringBuilder();
-        if (uploads.size() > 0) {
+        if (uploads.size() > 0 || regexs.size() > 0) {
             sb.append("startLog upload_test\n");
             //creates void result
             sb.append("mkdir -p " + Constants.CACHE_DIR + "\n");
             sb.append("test -f " + Constants.CACHE_DIR + "/uploadChecked\n");
             sb.append("if [ $? != 0 ]\n");
             sb.append("then\n");
-            sb.append(dataManagement.getUploadCommand(true, uploads.get(0)));
-            sb.append(dataManagement.getDeleteCommand(true, uploads.get(0)));
+            URI uri = null;
+            if(uploads.size() > 0) {
+                uri = uploads.get(0);
+            }
+            else {
+                uri = URI.create(defaultDir + "regexp-do-not-name-a-file-such-as-this-one");
+            }
+            sb.append(dataManagement.getUploadCommand(true, uri));
+            sb.append(dataManagement.getDeleteCommand(true, uri));
             sb.append("  touch " + Constants.CACHE_DIR + "/" + "uploadChecked\n");
             sb.append("else\n");
             sb.append("  info \"Skipping upload test (it has already been done by a previous job)\"\n");
@@ -342,7 +351,8 @@ public class ScriptGenerator extends AbstractGenerator {
             commandLine += " " + param;
         }
         sb.append("tar -zxf $GASW_EXEC_BUNDLE\n");
-        sb.append("chmod 755 *;\n");
+        sb.append("chmod 755 *\n");
+        sb.append("touch BEFORE_EXECUTION_REFERENCE_FILE\n");
         sb.append("info \"Executing " + commandLine + " ...\"\n");
         sb.append("startLog application_execution\n");
         sb.append(commandLine + "\n");
@@ -366,9 +376,11 @@ public class ScriptGenerator extends AbstractGenerator {
      * Generates the code to upload the results
      *
      * @param Uploads the list of URIs to be uploaded
+     * @param regexs list of regular expressions to match with results
+     * @param defaultDir default directory to store files matched against regexp
      * @return A string containing the code
      */
-    public String resultsUpload(List<URI> uploads) {
+    public String resultsUpload(List<URI> uploads, List<String> regexs, String defaultDir) {
 
         StringBuilder sb = new StringBuilder();
         String edgesVar = "__MOTEUR_OUT=\"";
@@ -385,8 +397,25 @@ public class ScriptGenerator extends AbstractGenerator {
             sb.append(dataManagement.getUploadCommand(false, lfn));
         }
         edgesVar += "\"";
-        sb.append("stopLog results_upload\n");
-        sb.append(edgesVar + "\n\n");
+        sb.append(edgesVar + "\n");
+        String dir = defaultDir;
+        if(dir.startsWith("lfn://")) {
+            dir = dir.replaceFirst("lfn://[^/]+", "");
+        }
+        for(String regexp : regexs) {
+            sb.append("  for f in `ls -A | grep -P '" + regexp + "'`\n");
+            //sb.append("  for f in `find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '\\.$' | sed 's#./##' | grep -P '" + regexp + "'`\n");
+            sb.append("  do\n");
+            sb.append("    uploadFile " + dir + "${f} ${PWD}/${f} 1\n");
+            sb.append("    if [ \"x$__MOTEUR_OUT\" == \"x\" ]\n");
+            sb.append("    then\n");
+            sb.append("      __MOTEUR_OUT=\"${f}\"\n");
+            sb.append("    else\n");
+            sb.append("      __MOTEUR_OUT=\"${__MOTEUR_OUT};${f}\"\n");
+            sb.append("    fi\n");
+            sb.append("  done\n");
+        }
+        sb.append("stopLog results_upload\n\n");
         return sb.toString();
     }
 
@@ -423,10 +452,12 @@ public class ScriptGenerator extends AbstractGenerator {
      * @param downloads
      * @param uploads
      * @param command
+     * @param regexs list of regular expressions to match with results
+     * @param defaultDir default directory to store files matched against regexp
      * @param parameters
      * @return A string containing the bash script source
      */
-    public String generateScript(Release release, List<URI> downloads, List<URI> uploads, List<String> parameters) {
+    public String generateScript(Release release, List<URI> downloads, List<URI> uploads, List<String> regexs, String defaultDir, List<String> parameters) {
 
         StringBuilder sb = new StringBuilder();
 
@@ -446,10 +477,10 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append(hostConfiguration());
         sb.append(backgroundScript());
 
-        sb.append(uploadTest(uploads));
+        sb.append(uploadTest(uploads, regexs, defaultDir));
         sb.append(inputs(release, downloads));
         sb.append(applicationExecution(parameters));
-        sb.append(resultsUpload(uploads));
+        sb.append(resultsUpload(uploads, regexs, defaultDir));
         sb.append(footer());
 
         return sb.toString();

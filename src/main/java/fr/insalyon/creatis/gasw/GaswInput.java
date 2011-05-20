@@ -49,7 +49,8 @@ public class GaswInput {
     private List<String> parameters;
     private List<URI> downloads;
     private List<URI> uploads;
-    private List<String> regexUploads;
+    private List<String> regexs;
+    private String defaultDir;
 
     /**
      * 
@@ -57,7 +58,7 @@ public class GaswInput {
      */
     public GaswInput(Release release) {
         this(release, new ArrayList<String>(), new ArrayList<URI>(),
-                new ArrayList<URI>(), new ArrayList<String>());
+                new ArrayList<URI>());
     }
 
     /**
@@ -69,7 +70,7 @@ public class GaswInput {
      */
     public GaswInput(Release release, List<String> parameters, List<URI> downloads,
             List<URI> uploads) {
-        this(release, parameters, downloads, uploads, new ArrayList<String>());
+        this(release, parameters, downloads, uploads, new ArrayList<String>(), null);
     }
 
     /**
@@ -78,16 +79,18 @@ public class GaswInput {
      * @param parameters List of parameters associated with the command.
      * @param downloads List of input files to be downloaded in the worker node.
      * @param uploads List of output files to be uploaded to a Storage Element.
-     * @param regexUploads
+     * @param regexs list of regular expressions to match against outputs.
+     * @param defaultDir default directory where to store files matching the regular expressions.
      */
     public GaswInput(Release release, List<String> parameters, List<URI> downloads,
-            List<URI> uploads, List<String> regexUploads) {
+            List<URI> uploads, List<String> regexs, String defaultDir) {
 
         this.release = release;
         this.parameters = parameters;
         this.downloads = downloads;
         this.uploads = uploads;
-        this.regexUploads = regexUploads;
+        this.regexs = regexs;
+        this.defaultDir = defaultDir;
     }
 
     /**
@@ -122,8 +125,8 @@ public class GaswInput {
      *
      * @param regex
      */
-    public void addRegexUpload(String regex) {
-        this.regexUploads.add(regex);
+    public void addRegex(String regex) {
+        this.regexs.add(regex);
     }
 
     public List<URI> getDownloads() {
@@ -134,8 +137,12 @@ public class GaswInput {
         return parameters;
     }
 
-    public List<String> getRegexUploads() {
-        return regexUploads;
+    public List<String> getRegexs() {
+        return regexs;
+    }
+
+    public String getDefaultDirectory() {
+        return defaultDir;
     }
 
     public Release getRelease() {

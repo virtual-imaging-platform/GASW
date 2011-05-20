@@ -107,6 +107,8 @@ public abstract class Executor {
                 gaswInput.getRelease(),
                 gaswInput.getDownloads(),
                 gaswInput.getUploads(),
+                gaswInput.getRegexs(),
+                gaswInput.getDefaultDirectory(),
                 gaswInput.getParameters());
 
         return publishScript(gaswInput.getRelease().getSymbolicName(), script);
