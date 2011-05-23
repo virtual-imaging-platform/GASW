@@ -64,7 +64,6 @@ public class DerbyDAOFactory extends DAOFactory {
     private DerbyDAOFactory() {
         try {
             connect();
-            createTables();
         } catch (SQLException ex) {
             log.error(ex);
             if (log.isDebugEnabled()) {
@@ -78,15 +77,17 @@ public class DerbyDAOFactory extends DAOFactory {
     @Override
     public void connect() throws SQLException {
         try {
-            Class.forName(DRIVER);
-            connection = DriverManager.getConnection(DBURL + Configuration.DERBY_HOST
-                    + ":" + Configuration.DERBY_PORT + "/" + new File("").getAbsolutePath() + "/jobs.db;create=true");
-            connection.setAutoCommit(true);
-
-        } catch (SQLException ex) {
+            Class.forName(DRIVER).newInstance();
+            File dbDir = new File(new File("").getAbsolutePath() + "/jobs.db");
+            if (!dbDir.exists()) {
                 connection = DriverManager.getConnection(DBURL + Configuration.DERBY_HOST
-                        + ":" + Configuration.DERBY_PORT + "/" + new File("").getAbsolutePath() + "/jobs.db");
-                connection.setAutoCommit(true);
+                        + ":" + Configuration.DERBY_PORT + "/" + dbDir.getAbsolutePath() + ";create=true");
+                createTables();
+            } else {
+                connection = DriverManager.getConnection(DBURL + Configuration.DERBY_HOST
+                        + ":" + Configuration.DERBY_PORT + "/" + dbDir.getAbsolutePath());
+            }
+            connection.setAutoCommit(true);
 
         } catch (ClassNotFoundException ex) {
             log.error(ex);
@@ -95,6 +96,10 @@ public class DerbyDAOFactory extends DAOFactory {
                     log.debug(stack);
                 }
             }
+        }catch (InstantiationException ex){
+            log.error(ex);
+        }catch (IllegalAccessException ex){
+            log.error(ex);
         }
 
     }
@@ -138,7 +143,7 @@ public class DerbyDAOFactory extends DAOFactory {
             stat.executeUpdate("CREATE INDEX jobs_command_idx ON Jobs(command)");
 
         } catch (SQLException ex) {
-            log.error(ex);
+            log.warn(ex);
             if (log.isDebugEnabled()) {
                 for (StackTraceElement stack : ex.getStackTrace()) {
                     log.debug(stack);
