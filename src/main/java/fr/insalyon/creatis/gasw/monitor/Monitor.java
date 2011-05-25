@@ -64,7 +64,7 @@ public abstract class Monitor extends Thread {
 
         COMPLETED, ERROR, RUNNING,
         QUEUED, NOT_SUBMITTED, SUCCESSFULLY_SUBMITTED,
-        CANCELLED, STALLED
+        CANCELLED, STALLED, KILL, RESCHEDULE
     };
 
     protected Monitor() {
@@ -166,4 +166,26 @@ public abstract class Monitor extends Thread {
     public int getStartTime() {
         return startTime;
     }
+
+    protected void verifySignaledJobs() {
+        try {
+            Map<String, Status> jobs = jobDAO.getSignaledJobs();
+            
+            for (String id : jobs.keySet()) {
+                Status status = jobs.get(id);
+                if (status == Status.KILL) {
+                    kill(id);
+                } else if (status.equals(Status.RESCHEDULE)) {
+                    reschedule(id);
+                }
+            }
+
+        } catch (DAOException ex) {
+            logException(logger, ex);
+        }
+    }
+    
+    protected abstract void kill(String jobID);
+    
+    protected abstract void reschedule(String jobID);
 }

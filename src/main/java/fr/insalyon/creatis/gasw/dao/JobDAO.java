@@ -53,4 +53,6 @@ public interface JobDAO {
     public Job getJobByID(String id) throws DAOException;
 
     public void updateStatus(Map<Status, String> jobStatus) throws DAOException;
+    
+    public Map<String, Status> getSignaledJobs() throws DAOException;
 }

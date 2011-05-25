@@ -44,6 +44,7 @@ import fr.insalyon.creatis.gasw.monitor.Monitor.Status;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -180,6 +181,12 @@ public class JobData extends AbstractData implements JobDAO {
         if (status.equals(Status.CANCELLED.toString())) {
             return Status.CANCELLED;
         }
+        if (status.equals(Status.KILL.toString())) {
+            return Status.KILL;
+        }
+        if (status.equals(Status.RESCHEDULE.toString())) {
+            return Status.RESCHEDULE;
+        }
         return null;
     }
 
@@ -217,6 +224,34 @@ public class JobData extends AbstractData implements JobDAO {
                 }
                 execute(ps);
             }
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
+        }
+    }
+    
+    /**
+     * 
+     * @return
+     * @throws DAOException 
+     */
+    public Map<String, Status> getSignaledJobs() throws DAOException {
+        try {
+            PreparedStatement ps = prepareStatement("SELECT "
+                    + "id, status FROM Jobs "
+                    + "WHERE status = ? OR status = ?");
+
+            ps.setString(1, "KILL");
+            ps.setString(2, "RESCHEDULE");
+            ResultSet rs = executeQuery(ps);
+            
+            Map<String, Status> jobs = new HashMap<String, Status>();
+            
+            while (rs.next()) {
+                jobs.put(rs.getString("id"), getStatus(rs.getString("status")));
+            }
+            
+            return jobs;
+
         } catch (SQLException ex) {
             throw new DAOException(ex);
         }

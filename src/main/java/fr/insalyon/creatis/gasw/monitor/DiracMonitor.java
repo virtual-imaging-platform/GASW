@@ -39,6 +39,9 @@ import fr.insalyon.creatis.gasw.Gasw;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,8 +76,10 @@ public class DiracMonitor extends Monitor {
         while (!stop) {
             try {
                 if (!monitoredJobs.isEmpty()) {
-                    
-                    Map <String, String> finishedJobs = new HashMap<String, String>();
+
+                    verifySignaledJobs();
+
+                    Map<String, String> finishedJobs = new HashMap<String, String>();
                     Map<Status, String> jobStatus = getNewJobStatusMap();
                     Map<String, String> jobsStatus = DiracDatabase.getInstance().getJobsStatus(new ArrayList(monitoredJobs.keySet()));
 
@@ -163,6 +168,71 @@ public class DiracMonitor extends Monitor {
     public static void finish() {
         if (instance != null) {
             instance.terminate();
+        }
+    }
+
+    @Override
+    protected void kill(String jobID) {
+        try {
+            ProcessBuilder builder = new ProcessBuilder(
+                    "dirac-wms-job-kill", jobID);
+
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+            process.waitFor();
+
+            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String cout = "";
+            String s = null;
+            while ((s = r.readLine()) != null) {
+                cout += s;
+            }
+
+            if (process.exitValue() != 0) {
+                logger.error(cout);
+            } else {
+                logger.info("Killed DIRAC Job ID '" + jobID + "'");
+            }
+
+        } catch (IOException ex) {
+            logException(logger, ex);
+        } catch (InterruptedException ex) {
+            logException(logger, ex);
+        }
+    }
+
+    @Override
+    protected void reschedule(String jobID) {
+        try {
+            ProcessBuilder builder = new ProcessBuilder(
+                    "dirac-wms-job-reschedule", jobID);
+
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+            process.waitFor();
+
+            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String cout = "";
+            String s = null;
+            while ((s = r.readLine()) != null) {
+                cout += s;
+            }
+
+            if (process.exitValue() != 0) {
+                logger.error(cout);
+            } else {
+                Job job = jobDAO.getJobByID(jobID);
+                job.setStatus(Status.SUCCESSFULLY_SUBMITTED);
+                jobDAO.update(job);
+                logger.info("Rescheduled DIRAC Job ID '" + jobID + "'");
+            }
+
+        } catch (DAOException ex) {
+            logException(logger, ex);
+        } catch (IOException ex) {
+            logException(logger, ex);
+        } catch (InterruptedException ex) {
+            logException(logger, ex);
         }
     }
 }

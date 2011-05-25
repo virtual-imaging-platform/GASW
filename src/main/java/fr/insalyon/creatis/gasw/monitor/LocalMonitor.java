@@ -128,4 +128,14 @@ public class LocalMonitor extends Monitor {
             instance.terminate();
         }
     }
+
+    @Override
+    protected void kill(String jobID) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected void reschedule(String jobID) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
