@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw.monitor;
 
 import fr.insalyon.creatis.gasw.Configuration;
+import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.Gasw;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.bean.Job;
@@ -78,7 +79,7 @@ public class GliteMonitor extends Monitor {
 
                 sleep(Configuration.SLEEPTIME);
                 verifySignaledJobs();
-                
+
                 // Getting Status
                 String ids = "";
                 for (String jobID : monitoredJobs.keySet()) {
@@ -183,7 +184,7 @@ public class GliteMonitor extends Monitor {
             }
         }
     }
-    
+
     @Override
     public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, String userProxy) {
         logger.info("Adding job: " + jobID);
@@ -236,6 +237,37 @@ public class GliteMonitor extends Monitor {
 
     @Override
     protected void reschedule(String jobID) {
-        //TODO: reschedule glite jobs
+        try {
+            kill(jobID);
+            Job job = jobDAO.getJobByID(jobID);
+
+            ProcessBuilder builder = new ProcessBuilder(
+                    "glite-wms-job-submit", "-a", Constants.JDL_ROOT
+                    + "/" + job.getFileName() + ".jdl");
+
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+            process.waitFor();
+
+            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String cout = "";
+            String s = null;
+            while ((s = r.readLine()) != null) {
+                cout += s;
+            }
+
+            if (process.exitValue() != 0) {
+                logger.error(cout);
+            } else {
+                logger.info("Rescheduled Glite Job ID '" + jobID + "'");
+            }
+            
+        } catch (IOException ex) {
+            logException(logger, ex);
+        } catch (InterruptedException ex) {
+            logException(logger, ex);
+        } catch (DAOException ex) {
+            logException(logger, ex);
+        }
     }
 }
