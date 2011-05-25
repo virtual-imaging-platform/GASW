@@ -54,7 +54,7 @@ import org.apache.log4j.Logger;
  */
 public class GliteMonitor extends Monitor {
 
-    private static final Logger log = Logger.getLogger(GliteMonitor.class);
+    private static final Logger logger = Logger.getLogger(GliteMonitor.class);
     private static GliteMonitor instance;
     private volatile Map<String, String> monitoredJobs;
 
@@ -151,7 +151,7 @@ public class GliteMonitor extends Monitor {
                                 jobStatus.put(Status.CANCELLED, list);
                                 st = Status.CANCELLED;
                             }
-                            log.info("Glite Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
+                            logger.info("Glite Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
                             finishedJobs.put(jobId + "--" + st, monitoredJobs.get(jobId));
                             jobsToRemove.add(jobId);
                         }
@@ -167,24 +167,24 @@ public class GliteMonitor extends Monitor {
                 } else {
                     r = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                     while ((s = r.readLine()) != null) {
-                        log.error("[GASW] ERROR:" + s);
+                        logger.error(s);
                     }
                 }
             } catch (GaswException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             } catch (DAOException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             } catch (IOException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             } catch (InterruptedException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             }
         }
     }
     
     @Override
     public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, String userProxy) {
-        log.info("[GASW] Adding job: " + jobID);
+        logger.info("Adding job: " + jobID);
         Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
         add(job, fileName);
         monitoredJobs.put(jobID, userProxy);
@@ -204,7 +204,32 @@ public class GliteMonitor extends Monitor {
 
     @Override
     protected void kill(String jobID) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        try {
+            ProcessBuilder builder = new ProcessBuilder(
+                    "glite-wms-job-cancel", "--noint", jobID);
+
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+            process.waitFor();
+
+            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String cout = "";
+            String s = null;
+            while ((s = r.readLine()) != null) {
+                cout += s;
+            }
+
+            if (process.exitValue() != 0) {
+                logger.error(cout);
+            } else {
+                logger.info("Killed Glite Job ID '" + jobID + "'");
+            }
+
+        } catch (IOException ex) {
+            logException(logger, ex);
+        } catch (InterruptedException ex) {
+            logException(logger, ex);
+        }
     }
 
     @Override
