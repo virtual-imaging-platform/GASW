@@ -77,6 +77,8 @@ public class GliteMonitor extends Monitor {
             try {
 
                 sleep(Configuration.SLEEPTIME);
+                verifySignaledJobs();
+                
                 // Getting Status
                 String ids = "";
                 for (String jobID : monitoredJobs.keySet()) {
@@ -234,6 +236,6 @@ public class GliteMonitor extends Monitor {
 
     @Override
     protected void reschedule(String jobID) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //TODO: reschedule glite jobs
     }
 }
