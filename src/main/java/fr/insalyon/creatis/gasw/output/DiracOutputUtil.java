@@ -45,7 +45,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Map;
 import org.apache.log4j.Logger;
 
 /**
@@ -120,11 +119,12 @@ public class DiracOutputUtil extends OutputUtil {
 
             } else {
 
-                String message = "";
-                int exitCode = 0;
+                String message = "";                
+                int exitCode;
 
                 if (job.getStatus() == Monitor.Status.CANCELLED) {
                     message = "Job Cancelled";
+                    exitCode =Integer.MIN_VALUE;
                 } else {
                     message = "Job Stalled";
                     exitCode = 6;
