@@ -79,19 +79,13 @@ public class NodeData extends AbstractData implements NodeDAO {
 
             execute(ps);
 
-        } catch (SQLException ex) {
+        } catch (DAOException ex) {
             if (!ex.getMessage().contains("duplicate key value")) {
                 throw new DAOException(ex);
             }
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
         }
-    }
-
-    public synchronized void update(Node node) throws DAOException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public synchronized void remove(Node node) throws DAOException {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public synchronized Node getNodeBySiteAndNodeName(String site, String nodeName) throws DAOException {

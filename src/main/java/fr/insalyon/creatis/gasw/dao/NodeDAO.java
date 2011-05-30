@@ -44,9 +44,5 @@ public interface NodeDAO {
 
     public void add(Node node) throws DAOException;
 
-    public void update(Node node) throws DAOException;
-
-    public void remove(Node node) throws DAOException;
-
     public Node getNodeBySiteAndNodeName(String site, String nodeName) throws DAOException;
 }
