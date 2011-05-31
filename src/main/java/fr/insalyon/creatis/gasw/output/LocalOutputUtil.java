@@ -45,7 +45,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Silva, Tram Truong Huu
  */
 public class LocalOutputUtil extends OutputUtil {
 

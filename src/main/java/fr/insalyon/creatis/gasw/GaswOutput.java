@@ -39,7 +39,7 @@ import java.io.File;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Silva, Tram Truong Huu
  */
 public class GaswOutput {
 

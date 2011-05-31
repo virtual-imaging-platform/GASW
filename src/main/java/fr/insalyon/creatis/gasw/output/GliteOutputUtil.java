@@ -49,7 +49,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Silva, Tram Truong Huu
  */
 public class GliteOutputUtil extends OutputUtil {
 
@@ -136,12 +136,12 @@ public class GliteOutputUtil extends OutputUtil {
                     
                 } else {
                     logger.error(cout);
-                    logger.error("Output files does not exist. Job ID: " + jobID);
+                    logger.error("Output files do not exist. Job ID: " + jobID);
 
-                    stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Output files does not exist.");
-                    stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Output files does not exist.");
-                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "Output files does not exist.");
-                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "Output files does not exist.");
+                    stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Output files do not exist.");
+                    stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Output files do not exist.");
+                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "Output files do not exist.");
+                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "Output files do not exist.");
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
                 }
             } else {
