@@ -67,6 +67,11 @@ public class DiracOutputUtil extends OutputUtil {
         try {
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
             Job job = jobDAO.getJobByID(jobID);
+            GaswExitCode gaswExitCode = GaswExitCode.UNDEFINED;
+            File stdOut = null;
+            File stdErr = null;
+            File appStdOut = null;
+            File appStdErr = null;
 
             if (job.getStatus() != Monitor.Status.CANCELLED && job.getStatus() != Monitor.Status.STALLED) {
 
@@ -83,8 +88,8 @@ public class DiracOutputUtil extends OutputUtil {
                 process.waitFor();
 
                 if (process.exitValue() == 0) {
-                    File stdOut = getStdFile(job, ".out", Constants.OUT_ROOT);
-                    File stdErr = getStdFile(job, ".err", Constants.ERR_ROOT);
+                    stdOut = getStdFile(job, ".out", Constants.OUT_ROOT);
+                    stdErr = getStdFile(job, ".err", Constants.ERR_ROOT);
 
                     File outTempDir = new File("./" + jobID);
                     outTempDir.delete();
@@ -92,50 +97,61 @@ public class DiracOutputUtil extends OutputUtil {
                     int exitCode = parseStdOut(job, stdOut);
                     exitCode = parseStdErr(job, stdErr, exitCode);
 
-                    File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
-                    File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
-
-                    return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
-                    
+                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
+                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
+                    switch (exitCode) {
+                        case 0:
+                            gaswExitCode = GaswExitCode.SUCCESS;
+                            break;
+                        case 1:
+                            gaswExitCode = GaswExitCode.ERROR_READ_GRID;
+                            break;
+                        case 2:
+                            gaswExitCode = GaswExitCode.ERROR_WRITE_GRID;
+                            break;
+                        case 6:
+                            gaswExitCode = GaswExitCode.EXECUTION_FAILED;
+                            break;
+                        case 7:
+                            gaswExitCode = GaswExitCode.ERROR_WRITE_LOCAL;
+                            break;
+                    }
                 } else {
-                    
+
                     BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
                     String cout = "";
                     String s = null;
                     while ((s = r.readLine()) != null) {
                         cout += s;
                     }
-                    
+
                     logger.error(cout);
                     logger.error("Output files does not exist. Job ID: " + jobID);
 
-                    File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Output files does not exist.");
-                    File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Output files does not exist.");
-                    File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "");
-                    File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "");
-
-                    return new GaswOutput(jobID, 6, appStdOut, appStdErr, stdOut, stdErr);
+                    stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Output files does not exist.");
+                    stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Output files does not exist.");
+                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "Output files does not exist.");
+                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "Output files does not exist.");
+                    gaswExitCode = GaswExitCode.ERROR_GET_STD;
                 }
 
             } else {
 
-                String message = "";                
-                int exitCode;
-
+                String message = "";
                 if (job.getStatus() == Monitor.Status.CANCELLED) {
                     message = "Job Cancelled";
-                    exitCode =Integer.MIN_VALUE;
+                    gaswExitCode = GaswExitCode.EXECUTION_CANCELED;
                 } else {
                     message = "Job Stalled";
-                    exitCode = 6;
+                    gaswExitCode = GaswExitCode.EXECUTION_STALLED;
                 }
 
-                File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, message);
-                File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, message);
-
-                return new GaswOutput(jobID, exitCode, stdOut, stdErr, stdOut, stdErr);
+                stdOut = saveFile(job, ".out", Constants.OUT_ROOT, message);
+                stdErr = saveFile(job, ".err", Constants.ERR_ROOT, message);
+                appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, message);
+                appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, message);
             }
-
+            return new GaswOutput(jobID, gaswExitCode, appStdOut, appStdErr, stdOut, stdErr);
         } catch (DAOException ex) {
             logException(logger, ex);
         } catch (InterruptedException ex) {

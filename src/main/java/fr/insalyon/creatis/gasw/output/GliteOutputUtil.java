@@ -70,11 +70,17 @@ public class GliteOutputUtil extends OutputUtil {
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
             Job job = jobDAO.getJobByID(jobID);
 
+            GaswExitCode gaswExitCode = GaswExitCode.UNDEFINED;
+            File stdOut = null;
+            File stdErr = null;
+            File appStdOut = null;
+            File appStdErr = null;
+
             if (job.getStatus() != Monitor.Status.CANCELLED) {
 
                 String dir = "out";
                 ProcessBuilder builder = new ProcessBuilder(
-                        "glite-wms-job-output", "--dir", 
+                        "glite-wms-job-output", "--dir",
                         dir, jobID);
 
                 builder.redirectErrorStream(true);
@@ -98,8 +104,8 @@ public class GliteOutputUtil extends OutputUtil {
                 }
 
                 if (process.exitValue() == 0) {
-                    File stdOut = getStdFile(job, ".out", Constants.OUT_ROOT, outputPath);
-                    File stdErr = getStdFile(job, ".err", Constants.ERR_ROOT, outputPath);
+                    stdOut = getStdFile(job, ".out", Constants.OUT_ROOT, outputPath);
+                    stdErr = getStdFile(job, ".err", Constants.ERR_ROOT, outputPath);
 
                     File outTempDir = new File(outputPath);
                     outTempDir.delete();
@@ -107,28 +113,47 @@ public class GliteOutputUtil extends OutputUtil {
                     int exitCode = parseStdOut(job, stdOut);
                     exitCode = parseStdErr(job, stdErr, exitCode);
 
-                    File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
-                    File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
+                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
+                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
 
-                    return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
-
+                    switch (exitCode) {
+                        case 0:
+                            gaswExitCode = GaswExitCode.SUCCESS;
+                            break;
+                        case 1:
+                            gaswExitCode = GaswExitCode.ERROR_READ_GRID;
+                            break;
+                        case 2:
+                            gaswExitCode = GaswExitCode.ERROR_WRITE_GRID;
+                            break;
+                        case 6:
+                            gaswExitCode = GaswExitCode.EXECUTION_FAILED;
+                            break;
+                        case 7:
+                            gaswExitCode = GaswExitCode.ERROR_WRITE_LOCAL;
+                            break;
+                    }
+                    
                 } else {
                     logger.error(cout);
                     logger.error("Output files does not exist. Job ID: " + jobID);
 
-                    File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Output files does not exist.");
-                    File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Output files does not exist.");
-                    File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "");
-                    File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "");
-
-                    return new GaswOutput(jobID, 6, appStdOut, appStdErr, stdOut, stdErr);
+                    stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Output files does not exist.");
+                    stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Output files does not exist.");
+                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "Output files does not exist.");
+                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "Output files does not exist.");
+                    gaswExitCode = GaswExitCode.ERROR_GET_STD;
                 }
             } else {
-                File stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Job Cancelled");
-                File stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Job Cancelled");
-
-                return new GaswOutput(jobID, 0, stdOut, stdErr, stdOut, stdErr);
+                stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Job Cancelled");
+                stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Job Cancelled");
+                appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "Job Cancelled");
+                appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "Job Cancelled");
+                gaswExitCode = GaswExitCode.EXECUTION_CANCELED;
             }
+            
+            return new GaswOutput(jobID, gaswExitCode, appStdOut, appStdErr, stdOut, stdErr);
+        
         } catch (DAOException ex) {
             logException(logger, ex);
         } catch (InterruptedException ex) {
@@ -154,7 +179,7 @@ public class GliteOutputUtil extends OutputUtil {
         }
         File stdFile = new File(srcDir + "/std" + extension);
         File stdRenamed = new File(outDir + "/" + job.getFileName() + ".sh" + extension);
-            stdFile.renameTo(stdRenamed);
+        stdFile.renameTo(stdRenamed);
         return stdRenamed;
     }
 }

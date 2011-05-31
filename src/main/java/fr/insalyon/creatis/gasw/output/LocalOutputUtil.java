@@ -55,10 +55,10 @@ public class LocalOutputUtil extends OutputUtil {
         super(startTime);
     }
 
-    public GaswOutput getOutputs(String jobID, String proxyFile){
+    public GaswOutput getOutputs(String jobID, String proxyFile) {
         return getOutputs(jobID);
     }
-    
+
     public GaswOutput getOutputs(String jobID) {
         try {
 
@@ -74,7 +74,25 @@ public class LocalOutputUtil extends OutputUtil {
             File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
             File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
 
-            return new GaswOutput(jobID, exitCode, appStdOut, appStdErr, stdOut, stdErr);
+            GaswExitCode gaswExitCode = GaswExitCode.UNDEFINED;
+            switch (exitCode) {
+                case 0:
+                    gaswExitCode = GaswExitCode.SUCCESS;
+                    break;
+                case 1:
+                    gaswExitCode = GaswExitCode.ERROR_READ_GRID;
+                    break;
+                case 2:
+                    gaswExitCode = GaswExitCode.ERROR_WRITE_GRID;
+                    break;
+                case 6:
+                    gaswExitCode = GaswExitCode.EXECUTION_FAILED;
+                    break;
+                case 7:
+                    gaswExitCode = GaswExitCode.ERROR_WRITE_LOCAL;
+                    break;
+            }
+            return new GaswOutput(jobID, gaswExitCode, appStdOut, appStdErr, stdOut, stdErr);
 
         } catch (DAOException ex) {
             logException(logger, ex);
