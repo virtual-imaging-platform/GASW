@@ -37,7 +37,7 @@ package fr.insalyon.creatis.gasw.executor;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
-import fr.insalyon.creatis.gasw.executor.generator.jdl.JdlGenerator;
+import fr.insalyon.creatis.gasw.executor.generator.jdl.DiracJdlGenerator;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -91,7 +91,7 @@ public class DiracExecutor extends Executor {
 
             String jobID = cout.substring(cout.lastIndexOf("=") + 2, cout.length()).trim();
             try {
-                new Integer(jobID);
+                Integer.parseInt(jobID);
             } catch (NumberFormatException ex) {
                 throw new GaswException("Unable to submit job. DIRAC Error: " + cout);
             }
@@ -121,7 +121,7 @@ public class DiracExecutor extends Executor {
     private String generateJdl(String scriptName) {
 
         StringBuilder sb = new StringBuilder();
-        JdlGenerator generator = JdlGenerator.getInstance();
+        DiracJdlGenerator generator = DiracJdlGenerator.getInstance();
 
         sb.append(generator.generate(scriptName));
 

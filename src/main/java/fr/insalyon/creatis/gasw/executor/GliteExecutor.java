@@ -37,8 +37,7 @@ package fr.insalyon.creatis.gasw.executor;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
-import fr.insalyon.creatis.gasw.executor.generator.jdl.JdlGenerator;
-import fr.insalyon.creatis.gasw.release.EnvVariable;
+import fr.insalyon.creatis.gasw.executor.generator.jdl.GliteJdlGenerator;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -80,20 +79,25 @@ public class GliteExecutor extends Executor {
             Process process = builder.start();
             process.waitFor();
 
-            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String cout = "";
+            BufferedReader br = new BufferedReader(new InputStreamReader(
+                    process.getInputStream()));
+            
+            String out = "";
             String s = null;
-            while ((s = r.readLine()) != null) {
-                cout += s;
+            while ((s = br.readLine()) != null) {
+                out += s;
             }
 
             if (process.exitValue() != 0) {
-                logger.error(cout);
+                logger.error(out);
                 throw new GaswException("Unable to submit job.");
             }
 
-            String jobID = cout.substring(cout.lastIndexOf("https://"), cout.length()).trim();
+            String jobID = out.substring(out.lastIndexOf("https://"),
+                    out.length()).trim();
+            
             jobID = jobID.substring(0, jobID.indexOf("=")).trim();
+            
             if (!userProxy.isEmpty() && userProxy != null) {
                 addJobToMonitor(jobID, userProxy);
             } else {
@@ -119,29 +123,11 @@ public class GliteExecutor extends Executor {
     private String generateJdl(String scriptName) {
 
         StringBuilder sb = new StringBuilder();
-        JdlGenerator generator = JdlGenerator.getInstance();
+        GliteJdlGenerator generator = GliteJdlGenerator.getInstance();
 
         sb.append(generator.generate(scriptName));
-        StringBuilder requirements = new StringBuilder();
-
-        for (EnvVariable v : gaswInput.getRelease().getConfigurations()) {
-            
-            if (v.getCategory() == EnvVariable.Category.SYSTEM
-                    && v.getName().equals("nodeNumber")) {
-                sb.append("NodeNumber\t= " + v.getValue() + ";\n");
-            
-            } else if (v.getCategory() == EnvVariable.Category.INFRASTRUCTURE
-                    && v.getName().equals("gLiteRequirement")) {
-                if (requirements.length() > 0) {
-                    requirements.append(" && ");
-                }
-                requirements.append(v.getValue());
-            }
-        }
-        
-        if (requirements.length() > 0) {
-            sb.append("Requirements\t= " + requirements.toString() + ";\n");
-        }
+        sb.append(generator.parseEnvironment(
+                gaswInput.getRelease().getConfigurations()));
 
         return publishJdl(scriptName, sb.toString());
     }

@@ -41,21 +41,10 @@ import java.io.File;
  *
  * @author Rafael Silva
  */
-public class JdlGenerator {
-
-    public static JdlGenerator instance;
-
-    public static JdlGenerator getInstance() {
-        if (instance == null) {
-            instance = new JdlGenerator();
-        }
-        return instance;
-    }
-
-    private JdlGenerator() {
-    }
+public abstract class AbstractJdlGenerator {
 
     public String generate(String scriptName) {
+        
         StringBuilder sb = new StringBuilder();
         String scriptPath = new File(Constants.SCRIPT_ROOT).getAbsolutePath();
 

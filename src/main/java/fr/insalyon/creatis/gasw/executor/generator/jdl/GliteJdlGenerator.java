@@ -34,21 +34,63 @@
  */
 package fr.insalyon.creatis.gasw.executor.generator.jdl;
 
+import fr.insalyon.creatis.gasw.release.EnvVariable;
+import java.util.List;
+
 /**
  *
  * @author Rafael Silva
  */
-public class DiracJdlGenerator extends AbstractJdlGenerator {
+public class GliteJdlGenerator extends AbstractJdlGenerator {
 
-    public static DiracJdlGenerator instance;
+    public static GliteJdlGenerator instance;
 
-    public static DiracJdlGenerator getInstance() {
+    public static GliteJdlGenerator getInstance() {
         if (instance == null) {
-            instance = new DiracJdlGenerator();
+            instance = new GliteJdlGenerator();
         }
         return instance;
     }
 
-    private DiracJdlGenerator() {
+    private GliteJdlGenerator() {
+    }
+
+    /**
+     * Parses a list of environment variables to add requirements or node number
+     * in case of MPI jobs.
+     * 
+     * @param list List of environment variables
+     * @return 
+     */
+    public String parseEnvironment(List<EnvVariable> list) {
+
+        StringBuilder sb = new StringBuilder();
+        StringBuilder requirements = new StringBuilder();
+
+        for (EnvVariable v : list) {
+            
+            if (v.getCategory() == EnvVariable.Category.SYSTEM
+                    && v.getName().equals("nodeNumber")) {
+                
+                sb.append("NodeNumber\t= ");
+                sb.append(v.getValue());
+                sb.append(";\n");
+
+            } else if (v.getCategory() == EnvVariable.Category.INFRASTRUCTURE
+                    && v.getName().equals("gLiteRequirement")) {
+                
+                if (requirements.length() > 0) {
+                    requirements.append(" && ");
+                }
+                requirements.append(v.getValue());
+            }
+        }
+        if (requirements.length() > 0) {
+            sb.append("Requirements\t= ");
+            sb.append(requirements.toString());
+            sb.append(";\n");
+        }
+        
+        return sb.toString();
     }
 }
