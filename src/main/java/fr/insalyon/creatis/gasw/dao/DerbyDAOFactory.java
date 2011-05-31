@@ -48,19 +48,19 @@ import org.apache.log4j.Logger;
  * @author Rafael Silva
  */
 public class DerbyDAOFactory extends DAOFactory {
-
+    
     private static final Logger log = Logger.getLogger(DerbyDAOFactory.class);
     private static DAOFactory instance;
     private final String DRIVER = "org.apache.derby.jdbc.ClientDriver";
     private final String DBURL = "jdbc:derby://";
-
+    
     protected static DAOFactory getInstance() {
         if (instance == null) {
             instance = new DerbyDAOFactory();
         }
         return instance;
     }
-
+    
     private DerbyDAOFactory() {
         try {
             connect();
@@ -73,12 +73,13 @@ public class DerbyDAOFactory extends DAOFactory {
             }
         }
     }
-
+    
     @Override
     public void connect() throws SQLException {
         try {
             Class.forName(DRIVER).newInstance();
-            File dbDir = new File(new File("").getAbsolutePath() + "/jobs.db");
+            File dbDir = new File(System.getProperty("user.dir"), "jobs.db");
+            
             if (!dbDir.exists()) {
                 connection = DriverManager.getConnection(DBURL + Configuration.DERBY_HOST
                         + ":" + Configuration.DERBY_PORT + "/" + dbDir.getAbsolutePath() + ";create=true");
@@ -88,7 +89,7 @@ public class DerbyDAOFactory extends DAOFactory {
                         + ":" + Configuration.DERBY_PORT + "/" + dbDir.getAbsolutePath());
             }
             connection.setAutoCommit(true);
-
+            
         } catch (ClassNotFoundException ex) {
             log.error(ex);
             if (log.isDebugEnabled()) {
@@ -96,14 +97,14 @@ public class DerbyDAOFactory extends DAOFactory {
                     log.debug(stack);
                 }
             }
-        }catch (InstantiationException ex){
+        } catch (InstantiationException ex) {
             log.error(ex);
-        }catch (IllegalAccessException ex){
+        } catch (IllegalAccessException ex) {
             log.error(ex);
         }
-
+        
     }
-
+    
     @Override
     protected void createTables() {
         try {
@@ -120,7 +121,7 @@ public class DerbyDAOFactory extends DAOFactory {
                     + "PRIMARY KEY (site, node_name)"
                     + ")");
             stat.executeUpdate("CREATE INDEX nodes_site_idx ON Nodes(site)");
-
+            
             stat.executeUpdate("CREATE TABLE Jobs ("
                     + "id VARCHAR(255), "
                     + "status VARCHAR(255), "
@@ -141,7 +142,7 @@ public class DerbyDAOFactory extends DAOFactory {
                     + ")");
             stat.executeUpdate("CREATE INDEX jobs_status_idx ON Jobs(status)");
             stat.executeUpdate("CREATE INDEX jobs_command_idx ON Jobs(command)");
-
+            
         } catch (SQLException ex) {
             log.warn(ex);
             if (log.isDebugEnabled()) {
@@ -151,7 +152,7 @@ public class DerbyDAOFactory extends DAOFactory {
             }
         }
     }
-
+    
     @Override
     public void close() {
         try {
@@ -167,13 +168,13 @@ public class DerbyDAOFactory extends DAOFactory {
             }
         }
     }
-
+    
     @Override
     public JobDAO getJobDAO() {
         JobData jobData = JobData.getInstance();
         return jobData;
     }
-
+    
     @Override
     public NodeDAO getNodeDAO() {
         NodeData nodeData = NodeData.getInstance();
