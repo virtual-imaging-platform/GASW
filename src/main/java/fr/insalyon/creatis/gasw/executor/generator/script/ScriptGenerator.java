@@ -210,10 +210,9 @@ public class ScriptGenerator extends AbstractGenerator {
             sb.append("if [ $? != 0 ]\n");
             sb.append("then\n");
             URI uri = null;
-            if(uploads.size() > 0) {
+            if (uploads.size() > 0) {
                 uri = uploads.get(0);
-            }
-            else {
+            } else {
                 uri = URI.create(defaultDir + "regexp-do-not-name-a-file-such-as-this-one");
             }
             sb.append(dataManagement.getUploadCommand(true, uri));
@@ -233,7 +232,7 @@ public class ScriptGenerator extends AbstractGenerator {
      * @param release 
      * @param downloads The list of URIs to be downloaded
      * @return A string containing the code
-                     */
+     */
     public String inputs(Release release, List<URI> downloads) {
 
         StringBuilder sb = new StringBuilder();
@@ -401,19 +400,23 @@ public class ScriptGenerator extends AbstractGenerator {
         edgesVar += "\"";
         sb.append(edgesVar + "\n");
         String dir = defaultDir;
-        if(dir.startsWith("lfn://")) {
+        if (dir.startsWith("lfn://")) {
             dir = dir.replaceFirst("lfn://[^/]+", "");
         }
-        for(String regexp : regexs) {
+        for (String regexp : regexs) {
             //sb.append("  for f in `ls -A | grep -P '" + regexp + "'`\n");
             sb.append("  for f in `find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '\\.$' | sed 's#./##' | grep -P '" + regexp + "'`\n");
             sb.append("  do\n");
             sb.append("    uploadFile " + dir + "${f} ${PWD}/${f} 1\n");
             sb.append("    if [ \"x$__MOTEUR_OUT\" == \"x\" ]\n");
             sb.append("    then\n");
-            sb.append("      __MOTEUR_OUT=\"${f}\"\n");
+            sb.append("      __MOTEUR_OUT=\"");
+            sb.append(defaultDir);
+            sb.append("${f}\"\n");
             sb.append("    else\n");
-            sb.append("      __MOTEUR_OUT=\"${__MOTEUR_OUT};${f}\"\n");
+            sb.append("      __MOTEUR_OUT=\"${__MOTEUR_OUT};");
+            sb.append(defaultDir);
+            sb.append("${f}\"\n");
             sb.append("    fi\n");
             sb.append("  done\n");
         }
