@@ -405,7 +405,7 @@ public class ScriptGenerator extends AbstractGenerator {
         }
         for (String regexp : regexs) {
             //sb.append("  for f in `ls -A | grep -P '" + regexp + "'`\n");
-            sb.append("  for f in `find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '\\.$' | sed 's#./##' | grep -P '" + regexp + "'`\n");
+            sb.append("  for f in `find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '^\\.$' | sed 's#./##' | grep -P '" + regexp + "'`\n");
             sb.append("  do\n");
             sb.append("    uploadFile " + dir + "${f} ${PWD}/${f} 1\n");
             sb.append("    if [ \"x$__MOTEUR_OUT\" == \"x\" ]\n");
