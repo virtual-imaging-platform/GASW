@@ -40,7 +40,10 @@ import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
+import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.io.File;
+import java.net.URI;
+import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
@@ -55,7 +58,7 @@ public class LocalOutputUtil extends OutputUtil {
         super(startTime);
     }
 
-    public GaswOutput getOutputs(String jobID, String proxyFile) {
+    public GaswOutput getOutputs(String jobID, Proxy userProxy) {
         return getOutputs(jobID);
     }
 
@@ -73,11 +76,12 @@ public class LocalOutputUtil extends OutputUtil {
 
             File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
             File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
-
+            List<URI> uploadedResults = null;
             GaswExitCode gaswExitCode = GaswExitCode.UNDEFINED;
             switch (exitCode) {
                 case 0:
                     gaswExitCode = GaswExitCode.SUCCESS;
+                    uploadedResults = getUploadedResults(stdOut);
                     break;
                 case 1:
                     gaswExitCode = GaswExitCode.ERROR_READ_GRID;
@@ -92,7 +96,7 @@ public class LocalOutputUtil extends OutputUtil {
                     gaswExitCode = GaswExitCode.ERROR_WRITE_LOCAL;
                     break;
             }
-            return new GaswOutput(jobID, gaswExitCode, appStdOut, appStdErr, stdOut, stdErr);
+            return new GaswOutput(jobID, gaswExitCode, uploadedResults, appStdOut, appStdErr, stdOut, stdErr);
 
         } catch (DAOException ex) {
             logException(logger, ex);

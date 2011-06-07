@@ -42,9 +42,12 @@ import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.monitor.GaswStatus;
+import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
@@ -61,11 +64,11 @@ public class GliteOutputUtil extends OutputUtil {
 
     @Override
     public GaswOutput getOutputs(String jobID) {
-        return getOutputs(jobID, "");
+        return getOutputs(jobID, null);
     }
 
     @Override
-    public GaswOutput getOutputs(String jobID, String proxyFile) {
+    public GaswOutput getOutputs(String jobID, Proxy userProxy) {
         try {
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
             Job job = jobDAO.getJobByID(jobID);
@@ -75,11 +78,12 @@ public class GliteOutputUtil extends OutputUtil {
             File stdErr = null;
             File appStdOut = null;
             File appStdErr = null;
-
+            List<URI> uploadedResults = null;
+            
             if (job.getStatus() != GaswStatus.CANCELLED) {
 
                 String dir = "out";
-                Process process = GaswUtil.getProcess(proxyFile,
+                Process process = GaswUtil.getProcess(userProxy,
                         "glite-wms-job-output", "--dir", dir, jobID);
                 process.waitFor();
 
@@ -110,6 +114,7 @@ public class GliteOutputUtil extends OutputUtil {
                     switch (exitCode) {
                         case 0:
                             gaswExitCode = GaswExitCode.SUCCESS;
+                            uploadedResults = getUploadedResults(stdOut);
                             break;
                         case 1:
                             gaswExitCode = GaswExitCode.ERROR_READ_GRID;
@@ -143,7 +148,7 @@ public class GliteOutputUtil extends OutputUtil {
                 gaswExitCode = GaswExitCode.EXECUTION_CANCELED;
             }
 
-            return new GaswOutput(jobID, gaswExitCode, appStdOut, appStdErr, stdOut, stdErr);
+            return new GaswOutput(jobID, gaswExitCode, uploadedResults, appStdOut, appStdErr, stdOut, stdErr);
 
         } catch (DAOException ex) {
             logException(logger, ex);

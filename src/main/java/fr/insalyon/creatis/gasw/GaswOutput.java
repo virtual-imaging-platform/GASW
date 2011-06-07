@@ -36,6 +36,8 @@ package fr.insalyon.creatis.gasw;
 
 import fr.insalyon.creatis.gasw.output.GaswExitCode;
 import java.io.File;
+import java.net.URI;
+import java.util.List;
 
 /**
  *
@@ -45,6 +47,7 @@ public class GaswOutput {
 
     private String jobID;
     private GaswExitCode exitCode;
+    private List<URI> uploadedResults;
     private File appStdOut;
     private File appStdErr;
     private File stdOut;
@@ -60,11 +63,12 @@ public class GaswOutput {
      * @param stdOut Job standard output file
      * @param stdErr Job standard error file
      */
-    public GaswOutput(String jobID, GaswExitCode exitCode, File appStdOut,
+    public GaswOutput(String jobID, GaswExitCode exitCode, List<URI> uploadedResults, File appStdOut,
             File appStdErr, File stdOut, File stdErr) {
 
         this.jobID = jobID;
         this.exitCode = exitCode;
+        this.uploadedResults = uploadedResults;
         this.appStdOut = appStdOut;
         this.appStdErr = appStdErr;
         this.stdOut = stdOut;
@@ -77,6 +81,10 @@ public class GaswOutput {
 
     public GaswExitCode getExitCode() {
         return exitCode;
+    }
+
+    public List<URI> getUploadedResults() {
+        return uploadedResults;
     }
 
     public File getAppStdErr() {

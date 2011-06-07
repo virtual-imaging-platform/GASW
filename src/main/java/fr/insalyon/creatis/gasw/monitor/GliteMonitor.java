@@ -41,6 +41,7 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
+import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -58,7 +59,7 @@ public class GliteMonitor extends Monitor {
 
     private static final Logger logger = Logger.getLogger(GliteMonitor.class);
     private static GliteMonitor instance;
-    private volatile Map<String, String> monitoredJobs;
+    private volatile Map<String, Proxy> monitoredJobs;
 
     public synchronized static GliteMonitor getInstance() {
         if (instance == null) {
@@ -70,7 +71,7 @@ public class GliteMonitor extends Monitor {
 
     private GliteMonitor() {
         super();
-        monitoredJobs = new HashMap<String, String>();
+        monitoredJobs = new HashMap<String, Proxy>();
     }
 
     @Override
@@ -86,7 +87,7 @@ public class GliteMonitor extends Monitor {
                 for (String jobID : monitoredJobs.keySet()) {
                     ids += jobID + " ";
                 }
-
+                // proxy init and appends voms extension in case each job has a specific proxy
                 Process process = Runtime.getRuntime().exec("glite-wms-job-status --verbosity 0 --noint " + ids);
                 process.waitFor();
                 BufferedReader br = GaswUtil.getBufferedReader(process);
@@ -107,7 +108,7 @@ public class GliteMonitor extends Monitor {
                 if (!cout.equals("")) {
                     String[] gliteStatus = cout.split("-");
                     String[] gliteIds = ids.split(" ");
-                    Map<String, String> finishedJobs = new HashMap<String, String>();
+                    Map<String, Proxy> finishedJobs = new HashMap<String, Proxy>();
                     List<String> jobsToRemove = new ArrayList<String>();
                     Map<GaswStatus, String> jobStatus = getNewJobStatusMap();
 
@@ -189,7 +190,7 @@ public class GliteMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, String userProxy) {
+    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy) {
         logger.info("Adding job: " + jobID);
         Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
         add(job, fileName);

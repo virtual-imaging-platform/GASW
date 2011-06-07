@@ -40,6 +40,7 @@ import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.GliteJdlGenerator;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import org.apache.log4j.Logger;
 

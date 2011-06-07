@@ -39,6 +39,7 @@ import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.dao.NodeDAO;
+import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -96,7 +97,7 @@ public abstract class Monitor extends Thread {
      * @param fileName
      * @param userProxy user proxy (null in case of using default proxy or local execution)
      */
-    public abstract void add(String jobID, String symbolicName, String fileName, String parameters, String userProxy);
+    public abstract void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy);
 
     /**
      * 

@@ -34,7 +34,9 @@
  */
 package fr.insalyon.creatis.gasw;
 
+import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import org.apache.log4j.Logger;
@@ -72,13 +74,21 @@ public class GaswUtil {
      * @param strings
      * @return 
      */
-    public static Process getProcess(String proxy, String... strings) throws IOException {
+    public static Process getProcess(Proxy userProxy, String... strings) throws IOException {
 
         ProcessBuilder builder = new ProcessBuilder(strings);
         builder.redirectErrorStream(true);
 
-        if (proxy != null && !proxy.isEmpty()) {
-            builder.environment().put("X509_USER_PROXY", proxy);
+        if (userProxy != null) {
+            File proxy = null;
+            if (strings[0].contains("glite")){
+                proxy = userProxy.initWithVOMSExtension();
+            }
+            else if (strings[0].contains("dirac")){
+                proxy = userProxy.init();
+            }     
+            
+            builder.environment().put("X509_USER_PROXY", proxy.getAbsolutePath());
         }
 
         return builder.start();

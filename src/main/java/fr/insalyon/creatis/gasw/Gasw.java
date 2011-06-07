@@ -38,6 +38,8 @@ import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.executor.Executor;
 import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
+import fr.insalyon.creatis.gasw.myproxy.GaswUserCredentials;
+import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import fr.insalyon.creatis.gasw.output.OutputUtilFactory;
 import fr.insalyon.creatis.gasw.release.EnvVariable;
 import java.util.ArrayList;
@@ -57,7 +59,7 @@ public class Gasw {
     private static Gasw instance;
     private GaswNotification notification;
     private Object client;
-    private volatile Map<String, String> finishedJobs;
+    private volatile Map<String, Proxy> finishedJobs;
     private volatile boolean gettingOutputs;
 
     /**
@@ -76,7 +78,7 @@ public class Gasw {
         PropertyConfigurator.configure(
                 Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
         Configuration.setUp();
-        finishedJobs = new HashMap<String, String>();
+        finishedJobs = new HashMap<String, Proxy>();
         notification = new GaswNotification();
         notification.start();
         gettingOutputs = false;
@@ -90,7 +92,7 @@ public class Gasw {
      */
     public synchronized String submit(Object client, GaswInput gaswInput) throws GaswException {
 
-        return submit(client, gaswInput, "");
+        return submit(client, gaswInput, null);
     }
 
     /**
@@ -100,20 +102,24 @@ public class Gasw {
      * @param proxy user's proxy
      * @return
      */
-    public synchronized String submit(Object client, GaswInput gaswInput, String userProxy) throws GaswException {
+    public synchronized String submit(Object client, GaswInput gaswInput, GaswUserCredentials credentials) throws GaswException {
 
         if (this.client == null) {
             this.client = client;
         }
         for (EnvVariable v : gaswInput.getRelease().getConfigurations()) {
-            if (v.getCategory() == EnvVariable.Category.SYSTEM 
+            if (v.getCategory() == EnvVariable.Category.SYSTEM
                     && v.getName().equals("gridTarget")) {
                 Configuration.GRID = v.getValue();
             }
         }
         Executor executor = ExecutorFactory.getExecutor("GRID", gaswInput);
         executor.preProcess();
-        executor.setUserProxy(userProxy);
+        
+        if (credentials != null) {
+            Proxy userProxy = new Proxy(credentials);
+            executor.setUserProxy(userProxy);
+        }
         return executor.submit();
     }
 
@@ -121,7 +127,7 @@ public class Gasw {
      * 
      * @param finishedJobs
      */
-    public synchronized void addFinishedJob(Map<String, String> finishedJobs) {
+    public synchronized void addFinishedJob(Map<String, Proxy> finishedJobs) {
         this.finishedJobs.putAll(finishedJobs);
     }
 

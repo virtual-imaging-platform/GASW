@@ -39,6 +39,7 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.executor.LocalExecutor;
+import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.log4j.Logger;
@@ -72,7 +73,7 @@ public class LocalMonitor extends Monitor {
             try {
 
                 boolean isFinished = false;
-                Map<String, String> finishedJobs = new HashMap<String, String>();
+                Map<String, Proxy> finishedJobs = new HashMap<String, Proxy>();
 
                 while (LocalExecutor.hasFinishedJobs()) {
                     String[] s = LocalExecutor.pullFinishedJobID().split("--");
@@ -86,7 +87,7 @@ public class LocalMonitor extends Monitor {
                         job.setStatus(GaswStatus.ERROR);
                     }
                     jobDAO.update(job);
-                    finishedJobs.put(job.getId() + "--" + job.getStatus(), "");
+                    finishedJobs.put(job.getId() + "--" + job.getStatus(), null);
                 }
                 if (isFinished) {
                     Gasw.getInstance().addFinishedJob(finishedJobs);
@@ -104,7 +105,7 @@ public class LocalMonitor extends Monitor {
     }
 
     @Override
-    public void add(String jobID, String command, String fileName, String parameters, String userProxy) {
+    public void add(String jobID, String command, String fileName, String parameters, Proxy userProxy) {
         try {
             if (jobsStatus.get(jobID) == null) {
                 Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, command);

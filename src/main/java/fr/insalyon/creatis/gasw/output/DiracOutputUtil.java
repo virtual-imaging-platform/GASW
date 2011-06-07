@@ -42,9 +42,12 @@ import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.monitor.GaswStatus;
+import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
@@ -58,12 +61,14 @@ public class DiracOutputUtil extends OutputUtil {
     public DiracOutputUtil(int startTime) {
         super(startTime);
     }
-
+    
+    @Override
     public GaswOutput getOutputs(String jobID) {
-        return getOutputs(jobID, "");
+        return getOutputs(jobID, null);
     }
-
-    public GaswOutput getOutputs(String jobID, String proxyFile) {
+    
+    @Override
+    public GaswOutput getOutputs(String jobID, Proxy userProxy) {
         try {
             JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
             Job job = jobDAO.getJobByID(jobID);
@@ -72,11 +77,12 @@ public class DiracOutputUtil extends OutputUtil {
             File stdErr = null;
             File appStdOut = null;
             File appStdErr = null;
-
+            List<URI> uploadedResults = null;
+            
             if (job.getStatus() != GaswStatus.CANCELLED 
                     && job.getStatus() != GaswStatus.STALLED) {
 
-                Process process = GaswUtil.getProcess(proxyFile, 
+                Process process = GaswUtil.getProcess(userProxy, 
                         "dirac-wms-job-get-output", jobID);
                 process.waitFor();
 
@@ -96,6 +102,7 @@ public class DiracOutputUtil extends OutputUtil {
                     switch (exitCode) {
                         case 0:
                             gaswExitCode = GaswExitCode.SUCCESS;
+                            uploadedResults = getUploadedResults(stdOut);
                             break;
                         case 1:
                             gaswExitCode = GaswExitCode.ERROR_READ_GRID;
@@ -145,7 +152,7 @@ public class DiracOutputUtil extends OutputUtil {
                 appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, message);
                 appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, message);
             }
-            return new GaswOutput(jobID, gaswExitCode, appStdOut, appStdErr, stdOut, stdErr);
+            return new GaswOutput(jobID, gaswExitCode, uploadedResults, appStdOut, appStdErr, stdOut, stdErr);
         } catch (DAOException ex) {
             logException(logger, ex);
         } catch (InterruptedException ex) {

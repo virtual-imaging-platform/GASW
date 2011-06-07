@@ -414,16 +414,27 @@ public class ScriptGenerator extends AbstractGenerator {
             sb.append(dataManagement.getUploadCommand(false, lfn));
         }
         edgesVar += "\"";
-        sb.append(edgesVar + "\n");
+        sb.append(edgesVar);
+        sb.append("\n");
         String dir = defaultDir;
         if (dir.startsWith("lfn://")) {
             dir = dir.replaceFirst("lfn://[^/]+", "");
         }
         for (String regexp : regexs) {
             //sb.append("  for f in `ls -A | grep -P '" + regexp + "'`\n");
-            sb.append("  for f in `find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '^\\.$' | sed 's#./##' | grep -P '" + regexp + "'`\n");
+            sb.append("  for f in `find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '^\\.$' | sed 's#./##' | grep -P '");
+            sb.append(regexp);
+            sb.append("'`\n");
             sb.append("  do\n");
-            sb.append("    uploadFile " + dir + "${f} ${PWD}/${f} 1\n");
+
+            sb.append("startLog file_upload lfn=\"");
+            sb.append(dir);
+            sb.append("${f}\"\n");
+
+            sb.append("    uploadFile ");
+            sb.append(dir);
+            sb.append("${f} ${PWD}/${f} 1\n");
+            sb.append("stopLog file_upload\n");
             sb.append("    if [ \"x$__MOTEUR_OUT\" == \"x\" ]\n");
             sb.append("    then\n");
             sb.append("      __MOTEUR_OUT=\"");

@@ -39,6 +39,7 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
+import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,7 +59,7 @@ public abstract class Executor {
     protected GaswInput gaswInput;
     protected String scriptName;
     protected String jdlName;
-    protected String userProxy;
+    protected Proxy userProxy;
     private boolean firstExecution;
 
     /**
@@ -73,7 +74,7 @@ public abstract class Executor {
         this.version = version;
         this.gaswInput = gaswInput;
         this.firstExecution = true;
-        this.userProxy = "";
+        this.userProxy = null;
     }
 
     /**
@@ -95,10 +96,6 @@ public abstract class Executor {
             firstExecution = false;
         }
         return null;
-    }
-
-    public void setUserProxy(String userProxy) {
-        this.userProxy = userProxy;
     }
 
     /**
@@ -173,21 +170,23 @@ public abstract class Executor {
      * 
      * @param jobID Job identification.
      */
-    protected void addJobToMonitor(String jobID, String userProxy) {
+    protected void addJobToMonitor(String jobID, Proxy userProxy) {
         StringBuilder params = new StringBuilder();
         for (String p : gaswInput.getParameters()) {
             params.append(p);
             params.append(" ");
         }
-        if (userProxy != null && !userProxy.isEmpty()) {
-            MonitorFactory.getMonitor(version).add(jobID,
-                    gaswInput.getRelease().getSymbolicName(),
-                    jdlName, params.toString(), userProxy);
-        } else {
-            MonitorFactory.getMonitor(version).add(jobID,
-                    gaswInput.getRelease().getSymbolicName(),
-                    jdlName, params.toString(), "");
-        }
+        if (userProxy != null){
+                MonitorFactory.getMonitor(version).add(jobID,
+                gaswInput.getRelease().getSymbolicName(),
+                jdlName, params.toString(), userProxy);
+            }else{
+                MonitorFactory.getMonitor(version).add(jobID,
+                gaswInput.getRelease().getSymbolicName(),
+                jdlName, params.toString(), null);
+            }
+        
+        
     }
 
     /**
@@ -203,6 +202,22 @@ public abstract class Executor {
                 logger.debug(stack);
             }
         }
+    }
+
+    /**
+     * 
+     * @param name
+     * @param nanoTime
+     * @param extension
+     * @param directory
+     * @return 
+     */
+    public Proxy getUserProxy() {
+        return userProxy;
+    }
+
+    public void setUserProxy(Proxy userProxy) {
+        this.userProxy = userProxy;
     }
 
     private String getNewName(String name, long nanoTime, String extension, String directory) {

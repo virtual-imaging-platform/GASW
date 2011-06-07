@@ -40,6 +40,7 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
+import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -55,7 +56,7 @@ public class DiracMonitor extends Monitor {
 
     private static final Logger logger = Logger.getLogger(DiracMonitor.class);
     private static DiracMonitor instance;
-    private volatile Map<String, String> monitoredJobs;
+    private volatile Map<String, Proxy> monitoredJobs;
 
     public synchronized static DiracMonitor getInstance() {
         if (instance == null) {
@@ -67,7 +68,7 @@ public class DiracMonitor extends Monitor {
 
     private DiracMonitor() {
         super();
-        this.monitoredJobs = new HashMap<String, String>();
+        this.monitoredJobs = new HashMap<String, Proxy>();
         if (Configuration.USE_DIRAC_SERVICE) {
             DiracServiceMonitor.getInstance();
         }
@@ -82,7 +83,7 @@ public class DiracMonitor extends Monitor {
 
                     verifySignaledJobs();
 
-                    Map<String, String> finishedJobs = new HashMap<String, String>();
+                    Map<String, Proxy> finishedJobs = new HashMap<String, Proxy>();
                     Map<GaswStatus, String> jobStatus = getNewJobStatusMap();
                     Map<String, String> jobsStatus = DiracDatabase.getInstance().getJobsStatus(new ArrayList(monitoredJobs.keySet()));
 
@@ -156,7 +157,7 @@ public class DiracMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, String userProxy) {
+    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy) {
         Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
         add(job, fileName);
         this.monitoredJobs.put(jobID, userProxy);
