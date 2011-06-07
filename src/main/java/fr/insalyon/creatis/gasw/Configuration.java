@@ -75,7 +75,7 @@ public class Configuration {
     public static int DATA_MANAGER_PORT = 8446;
     public static String DATA_MANAGER_HOME = "/dpm/grid.creatis.insa-lyon.fr/home/biomed/generated";
     // DIRAC Configuration
-    public static boolean USE_DIRAC_SERVICE = true;
+    public static boolean USE_DIRAC_SERVICE = false;
     public static int DIRAC_SERVICE_PORT = 50009;
     public static String DIRAC_HOST = "localhost";
     public static String MYSQL_HOST = "localhost";
