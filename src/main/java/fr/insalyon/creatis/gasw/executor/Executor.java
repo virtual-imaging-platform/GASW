@@ -39,7 +39,6 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
-import fr.insalyon.creatis.gasw.release.Release;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,7 +60,7 @@ public abstract class Executor {
     protected String jdlName;
     protected String userProxy;
     private boolean firstExecution;
-    
+
     /**
      *
      * @param version
@@ -80,8 +79,9 @@ public abstract class Executor {
     /**
      * Generates the script and job files for the requested release accordingly
      * to the Grid type defined in the configuration file.
+     * @throws GaswException
      */
-    public abstract void preProcess();
+    public abstract void preProcess() throws GaswException;
 
     /**
      * Submits a job to a grid or local execution.
@@ -97,8 +97,13 @@ public abstract class Executor {
         return null;
     }
 
+    public void setUserProxy(String userProxy) {
+        this.userProxy = userProxy;
+    }
+
     /**
-     *
+     * Generates job script
+     * 
      * @return
      */
     protected String generateScript() {
@@ -120,7 +125,7 @@ public abstract class Executor {
      * @param script Generated script to be saved in a file.
      * @return Name of the script file.
      */
-    protected String publishScript(String symbolicName, String script) {
+    private String publishScript(String symbolicName, String script) {
 
         try {
             File scriptsDir = new File(Constants.SCRIPT_ROOT);
@@ -155,7 +160,7 @@ public abstract class Executor {
             }
             String fileName = scriptName.substring(0, scriptName.lastIndexOf(".")) + ".jdl";
             writeToFile(Constants.JDL_ROOT + "/" + fileName, jdl);
-            
+
             return fileName;
 
         } catch (IOException ex) {
@@ -164,11 +169,6 @@ public abstract class Executor {
         }
     }
 
-    
-    protected void addJobToMonitor(String jobID) {
-        addJobToMonitor(jobID, "");
-    }
-    
     /**
      * 
      * @param jobID Job identification.
@@ -179,17 +179,15 @@ public abstract class Executor {
             params.append(p);
             params.append(" ");
         }
-        if (!userProxy.isEmpty() && userProxy != null){
-                MonitorFactory.getMonitor(version).add(jobID,
-                gaswInput.getRelease().getSymbolicName(),
-                jdlName, params.toString(), userProxy);
-            }else{
-                MonitorFactory.getMonitor(version).add(jobID,
-                gaswInput.getRelease().getSymbolicName(),
-                jdlName, params.toString(), "");
-            }
-        
-        
+        if (userProxy != null && !userProxy.isEmpty()) {
+            MonitorFactory.getMonitor(version).add(jobID,
+                    gaswInput.getRelease().getSymbolicName(),
+                    jdlName, params.toString(), userProxy);
+        } else {
+            MonitorFactory.getMonitor(version).add(jobID,
+                    gaswInput.getRelease().getSymbolicName(),
+                    jdlName, params.toString(), "");
+        }
     }
 
     /**
@@ -205,22 +203,6 @@ public abstract class Executor {
                 logger.debug(stack);
             }
         }
-    }
-
-    /**
-     * 
-     * @param name
-     * @param nanoTime
-     * @param extension
-     * @param directory
-     * @return 
-     */
-    public String getUserProxy() {
-        return userProxy;
-    }
-
-    public void setUserProxy(String userProxy) {
-        this.userProxy = userProxy;
     }
 
     private String getNewName(String name, long nanoTime, String extension, String directory) {

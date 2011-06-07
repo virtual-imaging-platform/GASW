@@ -57,7 +57,6 @@ public class Gasw {
     private static Gasw instance;
     private GaswNotification notification;
     private Object client;
-    // Map<Job ID, userProxy> userProxy is NULL in case using default proxy
     private volatile Map<String, String> finishedJobs;
     private volatile boolean gettingOutputs;
 
@@ -74,7 +73,8 @@ public class Gasw {
     }
 
     private Gasw() throws GaswException {
-        PropertyConfigurator.configure(Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
+        PropertyConfigurator.configure(
+                Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
         Configuration.setUp();
         finishedJobs = new HashMap<String, String>();
         notification = new GaswNotification();

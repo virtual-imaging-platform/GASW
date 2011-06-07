@@ -34,27 +34,15 @@
  */
 package fr.insalyon.creatis.gasw.dao;
 
-import fr.insalyon.creatis.gasw.bean.Job;
-import fr.insalyon.creatis.gasw.monitor.GaswStatus;
-import java.util.Map;
+import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
 
 /**
  *
  * @author Rafael Silva
  */
-public interface JobDAO {
-
-    public void add(Job job) throws DAOException;
-
-    public void update(Job job) throws DAOException;
-
-    public void remove(Job job) throws DAOException;
-
-    public Job getJobByID(String id) throws DAOException;
-
-    public void updateStatus(Map<GaswStatus, String> jobStatus) throws DAOException;
+public interface SEEntryPointsDAO {
     
-    public void updateMinorStatus(String jobId, int minorStatus) throws DAOException;
+    public void add(SEEntryPoint seEntryPoint) throws DAOException;
     
-    public Map<String, GaswStatus> getSignaledJobs() throws DAOException;
+    public SEEntryPoint getByHostName(String hostname) throws DAOException;
 }

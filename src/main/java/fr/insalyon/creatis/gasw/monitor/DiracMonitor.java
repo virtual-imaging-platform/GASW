@@ -37,11 +37,11 @@ package fr.insalyon.creatis.gasw.monitor;
 import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Gasw;
 import fr.insalyon.creatis.gasw.GaswException;
+import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,6 +68,9 @@ public class DiracMonitor extends Monitor {
     private DiracMonitor() {
         super();
         this.monitoredJobs = new HashMap<String, String>();
+        if (Configuration.USE_DIRAC_SERVICE) {
+            DiracServiceMonitor.getInstance();
+        }
     }
 
     @Override
@@ -80,7 +83,7 @@ public class DiracMonitor extends Monitor {
                     verifySignaledJobs();
 
                     Map<String, String> finishedJobs = new HashMap<String, String>();
-                    Map<Status, String> jobStatus = getNewJobStatusMap();
+                    Map<GaswStatus, String> jobStatus = getNewJobStatusMap();
                     Map<String, String> jobsStatus = DiracDatabase.getInstance().getJobsStatus(new ArrayList(monitoredJobs.keySet()));
 
                     for (String jobId : jobsStatus.keySet()) {
@@ -88,45 +91,45 @@ public class DiracMonitor extends Monitor {
                         String status = jobsStatus.get(jobId);
 
                         if (status.equals("Running")) {
-                            String list = jobStatus.get(Status.RUNNING);
+                            String list = jobStatus.get(GaswStatus.RUNNING);
                             list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(Status.RUNNING, list);
+                            jobStatus.put(GaswStatus.RUNNING, list);
 
                         } else if (status.equals("Waiting")) {
                             Job job = jobDAO.getJobByID(jobId);
-                            if (job.getStatus() != Status.QUEUED) {
+                            if (job.getStatus() != GaswStatus.QUEUED) {
                                 job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
                                 jobDAO.update(job);
                             }
-                            String list = jobStatus.get(Status.QUEUED);
+                            String list = jobStatus.get(GaswStatus.QUEUED);
                             list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(Status.QUEUED, list);
+                            jobStatus.put(GaswStatus.QUEUED, list);
 
                         } else {
-                            Status st = null;
+                            GaswStatus st = null;
                             if (status.equals("Done")) {
-                                String list = jobStatus.get(Status.COMPLETED);
+                                String list = jobStatus.get(GaswStatus.COMPLETED);
                                 list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(Status.COMPLETED, list);
-                                st = Status.COMPLETED;
+                                jobStatus.put(GaswStatus.COMPLETED, list);
+                                st = GaswStatus.COMPLETED;
 
                             } else if (status.equals("Failed")) {
-                                String list = jobStatus.get(Status.ERROR);
+                                String list = jobStatus.get(GaswStatus.ERROR);
                                 list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(Status.ERROR, list);
-                                st = Status.ERROR;
+                                jobStatus.put(GaswStatus.ERROR, list);
+                                st = GaswStatus.ERROR;
 
                             } else if (status.equals("Killed")) {
-                                String list = jobStatus.get(Status.CANCELLED);
+                                String list = jobStatus.get(GaswStatus.CANCELLED);
                                 list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(Status.CANCELLED, list);
-                                st = Status.CANCELLED;
+                                jobStatus.put(GaswStatus.CANCELLED, list);
+                                st = GaswStatus.CANCELLED;
 
                             } else {
-                                String list = jobStatus.get(Status.STALLED);
+                                String list = jobStatus.get(GaswStatus.STALLED);
                                 list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(Status.STALLED, list);
-                                st = Status.STALLED;
+                                jobStatus.put(GaswStatus.STALLED, list);
+                                st = GaswStatus.STALLED;
                             }
                             logger.info("Dirac Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
                             finishedJobs.put(jobId + "--" + st, monitoredJobs.get(jobId));
@@ -154,7 +157,7 @@ public class DiracMonitor extends Monitor {
 
     @Override
     public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, String userProxy) {
-        Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
+        Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
         add(job, fileName);
         this.monitoredJobs.put(jobID, userProxy);
     }
@@ -163,6 +166,9 @@ public class DiracMonitor extends Monitor {
     protected synchronized void terminate() {
         super.terminate();
         instance = null;
+        if (Configuration.USE_DIRAC_SERVICE) {
+            DiracServiceMonitor.getInstance().terminate();
+        }
     }
 
     public static void finish() {
@@ -174,17 +180,14 @@ public class DiracMonitor extends Monitor {
     @Override
     protected void kill(String jobID) {
         try {
-            ProcessBuilder builder = new ProcessBuilder(
+            Process process = GaswUtil.getProcess(null,
                     "dirac-wms-job-kill", jobID);
-
-            builder.redirectErrorStream(true);
-            Process process = builder.start();
             process.waitFor();
 
-            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader br = GaswUtil.getBufferedReader(process);
             String cout = "";
             String s = null;
-            while ((s = r.readLine()) != null) {
+            while ((s = br.readLine()) != null) {
                 cout += s;
             }
 
@@ -204,17 +207,14 @@ public class DiracMonitor extends Monitor {
     @Override
     protected void reschedule(String jobID) {
         try {
-            ProcessBuilder builder = new ProcessBuilder(
+            Process process = GaswUtil.getProcess(null,
                     "dirac-wms-job-reschedule", jobID);
-
-            builder.redirectErrorStream(true);
-            Process process = builder.start();
             process.waitFor();
 
-            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader br = GaswUtil.getBufferedReader(process);
             String cout = "";
             String s = null;
-            while ((s = r.readLine()) != null) {
+            while ((s = br.readLine()) != null) {
                 cout += s;
             }
 
@@ -222,7 +222,7 @@ public class DiracMonitor extends Monitor {
                 logger.error(cout);
             } else {
                 Job job = jobDAO.getJobByID(jobID);
-                job.setStatus(Status.SUCCESSFULLY_SUBMITTED);
+                job.setStatus(GaswStatus.SUCCESSFULLY_SUBMITTED);
                 jobDAO.update(job);
                 logger.info("Rescheduled DIRAC Job ID '" + jobID + "'");
             }

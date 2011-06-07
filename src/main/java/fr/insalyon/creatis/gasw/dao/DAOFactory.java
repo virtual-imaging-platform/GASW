@@ -60,7 +60,7 @@ public abstract class DAOFactory {
     protected DAOFactory() {
     }
 
-    public abstract void connect() throws SQLException;
+    protected abstract void connect() throws SQLException;
     
     protected abstract void createTables();
 
@@ -73,4 +73,6 @@ public abstract class DAOFactory {
     public abstract JobDAO getJobDAO();
 
     public abstract NodeDAO getNodeDAO();
+    
+    public abstract SEEntryPointsDAO getSEEntryPointDAO();
 }

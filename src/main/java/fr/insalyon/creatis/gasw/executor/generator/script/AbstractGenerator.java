@@ -36,7 +36,7 @@ package fr.insalyon.creatis.gasw.executor.generator.script;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Silva, Tristan Glatard
  */
 public abstract class AbstractGenerator {
 
@@ -45,7 +45,7 @@ public abstract class AbstractGenerator {
      *
      * @return a String containing the code
      */
-    public String logFunctions() {
+    protected String logFunctions() {
         StringBuilder sb = new StringBuilder();
         sb.append("function info {\n local D=`date`\n echo [ INFO - $D ] $*\n}\n");
         sb.append("function warning {\n local D=`date`\n echo [ WARN - $D ] $*\n}\n");
@@ -58,7 +58,7 @@ public abstract class AbstractGenerator {
      *
      * @return a String containing the bash function code
      */
-    public String startLogFunction() {
+    protected String startLogFunction() {
         StringBuilder sb = new StringBuilder();
         sb.append("function startLog {\n echo \"<$*>\" >&1; \n echo \"<$*>\" >&2;\n}\n");
         return sb.toString();
@@ -69,7 +69,7 @@ public abstract class AbstractGenerator {
      *
      * @return
      */
-    public String stopLogFunction() {
+    protected String stopLogFunction() {
         StringBuilder sb = new StringBuilder();
         sb.append("function stopLog {\n local logName=$1\n echo \"</${logName}>\" >&1\n echo \"</${logName}>\" >&2\n}\n");
         return sb.toString();

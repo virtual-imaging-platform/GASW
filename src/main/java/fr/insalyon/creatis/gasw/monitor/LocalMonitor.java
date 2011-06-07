@@ -51,7 +51,7 @@ public class LocalMonitor extends Monitor {
 
     private static final Logger log = Logger.getLogger(LocalMonitor.class);
     private static LocalMonitor instance;
-    private Map<String, Status> jobsStatus;
+    private Map<String, GaswStatus> jobsStatus;
 
     public synchronized static LocalMonitor getInstance() {
         if (instance == null) {
@@ -63,7 +63,7 @@ public class LocalMonitor extends Monitor {
 
     private LocalMonitor() {
         super();
-        jobsStatus = new HashMap<String, Status>();
+        jobsStatus = new HashMap<String, GaswStatus>();
     }
 
     @Override
@@ -81,9 +81,9 @@ public class LocalMonitor extends Monitor {
                     isFinished = true;
 
                     if (job.getExitCode() == 0) {
-                        job.setStatus(Status.COMPLETED);
+                        job.setStatus(GaswStatus.COMPLETED);
                     } else {
-                        job.setStatus(Status.ERROR);
+                        job.setStatus(GaswStatus.ERROR);
                     }
                     jobDAO.update(job);
                     finishedJobs.put(job.getId() + "--" + job.getStatus(), "");
@@ -107,9 +107,9 @@ public class LocalMonitor extends Monitor {
     public void add(String jobID, String command, String fileName, String parameters, String userProxy) {
         try {
             if (jobsStatus.get(jobID) == null) {
-                Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED, parameters, command);
+                Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, command);
                 add(job, fileName);
-                job.setStatus(Status.RUNNING);
+                job.setStatus(GaswStatus.RUNNING);
                 jobDAO.update(job);
             }
         } catch (DAOException ex) {

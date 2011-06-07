@@ -34,6 +34,7 @@
  */
 package fr.insalyon.creatis.gasw.dao;
 
+import fr.insalyon.creatis.gasw.GaswUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -46,8 +47,7 @@ import org.apache.log4j.Logger;
  */
 public class AbstractData {
 
-    private static final Logger log = Logger.getLogger(AbstractData.class);
-    private static final int[] times = {0, 10, 30, 60, 90, 150, 300, 600, 900};
+    private static final Logger logger = Logger.getLogger(AbstractData.class);
     private static int index = 0;
     private static transient boolean recovering = false;
     protected Connection connection;
@@ -137,24 +137,19 @@ public class AbstractData {
                 // Do nothing
             }
             recovering = true;
-            log.info("Connection lost to the database. Starting recovering mode.");
+            logger.info("Connection lost to the database. Starting recovering mode.");
             while (true) {
                 try {
                     DAOFactory.getDAOFactory().connect();
                     this.connection = DAOFactory.getDAOFactory().getConnection();
                     index = 0;
-                    log.info("Successfully reconnected to the database.");
+                    logger.info("Successfully reconnected to the database.");
                     break;
                 } catch (SQLException ex) {
                     try {
-                        if (index < times.length - 1) {
-                            index++;
-                        }
-                        log.info("Failed to reconnect to the database. Next "
-                                + "attempt in " + times[index] + " seconds.");
-                        Thread.sleep(times[index] * 1000);
+                        index = GaswUtil.sleep(logger, "Failed to reconnect to the database", index);
                     } catch (InterruptedException ex1) {
-                        // Do nothing
+                        logger.error("");
                     }
                 }
             }

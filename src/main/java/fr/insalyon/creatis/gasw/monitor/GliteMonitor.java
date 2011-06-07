@@ -38,6 +38,7 @@ import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.Gasw;
 import fr.insalyon.creatis.gasw.GaswException;
+import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import java.io.BufferedReader;
@@ -88,12 +89,14 @@ public class GliteMonitor extends Monitor {
 
                 Process process = Runtime.getRuntime().exec("glite-wms-job-status --verbosity 0 --noint " + ids);
                 process.waitFor();
-                BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                BufferedReader br = GaswUtil.getBufferedReader(process);
 
                 String cout = "";
                 String s = null;
-                while ((s = r.readLine()) != null) {
-                    if (s.toLowerCase().contains("current") && s.toLowerCase().contains("status")) {
+                while ((s = br.readLine()) != null) {
+                    if (s.toLowerCase().contains("current") 
+                            && s.toLowerCase().contains("status")) {
+                        
                         String[] res = s.split(" ");
                         s = res[res.length - 1];
                         cout += s + "-";
@@ -106,53 +109,53 @@ public class GliteMonitor extends Monitor {
                     String[] gliteIds = ids.split(" ");
                     Map<String, String> finishedJobs = new HashMap<String, String>();
                     List<String> jobsToRemove = new ArrayList<String>();
-                    Map<Status, String> jobStatus = getNewJobStatusMap();
+                    Map<GaswStatus, String> jobStatus = getNewJobStatusMap();
 
                     for (int i = 0; i < gliteIds.length; i++) {
                         String status = gliteStatus[i];
                         String jobId = gliteIds[i];
 
                         if (status.contains("Running")) {
-                            String list = jobStatus.get(Status.RUNNING);
+                            String list = jobStatus.get(GaswStatus.RUNNING);
                             list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(Status.RUNNING, list);
+                            jobStatus.put(GaswStatus.RUNNING, list);
 
                         } else if (status.contains("Scheduled")) {
                             Job job = jobDAO.getJobByID(jobId);
-                            if (job.getStatus() != Status.QUEUED) {
+                            if (job.getStatus() != GaswStatus.QUEUED) {
                                 job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
                                 jobDAO.update(job);
                             }
-                            String list = jobStatus.get(Status.QUEUED);
+                            String list = jobStatus.get(GaswStatus.QUEUED);
                             list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(Status.QUEUED, list);
+                            jobStatus.put(GaswStatus.QUEUED, list);
 
                         } else if (status.contains("Ready")
                                 || status.contains("Waiting")
                                 || status.contains("Submitted")) {
                             // do nothing
                         } else {
-                            Status st = null;
+                            GaswStatus st = null;
                             if (status.contains("Failed")
                                     || status.contains("Error")
                                     || status.contains("!=")
                                     || status.contains("Aborted")) {
-                                String list = jobStatus.get(Status.ERROR);
+                                String list = jobStatus.get(GaswStatus.ERROR);
                                 list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(Status.ERROR, list);
-                                st = Status.ERROR;
+                                jobStatus.put(GaswStatus.ERROR, list);
+                                st = GaswStatus.ERROR;
 
                             } else if (status.contains("Success")) {
-                                String list = jobStatus.get(Status.COMPLETED);
+                                String list = jobStatus.get(GaswStatus.COMPLETED);
                                 list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(Status.COMPLETED, list);
-                                st = Status.COMPLETED;
+                                jobStatus.put(GaswStatus.COMPLETED, list);
+                                st = GaswStatus.COMPLETED;
 
                             } else if (status.contains("Cancelled")) {
-                                String list = jobStatus.get(Status.CANCELLED);
+                                String list = jobStatus.get(GaswStatus.CANCELLED);
                                 list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(Status.CANCELLED, list);
-                                st = Status.CANCELLED;
+                                jobStatus.put(GaswStatus.CANCELLED, list);
+                                st = GaswStatus.CANCELLED;
                             }
                             logger.info("Glite Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
                             finishedJobs.put(jobId + "--" + st, monitoredJobs.get(jobId));
@@ -168,8 +171,8 @@ public class GliteMonitor extends Monitor {
                         }
                     }
                 } else {
-                    r = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-                    while ((s = r.readLine()) != null) {
+                    br = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                    while ((s = br.readLine()) != null) {
                         logger.error(s);
                     }
                 }
@@ -188,7 +191,7 @@ public class GliteMonitor extends Monitor {
     @Override
     public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, String userProxy) {
         logger.info("Adding job: " + jobID);
-        Job job = new Job(jobID, Status.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
+        Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
         add(job, fileName);
         monitoredJobs.put(jobID, userProxy);
     }
@@ -215,10 +218,10 @@ public class GliteMonitor extends Monitor {
             Process process = builder.start();
             process.waitFor();
 
-            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader br = GaswUtil.getBufferedReader(process);
             String cout = "";
             String s = null;
-            while ((s = r.readLine()) != null) {
+            while ((s = br.readLine()) != null) {
                 cout += s;
             }
 
@@ -249,10 +252,10 @@ public class GliteMonitor extends Monitor {
             Process process = builder.start();
             process.waitFor();
 
-            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader br = GaswUtil.getBufferedReader(process);
             String cout = "";
             String s = null;
-            while ((s = r.readLine()) != null) {
+            while ((s = br.readLine()) != null) {
                 cout += s;
             }
 

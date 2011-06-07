@@ -43,6 +43,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -50,6 +51,7 @@ import java.util.Map;
  */
 public class DiracDatabase {
 
+    private static Logger logger = Logger.getLogger(DiracDatabase.class);
     private static DiracDatabase instance;
     private Connection connection;
 
@@ -95,7 +97,7 @@ public class DiracDatabase {
             return jobsStatus;
 
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.error(ex);
         }
         return null;
     }
@@ -110,9 +112,9 @@ public class DiracDatabase {
                     Configuration.MYSQL_DB_USER, "");
 
         } catch (ClassNotFoundException ex) {
-            ex.printStackTrace();
+            logger.error(ex);
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.error(ex);
         }
     }
 
@@ -120,7 +122,7 @@ public class DiracDatabase {
         try {
             connection.close();
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            logger.warn(ex);
         }
     }
 }

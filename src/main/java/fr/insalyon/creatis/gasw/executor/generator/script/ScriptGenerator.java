@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -108,8 +108,11 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append("SE=" + Configuration.SE + "\n");
         sb.append("USE_CLOSE_SE=" + Configuration.USE_CLOSE_SE + "\n");
 
-        String path = new File("").getAbsolutePath();
-        sb.append("export MOTEUR_WORKFLOWID=" + path.substring(path.lastIndexOf("/") + 1) + "\n\n");
+        sb.append("export MOTEUR_WORKFLOWID=" + Configuration.MOTEUR_WORKFLOWID + "\n\n");
+
+        if (Configuration.USE_DIRAC_SERVICE) {
+            sb.append("python GASWServiceClient.py ${MOTEUR_WORKFLOWID} ${JOBID} 1\n");
+        }
 
         // if the execution environment is a cluster, the vlet binaries
         // should be added to the path
@@ -147,6 +150,9 @@ public class ScriptGenerator extends AbstractGenerator {
         if (!Configuration.BACKGROUND_SCRIPT.isEmpty()) {
             StringBuilder sb = new StringBuilder();
             sb.append("startLog background\n");
+            if (Configuration.USE_DIRAC_SERVICE) {
+                sb.append("python ../GASWServiceClient.py ${MOTEUR_WORKFLOWID} ${JOBID} 2\n");
+            }
             sb.append("checkCacheDownloadAndCacheLFN " + Configuration.BACKGROUND_SCRIPT + "\n");
             sb.append("bash `basename " + Configuration.BACKGROUND_SCRIPT + "` 1>background.out 2>background.err &\n");
             sb.append("BACKPID=$!\n\n");
@@ -238,6 +244,9 @@ public class ScriptGenerator extends AbstractGenerator {
         StringBuilder sb = new StringBuilder();
         String edgesVar = "__MOTEUR_IN=\"$GASW_EXEC_URL";
         sb.append("startLog inputs_download\n");
+        if (Configuration.USE_DIRAC_SERVICE) {
+            sb.append("python ../GASWServiceClient.py ${MOTEUR_WORKFLOWID} ${JOBID} 3\n");
+        }
         sb.append("touch DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK\n");
 
         for (Infrastructure i : release.getInfrastructures()) {
@@ -338,6 +347,10 @@ public class ScriptGenerator extends AbstractGenerator {
     public String applicationExecution(List<String> parameters) {
 
         StringBuilder sb = new StringBuilder();
+        if (Configuration.USE_DIRAC_SERVICE) {
+            sb.append("python ../GASWServiceClient.py ${MOTEUR_WORKFLOWID} ${JOBID} 4\n");
+        }
+
         String edgesVar = "__MOTEUR_ARGS=\"";
         String edgesVar1 = "__MOTEUR_EXE=\"$GASW_EXEC_COMMAND";
         String commandLine = "export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}\n  ./$GASW_EXEC_COMMAND";
@@ -386,6 +399,9 @@ public class ScriptGenerator extends AbstractGenerator {
         StringBuilder sb = new StringBuilder();
         String edgesVar = "__MOTEUR_OUT=\"";
         sb.append("startLog results_upload\n");
+        if (Configuration.USE_DIRAC_SERVICE) {
+            sb.append("python ../GASWServiceClient.py ${MOTEUR_WORKFLOWID} ${JOBID} 5\n");
+        }
         boolean first = true;
         for (URI lfn : uploads) {
             if (first) {
@@ -475,7 +491,13 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append(dataManagement.downloadFunction());
         sb.append(stopLogFunction());
         sb.append(dataManagement.addToCacheCommand());
+        sb.append(dataManagement.addToDataManagerCommand());
         sb.append(dataManagement.uploadFileCommand());
+
+        //GASW Service
+        if (Configuration.USE_DIRAC_SERVICE) {
+            sb.append(GASWServiceGenerator.getInstance().getClient());
+        }
 
         //main
         sb.append(header());

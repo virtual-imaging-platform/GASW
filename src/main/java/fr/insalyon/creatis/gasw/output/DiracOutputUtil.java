@@ -36,15 +36,15 @@ package fr.insalyon.creatis.gasw.output;
 
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswOutput;
+import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
-import fr.insalyon.creatis.gasw.monitor.Monitor;
+import fr.insalyon.creatis.gasw.monitor.GaswStatus;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import org.apache.log4j.Logger;
 
 /**
@@ -73,18 +73,11 @@ public class DiracOutputUtil extends OutputUtil {
             File appStdOut = null;
             File appStdErr = null;
 
-            if (job.getStatus() != Monitor.Status.CANCELLED && job.getStatus() != Monitor.Status.STALLED) {
+            if (job.getStatus() != GaswStatus.CANCELLED 
+                    && job.getStatus() != GaswStatus.STALLED) {
 
-                ProcessBuilder builder = new ProcessBuilder(
+                Process process = GaswUtil.getProcess(proxyFile, 
                         "dirac-wms-job-get-output", jobID);
-
-                builder.redirectErrorStream(true);
-
-                if (!proxyFile.isEmpty() && proxyFile != null) {
-                    builder.environment().put("X509_USER_PROXY", proxyFile);
-                }
-
-                Process process = builder.start();
                 process.waitFor();
 
                 if (process.exitValue() == 0) {
@@ -99,6 +92,7 @@ public class DiracOutputUtil extends OutputUtil {
 
                     appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
                     appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
+                    
                     switch (exitCode) {
                         case 0:
                             gaswExitCode = GaswExitCode.SUCCESS;
@@ -118,10 +112,10 @@ public class DiracOutputUtil extends OutputUtil {
                     }
                 } else {
 
-                    BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                    BufferedReader br = GaswUtil.getBufferedReader(process);
                     String cout = "";
                     String s = null;
-                    while ((s = r.readLine()) != null) {
+                    while ((s = br.readLine()) != null) {
                         cout += s;
                     }
 
@@ -138,7 +132,7 @@ public class DiracOutputUtil extends OutputUtil {
             } else {
 
                 String message = "";
-                if (job.getStatus() == Monitor.Status.CANCELLED) {
+                if (job.getStatus() == GaswStatus.CANCELLED) {
                     message = "Job Cancelled";
                     gaswExitCode = GaswExitCode.EXECUTION_CANCELED;
                 } else {

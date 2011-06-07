@@ -34,10 +34,17 @@
  */
 package fr.insalyon.creatis.gasw;
 
+import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
+import fr.insalyon.creatis.gasw.dao.DAOException;
+import fr.insalyon.creatis.gasw.dao.DAOFactory;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Properties;
 import org.apache.log4j.Logger;
 
@@ -51,6 +58,8 @@ public class Configuration {
     private static final String CONF_FILE = "./conf/settings.conf";
     private static Properties conf;
     // Properties
+    public static final String EXECUTION_FOLDER = new File("").getAbsolutePath();
+    public static final String MOTEUR_WORKFLOWID = EXECUTION_FOLDER.substring(EXECUTION_FOLDER.lastIndexOf("/") + 1);
     public static String GRID = "DIRAC";
     public static String VO = "biomed";
     public static String ENV = "\"\"";
@@ -61,7 +70,14 @@ public class Configuration {
     public static int RETRY_COUNT = 3;
     public static int TIMEOUT = 100000;
     public static int SLEEPTIME = 20000;
+    // Data Manager Configuration
+    public static String DATA_MANAGER_HOST = "data-manager.grid.creatis.insa-lyon.fr";
+    public static int DATA_MANAGER_PORT = 8446;
+    public static String DATA_MANAGER_HOME = "/dpm/grid.creatis.insa-lyon.fr/home/biomed/generated";
     // DIRAC Configuration
+    public static boolean USE_DIRAC_SERVICE = true;
+    public static int DIRAC_SERVICE_PORT = 50009;
+    public static String DIRAC_HOST = "localhost";
     public static String MYSQL_HOST = "localhost";
     public static int MYSQL_PORT = 3306;
     public static String MYSQL_DB_USER = "gasw";
@@ -69,7 +85,21 @@ public class Configuration {
     public static String DERBY_HOST = "localhost";
     public static int DERBY_PORT = 1527;
 
+    /**
+     * GASW setup
+     * 
+     * @throws GaswException 
+     */
     public static void setUp() throws GaswException {
+
+        loadConfigurationFile();
+
+        if (useDataManager()) {
+            loadSEEntryPoints();
+        }
+    }
+
+    private static void loadConfigurationFile() throws GaswException {
         try {
             conf = new Properties();
             conf.load(new FileInputStream(CONF_FILE));
@@ -149,6 +179,36 @@ public class Configuration {
                 DERBY_PORT = new Integer(derbyPort);
             }
 
+            String dataManagerHost = conf.getProperty("DATA_MANAGER_HOST");
+            if (dataManagerHost != null && !dataManagerHost.equals("")) {
+                DATA_MANAGER_HOST = dataManagerHost;
+            }
+
+            String dataManagerPort = conf.getProperty("DATA_MANAGER_PORT");
+            if (dataManagerPort != null && !dataManagerPort.equals("")) {
+                DATA_MANAGER_PORT = new Integer(dataManagerPort);
+            }
+
+            String dataManagerHome = conf.getProperty("DATA_MANAGER_HOME");
+            if (dataManagerHome != null && !dataManagerHome.equals("")) {
+                DATA_MANAGER_HOME = dataManagerHome;
+            }
+
+            String useDiracService = conf.getProperty("USE_DIRAC_SERVICE");
+            if (useDiracService != null && !useDiracService.equals("")) {
+                USE_DIRAC_SERVICE = Boolean.valueOf(useDiracService);
+            }
+
+            String diracServicePort = conf.getProperty("DIRAC_SERVICE_PORT");
+            if (diracServicePort != null && !diracServicePort.equals("")) {
+                DIRAC_SERVICE_PORT = new Integer(diracServicePort);
+            }
+
+            String diracHost = conf.getProperty("DIRAC_HOST");
+            if (diracHost != null && !diracHost.equals("")) {
+                DIRAC_HOST = diracHost;
+            }
+
         } catch (IOException ex) {
 
             logger.info("Failing to setup trying to create file");
@@ -163,11 +223,17 @@ public class Configuration {
                 conf.setProperty("TIMEOUT", TIMEOUT + "");
                 conf.setProperty("SLEEPTIME", (SLEEPTIME / 1000) + "");
                 conf.setProperty("REQUIREMENTS", REQUIREMENTS);
+                conf.setProperty("DIRAC_HOST", DIRAC_HOST);
+                conf.setProperty("USE_DIRAC_SERVICE", USE_DIRAC_SERVICE + "");
+                conf.setProperty("DIRAC_SERVICE_PORT", DIRAC_SERVICE_PORT + "");
                 conf.setProperty("MYSQL_HOST", MYSQL_HOST);
                 conf.setProperty("MYSQL_PORT", MYSQL_PORT + "");
                 conf.setProperty("MYSQL_DB_USER", MYSQL_DB_USER);
                 conf.setProperty("DERBY_HOST", DERBY_HOST);
                 conf.setProperty("DERBY_PORT", DERBY_PORT + "");
+                conf.setProperty("DATA_MANAGER_HOST", DATA_MANAGER_HOST);
+                conf.setProperty("DATA_MANAGER_PORT", DATA_MANAGER_PORT + "");
+                conf.setProperty("DATA_MANAGER_HOME", DATA_MANAGER_HOME);
 
                 File confDir = new File("./conf");
                 if (!confDir.exists()) {
@@ -182,9 +248,59 @@ public class Configuration {
                         logger.debug(stack);
                     }
                 }
-                throw new GaswException(ex1.getMessage());
+                throw new GaswException(ex1);
             }
-
         }
+    }
+
+    private static void loadSEEntryPoints() throws GaswException {
+        try {
+            logger.info("Loading SEs entry points.");
+            ProcessBuilder builder = new ProcessBuilder("lcg-info", "--list-service",
+                    "--vo", VO, "--attrs", "ServiceEndpoint");
+
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+
+            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String s = null;
+            String cout = "";
+
+            while ((s = r.readLine()) != null) {
+                cout += s;
+                if (s.startsWith("- Service: httpg://")) {
+                    try {
+                        URI service = new URI(s.split(" ")[2]);
+                        DAOFactory.getDAOFactory().getSEEntryPointDAO().add(
+                                new SEEntryPoint(service.getHost(),
+                                service.getPort(), service.getPath()));
+
+                    } catch (URISyntaxException ex) {
+                        logger.warn("Unable to read end point from: " + s);
+                    } catch (DAOException ex) {
+                        if (!ex.getMessage().contains("duplicate key value")) {
+                            logger.warn("Unable to save end point: " + ex.getMessage());
+                        }
+                    }
+                }
+            }
+            process.waitFor();
+
+            if (process.exitValue() != 0) {
+                logger.error(cout);
+                throw new GaswException("Unable to load SEs entry points.");
+            }
+        } catch (InterruptedException ex) {
+            logger.error(ex);
+            throw new GaswException(ex);
+
+        } catch (IOException ex) {
+            logger.error(ex);
+            throw new GaswException(ex);
+        }
+    }
+
+    public static boolean useDataManager() {
+        return DATA_MANAGER_HOST.isEmpty() ? false : true;
     }
 }

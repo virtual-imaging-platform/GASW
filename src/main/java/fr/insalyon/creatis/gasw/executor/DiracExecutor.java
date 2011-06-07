@@ -34,13 +34,16 @@
  */
 package fr.insalyon.creatis.gasw.executor;
 
+import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
+import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.DiracJdlGenerator;
+import fr.insalyon.creatis.gasw.release.Execution;
+import fr.insalyon.creatis.gasw.release.Infrastructure;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import org.apache.log4j.Logger;
 
 /**
@@ -49,14 +52,29 @@ import org.apache.log4j.Logger;
  */
 public class DiracExecutor extends Executor {
 
-    private static final Logger log = Logger.getLogger(DiracExecutor.class);
+    private static final Logger logger = Logger.getLogger(DiracExecutor.class);
 
     protected DiracExecutor(String version, GaswInput gaswInput) {
         super(version, gaswInput);
     }
 
     @Override
-    public void preProcess() {
+    public void preProcess() throws GaswException {
+
+        try {
+            if (Configuration.useDataManager()) {
+                DataManager.getInstance().replicate(gaswInput.getDownloads());
+
+                // Release artifacts
+                for (Infrastructure i : gaswInput.getRelease().getInfrastructures()) {
+                    for (Execution e : i.getExecutions()) {
+                        DataManager.getInstance().replicate(e.getBoundArtifact());
+                    }
+                }
+            }
+        } catch (GaswException ex) {
+            logger.error(ex);
+        }
         scriptName = generateScript();
         jdlName = generateJdl(scriptName);
     }
@@ -65,27 +83,20 @@ public class DiracExecutor extends Executor {
     public String submit() throws GaswException {
         super.submit();
         try {
-            ProcessBuilder builder = new ProcessBuilder(
+            Process process = GaswUtil.getProcess(userProxy,
                     "dirac-wms-job-submit", Constants.JDL_ROOT + "/" + jdlName);
-            
-            builder.redirectErrorStream(true);
-            
-            if (!userProxy.isEmpty() && userProxy != null){
-                builder.environment().put("X509_USER_PROXY", userProxy);
-            }
 
-            Process process = builder.start();
             process.waitFor();
 
-            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader br = GaswUtil.getBufferedReader(process);
             String cout = "";
             String s = null;
-            while ((s = r.readLine()) != null) {
+            while ((s = br.readLine()) != null) {
                 cout += s;
             }
 
             if (process.exitValue() != 0) {
-                log.error(cout);
+                logger.error(cout);
                 throw new GaswException("Unable to submit job.");
             }
 
@@ -95,20 +106,16 @@ public class DiracExecutor extends Executor {
             } catch (NumberFormatException ex) {
                 throw new GaswException("Unable to submit job. DIRAC Error: " + cout);
             }
-            
-            if (!userProxy.isEmpty() && userProxy != null)
-                addJobToMonitor(jobID, userProxy);
-            else 
-                addJobToMonitor(jobID);
-            
-            log.info("Dirac Executor Job ID: " + jobID);
+
+            addJobToMonitor(jobID, userProxy);
+            logger.info("Dirac Executor Job ID: " + jobID);
             return jobID;
 
         } catch (InterruptedException ex) {
-            logException(log, ex);
+            logException(logger, ex);
             return null;
         } catch (IOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
             return null;
         }
     }

@@ -36,15 +36,15 @@ package fr.insalyon.creatis.gasw.output;
 
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswOutput;
+import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
-import fr.insalyon.creatis.gasw.monitor.Monitor;
+import fr.insalyon.creatis.gasw.monitor.GaswStatus;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import org.apache.log4j.Logger;
 
 /**
@@ -76,27 +76,18 @@ public class GliteOutputUtil extends OutputUtil {
             File appStdOut = null;
             File appStdErr = null;
 
-            if (job.getStatus() != Monitor.Status.CANCELLED) {
+            if (job.getStatus() != GaswStatus.CANCELLED) {
 
                 String dir = "out";
-                ProcessBuilder builder = new ProcessBuilder(
-                        "glite-wms-job-output", "--dir",
-                        dir, jobID);
-
-                builder.redirectErrorStream(true);
-
-                if (!proxyFile.isEmpty() && proxyFile != null) {
-                    builder.environment().put("X509_USER_PROXY", proxyFile);
-                }
-
-                Process process = builder.start();
+                Process process = GaswUtil.getProcess(proxyFile,
+                        "glite-wms-job-output", "--dir", dir, jobID);
                 process.waitFor();
 
-                BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                BufferedReader br = GaswUtil.getBufferedReader(process);
                 String outputPath = "";
                 String cout = "";
                 String s = null;
-                while ((s = r.readLine()) != null) {
+                while ((s = br.readLine()) != null) {
                     if (s.contains("/" + dir + "/")) {
                         outputPath = s.trim();
                     }
@@ -133,7 +124,7 @@ public class GliteOutputUtil extends OutputUtil {
                             gaswExitCode = GaswExitCode.ERROR_WRITE_LOCAL;
                             break;
                     }
-                    
+
                 } else {
                     logger.error(cout);
                     logger.error("Output files do not exist. Job ID: " + jobID);
@@ -151,9 +142,9 @@ public class GliteOutputUtil extends OutputUtil {
                 appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "Job Cancelled");
                 gaswExitCode = GaswExitCode.EXECUTION_CANCELED;
             }
-            
+
             return new GaswOutput(jobID, gaswExitCode, appStdOut, appStdErr, stdOut, stdErr);
-        
+
         } catch (DAOException ex) {
             logException(logger, ex);
         } catch (InterruptedException ex) {

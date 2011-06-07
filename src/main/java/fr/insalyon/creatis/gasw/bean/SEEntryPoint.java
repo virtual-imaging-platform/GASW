@@ -32,29 +32,33 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.dao;
-
-import fr.insalyon.creatis.gasw.bean.Job;
-import fr.insalyon.creatis.gasw.monitor.GaswStatus;
-import java.util.Map;
+package fr.insalyon.creatis.gasw.bean;
 
 /**
  *
  * @author Rafael Silva
  */
-public interface JobDAO {
+public class SEEntryPoint {
 
-    public void add(Job job) throws DAOException;
+    private String hostname;
+    private int port;
+    private String path;
 
-    public void update(Job job) throws DAOException;
+    public SEEntryPoint(String hostname, int port, String path) {
+        this.hostname = hostname;
+        this.port = port;
+        this.path = path;
+    }
 
-    public void remove(Job job) throws DAOException;
+    public String getHostName() {
+        return hostname;
+    }
 
-    public Job getJobByID(String id) throws DAOException;
+    public String getPath() {
+        return path;
+    }
 
-    public void updateStatus(Map<GaswStatus, String> jobStatus) throws DAOException;
-    
-    public void updateMinorStatus(String jobId, int minorStatus) throws DAOException;
-    
-    public Map<String, GaswStatus> getSignaledJobs() throws DAOException;
+    public int getPort() {
+        return port;
+    }
 }

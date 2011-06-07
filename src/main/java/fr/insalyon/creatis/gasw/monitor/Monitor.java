@@ -60,13 +60,6 @@ public abstract class Monitor extends Thread {
     protected NodeDAO nodeDAO;
     protected int startTime = -1;
 
-    public static enum Status {
-
-        COMPLETED, ERROR, RUNNING,
-        QUEUED, NOT_SUBMITTED, SUCCESSFULLY_SUBMITTED,
-        CANCELLED, STALLED, KILL, RESCHEDULE
-    };
-
     protected Monitor() {
         stop = false;
         jobDAO = DAOFactory.getDAOFactory().getJobDAO();
@@ -109,7 +102,7 @@ public abstract class Monitor extends Thread {
      * 
      * @param jobStatus
      */
-    protected synchronized void setStatus(Map<Status, String> jobStatus) {
+    protected synchronized void setStatus(Map<GaswStatus, String> jobStatus) {
         try {
             jobDAO.updateStatus(jobStatus);
 
@@ -146,16 +139,16 @@ public abstract class Monitor extends Thread {
         }
     }
 
-    protected Map<Status, String> getNewJobStatusMap() {
-        Map<Status, String> jobStatusMap = new EnumMap<Status, String>(Status.class);
-        jobStatusMap.put(Status.CANCELLED, "");
-        jobStatusMap.put(Status.COMPLETED, "");
-        jobStatusMap.put(Status.ERROR, "");
-        jobStatusMap.put(Status.NOT_SUBMITTED, "");
-        jobStatusMap.put(Status.QUEUED, "");
-        jobStatusMap.put(Status.RUNNING, "");
-        jobStatusMap.put(Status.STALLED, "");
-        jobStatusMap.put(Status.SUCCESSFULLY_SUBMITTED, "");
+    protected Map<GaswStatus, String> getNewJobStatusMap() {
+        Map<GaswStatus, String> jobStatusMap = new EnumMap<GaswStatus, String>(GaswStatus.class);
+        jobStatusMap.put(GaswStatus.CANCELLED, "");
+        jobStatusMap.put(GaswStatus.COMPLETED, "");
+        jobStatusMap.put(GaswStatus.ERROR, "");
+        jobStatusMap.put(GaswStatus.NOT_SUBMITTED, "");
+        jobStatusMap.put(GaswStatus.QUEUED, "");
+        jobStatusMap.put(GaswStatus.RUNNING, "");
+        jobStatusMap.put(GaswStatus.STALLED, "");
+        jobStatusMap.put(GaswStatus.SUCCESSFULLY_SUBMITTED, "");
         return jobStatusMap;
     }
 
@@ -169,13 +162,13 @@ public abstract class Monitor extends Thread {
 
     protected void verifySignaledJobs() {
         try {
-            Map<String, Status> jobs = jobDAO.getSignaledJobs();
+            Map<String, GaswStatus> jobs = jobDAO.getSignaledJobs();
             
             for (String id : jobs.keySet()) {
-                Status status = jobs.get(id);
-                if (status == Status.KILL) {
+                GaswStatus status = jobs.get(id);
+                if (status == GaswStatus.KILL) {
                     kill(id);
-                } else if (status.equals(Status.RESCHEDULE)) {
+                } else if (status.equals(GaswStatus.RESCHEDULE)) {
                     reschedule(id);
                 }
             }

@@ -37,10 +37,10 @@ package fr.insalyon.creatis.gasw.executor;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
+import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.GliteJdlGenerator;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import org.apache.log4j.Logger;
 
 /**
@@ -56,7 +56,7 @@ public class GliteExecutor extends Executor {
     }
 
     @Override
-    public void preProcess() {
+    public void preProcess() throws GaswException {
         scriptName = generateScript();
         jdlName = generateJdl(scriptName);
     }
@@ -66,22 +66,12 @@ public class GliteExecutor extends Executor {
 
         super.submit();
         try {
-            ProcessBuilder builder = new ProcessBuilder(
-                    "glite-wms-job-submit",
+            Process process = GaswUtil.getProcess(userProxy, "glite-wms-job-submit",
                     "-a", Constants.JDL_ROOT + "/" + jdlName);
 
-            builder.redirectErrorStream(true);
-
-            if (!userProxy.isEmpty() && userProxy != null) {
-                builder.environment().put("X509_USER_PROXY", userProxy);
-            }
-
-            Process process = builder.start();
             process.waitFor();
+            BufferedReader br = GaswUtil.getBufferedReader(process);
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(
-                    process.getInputStream()));
-            
             String out = "";
             String s = null;
             while ((s = br.readLine()) != null) {
@@ -95,15 +85,10 @@ public class GliteExecutor extends Executor {
 
             String jobID = out.substring(out.lastIndexOf("https://"),
                     out.length()).trim();
-            
-            jobID = jobID.substring(0, jobID.indexOf("=")).trim();
-            
-            if (!userProxy.isEmpty() && userProxy != null) {
-                addJobToMonitor(jobID, userProxy);
-            } else {
-                addJobToMonitor(jobID);
-            }
 
+            jobID = jobID.substring(0, jobID.indexOf("=")).trim();
+
+            addJobToMonitor(jobID, userProxy);
             logger.info("Glite Executor Job ID: " + jobID);
             return jobID;
 

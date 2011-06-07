@@ -40,7 +40,7 @@ import fr.insalyon.creatis.gasw.bean.Node;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
-import fr.insalyon.creatis.gasw.monitor.Monitor.Status;
+import fr.insalyon.creatis.gasw.monitor.GaswStatus;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -154,7 +154,7 @@ public class JobData extends AbstractData implements JobDAO {
                     rs.getInt("exit_code"), rs.getInt("creation"), rs.getInt("queued"),
                     rs.getInt("download"), rs.getInt("running"), rs.getInt("upload"),
                     rs.getInt("end_e"), getNode(rs.getString("node_site"),
-                    rs.getString("node_name")), rs.getString("command"), 
+                    rs.getString("node_name")), rs.getString("command"),
                     rs.getString("file_name"), rs.getString("parameters"));
 
         } catch (SQLException ex) {
@@ -162,46 +162,10 @@ public class JobData extends AbstractData implements JobDAO {
         }
     }
 
-    private Status getStatus(String status) {
-        if (status.equals(Status.SUCCESSFULLY_SUBMITTED.toString())) {
-            return Status.SUCCESSFULLY_SUBMITTED;
-        }
-        if (status.equals(Status.QUEUED.toString())) {
-            return Status.QUEUED;
-        }
-        if (status.equals(Status.RUNNING.toString())) {
-            return Status.RUNNING;
-        }
-        if (status.equals(Status.COMPLETED.toString())) {
-            return Status.COMPLETED;
-        }
-        if (status.equals(Status.ERROR.toString())) {
-            return Status.ERROR;
-        }
-        if (status.equals(Status.CANCELLED.toString())) {
-            return Status.CANCELLED;
-        }
-        if (status.equals(Status.KILL.toString())) {
-            return Status.KILL;
-        }
-        if (status.equals(Status.RESCHEDULE.toString())) {
-            return Status.RESCHEDULE;
-        }
-        return null;
-    }
-
-    private Node getNode(String siteName, String nodeName) throws DAOException {
-        if (siteName != null && !siteName.equals("")) {
-            return DAOFactory.getDAOFactory().getNodeDAO().getNodeBySiteAndNodeName(siteName, nodeName);
-        } else {
-            return null;
-        }
-    }
-
-    public void updateStatus(Map<Status, String> jobStatus) throws DAOException {
+    public void updateStatus(Map<GaswStatus, String> jobStatus) throws DAOException {
         try {
 
-            for (Status status : jobStatus.keySet()) {
+            for (GaswStatus status : jobStatus.keySet()) {
                 String list = jobStatus.get(status);
                 StringBuilder sb = new StringBuilder();
 
@@ -228,13 +192,34 @@ public class JobData extends AbstractData implements JobDAO {
             throw new DAOException(ex);
         }
     }
-    
+
+    /**
+     * 
+     * @param jobId
+     * @param minorStatus
+     * @throws DAOException 
+     */
+    public void updateMinorStatus(String jobId, int minorStatus) throws DAOException {
+        try {
+            PreparedStatement ps = prepareStatement("UPDATE Jobs "
+                    + "SET minor_status = ? WHERE id = ?");
+            
+            ps.setInt(1, minorStatus);
+            ps.setString(2, jobId);
+            
+            execute(ps);
+            
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
+        }
+     }
+
     /**
      * 
      * @return
      * @throws DAOException 
      */
-    public Map<String, Status> getSignaledJobs() throws DAOException {
+    public Map<String, GaswStatus> getSignaledJobs() throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("SELECT "
                     + "id, status FROM Jobs "
@@ -243,17 +228,53 @@ public class JobData extends AbstractData implements JobDAO {
             ps.setString(1, "KILL");
             ps.setString(2, "RESCHEDULE");
             ResultSet rs = executeQuery(ps);
-            
-            Map<String, Status> jobs = new HashMap<String, Status>();
-            
+
+            Map<String, GaswStatus> jobs = new HashMap<String, GaswStatus>();
+
             while (rs.next()) {
                 jobs.put(rs.getString("id"), getStatus(rs.getString("status")));
             }
-            
+
             return jobs;
 
         } catch (SQLException ex) {
             throw new DAOException(ex);
+        }
+    }
+
+    private GaswStatus getStatus(String status) {
+        if (status.equals(GaswStatus.SUCCESSFULLY_SUBMITTED.toString())) {
+            return GaswStatus.SUCCESSFULLY_SUBMITTED;
+        }
+        if (status.equals(GaswStatus.QUEUED.name())) {
+            return GaswStatus.QUEUED;
+        }
+        if (status.equals(GaswStatus.RUNNING.name())) {
+            return GaswStatus.RUNNING;
+        }
+        if (status.equals(GaswStatus.COMPLETED.name())) {
+            return GaswStatus.COMPLETED;
+        }
+        if (status.equals(GaswStatus.ERROR.name())) {
+            return GaswStatus.ERROR;
+        }
+        if (status.equals(GaswStatus.CANCELLED.name())) {
+            return GaswStatus.CANCELLED;
+        }
+        if (status.equals(GaswStatus.KILL.name())) {
+            return GaswStatus.KILL;
+        }
+        if (status.equals(GaswStatus.RESCHEDULE.name())) {
+            return GaswStatus.RESCHEDULE;
+        }
+        return null;
+    }
+    
+    private Node getNode(String siteName, String nodeName) throws DAOException {
+        if (siteName != null && !siteName.equals("")) {
+            return DAOFactory.getDAOFactory().getNodeDAO().getNodeBySiteAndNodeName(siteName, nodeName);
+        } else {
+            return null;
         }
     }
 }

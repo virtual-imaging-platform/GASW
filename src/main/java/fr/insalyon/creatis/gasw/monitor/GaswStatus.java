@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -32,29 +32,15 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.dao;
-
-import fr.insalyon.creatis.gasw.bean.Job;
-import fr.insalyon.creatis.gasw.monitor.GaswStatus;
-import java.util.Map;
+package fr.insalyon.creatis.gasw.monitor;
 
 /**
  *
  * @author Rafael Silva
  */
-public interface JobDAO {
+public enum GaswStatus {
 
-    public void add(Job job) throws DAOException;
-
-    public void update(Job job) throws DAOException;
-
-    public void remove(Job job) throws DAOException;
-
-    public Job getJobByID(String id) throws DAOException;
-
-    public void updateStatus(Map<GaswStatus, String> jobStatus) throws DAOException;
-    
-    public void updateMinorStatus(String jobId, int minorStatus) throws DAOException;
-    
-    public Map<String, GaswStatus> getSignaledJobs() throws DAOException;
+    COMPLETED, ERROR, RUNNING,
+    QUEUED, NOT_SUBMITTED, SUCCESSFULLY_SUBMITTED,
+    CANCELLED, STALLED, KILL, RESCHEDULE
 }

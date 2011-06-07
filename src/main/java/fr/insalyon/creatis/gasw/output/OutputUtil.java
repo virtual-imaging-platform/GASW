@@ -67,6 +67,7 @@ public abstract class OutputUtil {
     }
 
     public abstract GaswOutput getOutputs(String jobID);
+
     /**
      * Gets the standard output and error files and exit code.
      * @param jobID job identification

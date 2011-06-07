@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -34,6 +34,7 @@
  */
 package fr.insalyon.creatis.gasw.executor.generator.script;
 
+import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -41,7 +42,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Silva, Tristan Glatard
  */
 public class DataManagement extends AbstractGenerator {
 
@@ -62,83 +63,87 @@ public class DataManagement extends AbstractGenerator {
 
         StringBuilder sb = new StringBuilder();
         sb.append("function checkCacheDownloadAndCacheLFN {\n");
-        sb.append("local LFN=$1\n");
-        sb.append("#the LFN is assumed to be in the /grid/biomed/... format (no leading lfn://lfc-biomed.in2p3.fr:5010/)\n");
-        sb.append("#this variable is true <=> the file has to be downloaded again\n");
-        sb.append("local download=\"true\"\n");
-        sb.append("#first check if the file is already in cache\n");
-        sb.append("local LOCALPATH=`awk -v L=${LFN} '$1==L {print $2}' " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "`\n");
-        sb.append("if [ \"${LOCALPATH}\" != \"\" ]\n");
+        sb.append("  local LFN=$1\n");
+        sb.append("  #the LFN is assumed to be in the /grid/biomed/... format (no leading lfn://lfc-biomed.in2p3.fr:5010/)\n");
+        sb.append("  #this variable is true <=> the file has to be downloaded again\n");
+        sb.append("  local download=\"true\"\n");
+        sb.append("  #first check if the file is already in cache\n");
+        sb.append("  local LOCALPATH=`awk -v L=${LFN} '$1==L {print $2}' " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "`\n");
+        sb.append("  if [ \"${LOCALPATH}\" != \"\" ]\n");
+        sb.append("  then\n");
+        sb.append("      info \"There is an entry in the cache: test if the local file still here\"\n");
+        sb.append("      local TIMESTAMP_LOCAL=\"\"\n");
+        sb.append("      local TIMESTAMP_GRID=\"\"\n");
+        sb.append("      local date_local=\"\"\n");
+        sb.append("      test -f ${LOCALPATH}\n");
+        sb.append("      if [ $? = 0 ]\n");
         sb.append("      then\n");
-        sb.append("        info \"There is an entry in the cache: test if the local file still here\"\n");
-        sb.append("        local TIMESTAMP_LOCAL=\"\"\n");
-        sb.append("        local TIMESTAMP_GRID=\"\"\n");
-        sb.append("        local date_local=\"\"\n");
-        sb.append("        test -f ${LOCALPATH}\n");
-        sb.append("        if [ $? = 0 ]\n");
-        sb.append("            then\n");
-        sb.append("               info \"The file exists: checking if it was modified since it was added to the cache\"\n");
-        sb.append("               local YEAR=`date +%Y`\n");
-        sb.append("               local YEARBEFORE=`expr ${YEAR} - 1`\n");
-        sb.append("               local currentDate=`date +%s`\n");
-        sb.append("               local TIMESTAMP_CACHE=`awk -v L=${LFN} '$1==L {print $3}' " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "`\n");
-        sb.append("               local LOCALMONTH=`ls -la ${LOCALPATH} | awk -F' ' '{print $6}'`\n");
-        sb.append("               local MONTHTIME=`date -d \"${LOCALMONTH} 1 00:00\" +%s`\n");
-        sb.append("               date_local=`ls -la ${LOCALPATH} | awk -F' ' '{print $6, $7, $8}'`\n");
-        sb.append("               if [ \"${MONTHTIME}\" -gt \"${currentDate}\" ]\n");
-        sb.append("                   then\n");
-        sb.append("                   TIMESTAMP_LOCAL=`date -d \"${date_local} ${YEARBEFORE}\" +%s`\n");
-        sb.append("               else\n");
-        sb.append("                   TIMESTAMP_LOCAL=`date -d \"${date_local} ${YEAR}\" +%s`\n");
-        sb.append("               fi\n");
-        sb.append("               if [ \"${TIMESTAMP_CACHE}\" = \"${TIMESTAMP_LOCAL}\" ]\n");
-        sb.append("                   then\n");
-        sb.append("                     info \"The file was not touched since it was added to the cache: test if it is up up-to-date\"\n");
-        sb.append("                     local date_grid_s=`lfc-ls -l ${LFN} | awk -F' ' '{print $6, $7, $8}'`\n");
-        sb.append("                     local MONTHGRID=`echo ${date_grid_s} | awk -F' ' '{print $1}'`\n");
-        sb.append("                     MONTHTIME=`date -d \"${MONTHGRID} 1 00:00\" +%s`\n");
-        sb.append("                     if [ \"${MONTHTIME}\" != \"\" ] && [ \"${date_grid_s}\" != \"\" ]\n");
-        sb.append("                     then\n");
-        sb.append("                       if [ \"${MONTHTIME}\" -gt \"${currentDate}\" ]\n");
-        sb.append("                           then\n");
-        sb.append("                                #it must be last year\n");
-        sb.append("                                TIMESTAMP_GRID=`date -d \"${date_grid_s} ${YEARBEFORE}\" +%s`\n");
-        sb.append("                           else\n");
-        sb.append("                                TIMESTAMP_GRID=`date -d \"${date_grid_s} ${YEAR}\" +%s`\n");
-        sb.append("                       fi\n");
-        sb.append("                       if [ \"${TIMESTAMP_LOCAL}\" -gt \"${TIMESTAMP_GRID}\" ]\n");
-        sb.append("                           then\n");
-        sb.append("                                  info \"The file is up-to-date ; there is no need to download it again\"\n");
-        sb.append("                                  download=\"false\"\n");
-        sb.append("                       else\n");
-        sb.append("                             warning \"The cache entry is outdated (local modification date is ${TIMESTAMP_LOCAL} - ${date_local} while grid is ${TIMESTAMP_GRID} ${date_grid_s})\"\n");
-        sb.append("                       fi\n");
-        sb.append("                     else\n");
-        sb.append("                        warning \"Cannot determine file timestamp on the LFC\"\n");
-        sb.append("                      fi\n");
+        sb.append("          info \"The file exists: checking if it was modified since it was added to the cache\"\n");
+        sb.append("          local YEAR=`date +%Y`\n");
+        sb.append("          local YEARBEFORE=`expr ${YEAR} - 1`\n");
+        sb.append("          local currentDate=`date +%s`\n");
+        sb.append("          local TIMESTAMP_CACHE=`awk -v L=${LFN} '$1==L {print $3}' " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "`\n");
+        sb.append("          local LOCALMONTH=`ls -la ${LOCALPATH} | awk -F' ' '{print $6}'`\n");
+        sb.append("          local MONTHTIME=`date -d \"${LOCALMONTH} 1 00:00\" +%s`\n");
+        sb.append("          date_local=`ls -la ${LOCALPATH} | awk -F' ' '{print $6, $7, $8}'`\n");
+        sb.append("          if [ \"${MONTHTIME}\" -gt \"${currentDate}\" ]\n");
+        sb.append("          then\n");
+        sb.append("              TIMESTAMP_LOCAL=`date -d \"${date_local} ${YEARBEFORE}\" +%s`\n");
+        sb.append("          else\n");
+        sb.append("              TIMESTAMP_LOCAL=`date -d \"${date_local} ${YEAR}\" +%s`\n");
+        sb.append("          fi\n");
+        sb.append("          if [ \"${TIMESTAMP_CACHE}\" = \"${TIMESTAMP_LOCAL}\" ]\n");
+        sb.append("          then\n");
+        sb.append("              info \"The file was not touched since it was added to the cache: test if it is up up-to-date\"\n");
+        sb.append("              local date_grid_s=`lfc-ls -l ${LFN} | awk -F' ' '{print $6, $7, $8}'`\n");
+        sb.append("              local MONTHGRID=`echo ${date_grid_s} | awk -F' ' '{print $1}'`\n");
+        sb.append("              MONTHTIME=`date -d \"${MONTHGRID} 1 00:00\" +%s`\n");
+        sb.append("              if [ \"${MONTHTIME}\" != \"\" ] && [ \"${date_grid_s}\" != \"\" ]\n");
+        sb.append("              then\n");
+        sb.append("                  if [ \"${MONTHTIME}\" -gt \"${currentDate}\" ]\n");
+        sb.append("                  then\n");
+        sb.append("                      #it must be last year\n");
+        sb.append("                      TIMESTAMP_GRID=`date -d \"${date_grid_s} ${YEARBEFORE}\" +%s`\n");
         sb.append("                  else\n");
-        sb.append("                   warning \"The cache entry was modified since it was created (cache time is ${TIMESTAMP_CACHE} and file time is ${TIMESTAMP_LOCAL} - ${date_local})\"\n");
-        sb.append("               fi\n");
-        sb.append("        else\n");
-        sb.append("            warning \"The cache entry disappeared\"\n");
-        sb.append("        fi\n");
-        sb.append("    else\n");
-        sb.append("        info \"There is no entry in the cache\"\n");
-        sb.append("    fi\n");
-        sb.append("    if [ \"${download}\" = \"false\" ]\n");
-        sb.append("        then\n");
-        sb.append("        info \"Linking file from cache: ${LOCALPATH}\"\n");
-        sb.append("        BASE=`basename ${LFN}`\n");
-        sb.append("        info \"ln -s ${LOCALPATH} ./${BASE}\"\n");
-        sb.append("        ln -s  ${LOCALPATH} ./${BASE}\n");
-        sb.append("        return 0\n");
-        sb.append("    fi\n");
-        sb.append("\n    if [ \"${download}\" = \"true\" ]\n");
-        sb.append("        then\n");
-        sb.append("           downloadLFN ${LFN} ; if  [ $? != 0 ]; then return 1; fi\n");
-        sb.append("           addToCache ${LFN} `basename ${LFN}`\n");
-        sb.append("        return 0\n");
-        sb.append("    fi\n");
+        sb.append("                      TIMESTAMP_GRID=`date -d \"${date_grid_s} ${YEAR}\" +%s`\n");
+        sb.append("                  fi\n");
+        sb.append("                  if [ \"${TIMESTAMP_LOCAL}\" -gt \"${TIMESTAMP_GRID}\" ]\n");
+        sb.append("                  then\n");
+        sb.append("                      info \"The file is up-to-date ; there is no need to download it again\"\n");
+        sb.append("                      download=\"false\"\n");
+        sb.append("                  else\n");
+        sb.append("                      warning \"The cache entry is outdated (local modification date is ${TIMESTAMP_LOCAL} - ${date_local} while grid is ${TIMESTAMP_GRID} ${date_grid_s})\"\n");
+        sb.append("                  fi\n");
+        sb.append("              else\n");
+        sb.append("                  warning \"Cannot determine file timestamp on the LFC\"\n");
+        sb.append("              fi\n");
+        sb.append("          else\n");
+        sb.append("              warning \"The cache entry was modified since it was created (cache time is ${TIMESTAMP_CACHE} and file time is ${TIMESTAMP_LOCAL} - ${date_local})\"\n");
+        sb.append("          fi\n");
+        sb.append("      else\n");
+        sb.append("         warning \"The cache entry disappeared\"\n");
+        sb.append("      fi\n");
+        sb.append("  else\n");
+        sb.append("      info \"There is no entry in the cache\"\n");
+        sb.append("  fi\n");
+        sb.append("  if [ \"${download}\" = \"false\" ]\n");
+        sb.append("  then\n");
+        sb.append("      info \"Linking file from cache: ${LOCALPATH}\"\n");
+        sb.append("      BASE=`basename ${LFN}`\n");
+        sb.append("      info \"ln -s ${LOCALPATH} ./${BASE}\"\n");
+        sb.append("      ln -s  ${LOCALPATH} ./${BASE}\n");
+        sb.append("      return 0\n");
+        sb.append("  fi\n\n");
+        sb.append("  if [ \"${download}\" = \"true\" ]\n");
+        sb.append("  then\n");
+        sb.append("      downloadLFN ${LFN}\n");
+        sb.append("      if  [ $? != 0 ]\n");
+        sb.append("      then\n");
+        sb.append("          return 1\n");
+        sb.append("      fi\n");
+        sb.append("      addToCache ${LFN} `basename ${LFN}`\n");
+        sb.append("      return 0\n");
+        sb.append("  fi\n");
         sb.append("}\n");
         sb.append("export -f checkCacheDownloadAndCacheLFN\n\n");
         return sb.toString();
@@ -153,7 +158,7 @@ public class DataManagement extends AbstractGenerator {
         sb.append("  info \"Removing file ${LOCAL} in case it is already here\"\n");
         sb.append("  \\rm -f ${LOCAL}\n");
         sb.append("  info \"Downloading file ${LFN}...\"\n");
-        sb.append("  LINE=\"lcg-cp -v --connect-timeout " + Constants.CONNECT_TIMEOUT 
+        sb.append("  LINE=\"lcg-cp -v --connect-timeout " + Constants.CONNECT_TIMEOUT
                 + " --sendreceive-timeout " + Constants.SEND_RECEIVE_TIMEOUT
                 + " --bdii-timeout " + Constants.BDII_TIMEOUT
                 + " --srm-timeout " + Constants.SRM_TIMEOUT
@@ -164,10 +169,30 @@ public class DataManagement extends AbstractGenerator {
         sb.append("  then\n");
         sb.append("    info \"lcg-cp worked fine\";\n");
         sb.append("  else\n");
-        sb.append("    error \"lcg-cp failed\"\n");
-        sb.append("  return 1\n");
+
+        if (Configuration.useDataManager()) {
+            sb.append("    local FILENAME=`lcg-lr lfn:${LFN} | grep " + Configuration.DATA_MANAGER_HOST + "`\n");
+            sb.append("    local PFILE=${FILENAME#*generated}\n");
+            sb.append("    lcg-cp --nobdii --defaultsetype srmv2 -v srm://"
+                    + Configuration.DATA_MANAGER_HOST + ":"
+                    + Configuration.DATA_MANAGER_PORT + "/srm/managerv2?SFN="
+                    + Configuration.DATA_MANAGER_HOME + "${PFILE} "
+                    + "file:`pwd`/`basename ${LFN}`\n");
+            sb.append("    if [ $? = 0 ];\n");
+            sb.append("    then\n");
+            sb.append("      info \"lcg-cp from Data Manager worked fine\";\n");
+            sb.append("    else\n");
+            sb.append("      error \"lcg-cp failed\"\n");
+            sb.append("      return 1\n");
+            sb.append("    fi\n");
+        } else {
+            sb.append("    error \"lcg-cp failed\"\n");
+            sb.append("    return 1\n");
+        }
+
         sb.append("  fi\n");
-        sb.append("}\nexport -f downloadLFN\n");
+        sb.append("}\n");
+        sb.append("export -f downloadLFN\n\n");
         return sb.toString();
     }
 
@@ -206,6 +231,52 @@ public class DataManagement extends AbstractGenerator {
         sb.append("  echo \"${LFN} ${NAME} ${TIMESTAMP}\" >> " + Constants.CACHE_DIR + "/" + Constants.CACHE_FILE + "\n");
         sb.append("}\n");
         sb.append("export -f addToCache\n\n");
+        return sb.toString();
+    }
+
+    protected String addToDataManagerCommand() {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("function addToDataManager {\n");
+        sb.append("  local LFN=$1\n");
+        sb.append("  local FILE=$2\n");
+        sb.append("  local REMOTEFILE=`lcg-lr lfn:${LFN} | grep " + Configuration.DATA_MANAGER_HOST + "`\n");
+        sb.append("  local RPFILE=${REMOTEFILE#*generated}\n");
+        sb.append("  lcg-del --nobdii --defaultsetype srmv2 -v srm://"
+                + Configuration.DATA_MANAGER_HOST + ":"
+                + Configuration.DATA_MANAGER_PORT + "/srm/managerv2?SFN="
+                + Configuration.DATA_MANAGER_HOME + "${RPFILE} &>/dev/null\n");
+        sb.append("  lfc-ls ${LFN};\n");
+        sb.append("  if [ $? = 0 ];\n");
+        sb.append("  then\n");
+        sb.append("    lfc-rename ${LFN} ${LFN}-garbage-`date +\"%Y-%m-%d-%H-%M-%S\"`\n");
+        sb.append("  fi;\n");
+        sb.append("  lfc-mkdir -p `dirname ${LFN}`;\n");
+        sb.append("  local FILENAME=`echo $RANDOM$RANDOM | md5sum | awk '{print $1}'`\n");
+        sb.append("  local FOLDERNAME=`date +\"%Y-%m-%d\"`\n");
+        sb.append("  local OPTS=\"--nobdii --defaultsetype srmv2\"\n");
+        sb.append("  DM_DEST=\"srm://" + Configuration.DATA_MANAGER_HOST
+                + ":" + Configuration.DATA_MANAGER_PORT
+                + "/srm/managerv2?SFN=" + Configuration.DATA_MANAGER_HOME
+                + "/${FOLDERNAME}/file-${FILENAME}\"\n");
+        sb.append("  GUID=`lcg-cr ${OPTS} -d ${DM_DEST} file:${FILE}`\n");
+        sb.append("  if [ $? = 0 ]\n");
+        sb.append("  then\n");
+        sb.append("    lcg-aa ${GUID} ${LFN}\n");
+        sb.append("    if [ $? = 0 ]\n");
+        sb.append("    then\n");
+        sb.append("      info \"Data successfully copied to Data Manager.\";\n");
+        sb.append("    else\n");
+        sb.append("      error \"Unable to create LFN alias ${LFN} to ${GUID}\"\n");
+        sb.append("      return 1\n");
+        sb.append("    fi\n");
+        sb.append("  else\n");
+        sb.append("    error \"Unable to copy data to Data Manager\"\n");
+        sb.append("    return 1\n");
+        sb.append("  fi\n");
+        sb.append("}\n");
+        sb.append("export -f addToDataManager\n\n");
+
         return sb.toString();
     }
 
@@ -288,7 +359,14 @@ public class DataManagement extends AbstractGenerator {
         sb.append("  do\n");
         sb.append("    if [ \"${done}\" = \"0\" ]\n");
         sb.append("    then\n");
-        sb.append("      lcg-del -v -a ${OPTS} lfn:${LFN} &>/dev/null; lfc-ls ${LFN}; if [ \\$? = 0 ]; then lfc-rename ${LFN} ${LFN}-garbage-${HOSTNAME}-${PWD}; fi; lfc-mkdir -p `dirname ${LFN}`; lcg-cr -v ${OPTS} -d ${DEST} -l lfn:${LFN} file:${FILE}\n");
+        sb.append("      lcg-del -v -a ${OPTS} lfn:${LFN} &>/dev/null;\n");
+        sb.append("      lfc-ls ${LFN};\n");
+        sb.append("      if [ \\$? = 0 ];\n");
+        sb.append("      then\n");
+        sb.append("        lfc-rename ${LFN} ${LFN}-garbage-${HOSTNAME}-${PWD};\n");
+        sb.append("      fi;\n");
+        sb.append("      lfc-mkdir -p `dirname ${LFN}`;\n");
+        sb.append("      lcg-cr -v ${OPTS} -d ${DEST} -l lfn:${LFN} file:${FILE}\n");
         sb.append("    else\n");
         sb.append("      lcg-rep -v ${OPTS} -d ${DEST} lfn:${LFN}\n");
         sb.append("    fi\n");
@@ -304,14 +382,28 @@ public class DataManagement extends AbstractGenerator {
         sb.append("  done\n");
         sb.append("  if [ \"${done}\" = \"0\" ]\n");
         sb.append("  then\n");
-        sb.append("    error \"Cannot lcg-cr file ${FILE} to lfn ${LFN}\"\n");
-        sb.append("    error \"Exiting with return value 2\"\n");
-        sb.append("    exit 2\n");
+
+        if (Configuration.useDataManager()) {
+            sb.append("    addToDataManager ${LFN} ${FILE}\n");
+            sb.append("    if [ $? = 0 ]\n");
+            sb.append("    then\n");
+            sb.append("      addToCache ${LFN} ${FILE}\n");
+            sb.append("    else\n");
+            sb.append("      error \"Cannot lcg-cr file ${FILE} to lfn ${LFN}\"\n");
+            sb.append("      error \"Exiting with return value 2\"\n");
+            sb.append("      exit 2\n");
+            sb.append("    fi\n");
+        } else {
+            sb.append("    error \"Cannot lcg-cr file ${FILE} to lfn ${LFN}\"\n");
+            sb.append("    error \"Exiting with return value 2\"\n");
+            sb.append("    exit 2\n");
+        }
+
         sb.append("  else\n"); //put file in cache
         sb.append("    addToCache ${LFN} ${FILE}\n");
         sb.append("  fi\n");
         sb.append("}\n\n");
-        
+
         return sb.toString();
     }
 
@@ -372,7 +464,15 @@ public class DataManagement extends AbstractGenerator {
             uploadTest = "-uploadTest";
         }
         sb.append("info \"Deleting file " + lfn.getPath() + uploadTest + "...\"\n");
-        sb.append("lcg-del -a lfn:" + lfn.getPath() + uploadTest + "\n");
+        sb.append("lcg-del -v -a lfn:" + lfn.getPath() + uploadTest + "\n");
+
+        if (Configuration.useDataManager()) {
+            sb.append("if [ $? != 0 ]\n");
+            sb.append("then\n");
+            sb.append("  lcg-del --nobdii --defaultsetype srmv2 ${DM_DEST}\n");
+            sb.append("fi\n");
+        }
+
         sb.append("stopLog file_delete\n");
         return sb.toString();
     }

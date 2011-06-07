@@ -37,13 +37,12 @@ package fr.insalyon.creatis.gasw.executor;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
+import fr.insalyon.creatis.gasw.GaswUtil;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -65,7 +64,7 @@ public class LocalExecutor extends Executor {
     }
 
     @Override
-    public void preProcess() {
+    public void preProcess() throws GaswException {
         scriptName = generateScript();
         jdlName = scriptName.substring(0, scriptName.lastIndexOf(".")) + ".jdl";
     }
@@ -93,21 +92,13 @@ public class LocalExecutor extends Executor {
         public void run() {
 
             try {
-                addJobToMonitor(jobID);
+                addJobToMonitor(jobID, userProxy);
 
-                ProcessBuilder builder = new ProcessBuilder(
-                        "chmod", "+x", Constants.SCRIPT_ROOT + "/" + scriptName);
-
-                builder.redirectErrorStream(true);
-
-                if (!userProxy.isEmpty() && userProxy != null) {
-                    builder.environment().put("X509_USER_PROXY", userProxy);
-                }
-
-                Process process = builder.start();
+                Process process = GaswUtil.getProcess(userProxy, "chmod", "+x", 
+                        Constants.SCRIPT_ROOT + "/" + scriptName);
                 process.waitFor();
 
-                BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                BufferedReader r = GaswUtil.getBufferedReader(process);
                 String cout = "";
                 String s = null;
                 while ((s = r.readLine()) != null) {

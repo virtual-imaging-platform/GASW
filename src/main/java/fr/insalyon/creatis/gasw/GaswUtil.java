@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -32,29 +32,64 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.dao;
+package fr.insalyon.creatis.gasw;
 
-import fr.insalyon.creatis.gasw.bean.Job;
-import fr.insalyon.creatis.gasw.monitor.GaswStatus;
-import java.util.Map;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author Rafael Silva
  */
-public interface JobDAO {
+public class GaswUtil {
 
-    public void add(Job job) throws DAOException;
+    private static final int[] times = {0, 10, 30, 45, 60, 90, 150, 300, 600, 900};
 
-    public void update(Job job) throws DAOException;
+    /**
+     * 
+     * @param logger
+     * @param message
+     * @param index
+     * @return
+     * @throws InterruptedException 
+     */
+    public static int sleep(Logger logger, String message, int index) 
+            throws InterruptedException {
+        
+        if (index < times.length - 1) {
+            index++;
+        }
+        logger.warn(message + ". Next "
+                + "attempt in " + times[index] + " seconds.");
+        Thread.sleep(times[index] * 1000);
+        return index;
+    }
 
-    public void remove(Job job) throws DAOException;
+    /**
+     * 
+     * @param strings
+     * @return 
+     */
+    public static Process getProcess(String proxy, String... strings) throws IOException {
 
-    public Job getJobByID(String id) throws DAOException;
+        ProcessBuilder builder = new ProcessBuilder(strings);
+        builder.redirectErrorStream(true);
 
-    public void updateStatus(Map<GaswStatus, String> jobStatus) throws DAOException;
-    
-    public void updateMinorStatus(String jobId, int minorStatus) throws DAOException;
-    
-    public Map<String, GaswStatus> getSignaledJobs() throws DAOException;
+        if (proxy != null && !proxy.isEmpty()) {
+            builder.environment().put("X509_USER_PROXY", proxy);
+        }
+
+        return builder.start();
+    }
+
+    /**
+     * 
+     * @param process
+     * @return 
+     */
+    public static BufferedReader getBufferedReader(Process process) {
+        return new BufferedReader(new InputStreamReader(process.getInputStream()));
+    }
 }

@@ -34,8 +34,9 @@
  */
 package fr.insalyon.creatis.gasw.bean;
 
+import fr.insalyon.creatis.gasw.monitor.GaswStatus;
 import fr.insalyon.creatis.gasw.monitor.Monitor;
-import fr.insalyon.creatis.gasw.monitor.Monitor.Status;
+import javax.net.ssl.SSLEngineResult.Status;
 
 /**
  *
@@ -44,7 +45,7 @@ import fr.insalyon.creatis.gasw.monitor.Monitor.Status;
 public class Job {
 
     private String id;
-    private Monitor.Status status;
+    private GaswStatus status;
     private int exitCode;
     private int creation;
     private int queued;
@@ -58,11 +59,11 @@ public class Job {
     private int startTime;
     private String parameters;
 
-    public Job(String id, Monitor.Status status, String parameters, String command) {
+    public Job(String id, GaswStatus status, String parameters, String command) {
         this(id, status, -1, 0, 0, 0, 0, 0, 0, null, command, "", parameters);
     }
 
-    public Job(String id, Status status, int exitCode, int creation, int queued,
+    public Job(String id, GaswStatus status, int exitCode, int creation, int queued,
             int download, int running, int upload, int end, Node node,
             String command, String fileName, String parameters) {
 
@@ -141,11 +142,11 @@ public class Job {
         this.running = running;
     }
 
-    public Status getStatus() {
+    public GaswStatus getStatus() {
         return status;
     }
 
-    public void setStatus(Status status) {
+    public void setStatus(GaswStatus status) {
         this.status = status;
     }
 
