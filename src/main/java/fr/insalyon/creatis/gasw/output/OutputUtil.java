@@ -39,6 +39,7 @@ import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.bean.Node;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
+import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -47,6 +48,9 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
@@ -75,7 +79,7 @@ public abstract class OutputUtil {
      * @return Array with the standard output and error files respectively.
      *
      */
-    public abstract GaswOutput getOutputs(String jobID, String proxy);
+    public abstract GaswOutput getOutputs(String jobID, Proxy userProxy);
 
     /**
      *
@@ -294,5 +298,47 @@ public abstract class OutputUtil {
                 logger.debug(stack);
             }
         }
+    }
+
+    protected List<URI> getUploadedResults(File stdOut) {
+        List<URI> uploadedResults = new ArrayList<URI>();
+        try {
+            DataInputStream in = new DataInputStream(new FileInputStream(stdOut));
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+
+            String strLine;
+            boolean isResultUpload = false;
+            String lfc_host = "";
+            int index;
+            while ((strLine = br.readLine()) != null) {
+                
+                if (strLine.contains("LFC_HOST")){
+                    index = strLine.indexOf("=");
+                    lfc_host = strLine.substring(index+1);
+                } else if (strLine.contains("<results_upload>")) {
+                    isResultUpload = true;
+
+                } else if (strLine.contains("</results_upload>")) {
+                    isResultUpload = false;
+
+                } else if (isResultUpload) {
+                    if (strLine.contains("<file_upload")){
+                        index = strLine.indexOf("=");
+                        String uploadedFile = strLine.substring(index+1, strLine.length()-1);
+                        URI uri = null;
+                        if (!"".equals(lfc_host))
+                            uri = URI.create("lfn://" + lfc_host + uploadedFile);
+                        else
+                            uri = URI.create("file://" + uploadedFile);
+                        uploadedResults.add(uri);
+                    }
+                }
+
+            }
+        } catch (IOException ex) {
+            logException(logger, ex);
+        }
+
+        return uploadedResults;
     }
 }
