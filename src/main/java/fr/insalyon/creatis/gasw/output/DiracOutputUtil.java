@@ -35,8 +35,10 @@
 package fr.insalyon.creatis.gasw.output;
 
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.GaswUtil;
+import fr.insalyon.creatis.gasw.ProxyRetrievalException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
@@ -81,58 +83,68 @@ public class DiracOutputUtil extends OutputUtil {
             
             if (job.getStatus() != GaswStatus.CANCELLED 
                     && job.getStatus() != GaswStatus.STALLED) {
+                try {
+                    Process process = GaswUtil.getProcess(userProxy, 
+                            "dirac-wms-job-get-output", jobID);
+                    process.waitFor();
 
-                Process process = GaswUtil.getProcess(userProxy, 
-                        "dirac-wms-job-get-output", jobID);
-                process.waitFor();
+                    if (process.exitValue() == 0) {
+                        stdOut = getStdFile(job, ".out", Constants.OUT_ROOT);
+                        stdErr = getStdFile(job, ".err", Constants.ERR_ROOT);
 
-                if (process.exitValue() == 0) {
-                    stdOut = getStdFile(job, ".out", Constants.OUT_ROOT);
-                    stdErr = getStdFile(job, ".err", Constants.ERR_ROOT);
+                        File outTempDir = new File("./" + jobID);
+                        outTempDir.delete();
 
-                    File outTempDir = new File("./" + jobID);
-                    outTempDir.delete();
+                        int exitCode = parseStdOut(job, stdOut);
+                        exitCode = parseStdErr(job, stdErr, exitCode);
 
-                    int exitCode = parseStdOut(job, stdOut);
-                    exitCode = parseStdErr(job, stdErr, exitCode);
+                        appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
+                        appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
 
-                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
-                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
-                    
-                    switch (exitCode) {
-                        case 0:
-                            gaswExitCode = GaswExitCode.SUCCESS;
-                            uploadedResults = getUploadedResults(stdOut);
-                            break;
-                        case 1:
-                            gaswExitCode = GaswExitCode.ERROR_READ_GRID;
-                            break;
-                        case 2:
-                            gaswExitCode = GaswExitCode.ERROR_WRITE_GRID;
-                            break;
-                        case 6:
-                            gaswExitCode = GaswExitCode.EXECUTION_FAILED;
-                            break;
-                        case 7:
-                            gaswExitCode = GaswExitCode.ERROR_WRITE_LOCAL;
-                            break;
+                        switch (exitCode) {
+                            case 0:
+                                gaswExitCode = GaswExitCode.SUCCESS;
+                                uploadedResults = getUploadedResults(stdOut);
+                                break;
+                            case 1:
+                                gaswExitCode = GaswExitCode.ERROR_READ_GRID;
+                                break;
+                            case 2:
+                                gaswExitCode = GaswExitCode.ERROR_WRITE_GRID;
+                                break;
+                            case 6:
+                                gaswExitCode = GaswExitCode.EXECUTION_FAILED;
+                                break;
+                            case 7:
+                                gaswExitCode = GaswExitCode.ERROR_WRITE_LOCAL;
+                                break;
+                        }
+                    } else {
+
+                        BufferedReader br = GaswUtil.getBufferedReader(process);
+                        String cout = "";
+                        String s = null;
+                        while ((s = br.readLine()) != null) {
+                            cout += s;
+                        }
+
+                        logger.error(cout);
+                        logger.error("Output files do not exist. Job ID: " + jobID);
+
+                        String message = "Output files do not exist.";
+                        stdOut = saveFile(job, ".out", Constants.OUT_ROOT, message);
+                        stdErr = saveFile(job, ".err", Constants.ERR_ROOT, message);
+                        appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, message);
+                        appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, message);
+                        gaswExitCode = GaswExitCode.ERROR_GET_STD;
                     }
-                } else {
-
-                    BufferedReader br = GaswUtil.getBufferedReader(process);
-                    String cout = "";
-                    String s = null;
-                    while ((s = br.readLine()) != null) {
-                        cout += s;
-                    }
-
-                    logger.error(cout);
-                    logger.error("Output files do not exist. Job ID: " + jobID);
-
-                    stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Output files do not exist.");
-                    stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Output files do not exist.");
-                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "Output files do not exist.");
-                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "Output files do not exist.");
+                }
+                catch(ProxyRetrievalException ex) {
+                    logger.error(ex.getMessage());
+                    stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
+                    stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());
+                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, ex.getMessage());
+                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
                 }
 

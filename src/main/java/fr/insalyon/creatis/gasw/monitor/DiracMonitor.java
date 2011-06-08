@@ -181,8 +181,7 @@ public class DiracMonitor extends Monitor {
     @Override
     protected void kill(String jobID) {
         try {
-            Process process = GaswUtil.getProcess(null,
-                    "dirac-wms-job-kill", jobID);
+            Process process = GaswUtil.getProcess("dirac-wms-job-kill", jobID);
             process.waitFor();
 
             BufferedReader br = GaswUtil.getBufferedReader(process);
@@ -208,8 +207,7 @@ public class DiracMonitor extends Monitor {
     @Override
     protected void reschedule(String jobID) {
         try {
-            Process process = GaswUtil.getProcess(null,
-                    "dirac-wms-job-reschedule", jobID);
+            Process process = GaswUtil.getProcess("dirac-wms-job-reschedule", jobID);
             process.waitFor();
 
             BufferedReader br = GaswUtil.getBufferedReader(process);

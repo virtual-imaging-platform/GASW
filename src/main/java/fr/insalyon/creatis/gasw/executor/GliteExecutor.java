@@ -38,6 +38,7 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
+import fr.insalyon.creatis.gasw.ProxyRetrievalException;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.GliteJdlGenerator;
 import java.io.BufferedReader;
 import java.io.File;
@@ -93,6 +94,8 @@ public class GliteExecutor extends Executor {
             logger.info("Glite Executor Job ID: " + jobID);
             return jobID;
 
+        } catch (ProxyRetrievalException ex) {
+            throw new GaswException("Job submission failed: " + ex.getMessage());
         } catch (InterruptedException ex) {
             logException(logger, ex);
         } catch (IOException ex) {

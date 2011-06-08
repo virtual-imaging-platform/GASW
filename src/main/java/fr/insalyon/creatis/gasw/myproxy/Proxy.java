@@ -1,5 +1,6 @@
 package fr.insalyon.creatis.gasw.myproxy;
 
+import fr.insalyon.creatis.gasw.ProxyRetrievalException;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -33,11 +34,11 @@ public class Proxy {
         this.proxyServer = new MyProxyServer();
     }
 
-    public File init() {
+    public File init() throws ProxyRetrievalException {
         return init(DEFAULT_DELEGATED_PROXY_LIFETIME);
     }
 
-    public File init(int lifetime) {
+    public File init(int lifetime) throws ProxyRetrievalException {
 
         if (lifetime < MIN_LIFETIME_FOR_USING) {
             lifetime = DEFAULT_DELEGATED_PROXY_LIFETIME;
@@ -46,11 +47,10 @@ public class Proxy {
 
         File proxyFile = null;
         try {
-
             proxyFile = File.createTempFile("gasw_", ".proxy");
             myProxyLogon(proxyFile);
-
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             log.error("Cannot create temporary file to store proxy.");
         }
 
@@ -58,11 +58,11 @@ public class Proxy {
 
     }
     
-    public File initWithVOMSExtension() {
+    public File initWithVOMSExtension() throws ProxyRetrievalException {
         return initWithVOMSExtension(DEFAULT_DELEGATED_PROXY_LIFETIME);
     }
 
-    public File initWithVOMSExtension(int lifetime) {
+    public File initWithVOMSExtension(int lifetime) throws ProxyRetrievalException {
 
         if (lifetime < MIN_LIFETIME_FOR_USING) {
             lifetime = DEFAULT_DELEGATED_PROXY_LIFETIME;
@@ -71,12 +71,12 @@ public class Proxy {
 
         File proxyFile = null;
         try {
-
             proxyFile = File.createTempFile("gasw_", ".proxy");
             myProxyLogon(proxyFile);
             vomsProxyInit(proxyFile);
 
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             log.error("Cannot create temporary file to store proxy.");
         }
 
@@ -84,7 +84,7 @@ public class Proxy {
 
     }
     
-    private void myProxyLogon(File proxyFile) {
+    private void myProxyLogon(File proxyFile) throws ProxyRetrievalException {
 
         List<String> command = new ArrayList<String>();
         command.add("myproxy-logon");
@@ -109,36 +109,21 @@ public class Proxy {
         try {
             process = builder.start();
 
-            BufferedReader outReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
+            //BufferedReader outReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
             BufferedReader errReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getErrorStream())));
-            BufferedWriter out = null;
-            BufferedWriter err = null;
 
             //   File directory = proxyFile.getParentFile();
             File stdout = new File(proxyFile.getName() + "_logon-stdout");
             File stderr = new File(proxyFile.getName() + "_logon-stderr");
-            out = new BufferedWriter(new FileWriter(stdout));
-            err = new BufferedWriter(new FileWriter(stderr));
+            //String out = null;
+            String err = null;
             String line;
 
-            while ((line = outReader.readLine()) != null) {
-
-                out.write(line);
-                out.newLine();
-            }
+            /*while ((line = outReader.readLine()) != null) {
+                out += line + "\n";
+            }*/
             while ((line = errReader.readLine()) != null) {
-
-                err.write(line);
-                err.newLine();
-            }
-
-            if (out != null) {
-                out.flush();
-                out.close();
-            }
-            if (err != null) {
-                err.flush();
-                err.close();
+                err += line + "\n";
             }
 
             int status = process.waitFor();
@@ -148,12 +133,19 @@ public class Proxy {
                 stdout.delete();
                 stderr.delete();
             } else {
-                throw new java.io.IOException("myproxy-logon invocation failed!");
+                String failure;
+                if(err.contains("certificate has expired")) {
+                    failure = "proxy retrieval failed: proxy available from " + proxyServer.getServer() + " has expired";
+                }
+                else {
+                    failure = "myproxy-logon invocation failed: " + err;
+                }
+                throw new ProxyRetrievalException(failure);
             }
         } catch (IOException ex) {
-            log.error("Cannot launch myproxy-logon commmand " + ex.toString());
+            throw new ProxyRetrievalException("Cannot launch myproxy-logon commmand " + ex.toString()); 
         } catch (InterruptedException ex) {
-            log.error("The execution was interrupted.");
+            throw new ProxyRetrievalException("Cannot launch myproxy-logon commmand " + ex.toString()); 
         }
     }
 

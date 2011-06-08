@@ -48,6 +48,7 @@ import org.apache.log4j.Logger;
 public class GaswUtil {
 
     private static final int[] times = {0, 10, 30, 45, 60, 90, 150, 300, 600, 900};
+    private static final Logger log = Logger.getLogger(GaswUtil.class);
 
     /**
      * 
@@ -74,7 +75,7 @@ public class GaswUtil {
      * @param strings
      * @return 
      */
-    public static Process getProcess(Proxy userProxy, String... strings) throws IOException {
+    public static Process getProcess(Proxy userProxy, String... strings) throws IOException, ProxyRetrievalException {
 
         ProcessBuilder builder = new ProcessBuilder(strings);
         builder.redirectErrorStream(true);
@@ -86,12 +87,26 @@ public class GaswUtil {
             }
             else if (strings[0].contains("dirac")){
                 proxy = userProxy.init();
-            }     
-            
+            }
+
             builder.environment().put("X509_USER_PROXY", proxy.getAbsolutePath());
         }
 
         return builder.start();
+    }
+
+    /**
+     * 
+     * @param strings
+     * @return 
+     */
+    public static Process getProcess(String... strings) throws IOException {
+        try {
+            return getProcess(null, strings);
+        }
+        catch(ProxyRetrievalException e) {
+            return null;
+        }
     }
 
     /**

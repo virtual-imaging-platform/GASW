@@ -89,7 +89,7 @@ public class DataManager {
     public synchronized void replicate(URI uri) throws GaswException {
 
         try {
-            Process process = GaswUtil.getProcess(null, "lcg-lr", "lfn:" + uri.getPath());
+            Process process = GaswUtil.getProcess("lcg-lr", "lfn:" + uri.getPath());
 
             BufferedReader br = GaswUtil.getBufferedReader(process);
             String s = null;
@@ -125,7 +125,7 @@ public class DataManager {
                         String[] source = getSourceTypeAndSURL(
                                 replica.getHost(), replica.getPath());
 
-                        process = GaswUtil.getProcess(null, "lcg-rep", "-b",
+                        process = GaswUtil.getProcess("lcg-rep", "-b",
                                 "-U", "srmv2", "-d", getDestinationSURL(),
                                 "-T", source[0], source[1]);
 

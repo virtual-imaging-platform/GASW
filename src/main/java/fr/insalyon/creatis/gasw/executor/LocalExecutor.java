@@ -38,6 +38,7 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
+import fr.insalyon.creatis.gasw.ProxyRetrievalException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -94,7 +95,7 @@ public class LocalExecutor extends Executor {
             try {
                 addJobToMonitor(jobID, userProxy);
 
-                Process process = GaswUtil.getProcess(userProxy, "chmod", "+x", 
+                Process process = GaswUtil.getProcess("chmod", "+x", 
                         Constants.SCRIPT_ROOT + "/" + scriptName);
                 process.waitFor();
 
@@ -102,7 +103,7 @@ public class LocalExecutor extends Executor {
                 String cout = "";
                 String s = null;
                 while ((s = r.readLine()) != null) {
-                    cout += s;
+                    cout += s + "\n";
                 }
 
                 int exitValue = process.exitValue();

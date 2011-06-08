@@ -39,6 +39,7 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
+import fr.insalyon.creatis.gasw.ProxyRetrievalException;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.DiracJdlGenerator;
 import fr.insalyon.creatis.gasw.release.Execution;
 import fr.insalyon.creatis.gasw.release.Infrastructure;
@@ -80,7 +81,7 @@ public class DiracExecutor extends Executor {
     }
 
     @Override
-    public String submit() throws GaswException {
+    public String submit() throws ProxyRetrievalException, GaswException {
         super.submit();
         try {
             Process process = GaswUtil.getProcess(userProxy,
@@ -92,7 +93,7 @@ public class DiracExecutor extends Executor {
             String cout = "";
             String s = null;
             while ((s = br.readLine()) != null) {
-                cout += s;
+                cout += s + "\n";
             }
 
             if (process.exitValue() != 0) {
