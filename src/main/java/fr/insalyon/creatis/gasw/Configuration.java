@@ -71,9 +71,9 @@ public class Configuration {
     public static int TIMEOUT = 100000;
     public static int SLEEPTIME = 20000;
     // Data Manager Configuration
-    public static String DATA_MANAGER_HOST = "data-manager.grid.creatis.insa-lyon.fr";
-    public static int DATA_MANAGER_PORT = 8446;
-    public static String DATA_MANAGER_HOME = "/dpm/grid.creatis.insa-lyon.fr/home/biomed/generated";
+    public static String DATA_MANAGER_HOST = "";
+    public static int DATA_MANAGER_PORT = -1;
+    public static String DATA_MANAGER_HOME = "";
     // DIRAC Configuration
     public static boolean USE_DIRAC_SERVICE = false;
     public static int DIRAC_SERVICE_PORT = 50009;
