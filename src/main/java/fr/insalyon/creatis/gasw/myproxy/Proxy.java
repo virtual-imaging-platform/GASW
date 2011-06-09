@@ -31,7 +31,7 @@ public class Proxy {
     public Proxy(GaswUserCredentials credentials) {
         this.gaswCredentials = credentials;
         this.lifetime = DEFAULT_DELEGATED_PROXY_LIFETIME;
-        this.proxyServer = new MyProxyServer();
+        this.proxyServer = credentials.getMyproxyServer();
     }
 
     public File init() throws ProxyRetrievalException {

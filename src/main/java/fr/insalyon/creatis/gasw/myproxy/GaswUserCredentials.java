@@ -14,7 +14,9 @@ public class GaswUserCredentials {
     private String dn;
     // vo user is belong to.
     private String vo;
-    
+    // my-proxy server
+    private MyProxyServer myProxyServer;
+   
     public GaswUserCredentials(String login, String password){
         this(login, password, null, DEFAULT_VO); 
     } 
@@ -61,7 +63,35 @@ public class GaswUserCredentials {
     public void setVo(String vo) {
         this.vo = vo;
     }
+
+    /**
+     * Get my-proxy server.
+     * @return my-proxy server
+     */
+    public MyProxyServer getMyproxyServer() {
+        if(myProxyServer == null) {
+            myProxyServer = new MyProxyServer();
+        }
+        return myProxyServer;
+    }
     
+   /**
+     * Set my-proxy server.
+     * @param my-proxy server
+     */
+    public void setMyproxyServer(MyProxyServer myProxyServer) {
+        this.myProxyServer = myProxyServer;
+    }
+
+    /**
+     * Set my-proxy server.
+     * @param serverName my-proxy server name
+     * @param serverPort my-proxy service port
+     */
+    public void setMyproxyServer(String serverName, int serverPort) {
+        this.myProxyServer = new MyProxyServer(serverName, serverPort);
+    }
+     
     private String RFC2253toGlobusFormat(String dn) {
 
         String[] attributes = dn.split(",");

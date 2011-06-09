@@ -6,9 +6,9 @@ package fr.insalyon.creatis.gasw.myproxy;
  */
 public class MyProxyServer {
     // default myproxy server
-    private static final String DEFAULT_SERVER = "kingkong.grid.creatis.insa-lyon.fr";
+    public static final String DEFAULT_SERVER = "kingkong.grid.creatis.insa-lyon.fr";
     // default myproxy server port
-    private static final int DEFAULT_PORT = 9011;
+    public static final int DEFAULT_PORT = 9011;
     // myproxy server
     private String server;
     // myproxy server port
