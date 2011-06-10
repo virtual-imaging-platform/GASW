@@ -34,7 +34,6 @@
  */
 package fr.insalyon.creatis.gasw.executor;
 
-import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswInput;
 
@@ -44,13 +43,13 @@ import fr.insalyon.creatis.gasw.GaswInput;
  */
 public class ExecutorFactory {
 
-    public static Executor getExecutor(String version, GaswInput gaswInput) {
+    public static Executor getExecutor(String version, String target, GaswInput gaswInput) {
 
         if (version.equals(Constants.VERSION_GRID)) {
-            if (Configuration.GRID.equals(Constants.GRID_DIRAC)) {
+            if (target.equals(Constants.GRID_DIRAC)) {
                 return new DiracExecutor(version, gaswInput);
             }
-            if (Configuration.GRID.equals(Constants.GRID_GLITE)) {
+            if (target.equals(Constants.GRID_GLITE)) {
                 return new GliteExecutor(version, gaswInput);
             }
         } else if (version.equals(Constants.VERSION_LOCAL)) {

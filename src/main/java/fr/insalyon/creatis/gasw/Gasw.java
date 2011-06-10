@@ -61,6 +61,8 @@ public class Gasw {
     private Object client;
     private volatile Map<String, Proxy> finishedJobs;
     private volatile boolean gettingOutputs;
+    private String version;
+    private String target;
 
     /**
      * Gets an instance of GASW
@@ -74,10 +76,28 @@ public class Gasw {
         return instance;
     }
 
+    /**
+     * Gets an instance of GASW
+     * 
+     * @return Instance of GASW
+     */
+    public synchronized static Gasw getInstance(String version, String target) throws GaswException {
+        if (instance == null) {
+            instance = new Gasw(version, target);
+        }
+        return instance;
+    }
+
     private Gasw() throws GaswException {
+        this(Constants.VERSION_GRID, Constants.GRID_GLITE);
+    }
+    
+    private Gasw(String version, String target) throws GaswException {
         PropertyConfigurator.configure(
                 Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
         Configuration.setUp();
+        this.version = version;
+        this.target = target;
         finishedJobs = new HashMap<String, Proxy>();
         notification = new GaswNotification();
         notification.start();
@@ -107,13 +127,15 @@ public class Gasw {
         if (this.client == null) {
             this.client = client;
         }
+        // if the jigsaw descriptor contains a target infrastruture, this overides the default target
+        String ltarget = this.target;
         for (EnvVariable v : gaswInput.getRelease().getConfigurations()) {
             if (v.getCategory() == EnvVariable.Category.SYSTEM
                     && v.getName().equals("gridTarget")) {
-                Configuration.GRID = v.getValue();
+                ltarget = v.getValue();
             }
         }
-        Executor executor = ExecutorFactory.getExecutor("GRID", gaswInput);
+        Executor executor = ExecutorFactory.getExecutor(version, ltarget, gaswInput);
         executor.preProcess();
         
         if (credentials != null) {
