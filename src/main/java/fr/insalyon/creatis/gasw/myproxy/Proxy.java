@@ -3,13 +3,9 @@ package fr.insalyon.creatis.gasw.myproxy;
 import fr.insalyon.creatis.gasw.ProxyRetrievalException;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -113,9 +109,10 @@ public class Proxy {
             BufferedReader errReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getErrorStream())));
 
             //   File directory = proxyFile.getParentFile();
-            File stdout = new File(proxyFile.getName() + "_logon-stdout");
-            File stderr = new File(proxyFile.getName() + "_logon-stderr");
-            //String out = null;
+            //File stdout = new File(proxyFile.getName() + "_logon-stdout");
+            //File stderr = new File(proxyFile.getName() + "_logon-stderr");
+            //BufferedWriter out = new BufferedWriter(new FileWriter(stdout));
+            //BufferedWriter err = new BufferedWriter(new FileWriter(stderr));
             String err = null;
             String line;
 
@@ -130,8 +127,8 @@ public class Proxy {
             if (status == 0) {
                 log.info("Proxy successfully downloaded to " + proxyFile.getAbsolutePath());
                 // download proxy succesfully, delete stdout/err file
-                stdout.delete();
-                stderr.delete();
+                //stdout.delete();
+                //stderr.delete();
             } else {
                 String failure;
                 if(err.contains("certificate has expired")) {
@@ -153,10 +150,11 @@ public class Proxy {
      * append voms extension to a existing proxy
      * @param proxyFile file storing proxy downloaded from myProxy server
      */
-    private void vomsProxyInit(File proxyFile) {
+    private void vomsProxyInit(File proxyFile) throws ProxyRetrievalException {
 
         List<String> command = new ArrayList<String>();
 
+        command.add("voms-proxy-init");
         command.add("-noregen");
         command.add("-voms");
         command.add(gaswCredentials.getVo());
@@ -177,49 +175,45 @@ public class Proxy {
         try {
             process = builder.start();
 
-            BufferedReader outReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
+            //BufferedReader outReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
             BufferedReader errReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getErrorStream())));
-            BufferedWriter out = null;
-            BufferedWriter err = null;
+            //String out = null;
+            String err = null;
 
-            File stdout = new File(proxyFile.getName() + "_extension-stdout");
-            File stderr = new File(proxyFile.getName() + "_extension-stderr");
-            out = new BufferedWriter(new FileWriter(stdout));
-            err = new BufferedWriter(new FileWriter(stderr));
+            //File stdout = new File(proxyFile.getName() + "_extension-stdout");
+            //File stderr = new File(proxyFile.getName() + "_extension-stderr");
+            //BufferedWriter out = new BufferedWriter(new FileWriter(stdout));
+            //BufferedWriter err = new BufferedWriter(new FileWriter(stderr));
             String line;
 
-            while ((line = outReader.readLine()) != null) {
-
-                out.write(line);
-                out.newLine();
-            }
+            int status = process.waitFor();
+            /*while ((line = outReader.readLine()) != null) {
+                out += line + "\n";
+            }*/
             while ((line = errReader.readLine()) != null) {
-
-                err.write(line);
-                err.newLine();
+                err += line + "\n";
             }
 
-            if (out != null) {
+            /*if (out != null) {
                 out.flush();
                 out.close();
             }
             if (err != null) {
                 err.flush();
                 err.close();
-            }
+            }*/
 
-            int status = process.waitFor();
             if (status == 0) {
                 log.info("Voms extension successfully added to proxy " + proxyFile.getAbsolutePath());
-                stdout.delete();
-                stderr.delete();
+                //stdout.delete();
+                //stderr.delete();
             } else {
-                FileReader fileReader = null;
+                /*FileReader fileReader = null;
                 try {
                     fileReader = new FileReader(stderr);
                 } catch (java.io.FileNotFoundException ex) {
                     throw new java.io.IOException("The file " + stderr.getCanonicalPath()
-                            + " is does not exist or cannot be read", ex);
+                            + " does not exist or cannot be read", ex);
                 }
 
                 LineNumberReader lineNumberReader = new LineNumberReader(fileReader);
@@ -229,13 +223,17 @@ public class Proxy {
                         throw new java.io.IOException("voms-proxy-init execution failed!");
                     }
                 }
-                log.warn("Voms extension added. See " + stdout.getCanonicalPath() + " for details");
+                log.warn("Voms extension failed. See " + stdout.getCanonicalPath() + " for details");*/
+                throw new ProxyRetrievalException("voms-proxy-init invocation failed: " + err);
             }
         } catch (IOException ex) {
-            log.error("Cannot launch voms-proxy-init commmand " + ex.toString());
+             throw new ProxyRetrievalException("Cannot launch voms-proxy-init commmand " + ex.toString());
         } catch (InterruptedException ex) {
-            log.error("The execution was interrupted.");
+             throw new ProxyRetrievalException("Cannot launch voms-proxy-init commmand " + ex.toString());
         }
 
     }
+    
+    // proxy initialization command line
+    // env GT_PROXY_MODE=old myproxy-init -s kingkong.grid.creatis.insa-lyon.fr -p 9011 -d -n
 }
