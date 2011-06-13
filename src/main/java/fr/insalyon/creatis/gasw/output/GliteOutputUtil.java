@@ -77,7 +77,7 @@ public class GliteOutputUtil extends OutputUtil {
             File stdErr = null;
             File appStdOut = null;
             File appStdErr = null;
-            
+
             if (job.getStatus() != GaswStatus.CANCELLED) {
 
                 String dir = "out";
@@ -138,14 +138,13 @@ public class GliteOutputUtil extends OutputUtil {
                         appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "Output files do not exist.");
                         gaswExitCode = GaswExitCode.ERROR_GET_STD;
                     }
-                }
-                catch(ProxyRetrievalException ex) {
+                } catch (ProxyRetrievalException ex) {
                     logger.error(ex.getMessage());
                     stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
                     stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());
                     appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, ex.getMessage());
                     appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
-                    gaswExitCode = GaswExitCode.ERROR_GET_STD;                    
+                    gaswExitCode = GaswExitCode.ERROR_GET_STD;
                 }
             } else {
                 stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Job Cancelled");

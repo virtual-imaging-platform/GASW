@@ -60,12 +60,12 @@ public class DiracOutputUtil extends OutputUtil {
     public DiracOutputUtil(int startTime) {
         super(startTime);
     }
-    
+
     @Override
     public GaswOutput getOutputs(String jobID) {
         return getOutputs(jobID, null);
     }
-    
+
     @Override
     public GaswOutput getOutputs(String jobID, Proxy userProxy) {
         try {
@@ -76,11 +76,11 @@ public class DiracOutputUtil extends OutputUtil {
             File stdErr = null;
             File appStdOut = null;
             File appStdErr = null;
-            
-            if (job.getStatus() != GaswStatus.CANCELLED 
+
+            if (job.getStatus() != GaswStatus.CANCELLED
                     && job.getStatus() != GaswStatus.STALLED) {
                 try {
-                    Process process = GaswUtil.getProcess(userProxy, 
+                    Process process = GaswUtil.getProcess(userProxy,
                             "dirac-wms-job-get-output", jobID);
                     process.waitFor();
 
@@ -133,8 +133,7 @@ public class DiracOutputUtil extends OutputUtil {
                         appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, message);
                         gaswExitCode = GaswExitCode.ERROR_GET_STD;
                     }
-                }
-                catch(ProxyRetrievalException ex) {
+                } catch (ProxyRetrievalException ex) {
                     logger.error(ex.getMessage());
                     stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
                     stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());
