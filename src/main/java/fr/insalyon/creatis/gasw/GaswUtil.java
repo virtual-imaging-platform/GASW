@@ -48,7 +48,6 @@ import org.apache.log4j.Logger;
 public class GaswUtil {
 
     private static final int[] times = {0, 10, 30, 45, 60, 90, 150, 300, 600, 900};
-    private static final Logger log = Logger.getLogger(GaswUtil.class);
 
     /**
      * 
@@ -58,9 +57,9 @@ public class GaswUtil {
      * @return
      * @throws InterruptedException 
      */
-    public static int sleep(Logger logger, String message, int index) 
+    public static int sleep(Logger logger, String message, int index)
             throws InterruptedException {
-        
+
         if (index < times.length - 1) {
             index++;
         }
@@ -75,20 +74,19 @@ public class GaswUtil {
      * @param strings
      * @return 
      */
-    public static Process getProcess(Proxy userProxy, String... strings) throws IOException, ProxyRetrievalException {
+    public static Process getProcess(Proxy userProxy, String... strings)
+            throws IOException, ProxyRetrievalException {
 
         ProcessBuilder builder = new ProcessBuilder(strings);
         builder.redirectErrorStream(true);
 
         if (userProxy != null) {
             File proxy = null;
-            if (strings[0].contains("glite")){
+            if (strings[0].contains("glite")) {
                 proxy = userProxy.initWithVOMSExtension();
-            }
-            else if (strings[0].contains("dirac")){
+            } else if (strings[0].contains("dirac")) {
                 proxy = userProxy.init();
             }
-
             builder.environment().put("X509_USER_PROXY", proxy.getAbsolutePath());
         }
 
@@ -103,8 +101,7 @@ public class GaswUtil {
     public static Process getProcess(String... strings) throws IOException {
         try {
             return getProcess(null, strings);
-        }
-        catch(ProxyRetrievalException e) {
+        } catch (ProxyRetrievalException e) {
             return null;
         }
     }

@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw.monitor;
 
 import fr.insalyon.creatis.gasw.Configuration;
+import fr.insalyon.creatis.gasw.GaswUtil;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -67,6 +68,8 @@ public class DiracDatabase {
     }
 
     public synchronized Map<String, String> getJobsStatus(List<String> idsList) {
+        
+        Map<String, String> jobsStatus = new HashMap<String, String>();
         try {
             if (connection.isClosed() || !connection.isValid(10)) {
                 connect();
@@ -77,7 +80,9 @@ public class DiracDatabase {
                 if (sb.length() > 0) {
                     sb.append(" OR ");
                 }
-                sb.append("JobID='" + id + "'");
+                sb.append("JobID='");
+                sb.append(id);
+                sb.append("'");
             }
 
             PreparedStatement ps = connection.prepareStatement(
@@ -87,8 +92,7 @@ public class DiracDatabase {
                     + " OR Status = 'Killed' OR Status = 'Stalled');");
 
             ResultSet rs = ps.executeQuery();
-
-            Map<String, String> jobsStatus = new HashMap<String, String>();
+            
             while (rs.next()) {
                 String jobID = rs.getString(1);
                 String jobStatus = rs.getString(2);
@@ -99,22 +103,31 @@ public class DiracDatabase {
         } catch (SQLException ex) {
             logger.error(ex);
         }
-        return null;
+        return jobsStatus;
     }
 
     private synchronized void connect() {
 
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-            connection = DriverManager.getConnection(
-                    "jdbc:mysql://" + Configuration.MYSQL_HOST + ":"
-                    + Configuration.MYSQL_PORT + "/JobDB",
-                    Configuration.MYSQL_DB_USER, "");
+        int index = 0;
+        while (true) {
+            try {
+                Class.forName("com.mysql.jdbc.Driver");
+                connection = DriverManager.getConnection(
+                        "jdbc:mysql://" + Configuration.MYSQL_HOST + ":"
+                        + Configuration.MYSQL_PORT + "/JobDB",
+                        Configuration.MYSQL_DB_USER, "");
+                break;
 
-        } catch (ClassNotFoundException ex) {
-            logger.error(ex);
-        } catch (SQLException ex) {
-            logger.error(ex);
+            } catch (ClassNotFoundException ex) {
+                logger.error(ex);
+                break;
+            } catch (SQLException ex) {
+                try {
+                    index = GaswUtil.sleep(logger, "Failed to reconnect to DIRAC database", index);
+                } catch (InterruptedException ex1) {
+                    logger.error(ex1);
+                }
+            }
         }
     }
 
