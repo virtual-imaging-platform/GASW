@@ -262,7 +262,7 @@ public class DataManagement extends AbstractGenerator {
         sb.append("  GUID=`lcg-cr ${OPTS} -d ${DM_DEST} file:${FILE}`\n");
         sb.append("  if [ $? = 0 ]\n");
         sb.append("  then\n");
-        sb.append("    lcg-aa ${GUID} ${LFN}\n");
+        sb.append("    lcg-aa ${GUID} lfn:${LFN}\n");
         sb.append("    if [ $? = 0 ]\n");
         sb.append("    then\n");
         sb.append("      info \"Data successfully copied to Data Manager.\";\n");

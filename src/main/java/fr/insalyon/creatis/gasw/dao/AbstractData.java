@@ -45,11 +45,11 @@ import org.apache.log4j.Logger;
  *
  * @author Rafael Silva
  */
-public class AbstractData {
+public abstract class AbstractData {
 
     private static final Logger logger = Logger.getLogger(AbstractData.class);
     private static int index = 0;
-    private static transient boolean recovering = false;
+    private static volatile boolean recovering = false;
     protected Connection connection;
 
     protected AbstractData() {
