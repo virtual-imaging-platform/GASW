@@ -63,6 +63,7 @@ public abstract class OutputUtil {
     private int startTime;
     private StringBuilder appStdOut;
     private StringBuilder appStdErr;
+    protected List<URI> uploadedResults = null;
 
     public OutputUtil(int startTime) {
         this.startTime = startTime;
@@ -103,6 +104,8 @@ public abstract class OutputUtil {
 
             int startExec = 0;
             boolean isAppExec = false;
+            boolean isResultUpload = false;
+            String lfcHost = "";
 
             while ((strLine = br.readLine()) != null) {
 
@@ -170,6 +173,24 @@ public abstract class OutputUtil {
 
                 } else if (strLine.startsWith("MemTotal:")) {
                     node.setMemTotal(new Integer(strLine.split("\\s+")[1]));
+
+                } else if (strLine.startsWith("<results_upload>")) {
+                    isResultUpload = true;
+                    uploadedResults = new ArrayList<URI>();
+
+                } else if (strLine.startsWith("</results_upload>")) {
+                    isResultUpload = false;
+
+                } else if (strLine.startsWith("LFC_HOST")) {
+                    lfcHost = strLine.substring(strLine.indexOf("=") + 1);
+
+                } else if (strLine.startsWith("<file_upload") && isResultUpload) {
+                    String uploadedFile = strLine.substring(
+                            strLine.indexOf("=") + 1, strLine.length() - 1);
+                    URI uri = lfcHost.isEmpty()
+                            ? URI.create("file://" + uploadedFile)
+                            : URI.create("lfn://" + lfcHost + uploadedFile);
+                    uploadedResults.add(uri);
                 }
             }
 
@@ -298,47 +319,5 @@ public abstract class OutputUtil {
                 logger.debug(stack);
             }
         }
-    }
-
-    protected List<URI> getUploadedResults(File stdOut) {
-        List<URI> uploadedResults = new ArrayList<URI>();
-        try {
-            DataInputStream in = new DataInputStream(new FileInputStream(stdOut));
-            BufferedReader br = new BufferedReader(new InputStreamReader(in));
-
-            String strLine;
-            boolean isResultUpload = false;
-            String lfc_host = "";
-            int index;
-            while ((strLine = br.readLine()) != null) {
-                
-                if (strLine.contains("LFC_HOST")){
-                    index = strLine.indexOf("=");
-                    lfc_host = strLine.substring(index+1);
-                } else if (strLine.contains("<results_upload>")) {
-                    isResultUpload = true;
-
-                } else if (strLine.contains("</results_upload>")) {
-                    isResultUpload = false;
-
-                } else if (isResultUpload) {
-                    if (strLine.contains("<file_upload")){
-                        index = strLine.indexOf("=");
-                        String uploadedFile = strLine.substring(index+1, strLine.length()-1);
-                        URI uri = null;
-                        if (!"".equals(lfc_host))
-                            uri = URI.create("lfn://" + lfc_host + uploadedFile);
-                        else
-                            uri = URI.create("file://" + uploadedFile);
-                        uploadedResults.add(uri);
-                    }
-                }
-
-            }
-        } catch (IOException ex) {
-            logException(logger, ex);
-        }
-
-        return uploadedResults;
     }
 }

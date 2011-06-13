@@ -42,8 +42,6 @@ import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.io.File;
-import java.net.URI;
-import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
@@ -76,12 +74,10 @@ public class LocalOutputUtil extends OutputUtil {
 
             File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
             File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
-            List<URI> uploadedResults = null;
             GaswExitCode gaswExitCode = GaswExitCode.UNDEFINED;
             switch (exitCode) {
                 case 0:
                     gaswExitCode = GaswExitCode.SUCCESS;
-                    uploadedResults = getUploadedResults(stdOut);
                     break;
                 case 1:
                     gaswExitCode = GaswExitCode.ERROR_READ_GRID;

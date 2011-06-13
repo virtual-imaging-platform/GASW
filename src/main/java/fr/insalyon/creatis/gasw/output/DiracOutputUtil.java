@@ -35,7 +35,6 @@
 package fr.insalyon.creatis.gasw.output;
 
 import fr.insalyon.creatis.gasw.Constants;
-import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.ProxyRetrievalException;
@@ -48,8 +47,6 @@ import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
@@ -79,7 +76,6 @@ public class DiracOutputUtil extends OutputUtil {
             File stdErr = null;
             File appStdOut = null;
             File appStdErr = null;
-            List<URI> uploadedResults = null;
             
             if (job.getStatus() != GaswStatus.CANCELLED 
                     && job.getStatus() != GaswStatus.STALLED) {
@@ -104,7 +100,6 @@ public class DiracOutputUtil extends OutputUtil {
                         switch (exitCode) {
                             case 0:
                                 gaswExitCode = GaswExitCode.SUCCESS;
-                                uploadedResults = getUploadedResults(stdOut);
                                 break;
                             case 1:
                                 gaswExitCode = GaswExitCode.ERROR_READ_GRID;
