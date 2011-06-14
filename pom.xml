@@ -116,7 +116,7 @@
         <dependency>
             <groupId>org.glite</groupId>
             <artifactId>security-voms</artifactId>
-            <version>1.9.19.3</version>
+            <version>1.9.19-3</version>
         </dependency>
         
     </dependencies>

@@ -102,9 +102,8 @@ public class Configuration {
         if (useDataManager()) {
             loadSEEntryPoints();
         }
-
-        String cadir = System.getenv("X509_USER_CERTDIR");
-        String vomsdir = System.getenv("X509_USER_VOMSDIR");
+        String cadir = System.getenv("X509_CERT_DIR");
+        String vomsdir = System.getenv("X509_VOMS_DIR");
         if (cadir != null && !cadir.isEmpty()) {
             CADIR = cadir;
         }

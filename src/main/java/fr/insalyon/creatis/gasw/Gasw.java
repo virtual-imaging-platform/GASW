@@ -93,7 +93,7 @@ public class Gasw {
     private Gasw() throws GaswException {
         this(Constants.VERSION_GRID, Constants.GRID_GLITE);
     }
-    
+
     private Gasw(String version, String target) throws GaswException {
         PropertyConfigurator.configure(
                 Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
@@ -142,8 +142,8 @@ public class Gasw {
 
         if (credentials != null) {
             Proxy userProxy = null;
-            if (!credentials.getLogin().isEmpty() && credentials.getLogin() != null
-                    && !credentials.getPassword().isEmpty() && credentials.getPassword() != null) {
+            if (credentials.getLogin() != null && credentials.getPassword() != null
+                    && !credentials.getLogin().isEmpty() && !credentials.getPassword().isEmpty()) {
                 // getting proxy and appending voms extension by login/password using globus/glite API
                 userProxy = new APIProxy(credentials);
             } else {
