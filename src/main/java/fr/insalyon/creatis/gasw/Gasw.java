@@ -38,6 +38,8 @@ import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.executor.Executor;
 import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
+import fr.insalyon.creatis.gasw.myproxy.APIProxy;
+import fr.insalyon.creatis.gasw.myproxy.CLIProxy;
 import fr.insalyon.creatis.gasw.myproxy.GaswUserCredentials;
 import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import fr.insalyon.creatis.gasw.output.OutputUtilFactory;
@@ -137,9 +139,17 @@ public class Gasw {
         }
         Executor executor = ExecutorFactory.getExecutor(version, ltarget, gaswInput);
         executor.preProcess();
-        
+
         if (credentials != null) {
-            Proxy userProxy = new Proxy(credentials);
+            Proxy userProxy = null;
+            if (!credentials.getLogin().isEmpty() && credentials.getLogin() != null
+                    && !credentials.getPassword().isEmpty() && credentials.getPassword() != null) {
+                // getting proxy and appending voms extension by login/password using globus/glite API
+                userProxy = new APIProxy(credentials);
+            } else {
+                // getting proxy and appending voms extension by user DN using command line
+                userProxy = new CLIProxy(credentials);
+            }
             executor.setUserProxy(userProxy);
         }
         return executor.submit();

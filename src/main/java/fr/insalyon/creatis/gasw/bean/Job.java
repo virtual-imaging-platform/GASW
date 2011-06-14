@@ -35,8 +35,6 @@
 package fr.insalyon.creatis.gasw.bean;
 
 import fr.insalyon.creatis.gasw.monitor.GaswStatus;
-import fr.insalyon.creatis.gasw.monitor.Monitor;
-import javax.net.ssl.SSLEngineResult.Status;
 
 /**
  *

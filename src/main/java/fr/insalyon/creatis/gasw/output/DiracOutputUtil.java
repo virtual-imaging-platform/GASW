@@ -38,6 +38,7 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.ProxyRetrievalException;
+import fr.insalyon.creatis.gasw.VOMSExtensionAppendException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
@@ -140,7 +141,15 @@ public class DiracOutputUtil extends OutputUtil {
                     appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, ex.getMessage());
                     appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
+                }catch(VOMSExtensionAppendException ex) {
+                    logger.error(ex.getMessage());
+                    stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
+                    stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());
+                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, ex.getMessage());
+                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
+                    gaswExitCode = GaswExitCode.ERROR_GET_STD;
                 }
+                
 
             } else {
 

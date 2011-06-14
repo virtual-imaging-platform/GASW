@@ -2,7 +2,7 @@ package fr.insalyon.creatis.gasw.myproxy;
 
 /**
  *
- * @author tram
+ * @author Tram Truong Huu
  */
 public class MyProxyServer {
     // default myproxy server

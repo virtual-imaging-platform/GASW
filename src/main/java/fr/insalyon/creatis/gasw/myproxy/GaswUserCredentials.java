@@ -1,10 +1,11 @@
-
 package fr.insalyon.creatis.gasw.myproxy;
+
 /**
  *
- * @author tram
+ * @author Tram Truong Huu
  */
 public class GaswUserCredentials {
+
     private static final String DEFAULT_VO = "biomed";
     // user name of associated proxy stored on myproxy server
     private String login;
@@ -24,14 +25,16 @@ public class GaswUserCredentials {
     public GaswUserCredentials(String login, String password, String dn){
         this(login, password, dn, DEFAULT_VO);        
     }
-    
-    public GaswUserCredentials(String login, String password, String dn, String vo){
+
+    public GaswUserCredentials(String login, String password, String dn, String vo) {
         this.login = login;
         this.password = password;
-        this.dn = RFC2253toGlobusFormat(dn);
+        if (dn != null) {
+            this.dn = RFC2253toGlobusFormat(dn);
+        }
         this.vo = vo;
     }
-    
+
     public String getDn() {
         return dn;
     }

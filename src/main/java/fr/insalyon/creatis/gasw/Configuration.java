@@ -84,6 +84,11 @@ public class Configuration {
     // Derby Configuraiton
     public static String DERBY_HOST = "localhost";
     public static int DERBY_PORT = 1527;
+    // Proxy env variable for appending VOMS Extension
+    // gLite API uses these two environment variables 
+    // instead of X509_USER_CERTDIR and X509_USER_VOMSDIR
+    public static String CADIR = "/etc/grid-security/certificates";
+    public static String VOMSDIR = "/etc/grid-security/vomsdir";
 
     /**
      * GASW setup
@@ -97,6 +102,18 @@ public class Configuration {
         if (useDataManager()) {
             loadSEEntryPoints();
         }
+
+        String cadir = System.getenv("X509_USER_CERTDIR");
+        String vomsdir = System.getenv("X509_USER_VOMSDIR");
+        if (!cadir.isEmpty() && cadir!=null){
+            CADIR = cadir;
+        }
+        if (!vomsdir.isEmpty() && vomsdir!=null){
+            VOMSDIR = vomsdir;
+        }
+        System.setProperty("CADIR", cadir);
+        System.setProperty("VOMSDIR", vomsdir);
+        
     }
 
     private static void loadConfigurationFile() throws GaswException {

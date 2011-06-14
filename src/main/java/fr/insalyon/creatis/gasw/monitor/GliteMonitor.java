@@ -87,7 +87,7 @@ public class GliteMonitor extends Monitor {
                 for (String jobID : monitoredJobs.keySet()) {
                     ids += jobID + " ";
                 }
-                // proxy init and appends voms extension in case each job has a specific proxy
+                // change this code line in case each job is submitted with different user and in case X509_USER_PROXY not set
                 Process process = Runtime.getRuntime().exec("glite-wms-job-status --verbosity 0 --noint " + ids);
                 process.waitFor();
                 BufferedReader br = GaswUtil.getBufferedReader(process);

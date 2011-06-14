@@ -74,19 +74,23 @@ public class GaswUtil {
      * @param strings
      * @return 
      */
-    public static Process getProcess(Proxy userProxy, String... strings)
-            throws IOException, ProxyRetrievalException {
+    public static Process getProcess(Proxy userProxy, String... strings) 
+            throws IOException, ProxyRetrievalException, VOMSExtensionAppendException {
 
         ProcessBuilder builder = new ProcessBuilder(strings);
         builder.redirectErrorStream(true);
 
         if (userProxy != null) {
-            File proxy = null;
             if (strings[0].contains("glite")) {
-                proxy = userProxy.initWithVOMSExtension();
+                if (!userProxy.isValid()) {
+                    userProxy.init();
+                }
             } else if (strings[0].contains("dirac")) {
-                proxy = userProxy.init();
+                if (!userProxy.isRawProxyValid()) {
+                    userProxy.initRawProxy();
+                }
             }
+            File proxy = userProxy.getProxy();
             builder.environment().put("X509_USER_PROXY", proxy.getAbsolutePath());
         }
 
@@ -102,6 +106,8 @@ public class GaswUtil {
         try {
             return getProcess(null, strings);
         } catch (ProxyRetrievalException e) {
+            return null;
+        } catch (VOMSExtensionAppendException e) {
             return null;
         }
     }
