@@ -4,13 +4,9 @@ import fr.insalyon.creatis.gasw.ProxyRetrievalException;
 import fr.insalyon.creatis.gasw.VOMSExtensionAppendException;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -146,35 +142,32 @@ public class CLIProxy extends Proxy {
         command.add("-q");
 
         ProcessBuilder builder = new ProcessBuilder(command);
-        builder.redirectErrorStream(false);
+        builder.redirectErrorStream(true);
 
         Process process = null;
         try {
             process = builder.start();
 
-            BufferedReader errReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getErrorStream())));
-
-            File stderr = new File(proxyFile.getParentFile(), proxyFile.getName() + "_logon-stderr");
-
+            BufferedReader errReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
             String err = null;
             String line;
-
             while ((line = errReader.readLine()) != null) {
                 err += line + "\n";
             }
+            errReader.close();
 
             int status = process.waitFor();
             if (status == 0) {
                 log.info("Proxy successfully downloaded to " + proxyFile.getAbsolutePath());
-                // download proxy succesfully, delete stdout/err file
-                stderr.delete();
-            } else {
+            }
+            else {
                 String failure;
                 if (err.contains("certificate has expired")) {
                     failure = "proxy retrieval failed: proxy available from " + proxyServer.getServer() + " has expired";
                 } else {
                     failure = "myproxy-logon invocation failed: " + err;
                 }
+                log.warn("Failed creating proxy: " + failure);
                 throw new ProxyRetrievalException(failure);
             }
         } catch (IOException ex) {
@@ -193,6 +186,7 @@ public class CLIProxy extends Proxy {
 
         List<String> command = new ArrayList<String>();
 
+        command.add("voms-proxy-init");
         command.add("-noregen");
         command.add("-voms");
         command.add(gaswCredentials.getVo());
@@ -201,7 +195,7 @@ public class CLIProxy extends Proxy {
         command.add("-q");
 
         ProcessBuilder builder = new ProcessBuilder(command);
-        builder.redirectErrorStream(false);
+        builder.redirectErrorStream(true);
 
         Map<String, String> environment = builder.environment();
         environment.put("X509_USER_PROXY", proxyFile.getAbsolutePath());
@@ -210,65 +204,25 @@ public class CLIProxy extends Proxy {
         try {
             process = builder.start();
 
-            BufferedReader outReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
-            BufferedReader errReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getErrorStream())));
-            BufferedWriter out = null;
-            BufferedWriter err = null;
-
-            File directory = proxyFile.getParentFile();
-            File stdout = new File(directory, proxyFile.getName() + "_extension-stdout");
-            File stderr = new File(directory, proxyFile.getName() + "_extension-stderr");
-            out = new BufferedWriter(new FileWriter(stdout));
-            err = new BufferedWriter(new FileWriter(stderr));
+            BufferedReader errReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
+            String err = null;
             String line;
-
-            while ((line = outReader.readLine()) != null) {
-
-                out.write(line);
-                out.newLine();
-            }
             while ((line = errReader.readLine()) != null) {
-
-                err.write(line);
-                err.newLine();
+                err += line + "\n";
             }
-
-            if (out != null) {
-                out.flush();
-                out.close();
-            }
-            if (err != null) {
-                err.flush();
-                err.close();
-            }
-
+            errReader.close();
+            
             int status = process.waitFor();
             if (status == 0) {
-                log.info("Voms extension successfully added to proxy " + proxyFile.getAbsolutePath());
-                stdout.delete();
-                stderr.delete();
+                log.info("VOMS extension successfully added to proxy " + proxyFile.getAbsolutePath());
             } else {
-                FileReader fileReader = null;
-                try {
-                    fileReader = new FileReader(stderr);
-                } catch (java.io.FileNotFoundException ex) {
-                    throw new java.io.IOException("The file " + stderr.getCanonicalPath()
-                            + " is does not exist or cannot be read", ex);
-                }
-
-                LineNumberReader lineNumberReader = new LineNumberReader(fileReader);
-                line = null;
-                while ((line = lineNumberReader.readLine()) != null) {
-                    if (line.contains("Error")) {
-                        throw new VOMSExtensionAppendException("voms-proxy-init execution failed!");
-                    }
-                }
-                log.warn("Voms extension added. See " + stdout.getCanonicalPath() + " for details");
+                log.warn("Failed adding voms extension: " + err);
+                throw new VOMSExtensionAppendException("Cannot launch voms-proxy-init commmand: " + err);
             }
         } catch (IOException ex) {
-            throw new VOMSExtensionAppendException("Cannot launch voms-proxy-init commmand " + ex.toString());
+            throw new VOMSExtensionAppendException("Cannot launch voms-proxy-init commmand: " + ex.toString());
         } catch (InterruptedException ex) {
-            throw new VOMSExtensionAppendException("The execution was interrupted.");
+            throw new VOMSExtensionAppendException("Cannot launch voms-proxy-init commmand: " + ex.toString());
         }
 
     }
