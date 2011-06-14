@@ -22,11 +22,19 @@ public class VOMSServer {
     private String host;
     private int port;
     private String dn;
+    
     public VOMSServer(){
         this.name = DEFAULT_VO_NAME;
         this.host = DEFAULT_VOMS_SERVER;
         this.port = DEFAULT_VOMS_PORT;
         this.dn = DEFAULT_VOMS_DN;
+    }
+    
+    public VOMSServer(String serverName, int serverPort, String serverDN, String voName) {
+        this.name = voName;
+        this.host = serverName;
+        this.port = serverPort;
+        this.dn = serverDN;
     }
     
     /**
@@ -37,20 +45,37 @@ public class VOMSServer {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public String getName() {
+    public String getVoName() {
         return name;
     }
 
-    public int getPort() {
+    public int getServerPort() {
         return port;
     }
 
-    public String getHost() {
+    public String getServerName() {
         return host;
     }
 
-    public String getDN() {
+    public String getServerDN() {
         return dn;
+    }
+    
+
+    public void setVoName(String name) {
+        this.name = name;
+    }
+
+    public void setServerPort(int port) {
+        this.port = port;
+    }
+
+    public void setServerName(String host) {
+        this.host = host;
+    }
+
+    public void setServerDN(String dn) {
+        this.dn = dn;
     }
     
     

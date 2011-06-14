@@ -33,11 +33,18 @@ public class APIProxy extends Proxy {
     public APIProxy(GaswUserCredentials credentials) {
         super(credentials);
         this.vomsServer = new VOMSServer();
+        if(credentials.getVo() != null) {
+            vomsServer.setVoName(credentials.getVo());
+        }
+    }
+
+   public APIProxy(GaswUserCredentials credentials, String VOMSServerName, int VOMSServerPort, String VOMSServerDN) {
+        super(credentials);
+        this.vomsServer = new VOMSServer(VOMSServerName, VOMSServerPort, VOMSServerDN, credentials.getDn());
     }
 
     @Override
     public boolean isValid() {
-        boolean valid = true;
         if (this.proxyFile.length() == 0) {
             return false;
         }
@@ -48,26 +55,20 @@ public class APIProxy extends Proxy {
 
             long vomsExtensionRemainingTime = (attribute.getNotAfter().getTime() - System.currentTimeMillis()) / 1000;
             if (vomsExtensionRemainingTime < 3600 * MIN_LIFETIME_FOR_USING) {
-                log.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
-                valid = false;
+                return false;
             }
         } catch (ParseException ex) {
             log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
-            //return false as an invalid proxy
-            valid = false;
+            return false;
         } catch (GlobusCredentialException ex) {
             log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
-            //return false as an invalid proxy
-            valid = false;
-        } finally {
-            return valid;
-        }
+            return false;
+        } 
+        return true;
     }
 
     @Override
     public boolean isRawProxyValid() {
-        boolean valid = true;
-        
         if (this.proxyFile.length() == 0) {
             return false;
         }
@@ -77,16 +78,13 @@ public class APIProxy extends Proxy {
             // get timeleft (in second) of validity of proxy (without voms extension) 
             long timeleft = globusCredentials.getTimeLeft();
             if (timeleft < 3600 * MIN_LIFETIME_FOR_USING) {
-                log.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
-                valid = false;
+                return false;
             }
         } catch (GlobusCredentialException ex) {
             log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
-            //return false as an invalid proxy
-            valid = false;
-        } finally {
-            return valid;
-        }
+            return false;
+        } 
+        return true;
     }
 
     @Override
@@ -106,8 +104,9 @@ public class APIProxy extends Proxy {
 
             credential = myProxyServer.get(this.gaswCredentials.getLogin(),
                     this.gaswCredentials.getPassword(), this.lifetime * 3600);
-        } catch (org.globus.myproxy.MyProxyException ex) {
-            throw new ProxyRetrievalException(ex.getMessage());
+        }
+        catch (org.globus.myproxy.MyProxyException ex) {
+            throw new ProxyRetrievalException("proxy retrieval failed: " + ex.getMessage());
         }
 
         //save this credential to file
@@ -123,11 +122,11 @@ public class APIProxy extends Proxy {
         UserCredentials userCredential = UserCredentials.instance(proxyPath, proxyPath);
 
         VOMSServerInfo server = new VOMSServerInfo();
-        server.setHostName(this.vomsServer.getHost());
-        server.setPort(this.vomsServer.getPort());
-        server.setHostDn(this.vomsServer.getDN());
-        server.setVoName(this.vomsServer.getName());
-        server.setAlias(this.vomsServer.getName());
+        server.setHostName(this.vomsServer.getServerName());
+        server.setPort(this.vomsServer.getServerPort());
+        server.setHostDn(this.vomsServer.getServerDN());
+        server.setVoName(this.vomsServer.getVoName());
+        server.setAlias(this.vomsServer.getVoName());
 
         // setting up options
         VOMSProxyInit vomsProxyInit = VOMSProxyInit.instance(userCredential);
@@ -139,7 +138,7 @@ public class APIProxy extends Proxy {
         vomsProxyInit.addVomsServer(server);
         VOMSRequestOptions requestOptions = new VOMSRequestOptions();
         requestOptions.setLifetime(this.lifetime * 3600);
-        requestOptions.setVoName(vomsServer.getName());
+        requestOptions.setVoName(vomsServer.getVoName());
 
         List options = new ArrayList();
         options.add(requestOptions);
@@ -147,12 +146,24 @@ public class APIProxy extends Proxy {
         // adding voms extension to proxy
         vomsProxyInit.getVomsProxy(options);
 
-        // Test if voms extension is successfully added
-        if (!isValid()) {
-            throw new VOMSExtensionAppendException("Appending VOMS Extension failed!");
-        }
+        // Test if voms extension was successfully added
+        try {
+            GlobusCredential globusCredentials = new GlobusCredential(proxyPath);
+            VOMSAttribute attribute = (VOMSAttribute) (VOMSValidator.parse(globusCredentials.getCertificateChain())).elementAt(0);
 
+            long vomsExtensionRemainingTime = (attribute.getNotAfter().getTime() - System.currentTimeMillis()) / 1000;
+            if (vomsExtensionRemainingTime < 3600 * MIN_LIFETIME_FOR_USING) {
+                throw new VOMSExtensionAppendException("Appending VOMS Extension failed: VOMS extension lifetime expired");
+            }
+        }
+        catch (ParseException ex) {
+            throw new VOMSExtensionAppendException("Appending VOMS Extension failed: " + ex.getMessage());
+        }
+        catch (GlobusCredentialException ex) {
+            throw new VOMSExtensionAppendException("Appending VOMS Extension failed: " + ex.getMessage());
+        }
     }
+    
 
     private void saveCredential(GSSCredential credential, File proxyFile) throws ProxyRetrievalException {
 

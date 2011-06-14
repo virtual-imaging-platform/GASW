@@ -162,7 +162,7 @@ public class DerbyDAOFactory extends DAOFactory {
     @Override
     public void close() {
         try {
-            if (connection.isValid(10)) {
+            if (connection != null && connection.isValid(10)) {
                 connection.close();
             }
         } catch (SQLException ex) {
