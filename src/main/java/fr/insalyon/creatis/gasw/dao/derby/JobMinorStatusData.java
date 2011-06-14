@@ -32,27 +32,54 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.dao;
+package fr.insalyon.creatis.gasw.dao.derby;
 
-import fr.insalyon.creatis.gasw.bean.Job;
-import fr.insalyon.creatis.gasw.monitor.GaswStatus;
-import java.util.Map;
+import fr.insalyon.creatis.gasw.dao.AbstractData;
+import fr.insalyon.creatis.gasw.dao.DAOException;
+import fr.insalyon.creatis.gasw.dao.JobMinorStatusDAO;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
 
 /**
  *
  * @author Rafael Silva
  */
-public interface JobDAO {
+public class JobMinorStatusData extends AbstractData implements JobMinorStatusDAO {
 
-    public void add(Job job) throws DAOException;
+    private static JobMinorStatusData instance;
 
-    public void update(Job job) throws DAOException;
+    public static JobMinorStatusData getInstance() {
+        if (instance == null) {
+            instance = new JobMinorStatusData();
+        }
+        return instance;
+    }
 
-    public void remove(Job job) throws DAOException;
+    private JobMinorStatusData() {
+        super();
+    }
+    
+    /**
+     * 
+     * @param jobId
+     * @param minorStatus
+     * @throws DAOException 
+     */
+    public void add(String jobId, int minorStatus) throws DAOException {
+        try {
+            PreparedStatement ps = prepareStatement("INSERT INTO JobsMinorStatus "
+                    + "(id, minor_status, event_date) VALUES (?, ?, ?)");
 
-    public Job getJobByID(String id) throws DAOException;
+            ps.setString(1, jobId);
+            ps.setInt(2, minorStatus);
+            ps.setTimestamp(3, new Timestamp(new Date().getTime()));
 
-    public void updateStatus(Map<GaswStatus, String> jobStatus) throws DAOException;
-       
-    public Map<String, GaswStatus> getSignaledJobs() throws DAOException;
+            execute(ps);
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
+        }
+    }
 }

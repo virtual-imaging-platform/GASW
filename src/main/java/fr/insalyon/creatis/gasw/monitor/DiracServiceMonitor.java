@@ -87,7 +87,7 @@ public class DiracServiceMonitor extends Thread {
                 while (!stop) {
                     String[] message = in.readLine().split(SEPARATOR);
                     try {
-                        DAOFactory.getDAOFactory().getJobDAO().updateMinorStatus(
+                        DAOFactory.getDAOFactory().getJobMinorStatusDAO().add(
                                 message[0], new Integer(message[1]));
                     } catch (DAOException ex) {
                         logger.warn(ex);

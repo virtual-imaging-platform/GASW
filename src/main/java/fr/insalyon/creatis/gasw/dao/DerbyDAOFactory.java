@@ -36,6 +36,7 @@ package fr.insalyon.creatis.gasw.dao;
 
 import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.dao.derby.JobData;
+import fr.insalyon.creatis.gasw.dao.derby.JobMinorStatusData;
 import fr.insalyon.creatis.gasw.dao.derby.NodeData;
 import fr.insalyon.creatis.gasw.dao.derby.SEEntryPointData;
 import java.io.File;
@@ -79,18 +80,16 @@ public class DerbyDAOFactory extends DAOFactory {
     protected void connect() throws SQLException {
         try {
             Class.forName(DRIVER).newInstance();
-            
+
             File dbDir = new File(Configuration.EXECUTION_FOLDER, "jobs.db");
             String create = dbDir.exists() ? "" : ";create=true";
-            
+
             connection = DriverManager.getConnection(
                     DBURL + Configuration.DERBY_HOST
                     + ":" + Configuration.DERBY_PORT + "/"
                     + dbDir.getAbsolutePath() + create);
 
-            if (!create.isEmpty()){
-                createTables();
-            }
+            createTables();
             connection.setAutoCommit(true);
 
         } catch (ClassNotFoundException ex) {
@@ -122,7 +121,6 @@ public class DerbyDAOFactory extends DAOFactory {
             stat.executeUpdate("CREATE TABLE Jobs ("
                     + "id VARCHAR(255), "
                     + "status VARCHAR(255), "
-                    + "minor_status INT, "
                     + "exit_code INT, "
                     + "creation INT, "
                     + "queued INT, "
@@ -146,6 +144,14 @@ public class DerbyDAOFactory extends DAOFactory {
                     + "port INT, "
                     + "path VARCHAR(255), "
                     + "PRIMARY KEY(hostname, port)"
+                    + ")");
+
+            stat.executeUpdate("CREATE TABLE JobsMinorStatus ("
+                    + "id VARCHAR(255), "
+                    + "minor_status INT, "
+                    + "event_date TIMESTAMP, "
+                    + "PRIMARY KEY(id, minor_status), "
+                    + "FOREIGN KEY(id) REFERENCES Jobs(id)"
                     + ")");
 
         } catch (SQLException ex) {
@@ -172,6 +178,11 @@ public class DerbyDAOFactory extends DAOFactory {
     @Override
     public JobDAO getJobDAO() {
         return JobData.getInstance();
+    }
+
+    @Override
+    public JobMinorStatusDAO getJobMinorStatusDAO() {
+        return JobMinorStatusData.getInstance();
     }
 
     @Override

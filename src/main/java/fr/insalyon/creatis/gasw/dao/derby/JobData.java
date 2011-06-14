@@ -195,27 +195,6 @@ public class JobData extends AbstractData implements JobDAO {
 
     /**
      * 
-     * @param jobId
-     * @param minorStatus
-     * @throws DAOException 
-     */
-    public void updateMinorStatus(String jobId, int minorStatus) throws DAOException {
-        try {
-            PreparedStatement ps = prepareStatement("UPDATE Jobs "
-                    + "SET minor_status = ? WHERE id = ?");
-            
-            ps.setInt(1, minorStatus);
-            ps.setString(2, jobId);
-            
-            execute(ps);
-            
-        } catch (SQLException ex) {
-            throw new DAOException(ex);
-        }
-     }
-
-    /**
-     * 
      * @return
      * @throws DAOException 
      */
