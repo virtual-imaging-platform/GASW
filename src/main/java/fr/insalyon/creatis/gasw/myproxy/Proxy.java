@@ -24,7 +24,7 @@ public abstract class Proxy {
         this.gaswCredentials = credentials;
         this.lifetime = DEFAULT_DELEGATED_PROXY_LIFETIME;
         this.proxyServer = credentials.getMyproxyServer();
-        this.proxyFile = null;
+        this.proxyFile = getDefaultProxy();
     }
 
     public void initRawProxy() throws ProxyRetrievalException {
@@ -38,15 +38,8 @@ public abstract class Proxy {
         }
         this.lifetime = lifetime;
 
-        if (this.proxyFile != null) {
-            this.proxyFile.delete();
-        }
-        try {
-            this.proxyFile = File.createTempFile("gasw_", ".proxy");
-            myProxyLogon(this.proxyFile);
-        } catch (IOException ex) {
-            throw new ProxyRetrievalException("Cannot create temporary file to store proxy: " + ex.getMessage());
-        }
+        myProxyLogon(this.proxyFile);
+
     }
 
     public void init() throws ProxyRetrievalException, VOMSExtensionAppendException {
@@ -60,22 +53,24 @@ public abstract class Proxy {
         }
         this.lifetime = lifetime;
 
-        if (this.proxyFile != null) {
-            this.proxyFile.delete();
-        }
-
-        try {
-            proxyFile = File.createTempFile("gasw_", ".proxy");
-            myProxyLogon(proxyFile);
-            vomsProxyInit(proxyFile);
-
-        } catch (IOException ex) {
-            throw new ProxyRetrievalException("Cannot create temporary file to store proxy: " + ex.getMessage());
-        }
+        myProxyLogon(proxyFile);
+        vomsProxyInit(proxyFile);
     }
 
     public File getProxy() {
         return proxyFile;
+    }
+
+    protected static File getDefaultProxy() {
+
+        File defaultProxy = null;
+
+        try {
+            defaultProxy = File.createTempFile("gasw_", ".proxy");
+        } catch (java.io.IOException ex) {
+        }
+
+        return defaultProxy;
     }
 
     /**

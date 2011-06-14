@@ -38,57 +38,55 @@ public class APIProxy extends Proxy {
     @Override
     public boolean isValid() {
         boolean valid = true;
-
-        if (this.proxyFile != null) {
-            try {
-                GlobusCredential globusCredentials = new GlobusCredential(this.proxyFile.getAbsolutePath());
-                VOMSAttribute attribute = (VOMSAttribute) (VOMSValidator.parse(globusCredentials.getCertificateChain())).elementAt(0);
-
-                long vomsExtensionRemainingTime = (attribute.getNotAfter().getTime() - System.currentTimeMillis()) / 1000;
-                if (vomsExtensionRemainingTime < 3600 * MIN_LIFETIME_FOR_USING) {
-                    log.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
-                    valid = false;
-                }
-            } catch (ParseException ex) {
-                log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
-                //return false as an invalid proxy
-                valid = false;
-            } catch (GlobusCredentialException ex) {
-                log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
-                //return false as an invalid proxy
-                valid = false;
-            }
-        } else {
-            // first time when proxy is not generated yet 
-            valid = false;
+        if (this.proxyFile.length() == 0) {
+            return false;
         }
 
-        return valid;
+        try {
+            GlobusCredential globusCredentials = new GlobusCredential(this.proxyFile.getAbsolutePath());
+            VOMSAttribute attribute = (VOMSAttribute) (VOMSValidator.parse(globusCredentials.getCertificateChain())).elementAt(0);
+
+            long vomsExtensionRemainingTime = (attribute.getNotAfter().getTime() - System.currentTimeMillis()) / 1000;
+            if (vomsExtensionRemainingTime < 3600 * MIN_LIFETIME_FOR_USING) {
+                log.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
+                valid = false;
+            }
+        } catch (ParseException ex) {
+            log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
+            //return false as an invalid proxy
+            valid = false;
+        } catch (GlobusCredentialException ex) {
+            log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
+            //return false as an invalid proxy
+            valid = false;
+        } finally {
+            return valid;
+        }
     }
 
     @Override
     public boolean isRawProxyValid() {
         boolean valid = true;
-        if (this.proxyFile != null) {
-            try {
-                GlobusCredential globusCredentials = new GlobusCredential(this.proxyFile.getAbsolutePath());
-                // get timeleft (in second) of validity of proxy (without voms extension) 
-                long timeleft = globusCredentials.getTimeLeft();
-                if (timeleft < 3600 * MIN_LIFETIME_FOR_USING) {
-                    log.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
-                    valid = false;
-                }
-            } catch (GlobusCredentialException ex) {
-                log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
-                //return false as an invalid proxy
-                valid = false;
-            }
-        } else {
-            //first time when proxy is not generated yet
-            valid = false;
+        
+        if (this.proxyFile.length() == 0) {
+            return false;
         }
         
-        return valid;
+        try {
+            GlobusCredential globusCredentials = new GlobusCredential(this.proxyFile.getAbsolutePath());
+            // get timeleft (in second) of validity of proxy (without voms extension) 
+            long timeleft = globusCredentials.getTimeLeft();
+            if (timeleft < 3600 * MIN_LIFETIME_FOR_USING) {
+                log.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
+                valid = false;
+            }
+        } catch (GlobusCredentialException ex) {
+            log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
+            //return false as an invalid proxy
+            valid = false;
+        } finally {
+            return valid;
+        }
     }
 
     @Override

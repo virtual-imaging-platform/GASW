@@ -32,49 +32,48 @@ public class CLIProxy extends Proxy {
     public boolean isValid() {
         boolean valid = true;
 
-        if (this.proxyFile != null) {
-            List<String> command = new ArrayList<String>();
-            command.add("voms-proxy-info");
-            command.add("-file");
-            command.add(this.proxyFile.getAbsolutePath());
-            command.add("-actimeleft");
+        if (this.proxyFile.length() == 0) {
+            return false;
+        }
+        
+        List<String> command = new ArrayList<String>();
+        command.add("voms-proxy-info");
+        command.add("-file");
+        command.add(this.proxyFile.getAbsolutePath());
+        command.add("-actimeleft");
 
-            ProcessBuilder builder = new ProcessBuilder(command);
-            builder.redirectErrorStream(false);
+        ProcessBuilder builder = new ProcessBuilder(command);
+        builder.redirectErrorStream(false);
 
-            Process process = null;
-            try {
-                process = builder.start();
+        Process process = null;
+        try {
+            process = builder.start();
 
-                BufferedReader outReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
+            BufferedReader outReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
 
-                String line;
-                String out = "";
-                while ((line = outReader.readLine()) != null) {
-                    out += line;
-                }
-                process.waitFor();
+            String line;
+            String out = "";
+            while ((line = outReader.readLine()) != null) {
+                out += line;
+            }
+            process.waitFor();
 
-                if (Integer.valueOf(out) < 3600 * MIN_LIFETIME_FOR_USING) {
-                    log.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
-                    valid = false;
-                }
-
-            } catch (IOException ex) {
-                log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
-                //return false as an invalid proxy
-                valid = false;
-            } catch (InterruptedException ex) {
-                log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
-                //return false as an invalid proxy
+            if (Integer.valueOf(out) < 3600 * MIN_LIFETIME_FOR_USING) {
+                log.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
                 valid = false;
             }
-        } else {
-            // first time when proxy is not generated yet
-            valid = false;
-        }
 
-        return valid;
+        } catch (IOException ex) {
+            log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
+            //return false as an invalid proxy
+            valid = false;
+        } catch (InterruptedException ex) {
+            log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
+            //return false as an invalid proxy
+            valid = false;
+        } finally {
+            return valid;
+        }
 
     }
 
@@ -82,49 +81,48 @@ public class CLIProxy extends Proxy {
     public boolean isRawProxyValid() {
         boolean valid = true;
 
-        if (this.proxyFile != null) {
-            List<String> command = new ArrayList<String>();
-            command.add("voms-proxy-info");
-            command.add("-file");
-            command.add(this.proxyFile.getAbsolutePath());
-            command.add("-timeleft");
-
-            ProcessBuilder builder = new ProcessBuilder(command);
-            builder.redirectErrorStream(false);
-
-            Process process = null;
-            try {
-                process = builder.start();
-
-                BufferedReader outReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
-
-                String line;
-                String out = "";
-                while ((line = outReader.readLine()) != null) {
-                    out += line;
-                }
-                process.waitFor();
-
-                if (Integer.valueOf(out) < 3600 * MIN_LIFETIME_FOR_USING) {
-                    log.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
-                    valid = false;
-                }
-
-            } catch (IOException ex) {
-                log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
-                //return false as an invalid proxy
-                valid = false;
-            } catch (InterruptedException ex) {
-                log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
-                //return false as an invalid proxy
-                valid = false;
-            }
-        } else {
-            // first time when proxy is not generated yet
-            valid = false;
+        if (this.proxyFile.length() == 0) {
+            return false;
         }
 
-        return valid;
+        List<String> command = new ArrayList<String>();
+        command.add("voms-proxy-info");
+        command.add("-file");
+        command.add(this.proxyFile.getAbsolutePath());
+        command.add("-timeleft");
+
+        ProcessBuilder builder = new ProcessBuilder(command);
+        builder.redirectErrorStream(false);
+
+        Process process = null;
+        try {
+            process = builder.start();
+
+            BufferedReader outReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
+
+            String line;
+            String out = "";
+            while ((line = outReader.readLine()) != null) {
+                out += line;
+            }
+            process.waitFor();
+
+            if (Integer.valueOf(out) < 3600 * MIN_LIFETIME_FOR_USING) {
+                log.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
+                valid = false;
+            }
+
+        } catch (IOException ex) {
+            log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
+            //return false as an invalid proxy
+            valid = false;
+        } catch (InterruptedException ex) {
+            log.warn("Cannot verify the validility of the proxy: " + ex.getMessage());
+            //return false as an invalid proxy
+            valid = false;
+        } finally {
+            return valid;
+        }
 
     }
 
