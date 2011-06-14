@@ -111,8 +111,8 @@ public class Configuration {
         if (vomsdir != null && !vomsdir.isEmpty()) {
             VOMSDIR = vomsdir;
         }
-        System.setProperty("CADIR", cadir);
-        System.setProperty("VOMSDIR", vomsdir);
+        System.setProperty("CADIR", CADIR);
+        System.setProperty("VOMSDIR", VOMSDIR);
 
     }
 
