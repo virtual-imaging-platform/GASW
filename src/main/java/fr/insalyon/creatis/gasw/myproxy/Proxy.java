@@ -68,6 +68,8 @@ public abstract class Proxy {
         try {
             defaultProxy = File.createTempFile("gasw_", ".proxy");
         } catch (java.io.IOException ex) {
+            log.error("Cannot creat temporary file to store proxy: " + ex.getMessage());
+            return null;
         }
 
         return defaultProxy;
