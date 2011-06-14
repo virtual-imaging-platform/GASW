@@ -105,15 +105,15 @@ public class Configuration {
 
         String cadir = System.getenv("X509_USER_CERTDIR");
         String vomsdir = System.getenv("X509_USER_VOMSDIR");
-        if (!cadir.isEmpty() && cadir!=null){
+        if (cadir != null && !cadir.isEmpty()) {
             CADIR = cadir;
         }
-        if (!vomsdir.isEmpty() && vomsdir!=null){
+        if (vomsdir != null && !vomsdir.isEmpty()) {
             VOMSDIR = vomsdir;
         }
         System.setProperty("CADIR", cadir);
         System.setProperty("VOMSDIR", vomsdir);
-        
+
     }
 
     private static void loadConfigurationFile() throws GaswException {
