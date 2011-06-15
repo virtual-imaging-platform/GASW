@@ -149,7 +149,7 @@ public class CLIProxy extends Proxy {
             process = builder.start();
 
             BufferedReader errReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
-            String err = null;
+            String err = "";
             String line;
             while ((line = errReader.readLine()) != null) {
                 err += line + "\n";
@@ -205,7 +205,7 @@ public class CLIProxy extends Proxy {
             process = builder.start();
 
             BufferedReader errReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(process.getInputStream())));
-            String err = null;
+            String err = "";
             String line;
             while ((line = errReader.readLine()) != null) {
                 err += line + "\n";
@@ -213,7 +213,7 @@ public class CLIProxy extends Proxy {
             errReader.close();
             
             int status = process.waitFor();
-            if (status == 0) {
+            if (status == 0 || status == 1) {
                 log.info("VOMS extension successfully added to proxy " + proxyFile.getAbsolutePath());
             } else {
                 log.warn("Failed adding voms extension: " + err);
