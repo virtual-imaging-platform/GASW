@@ -63,6 +63,11 @@ public abstract class Proxy {
     protected static File getDefaultProxy() {
 
         File defaultProxy = null;
+        
+        String proxyPath = System.getenv("X509_USER_PROXY");
+        if (proxyPath != null && !proxyPath.isEmpty()) {
+            return new File(proxyPath);
+        }
 
         try {
             defaultProxy = File.createTempFile("gasw_", ".proxy");
