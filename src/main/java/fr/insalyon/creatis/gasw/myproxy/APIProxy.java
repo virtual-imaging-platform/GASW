@@ -1,7 +1,5 @@
 package fr.insalyon.creatis.gasw.myproxy;
 
-import fr.insalyon.creatis.gasw.ProxyRetrievalException;
-import fr.insalyon.creatis.gasw.VOMSExtensionAppendException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.ParseException;

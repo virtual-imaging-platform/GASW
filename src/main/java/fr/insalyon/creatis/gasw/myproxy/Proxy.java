@@ -1,7 +1,5 @@
 package fr.insalyon.creatis.gasw.myproxy;
 
-import fr.insalyon.creatis.gasw.ProxyRetrievalException;
-import fr.insalyon.creatis.gasw.VOMSExtensionAppendException;
 import java.io.File;
 import org.apache.log4j.Logger;
 
@@ -11,6 +9,18 @@ import org.apache.log4j.Logger;
  */
 public abstract class Proxy {
 
+    public class ProxyRetrievalException extends Exception {
+        public ProxyRetrievalException(String error) {
+            super(error);
+        }
+    }
+    
+    public class VOMSExtensionAppendException extends Exception {
+        public VOMSExtensionAppendException(String error) {
+            super(error);
+        }       
+    }
+    
     private static final Logger log = Logger.getLogger(Proxy.class);
     private static final int DEFAULT_DELEGATED_PROXY_LIFETIME = 24; //24 hours
     protected static final int MIN_LIFETIME_FOR_USING = 1;   //  hours
