@@ -40,7 +40,7 @@ import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
-import fr.insalyon.creatis.gasw.myproxy.Proxy;
+import grool.proxy.Proxy;
 import java.io.File;
 import org.apache.log4j.Logger;
 

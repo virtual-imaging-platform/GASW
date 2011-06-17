@@ -88,8 +88,9 @@ public class DerbyDAOFactory extends DAOFactory {
                     DBURL + Configuration.DERBY_HOST
                     + ":" + Configuration.DERBY_PORT + "/"
                     + dbDir.getAbsolutePath() + create);
-
-            createTables();
+            if (!create.isEmpty()) {
+                createTables();
+            }
             connection.setAutoCommit(true);
 
         } catch (ClassNotFoundException ex) {

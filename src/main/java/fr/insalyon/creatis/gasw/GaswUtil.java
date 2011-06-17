@@ -34,7 +34,7 @@
  */
 package fr.insalyon.creatis.gasw;
 
-import fr.insalyon.creatis.gasw.myproxy.Proxy;
+import grool.proxy.Proxy;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -75,7 +75,7 @@ public class GaswUtil {
      * @return 
      */
     public static Process getProcess(Proxy userProxy, String... strings) 
-            throws IOException, ProxyRetrievalException, VOMSExtensionAppendException {
+            throws IOException, grool.proxy.ProxyInitializationException, grool.proxy.VOMSExtensionException {
 
         ProcessBuilder builder = new ProcessBuilder(strings);
         builder.redirectErrorStream(true);
@@ -107,9 +107,9 @@ public class GaswUtil {
     public static Process getProcess(String... strings) throws IOException {
         try {
             return getProcess(null, strings);
-        } catch (ProxyRetrievalException e) {
+        } catch (grool.proxy.ProxyInitializationException e) {
             return null;
-        } catch (VOMSExtensionAppendException e) {
+        } catch (grool.proxy.VOMSExtensionException e) {
             return null;
         }
     }

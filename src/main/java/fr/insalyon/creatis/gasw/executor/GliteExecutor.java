@@ -38,11 +38,8 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
-import fr.insalyon.creatis.gasw.ProxyRetrievalException;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.GliteJdlGenerator;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
 import org.apache.log4j.Logger;
 
 /**
@@ -65,7 +62,7 @@ public class GliteExecutor extends Executor {
 
     @Override
     public String submit() throws GaswException {
-
+        String jobID = null;
         super.submit();
         try {
             Process process = GaswUtil.getProcess(userProxy, "glite-wms-job-submit",
@@ -85,23 +82,24 @@ public class GliteExecutor extends Executor {
                 throw new GaswException("Unable to submit job.");
             }
 
-            String jobID = out.substring(out.lastIndexOf("https://"),
+            jobID = out.substring(out.lastIndexOf("https://"),
                     out.length()).trim();
 
             jobID = jobID.substring(0, jobID.indexOf("=")).trim();
 
             addJobToMonitor(jobID, userProxy);
             logger.info("Glite Executor Job ID: " + jobID);
-            return jobID;
-
-        } catch (ProxyRetrievalException ex) {
-            throw new GaswException("Job submission failed: " + ex.getMessage());
         } catch (InterruptedException ex) {
             logException(logger, ex);
-        } catch (IOException ex) {
+        } catch (java.io.IOException ex) {
             logException(logger, ex);
+        } catch (grool.proxy.ProxyInitializationException ex) {
+            logException(logger, ex);
+        } catch (grool.proxy.VOMSExtensionException ex) {
+            logException(logger, ex);
+        } finally {
+            return jobID;
         }
-        return null;
     }
 
     /**

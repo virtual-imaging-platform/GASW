@@ -40,7 +40,7 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.myproxy.Proxy;
+import grool.proxy.Proxy;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;

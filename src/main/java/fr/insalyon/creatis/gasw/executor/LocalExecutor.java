@@ -38,7 +38,6 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
-import fr.insalyon.creatis.gasw.ProxyRetrievalException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;

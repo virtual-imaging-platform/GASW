@@ -39,12 +39,10 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
-import fr.insalyon.creatis.gasw.ProxyRetrievalException;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.DiracJdlGenerator;
 import fr.insalyon.creatis.gasw.release.Execution;
 import fr.insalyon.creatis.gasw.release.Infrastructure;
 import java.io.BufferedReader;
-import java.io.IOException;
 import org.apache.log4j.Logger;
 
 /**
@@ -81,8 +79,9 @@ public class DiracExecutor extends Executor {
     }
 
     @Override
-    public String submit() throws ProxyRetrievalException, GaswException {
+    public String submit() throws GaswException {
         super.submit();
+        String jobID = null;
         try {
             Process process = GaswUtil.getProcess(userProxy,
                     "dirac-wms-job-submit", Constants.JDL_ROOT + "/" + jdlName);
@@ -101,7 +100,7 @@ public class DiracExecutor extends Executor {
                 throw new GaswException("Unable to submit job.");
             }
 
-            String jobID = cout.substring(cout.lastIndexOf("=") + 2, cout.length()).trim();
+            jobID = cout.substring(cout.lastIndexOf("=") + 2, cout.length()).trim();
             try {
                 Integer.parseInt(jobID);
             } catch (NumberFormatException ex) {
@@ -110,14 +109,16 @@ public class DiracExecutor extends Executor {
 
             addJobToMonitor(jobID, userProxy);
             logger.info("Dirac Executor Job ID: " + jobID);
-            return jobID;
-
         } catch (InterruptedException ex) {
             logException(logger, ex);
-            return null;
-        } catch (IOException ex) {
+        } catch (java.io.IOException ex) {
             logException(logger, ex);
-            return null;
+        } catch (grool.proxy.ProxyInitializationException ex) {
+            logException(logger, ex);
+        } catch (grool.proxy.VOMSExtensionException ex) {
+            logException(logger, ex);
+        } finally {
+            return jobID;
         }
     }
 

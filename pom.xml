@@ -77,55 +77,24 @@
             <version>1.2.16</version>
         </dependency>
         
-        <!-- dependency CoG JGlobus -->
+        <!--grool - proxy-->
         <dependency>
-            <groupId>org.globus</groupId>
-            <artifactId>cog-jglobus</artifactId>
-            <version>1.4</version>
-        </dependency>
-         <dependency>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-                <version>1.1.1</version>
-            </dependency>
-        <dependency>
-            <groupId>org.globus</groupId>
-            <artifactId>cryptix32</artifactId>
-            <version>1.4</version>
+            <groupId>fr.cnrs.i3s</groupId>
+            <artifactId>grool-proxy</artifactId>
+            <version>0.1.1</version>
         </dependency>
         <dependency>
-            
-            <groupId>org.globus</groupId>
-            <artifactId>cryptix-asn1</artifactId>
-            <version>1.4</version>
+            <groupId>fr.cnrs.i3s</groupId>
+            <artifactId>grool-proxy-cli</artifactId>
+            <version>0.1.1</version>
         </dependency>
-        <dependency>
-            
-            <groupId>org.globus</groupId>
-            <artifactId>puretls</artifactId>
-            <version>1.4</version>
-            
-        </dependency>
-         <dependency>
-            <groupId>org.globus</groupId>
-            <artifactId>jce-jdk13</artifactId>
-            <version>131</version>
-        </dependency>
-        <!-- dependency CoG JGlobus -->
-        <!--dependency of glite API to add voms extension-->
-        <dependency>
-            <groupId>org.glite</groupId>
-            <artifactId>security-voms</artifactId>
-            <version>1.9.19-3</version>
-        </dependency>
-        
     </dependencies>
     
     <repositories>
         <repository>
-            <id>thirdparty</id>
-            <name>Private third-party repository [modalis]</name>
-            <url>http://nyx.unice.fr:9007/nexus/content/repositories/thirdparty</url>    
+            <id>releases</id>
+            <name>Modalis releases repository [modalis]</name>
+            <url>http://nyx.unice.fr:9007/nexus/content/repositories/releases</url>    
         </repository>    
     </repositories>
     

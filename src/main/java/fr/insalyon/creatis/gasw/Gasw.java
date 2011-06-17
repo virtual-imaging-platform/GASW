@@ -38,12 +38,13 @@ import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.executor.Executor;
 import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
-import fr.insalyon.creatis.gasw.myproxy.APIProxy;
-import fr.insalyon.creatis.gasw.myproxy.CLIProxy;
-import fr.insalyon.creatis.gasw.myproxy.GaswUserCredentials;
-import fr.insalyon.creatis.gasw.myproxy.Proxy;
 import fr.insalyon.creatis.gasw.output.OutputUtilFactory;
 import fr.insalyon.creatis.gasw.release.EnvVariable;
+import grool.GridUserCredentials;
+import grool.proxy.Proxy;
+import grool.proxy.ProxyConfiguration;
+import grool.proxy.myproxy.CLIGlobusMyproxy;
+import grool.proxy.myproxy.GlobusMyproxy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,7 +57,7 @@ import org.apache.log4j.PropertyConfigurator;
  * @author Rafael Silva
  */
 public class Gasw {
-
+    
     private static final Logger log = Logger.getLogger(Gasw.class);
     private static Gasw instance;
     private GaswNotification notification;
@@ -91,13 +92,14 @@ public class Gasw {
     }
 
     private Gasw() throws GaswException {
-        this(Constants.VERSION_GRID, Constants.GRID_GLITE);
+        this(Constants.VERSION_GRID, Constants.GRID_DIRAC);
     }
 
     private Gasw(String version, String target) throws GaswException {
         PropertyConfigurator.configure(
                 Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
         Configuration.setUp();
+        ProxyConfiguration.initConfiguration();
         this.version = version;
         this.target = target;
         finishedJobs = new HashMap<String, Proxy>();
@@ -124,7 +126,7 @@ public class Gasw {
      * @param proxy user's proxy
      * @return
      */
-    public synchronized String submit(Object client, GaswInput gaswInput, GaswUserCredentials credentials) throws GaswException {
+    public synchronized String submit(Object client, GaswInput gaswInput, GridUserCredentials credentials) throws GaswException {
 
         if (this.client == null) {
             this.client = client;
@@ -145,10 +147,10 @@ public class Gasw {
             if (credentials.getLogin() != null && credentials.getPassword() != null
                     && !credentials.getLogin().isEmpty() && !credentials.getPassword().isEmpty()) {
                 // getting proxy and appending voms extension by login/password using globus/glite API
-                userProxy = new APIProxy(credentials);
+                userProxy = new GlobusMyproxy(credentials);
             } else {
                 // getting proxy and appending voms extension by user DN using command line
-                userProxy = new CLIProxy(credentials);
+                userProxy = new CLIGlobusMyproxy(credentials);
             }
             executor.setUserProxy(userProxy);
         }
@@ -176,10 +178,10 @@ public class Gasw {
 
         if (finishedJobs != null) {
             for (String jobID : finishedJobs.keySet()) {
-                String version = jobID.contains("Local-") ? "LOCAL" : "GRID";
-                int startTime = MonitorFactory.getMonitor(version).getStartTime();
+                String vversion = jobID.contains("Local-") ? "LOCAL" : "GRID";
+                int startTime = MonitorFactory.getMonitor(vversion).getStartTime();
                 outputsList.add(OutputUtilFactory.getOutputUtil(
-                        version, startTime).getOutputs(jobID.split("--")[0], finishedJobs.get(jobID)));
+                        vversion, startTime).getOutputs(jobID.split("--")[0], finishedJobs.get(jobID)));
 
                 jobsToRemove.add(jobID);
             }

@@ -37,14 +37,14 @@ package fr.insalyon.creatis.gasw.output;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.GaswUtil;
-import fr.insalyon.creatis.gasw.ProxyRetrievalException;
-import fr.insalyon.creatis.gasw.VOMSExtensionAppendException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.monitor.GaswStatus;
-import fr.insalyon.creatis.gasw.myproxy.Proxy;
+import grool.proxy.Proxy;
+import grool.proxy.ProxyInitializationException;
+import grool.proxy.VOMSExtensionException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -139,14 +139,14 @@ public class GliteOutputUtil extends OutputUtil {
                         appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "Output files do not exist.");
                         gaswExitCode = GaswExitCode.ERROR_GET_STD;
                     }
-                } catch (ProxyRetrievalException ex) {
+                } catch (grool.proxy.ProxyInitializationException ex) {
                     logger.error(ex.getMessage());
                     stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
                     stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());
                     appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, ex.getMessage());
                     appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
-                }catch(VOMSExtensionAppendException ex) {
+                }catch(grool.proxy.VOMSExtensionException ex) {
                     logger.error(ex.getMessage());
                     stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
                     stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());

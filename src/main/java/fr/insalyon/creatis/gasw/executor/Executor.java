@@ -39,7 +39,7 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
-import fr.insalyon.creatis.gasw.myproxy.Proxy;
+import grool.proxy.Proxy;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
