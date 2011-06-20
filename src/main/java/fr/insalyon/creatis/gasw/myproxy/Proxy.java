@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
  *
  * @author Tram Truong Huu
  */
+@Deprecated
 public abstract class Proxy {
 
     public class ProxyRetrievalException extends Exception {

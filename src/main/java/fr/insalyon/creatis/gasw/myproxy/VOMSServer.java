@@ -8,6 +8,7 @@ package fr.insalyon.creatis.gasw.myproxy;
  *
  * @author tram
  */
+@Deprecated
 public class VOMSServer {
     // default vo name
     private static final String DEFAULT_VO_NAME = "biomed";

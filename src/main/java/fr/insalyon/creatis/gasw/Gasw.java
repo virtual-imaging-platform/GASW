@@ -40,7 +40,7 @@ import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import fr.insalyon.creatis.gasw.output.OutputUtilFactory;
 import fr.insalyon.creatis.gasw.release.EnvVariable;
-import grool.GridUserCredentials;
+import grool.access.GridUserCredentials;
 import grool.proxy.Proxy;
 import grool.proxy.ProxyConfiguration;
 import grool.proxy.myproxy.CLIGlobusMyproxy;

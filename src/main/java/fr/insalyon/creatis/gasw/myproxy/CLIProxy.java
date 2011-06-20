@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
  *
  * @author Tram Truong Huu
  */
+@Deprecated
 public class CLIProxy extends Proxy {
 
     private static final Logger log = Logger.getLogger(CLIProxy.class);

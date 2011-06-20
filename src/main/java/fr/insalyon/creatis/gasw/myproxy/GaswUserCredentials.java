@@ -4,6 +4,7 @@ package fr.insalyon.creatis.gasw.myproxy;
  *
  * @author Tram Truong Huu
  */
+@Deprecated
 public class GaswUserCredentials {
 
     private static final String DEFAULT_VO = "biomed";

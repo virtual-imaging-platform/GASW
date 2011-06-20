@@ -23,6 +23,7 @@ import org.ietf.jgss.GSSCredential;
  *
  * @author Tram Truong Huu
  */
+@Deprecated
 public class APIProxy extends Proxy {
 
     private static final Logger log = Logger.getLogger(APIProxy.class);

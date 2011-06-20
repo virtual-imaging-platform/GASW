@@ -4,6 +4,7 @@ package fr.insalyon.creatis.gasw.myproxy;
  *
  * @author Tram Truong Huu
  */
+@Deprecated
 public class MyProxyServer {
     // default myproxy server
     public static final String DEFAULT_SERVER = "kingkong.grid.creatis.insa-lyon.fr";
