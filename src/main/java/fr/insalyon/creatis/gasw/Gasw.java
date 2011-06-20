@@ -45,6 +45,7 @@ import grool.proxy.Proxy;
 import grool.proxy.ProxyConfiguration;
 import grool.proxy.myproxy.CLIGlobusMyproxy;
 import grool.proxy.myproxy.GlobusMyproxy;
+import grool.server.MyproxyServer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -115,8 +116,7 @@ public class Gasw {
      * @return
      */
     public synchronized String submit(Object client, GaswInput gaswInput) throws GaswException {
-
-        return submit(client, gaswInput, null);
+        return submit(client, gaswInput, null, null);
     }
 
     /**
@@ -126,7 +126,7 @@ public class Gasw {
      * @param proxy user's proxy
      * @return
      */
-    public synchronized String submit(Object client, GaswInput gaswInput, GridUserCredentials credentials) throws GaswException {
+    public synchronized String submit(Object client, GaswInput gaswInput, GridUserCredentials credentials, MyproxyServer myproxyServer) throws GaswException {
 
         if (this.client == null) {
             this.client = client;
@@ -147,10 +147,10 @@ public class Gasw {
             if (credentials.getLogin() != null && credentials.getPassword() != null
                     && !credentials.getLogin().isEmpty() && !credentials.getPassword().isEmpty()) {
                 // getting proxy and appending voms extension by login/password using globus/glite API
-                userProxy = new GlobusMyproxy(credentials);
+                userProxy = new GlobusMyproxy(credentials, myproxyServer);
             } else {
                 // getting proxy and appending voms extension by user DN using command line
-                userProxy = new CLIGlobusMyproxy(credentials);
+                userProxy = new CLIGlobusMyproxy(credentials, myproxyServer);
             }
             executor.setUserProxy(userProxy);
         }
