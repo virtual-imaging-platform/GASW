@@ -79,7 +79,7 @@ public class GliteExecutor extends Executor {
 
             if (process.exitValue() != 0) {
                 logger.error(out);
-                throw new GaswException("Unable to submit job.");
+                throw new GaswException("Unable to submit job: " + out);
             }
 
             jobID = out.substring(out.lastIndexOf("https://"),

@@ -97,7 +97,7 @@ public class DiracExecutor extends Executor {
 
             if (process.exitValue() != 0) {
                 logger.error(cout);
-                throw new GaswException("Unable to submit job.");
+                throw new GaswException("Unable to submit job: " + cout);
             }
 
             jobID = cout.substring(cout.lastIndexOf("=") + 2, cout.length()).trim();
