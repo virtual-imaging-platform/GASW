@@ -105,7 +105,7 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append("ENV=" + Configuration.ENV + "\n");
         sb.append("export $ENV;\n");
         sb.append("__MOTEUR_ENV=" + Configuration.ENV + "\n");
-        sb.append("SE=" + Configuration.SE + "\n");
+        sb.append("export SE=" + Configuration.SE + "\n");
         sb.append("USE_CLOSE_SE=" + Configuration.USE_CLOSE_SE + "\n");
 
         sb.append("export MOTEUR_WORKFLOWID=" + Configuration.MOTEUR_WORKFLOWID + "\n\n");
