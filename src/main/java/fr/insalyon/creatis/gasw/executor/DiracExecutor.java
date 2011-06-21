@@ -109,16 +109,19 @@ public class DiracExecutor extends Executor {
 
             addJobToMonitor(jobID, userProxy);
             logger.info("Dirac Executor Job ID: " + jobID);
+            return jobID;
         } catch (InterruptedException ex) {
             logException(logger, ex);
+            throw new GaswException(ex);
         } catch (java.io.IOException ex) {
             logException(logger, ex);
+            throw new GaswException(ex);
         } catch (grool.proxy.ProxyInitializationException ex) {
             logException(logger, ex);
+            throw new GaswException(ex);
         } catch (grool.proxy.VOMSExtensionException ex) {
             logException(logger, ex);
-        } finally {
-            return jobID;
+            throw new GaswException(ex);
         }
     }
 
