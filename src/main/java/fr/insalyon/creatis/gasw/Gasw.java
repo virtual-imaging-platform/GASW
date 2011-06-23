@@ -145,15 +145,7 @@ public class Gasw {
         executor.preProcess();
 
         if (credentials != null) {
-            Proxy userProxy = null;
-            if (credentials.getLogin() != null && credentials.getPassword() != null
-                    && !credentials.getLogin().isEmpty() && !credentials.getPassword().isEmpty()) {
-                // getting proxy and appending voms extension by login/password using globus/glite API
-                userProxy = new GlobusMyproxy(credentials, myproxyServer, vomsServer);
-            } else {
-                // getting proxy and appending voms extension by user DN using command line
-                userProxy = new CLIGlobusMyproxy(credentials, myproxyServer, vomsServer);
-            }
+            Proxy userProxy = new GlobusMyproxy(credentials, myproxyServer, vomsServer);
             executor.setUserProxy(userProxy);
         }
         return executor.submit();
