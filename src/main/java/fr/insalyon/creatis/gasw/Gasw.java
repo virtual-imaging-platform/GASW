@@ -43,7 +43,6 @@ import fr.insalyon.creatis.gasw.release.EnvVariable;
 import grool.access.GridUserCredentials;
 import grool.proxy.Proxy;
 import grool.proxy.ProxyConfiguration;
-import grool.proxy.myproxy.CLIGlobusMyproxy;
 import grool.proxy.myproxy.GlobusMyproxy;
 import grool.server.MyproxyServer;
 import grool.server.VOMSServer;
