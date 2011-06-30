@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -83,7 +83,7 @@ public class DiracExecutor extends Executor {
         super.submit();
         String jobID = null;
         try {
-            Process process = GaswUtil.getProcess(userProxy,
+            Process process = GaswUtil.getProcess(logger, userProxy,
                     "dirac-wms-job-submit", Constants.JDL_ROOT + "/" + jdlName);
 
             process.waitFor();

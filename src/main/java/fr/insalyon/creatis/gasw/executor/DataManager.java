@@ -88,80 +88,85 @@ public class DataManager {
      */
     public synchronized void replicate(URI uri) throws GaswException {
 
-        try {
-            Process process = GaswUtil.getProcess("lcg-lr", "lfn:" + uri.getPath());
+        String scheme = uri.getScheme();
+        if (scheme == null || (!scheme.equalsIgnoreCase("file")
+                && !scheme.equalsIgnoreCase("http"))) {
+            try {
+                Process process = GaswUtil.getProcess(logger, 
+                        "lcg-lr", "lfn:" + uri.getPath());
 
-            BufferedReader br = GaswUtil.getBufferedReader(process);
-            String s = null;
-            String cout = "";
-            boolean replicated = false;
-            List<URI> replicas = new ArrayList<URI>();
+                BufferedReader br = GaswUtil.getBufferedReader(process);
+                String s = null;
+                String cout = "";
+                boolean replicated = false;
+                List<URI> replicas = new ArrayList<URI>();
 
-            while ((s = br.readLine()) != null) {
-                cout += s;
-                if (s.contains(Configuration.DATA_MANAGER_HOST)) {
-                    replicated = true;
-                    break;
-                } else {
-                    try {
-                        replicas.add(new URI(s));
-                    } catch (URISyntaxException ex) {
+                while ((s = br.readLine()) != null) {
+                    cout += s;
+                    if (s.contains(Configuration.DATA_MANAGER_HOST)) {
+                        replicated = true;
+                        break;
+                    } else {
+                        try {
+                            replicas.add(new URI(s));
+                        } catch (URISyntaxException ex) {
+                            throw new GaswException("Unable to get replicas from '"
+                                    + uri.getPath() + "'.");
+                        }
+                    }
+                    process.waitFor();
+                    if (process.exitValue() != 0) { //TODO verify if this place could be reached
+                        logger.warn(cout);
                         throw new GaswException("Unable to get replicas from '"
                                 + uri.getPath() + "'.");
                     }
                 }
-                process.waitFor();
-                if (process.exitValue() != 0) { //TODO verify if this place could be reached
-                    logger.warn(cout);
-                    throw new GaswException("Unable to get replicas from '"
-                            + uri.getPath() + "'.");
-                }
-            }
 
-            if (!replicated) {
-                logger.info("Replicating '" + uri.getPath() + "'.");
-                for (URI replica : replicas) {
-                    try {
-                        String[] source = getSourceTypeAndSURL(
-                                replica.getHost(), replica.getPath());
+                if (!replicated) {
+                    logger.info("Replicating '" + uri.getPath() + "'.");
+                    for (URI replica : replicas) {
+                        try {
+                            String[] source = getSourceTypeAndSURL(
+                                    replica.getHost(), replica.getPath());
 
-                        process = GaswUtil.getProcess("lcg-rep", "-b",
-                                "-U", "srmv2", "-d", getDestinationSURL(),
-                                "-T", source[0], source[1]);
+                            process = GaswUtil.getProcess(logger, "lcg-rep", "-b",
+                                    "-U", "srmv2", "-d", getDestinationSURL(),
+                                    "-T", source[0], source[1]);
 
-                        br = GaswUtil.getBufferedReader(process);
-                        s = null;
-                        cout = "";
+                            br = GaswUtil.getBufferedReader(process);
+                            s = null;
+                            cout = "";
 
-                        while ((s = br.readLine()) != null) {
-                            cout += s;
-                        }
-                        process.waitFor();
+                            while ((s = br.readLine()) != null) {
+                                cout += s;
+                            }
+                            process.waitFor();
 
-                        if (process.exitValue() == 0) {
-                            replicated = true;
-                            break;
-                        } else {
+                            if (process.exitValue() == 0) {
+                                replicated = true;
+                                break;
+                            } else {
+                                logger.warn("Unable to replicate '" + uri.getPath()
+                                        + "' from '" + replica + "': " + cout);
+                            }
+                        } catch (DAOException ex) {
+                            logger.warn("Unable to find entry point for '"
+                                    + replica.getHost() + "'.");
+                        } catch (InterruptedException ex) {
                             logger.warn("Unable to replicate '" + uri.getPath()
-                                    + "' from '" + replica + "': " + cout);
+                                    + "' from '" + replica + "'.");
                         }
-                    } catch (DAOException ex) {
-                        logger.warn("Unable to find entry point for '"
-                                + replica.getHost() + "'.");
-                    } catch (InterruptedException ex) {
-                        logger.warn("Unable to replicate '" + uri.getPath()
-                                + "' from '" + replica + "'.");
+                    }
+                    if (!replicated) {
+                        throw new GaswException("Unable to replicate '"
+                                + uri.getPath() + "'.");
                     }
                 }
-                if (!replicated) {
-                    throw new GaswException("Unable to replicate '"
-                            + uri.getPath() + "'.");
-                }
+            } catch (InterruptedException ex) {
+                throw new GaswException(ex);
+            } catch (IOException ex) {
+                throw new GaswException(ex);
             }
-        } catch (InterruptedException ex) {
-            throw new GaswException(ex);
-        } catch (IOException ex) {
-            throw new GaswException(ex);
         }
     }
 

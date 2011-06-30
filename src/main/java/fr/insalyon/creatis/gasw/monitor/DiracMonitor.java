@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -181,7 +181,7 @@ public class DiracMonitor extends Monitor {
     @Override
     protected void kill(String jobID) {
         try {
-            Process process = GaswUtil.getProcess("dirac-wms-job-kill", jobID);
+            Process process = GaswUtil.getProcess(logger, "dirac-wms-job-kill", jobID);
             process.waitFor();
 
             BufferedReader br = GaswUtil.getBufferedReader(process);
@@ -207,7 +207,7 @@ public class DiracMonitor extends Monitor {
     @Override
     protected void reschedule(String jobID) {
         try {
-            Process process = GaswUtil.getProcess("dirac-wms-job-reschedule", jobID);
+            Process process = GaswUtil.getProcess(logger, "dirac-wms-job-reschedule", jobID);
             process.waitFor();
 
             BufferedReader br = GaswUtil.getBufferedReader(process);

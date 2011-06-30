@@ -74,7 +74,7 @@ public class GaswUtil {
      * @param strings
      * @return 
      */
-    public static Process getProcess(Proxy userProxy, String... strings) 
+    public static Process getProcess(Logger logger, Proxy userProxy, String... strings)
             throws IOException, grool.proxy.ProxyInitializationException, grool.proxy.VOMSExtensionException {
 
         ProcessBuilder builder = new ProcessBuilder(strings);
@@ -83,12 +83,12 @@ public class GaswUtil {
         if (userProxy != null) {
             if (strings[0].contains("glite")) {
                 if (!userProxy.isValid()) {
-                    Logger.getLogger(GaswUtil.class).warn("Proxy has expired. Downloading a new proxy from myProxy server.");
+                    logger.warn("Proxy has expired. Downloading a new proxy from myProxy server.");
                     userProxy.init();
                 }
             } else if (strings[0].contains("dirac")) {
                 if (!userProxy.isRawProxyValid()) {
-                    Logger.getLogger(GaswUtil.class).warn("Proxy has expired. Downloading a new proxy from myProxy server...");
+                    logger.warn("Proxy has expired. Downloading a new proxy from myProxy server.");
                     userProxy.initRawProxy();
                 }
             }
@@ -104,9 +104,9 @@ public class GaswUtil {
      * @param strings
      * @return 
      */
-    public static Process getProcess(String... strings) throws IOException {
+    public static Process getProcess(Logger logger, String... strings) throws IOException {
         try {
-            return getProcess(null, strings);
+            return getProcess(logger, null, strings);
         } catch (grool.proxy.ProxyInitializationException e) {
             return null;
         } catch (grool.proxy.VOMSExtensionException e) {

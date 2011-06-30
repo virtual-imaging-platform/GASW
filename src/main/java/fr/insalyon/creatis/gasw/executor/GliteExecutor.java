@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -40,6 +40,7 @@ import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.GliteJdlGenerator;
 import java.io.BufferedReader;
+import java.io.IOException;
 import org.apache.log4j.Logger;
 
 /**
@@ -65,8 +66,9 @@ public class GliteExecutor extends Executor {
         String jobID = null;
         super.submit();
         try {
-            Process process = GaswUtil.getProcess(userProxy, "glite-wms-job-submit",
-                    "-a", Constants.JDL_ROOT + "/" + jdlName);
+            Process process = GaswUtil.getProcess(logger, userProxy, 
+                    "glite-wms-job-submit", "-a", 
+                    Constants.JDL_ROOT + "/" + jdlName);
 
             process.waitFor();
             BufferedReader br = GaswUtil.getBufferedReader(process);

@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -83,7 +83,7 @@ public class GliteOutputUtil extends OutputUtil {
 
                 String dir = "out";
                 try {
-                    Process process = GaswUtil.getProcess(userProxy,
+                    Process process = GaswUtil.getProcess(logger, userProxy,
                             "glite-wms-job-output", "--dir", dir, jobID);
                     process.waitFor();
 

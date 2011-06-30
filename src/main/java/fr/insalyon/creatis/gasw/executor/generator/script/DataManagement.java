@@ -59,7 +59,7 @@ public class DataManagement extends AbstractGenerator {
     private DataManagement() {
     }
 
-    public String checkCacheDownloadAndCacheLFNFunction() {
+    public String checkCacheDownloadAndCacheLFNCommand() {
 
         StringBuilder sb = new StringBuilder();
         sb.append("function checkCacheDownloadAndCacheLFN {\n");
@@ -149,7 +149,7 @@ public class DataManagement extends AbstractGenerator {
         return sb.toString();
     }
 
-    public String downloadFunction() {
+    public String downloadCommand() {
 
         StringBuilder sb = new StringBuilder();
         sb.append("function downloadLFN {\n");
@@ -541,5 +541,44 @@ public class DataManagement extends AbstractGenerator {
         } else {
             return lfn.toString();
         }
+    }
+
+    /**
+     * Downloads a URI from the grid if it's a LFN, a file from a URL or makes a
+     * local copy.
+     * 
+     * @param uri
+     * @param indentation 
+     * @return 
+     */
+    public String downloadURICommand(URI uri, String indentation) {
+
+        StringBuilder sb = new StringBuilder();
+        String scheme = uri.getScheme();
+        if (scheme == null || scheme.equalsIgnoreCase("lfn")) {
+            sb.append(indentation + "checkCacheDownloadAndCacheLFN " + removeLFCHost(uri) + "\n");
+            sb.append(validateDownload("Cannot download LFN file", indentation));
+
+        } else if (scheme.equalsIgnoreCase("http")) {
+            sb.append(indentation + "wget --no-check-certificate " + uri.toString() + "\n");
+            sb.append(validateDownload("Cannot download HTTP file", indentation));
+
+        } else if (scheme.equalsIgnoreCase("file")) {
+            sb.append(indentation + "cp " + uri.getPath() + " .\n");
+            sb.append(validateDownload("Cannot copy file", indentation));
+        }
+        return sb.toString();
+    }
+
+    private String validateDownload(String message, String indentation) {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(indentation + "if [ $? != 0 ]\n");
+        sb.append(indentation + "then\n");
+        sb.append(indentation + "  error \"" + message + "\"\n");
+        sb.append(indentation + "  error \"Exiting with return value 1\"\n");
+        sb.append(indentation + "  exit 1\n");
+        sb.append(indentation + "fi\n");
+        return sb.toString();
     }
 }

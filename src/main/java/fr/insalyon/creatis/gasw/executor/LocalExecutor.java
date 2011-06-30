@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -54,7 +54,7 @@ import org.apache.log4j.Logger;
  */
 public class LocalExecutor extends Executor {
 
-    private static final Logger log = Logger.getLogger(LocalExecutor.class);
+    private static final Logger logger = Logger.getLogger(LocalExecutor.class);
     private String cerr;
     private String cout;
     private static List<String> finishedJobs = new ArrayList<String>();
@@ -76,7 +76,7 @@ public class LocalExecutor extends Executor {
         String jobID = "Local-" + random.nextInt(100000);
         new Execution(jobID).start();
 
-        log.info("Local Executor Job ID: " + jobID);
+        logger.info("Local Executor Job ID: " + jobID);
         return jobID;
     }
 
@@ -94,7 +94,7 @@ public class LocalExecutor extends Executor {
             try {
                 addJobToMonitor(jobID, userProxy);
 
-                Process process = GaswUtil.getProcess("chmod", "+x", 
+                Process process = GaswUtil.getProcess(logger, "chmod", "+x", 
                         Constants.SCRIPT_ROOT + "/" + scriptName);
                 process.waitFor();
 
@@ -121,9 +121,9 @@ public class LocalExecutor extends Executor {
                     finishedJobs.add(jobID + "--" + exitValue);
                 }
             } catch (InterruptedException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             } catch (IOException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             }
         }
     }

@@ -255,16 +255,10 @@ public class ScriptGenerator extends AbstractGenerator {
             for (Execution e : i.getExecutions()) {
                 sb.append("  if [[ \"$GASW_JOB_ENV\" == \"" + e.getType().name() + "\" ]]\n");
                 sb.append("  then\n");
-                URI lfn = e.getBoundArtifact();
-                sb.append("    checkCacheDownloadAndCacheLFN " + dataManagement.removeLFCHost(lfn) + "\n");
-                sb.append("    if [ $? != 0 ]\n"
-                        + "      then\n"
-                        + "      error \"Cannot download file\"\n"
-                        + "      error \"Exiting with return value 1\"\n"
-                        + "      exit 1\n"
-                        + "    fi\n");
-                sb.append("    export GASW_EXEC_URL=\"" + lfn + "\"\n");
-                File file = new File(lfn.getRawPath());
+                URI uri = e.getBoundArtifact();
+                sb.append(dataManagement.downloadURICommand(uri, "    "));
+                sb.append("    export GASW_EXEC_URL=\"" + uri + "\"\n");
+                File file = new File(uri.getRawPath());
                 sb.append("    export GASW_EXEC_BUNDLE=\"" + file.getName() + "\"\n");
                 sb.append("    export GASW_EXEC_COMMAND=\"" + e.getTarget() + "\"\n");
                 sb.append("  fi\n");
@@ -274,15 +268,9 @@ public class ScriptGenerator extends AbstractGenerator {
 
         sb.append("\n");
 
-        for (URI lfn : downloads) {
-            sb.append("checkCacheDownloadAndCacheLFN " + dataManagement.removeLFCHost(lfn) + "\n");
-            sb.append("if [ $? != 0 ]\n"
-                    + "then\n"
-                    + "  error \"Cannot download file\"\n"
-                    + "  error \"Exiting with return value 1\"\n"
-                    + "  exit 1\n"
-                    + "fi\n");
-            edgesVar += ";" + lfn;
+        for (URI uri : downloads) {
+            sb.append(dataManagement.downloadURICommand(uri, ""));
+            edgesVar += ";" + uri;
         }
         edgesVar += "\"";
 
@@ -489,7 +477,9 @@ public class ScriptGenerator extends AbstractGenerator {
      * @param parameters
      * @return A string containing the bash script source
      */
-    public String generateScript(Release release, List<URI> downloads, List<URI> uploads, List<String> regexs, String defaultDir, List<String> parameters) {
+    public String generateScript(Release release, List<URI> downloads,
+            List<URI> uploads, List<String> regexs, String defaultDir,
+            List<String> parameters) {
 
         StringBuilder sb = new StringBuilder();
 
@@ -498,8 +488,8 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append(bashFunctions.cleanupCommand());
         sb.append(logFunctions());
         sb.append(startLogFunction());
-        sb.append(dataManagement.checkCacheDownloadAndCacheLFNFunction());
-        sb.append(dataManagement.downloadFunction());
+        sb.append(dataManagement.checkCacheDownloadAndCacheLFNCommand());
+        sb.append(dataManagement.downloadCommand());
         sb.append(stopLogFunction());
         sb.append(dataManagement.addToCacheCommand());
         sb.append(dataManagement.addToDataManagerCommand());
