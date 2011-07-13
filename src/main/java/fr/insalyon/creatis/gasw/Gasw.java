@@ -46,6 +46,7 @@ import grool.proxy.ProxyConfiguration;
 import grool.proxy.myproxy.GlobusMyproxy;
 import grool.server.MyproxyServer;
 import grool.server.VOMSServer;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,7 +59,7 @@ import org.apache.log4j.PropertyConfigurator;
  * @author Rafael Silva
  */
 public class Gasw {
-    
+
     private static final Logger log = Logger.getLogger(Gasw.class);
     private static Gasw instance;
     private GaswNotification notification;
@@ -127,7 +128,7 @@ public class Gasw {
      * @return
      */
     public synchronized String submit(Object client, GaswInput gaswInput, GridUserCredentials credentials,
-                                      MyproxyServer myproxyServer, VOMSServer vomsServer) throws GaswException {
+            MyproxyServer myproxyServer, VOMSServer vomsServer) throws GaswException {
 
         if (this.client == null) {
             this.client = client;
@@ -143,10 +144,17 @@ public class Gasw {
         Executor executor = ExecutorFactory.getExecutor(version, ltarget, gaswInput);
         executor.preProcess();
 
+        Proxy userProxy = null;
         if (credentials != null) {
-            Proxy userProxy = new GlobusMyproxy(credentials, myproxyServer, vomsServer);
-            executor.setUserProxy(userProxy);
+            userProxy = new GlobusMyproxy(credentials, myproxyServer, vomsServer);
+        } else {
+            String proxyPath = System.getenv("X509_USER_PROXY");
+            if (proxyPath != null && !proxyPath.isEmpty()) {
+                userProxy = new GlobusMyproxy(myproxyServer, vomsServer, new File(proxyPath));
+            }
         }
+        executor.setUserProxy(userProxy);
+
         return executor.submit();
     }
 
