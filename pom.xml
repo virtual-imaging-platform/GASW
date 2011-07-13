@@ -77,16 +77,11 @@
             <version>1.2.16</version>
         </dependency>
         
-        <!--grool - proxy-->
+        <!--grool-proxy-->
         <dependency>
             <groupId>fr.cnrs.i3s</groupId>
             <artifactId>grool-proxy</artifactId>
-            <version>0.2.1</version>
-        </dependency>
-        <dependency>
-            <groupId>fr.cnrs.i3s</groupId>
-            <artifactId>grool-proxy-cli</artifactId>
-            <version>0.2.1</version>
+            <version>0.2.2</version>
         </dependency>
     </dependencies>
     
