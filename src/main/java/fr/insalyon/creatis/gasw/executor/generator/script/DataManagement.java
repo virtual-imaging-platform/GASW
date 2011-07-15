@@ -46,7 +46,7 @@ import org.apache.log4j.Logger;
  */
 public class DataManagement extends AbstractGenerator {
 
-    private static final Logger logger = Logger.getLogger(DataManagement.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static DataManagement instance;
 
     public static DataManagement getInstance() {

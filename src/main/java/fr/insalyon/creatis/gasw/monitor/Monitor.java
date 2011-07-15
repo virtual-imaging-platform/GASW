@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -55,7 +55,7 @@ import org.apache.log4j.Logger;
  */
 public abstract class Monitor extends Thread {
 
-    private static final Logger logger = Logger.getLogger(Monitor.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     protected boolean stop;
     protected JobDAO jobDAO;
     protected NodeDAO nodeDAO;

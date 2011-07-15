@@ -52,7 +52,7 @@ import org.apache.log4j.Logger;
  */
 public class DiracDatabase {
 
-    private static Logger logger = Logger.getLogger(DiracDatabase.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static DiracDatabase instance;
     private Connection connection;
 

@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -34,6 +34,8 @@
  */
 package fr.insalyon.creatis.gasw;
 
+import fr.insalyon.creatis.gasw.Constants.Grid;
+import fr.insalyon.creatis.gasw.Constants.Version;
 import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
@@ -54,13 +56,14 @@ import org.apache.log4j.Logger;
  */
 public class Configuration {
 
-    private static final Logger logger = Logger.getLogger(Configuration.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static final String CONF_FILE = "./conf/settings.conf";
     private static Properties conf;
     // Properties
     public static final String EXECUTION_FOLDER = new File("").getAbsolutePath();
     public static final String MOTEUR_WORKFLOWID = EXECUTION_FOLDER.substring(EXECUTION_FOLDER.lastIndexOf("/") + 1);
-    public static String GRID = "DIRAC";
+    public static Version VERSION = Constants.Version.GRID;
+    public static Grid GRID = Constants.Grid.DIRAC;
     public static String VO = "biomed";
     public static String ENV = "\"\"";
     public static String SE = "ccsrm02.in2p3.fr";
@@ -106,7 +109,7 @@ public class Configuration {
 
             String grid = conf.getProperty("GRID");
             if (grid != null && !grid.equals("")) {
-                GRID = grid;
+                GRID = Constants.Grid.valueOf(grid);
             }
 
             String vo = conf.getProperty("VO");
@@ -213,7 +216,7 @@ public class Configuration {
 
             logger.info("Failing to setup trying to create file");
             try {
-                conf.setProperty("GRID", GRID);
+                conf.setProperty("GRID", GRID.name());
                 conf.setProperty("VO", VO);
                 conf.setProperty("ENV", ENV);
                 conf.setProperty("SE", SE);

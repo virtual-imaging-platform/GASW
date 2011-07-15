@@ -40,7 +40,6 @@ import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.GliteJdlGenerator;
 import java.io.BufferedReader;
-import java.io.IOException;
 import org.apache.log4j.Logger;
 
 /**
@@ -49,10 +48,10 @@ import org.apache.log4j.Logger;
  */
 public class GliteExecutor extends Executor {
 
-    private static final Logger logger = Logger.getLogger(GliteExecutor.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
 
-    public GliteExecutor(String version, GaswInput gaswInput) {
-        super(version, gaswInput);
+    public GliteExecutor(GaswInput gaswInput) {
+        super(gaswInput);
     }
 
     @Override

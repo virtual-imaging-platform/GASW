@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -57,7 +57,7 @@ import org.apache.log4j.Logger;
  */
 public class GliteMonitor extends Monitor {
 
-    private static final Logger logger = Logger.getLogger(GliteMonitor.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static GliteMonitor instance;
     private volatile Map<String, Proxy> monitoredJobs;
 

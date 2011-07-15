@@ -57,7 +57,7 @@ import org.apache.log4j.Logger;
  */
 public class DataManager {
 
-    private static final Logger logger = Logger.getLogger(DataManager.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static DataManager instance;
 
     public synchronized static DataManager getInstance() {

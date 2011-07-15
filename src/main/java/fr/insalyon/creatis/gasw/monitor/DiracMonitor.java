@@ -54,7 +54,7 @@ import org.apache.log4j.Logger;
  */
 public class DiracMonitor extends Monitor {
 
-    private static final Logger logger = Logger.getLogger(DiracMonitor.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static DiracMonitor instance;
     private volatile Map<String, Proxy> monitoredJobs;
 

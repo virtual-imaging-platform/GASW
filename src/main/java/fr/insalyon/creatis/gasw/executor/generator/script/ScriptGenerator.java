@@ -51,7 +51,6 @@ import org.apache.log4j.Logger;
  */
 public class ScriptGenerator extends AbstractGenerator {
 
-    private static final Logger logger = Logger.getLogger(ScriptGenerator.class);
     private static ScriptGenerator instance;
     private DataManagement dataManagement;
     private BashFunctions bashFunctions;

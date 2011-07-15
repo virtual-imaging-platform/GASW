@@ -34,8 +34,6 @@
  */
 package fr.insalyon.creatis.gasw.executor.generator.script;
 
-import fr.insalyon.creatis.gasw.Configuration;
-
 /**
  *
  * @author Rafael Silva

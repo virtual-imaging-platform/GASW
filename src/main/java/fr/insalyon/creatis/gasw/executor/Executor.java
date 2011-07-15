@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -54,8 +54,7 @@ import org.apache.log4j.Logger;
  */
 public abstract class Executor {
 
-    private static final Logger log = Logger.getLogger(Executor.class);
-    protected String version;
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     protected GaswInput gaswInput;
     protected String scriptName;
     protected String jdlName;
@@ -70,8 +69,7 @@ public abstract class Executor {
      * @param downloads List of input files to be downloaded in the worker node.
      * @param uploads List of output files to be uploaded to a Storage Element.
      */
-    public Executor(String version, GaswInput gaswInput) {
-        this.version = version;
+    public Executor(GaswInput gaswInput) {
         this.gaswInput = gaswInput;
         this.firstExecution = true;
         this.userProxy = null;
@@ -137,7 +135,7 @@ public abstract class Executor {
             return fileName;
 
         } catch (IOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
             return null;
         }
     }
@@ -161,7 +159,7 @@ public abstract class Executor {
             return fileName;
 
         } catch (IOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
             return null;
         }
     }
@@ -177,11 +175,11 @@ public abstract class Executor {
             params.append(" ");
         }
         if (userProxy != null){
-                MonitorFactory.getMonitor(version).add(jobID,
+                MonitorFactory.getMonitor().add(jobID,
                 gaswInput.getRelease().getSymbolicName(),
                 jdlName, params.toString(), userProxy);
             }else{
-                MonitorFactory.getMonitor(version).add(jobID,
+                MonitorFactory.getMonitor().add(jobID,
                 gaswInput.getRelease().getSymbolicName(),
                 jdlName, params.toString(), null);
             }
@@ -242,7 +240,7 @@ public abstract class Executor {
             return newName;
 
         } catch (Exception ex) {
-            logException(log, ex);
+            logException(logger, ex);
             return null;
         }
     }

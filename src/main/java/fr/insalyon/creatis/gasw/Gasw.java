@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -60,14 +60,12 @@ import org.apache.log4j.PropertyConfigurator;
  */
 public class Gasw {
 
-    private static final Logger log = Logger.getLogger(Gasw.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static Gasw instance;
     private GaswNotification notification;
     private Object client;
     private volatile Map<String, Proxy> finishedJobs;
     private volatile boolean gettingOutputs;
-    private String version;
-    private String target;
 
     /**
      * Gets an instance of GASW
@@ -94,20 +92,25 @@ public class Gasw {
     }
 
     private Gasw() throws GaswException {
-        this(Constants.VERSION_GRID, Constants.GRID_DIRAC);
+        this(Constants.Version.GRID.name(), Constants.Grid.DIRAC.name());
     }
 
     private Gasw(String version, String target) throws GaswException {
-        PropertyConfigurator.configure(
-                Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
-        Configuration.setUp();
-        ProxyConfiguration.initConfiguration();
-        this.version = version;
-        this.target = target;
-        finishedJobs = new HashMap<String, Proxy>();
-        notification = new GaswNotification();
-        notification.start();
-        gettingOutputs = false;
+        try {
+            PropertyConfigurator.configure(
+                    Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
+            Configuration.setUp();
+            ProxyConfiguration.initConfiguration();
+            Configuration.VERSION = Constants.Version.valueOf(version);
+            Configuration.GRID = Constants.Grid.valueOf(target);
+            finishedJobs = new HashMap<String, Proxy>();
+            notification = new GaswNotification();
+            notification.start();
+            gettingOutputs = false;
+        
+        } catch (IllegalArgumentException ex) {
+            throw new GaswException(ex);
+        }
     }
 
     /**
@@ -134,14 +137,13 @@ public class Gasw {
             this.client = client;
         }
         // if the jigsaw descriptor contains a target infrastruture, this overides the default target
-        String ltarget = this.target;
         for (EnvVariable v : gaswInput.getRelease().getConfigurations()) {
             if (v.getCategory() == EnvVariable.Category.SYSTEM
                     && v.getName().equals("gridTarget")) {
-                ltarget = v.getValue();
+                Configuration.GRID = Constants.Grid.valueOf(v.getValue());
             }
         }
-        Executor executor = ExecutorFactory.getExecutor(version, ltarget, gaswInput);
+        Executor executor = ExecutorFactory.getExecutor(gaswInput);
         executor.preProcess();
 
         Proxy userProxy = null;
@@ -179,10 +181,9 @@ public class Gasw {
 
         if (finishedJobs != null) {
             for (String jobID : finishedJobs.keySet()) {
-                String vversion = jobID.contains("Local-") ? "LOCAL" : "GRID";
-                int startTime = MonitorFactory.getMonitor(vversion).getStartTime();
-                outputsList.add(OutputUtilFactory.getOutputUtil(
-                        vversion, startTime).getOutputs(jobID.split("--")[0], finishedJobs.get(jobID)));
+                int startTime = MonitorFactory.getMonitor().getStartTime();
+                outputsList.add(OutputUtilFactory.getOutputUtil(startTime)
+                        .getOutputs(jobID.split("--")[0], finishedJobs.get(jobID)));
 
                 jobsToRemove.add(jobID);
             }
@@ -221,10 +222,10 @@ public class Gasw {
                 try {
                     sleep(10000);
                 } catch (InterruptedException ex) {
-                    log.error(ex);
-                    if (log.isDebugEnabled()) {
+                    logger.error(ex);
+                    if (logger.isDebugEnabled()) {
                         for (StackTraceElement stack : ex.getStackTrace()) {
-                            log.debug(stack);
+                            logger.debug(stack);
                         }
                     }
                 }

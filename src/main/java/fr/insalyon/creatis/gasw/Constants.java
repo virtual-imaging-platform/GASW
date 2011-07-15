@@ -53,8 +53,14 @@ public class Constants {
     public static final String CACHE_DIR = "${BASEDIR}/cache";
     public static final String CACHE_FILE = "cache.txt";
     // Versions
-    public static final String VERSION_GRID = "GRID";
-    public static final String VERSION_LOCAL = "LOCAL";
-    public static final String GRID_DIRAC = "DIRAC";
-    public static final String GRID_GLITE = "GLITE_WMS";
+
+    public static enum Version {
+
+        GRID, LOCAL
+    };
+
+    public static enum Grid {
+
+        DIRAC, GLITE_WMS
+    };
 }

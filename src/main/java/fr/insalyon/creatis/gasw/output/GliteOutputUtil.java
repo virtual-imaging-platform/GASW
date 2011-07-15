@@ -43,8 +43,6 @@ import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.monitor.GaswStatus;
 import grool.proxy.Proxy;
-import grool.proxy.ProxyInitializationException;
-import grool.proxy.VOMSExtensionException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -56,7 +54,7 @@ import org.apache.log4j.Logger;
  */
 public class GliteOutputUtil extends OutputUtil {
 
-    private static final Logger logger = Logger.getLogger(GliteOutputUtil.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
 
     public GliteOutputUtil(int startTime) {
         super(startTime);

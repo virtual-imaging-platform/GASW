@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -50,7 +50,7 @@ import org.apache.log4j.Logger;
  */
 public class LocalOutputUtil extends OutputUtil {
 
-    private static final Logger logger = Logger.getLogger(LocalOutputUtil.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
 
     public LocalOutputUtil(int startTime) {
         super(startTime);

@@ -51,7 +51,7 @@ import org.apache.log4j.Logger;
  */
 public class DerbyDAOFactory extends DAOFactory {
 
-    private static final Logger log = Logger.getLogger(DerbyDAOFactory.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static DAOFactory instance;
     private final String DRIVER = "org.apache.derby.jdbc.ClientDriver";
     private final String DBURL = "jdbc:derby://";
@@ -67,10 +67,10 @@ public class DerbyDAOFactory extends DAOFactory {
         try {
             connect();
         } catch (SQLException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
+            logger.error(ex);
+            if (logger.isDebugEnabled()) {
                 for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
+                    logger.debug(stack);
                 }
             }
         }
@@ -88,17 +88,19 @@ public class DerbyDAOFactory extends DAOFactory {
                     DBURL + Configuration.DERBY_HOST
                     + ":" + Configuration.DERBY_PORT + "/"
                     + dbDir.getAbsolutePath() + create);
-            if (!create.isEmpty()) {
-                createTables();
-            }
+
+            // Create table should always be called, cause there are other services
+            // who uses the same database. Thus, the database folder could exists but
+            // not the tables.
+            createTables();
             connection.setAutoCommit(true);
 
         } catch (ClassNotFoundException ex) {
-            log.error(ex);
+            logger.error(ex);
         } catch (InstantiationException ex) {
-            log.error(ex);
+            logger.error(ex);
         } catch (IllegalAccessException ex) {
-            log.error(ex);
+            logger.error(ex);
         }
     }
 
@@ -156,7 +158,7 @@ public class DerbyDAOFactory extends DAOFactory {
                     + ")");
 
         } catch (SQLException ex) {
-            log.info("Tables already created!");
+            logger.info("Tables already created!");
         }
     }
 
@@ -167,10 +169,10 @@ public class DerbyDAOFactory extends DAOFactory {
                 connection.close();
             }
         } catch (SQLException ex) {
-            log.error(ex);
-            if (log.isDebugEnabled()) {
+            logger.error(ex);
+            if (logger.isDebugEnabled()) {
                 for (StackTraceElement stack : ex.getStackTrace()) {
-                    log.debug(stack);
+                    logger.debug(stack);
                 }
             }
         }

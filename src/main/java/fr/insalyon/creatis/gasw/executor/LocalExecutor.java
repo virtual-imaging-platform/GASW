@@ -54,13 +54,13 @@ import org.apache.log4j.Logger;
  */
 public class LocalExecutor extends Executor {
 
-    private static final Logger logger = Logger.getLogger(LocalExecutor.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private String cerr;
     private String cout;
     private static List<String> finishedJobs = new ArrayList<String>();
 
-    protected LocalExecutor(String version, GaswInput gaswInput) {
-        super(version, gaswInput);
+    protected LocalExecutor(GaswInput gaswInput) {
+        super(gaswInput);
     }
 
     @Override

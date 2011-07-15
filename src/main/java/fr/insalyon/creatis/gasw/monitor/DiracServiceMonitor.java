@@ -51,7 +51,7 @@ import org.apache.log4j.Logger;
  */
 public class DiracServiceMonitor extends Thread {
 
-    private static final Logger logger = Logger.getLogger(DiracServiceMonitor.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static final String SEPARATOR = "###";
     private static DiracServiceMonitor instance;
     private boolean stop;

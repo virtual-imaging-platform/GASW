@@ -51,10 +51,10 @@ import org.apache.log4j.Logger;
  */
 public class DiracExecutor extends Executor {
 
-    private static final Logger logger = Logger.getLogger(DiracExecutor.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
 
-    protected DiracExecutor(String version, GaswInput gaswInput) {
-        super(version, gaswInput);
+    protected DiracExecutor(GaswInput gaswInput) {
+        super(gaswInput);
     }
 
     @Override

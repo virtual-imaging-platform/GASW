@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -50,7 +50,7 @@ import org.apache.log4j.Logger;
  */
 public class LocalMonitor extends Monitor {
 
-    private static final Logger log = Logger.getLogger(LocalMonitor.class);
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static LocalMonitor instance;
     private Map<String, GaswStatus> jobsStatus;
 
@@ -95,11 +95,11 @@ public class LocalMonitor extends Monitor {
                     Thread.sleep(5000);
                 }
             } catch (GaswException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             } catch (DAOException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             } catch (InterruptedException ex) {
-                logException(log, ex);
+                logException(logger, ex);
             }
         }
     }
@@ -114,7 +114,7 @@ public class LocalMonitor extends Monitor {
                 jobDAO.update(job);
             }
         } catch (DAOException ex) {
-            logException(log, ex);
+            logException(logger, ex);
         }
     }
 

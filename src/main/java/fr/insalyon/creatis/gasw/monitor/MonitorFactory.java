@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -43,19 +43,18 @@ import fr.insalyon.creatis.gasw.Constants;
  */
 public class MonitorFactory {
 
-    public static Monitor getMonitor(String version) {
+    public static Monitor getMonitor() {
 
-        if (version.equals(Constants.VERSION_GRID)) {
-            if (Configuration.GRID.equals(Constants.GRID_DIRAC)) {
+        if (Configuration.VERSION == Constants.Version.GRID) {
+            if (Configuration.GRID == Constants.Grid.DIRAC) {
                 return DiracMonitor.getInstance();
             }
-            if (Configuration.GRID.equals(Constants.GRID_GLITE)) {
+            if (Configuration.GRID == Constants.Grid.GLITE_WMS) {
                 return GliteMonitor.getInstance();
             }
         } else {
             return LocalMonitor.getInstance();
         }
-
         return null;
     }
 
