@@ -92,7 +92,7 @@ public class DataManager {
         if (scheme == null || (!scheme.equalsIgnoreCase("file")
                 && !scheme.equalsIgnoreCase("http"))) {
             try {
-                Process process = GaswUtil.getProcess(logger, 
+                Process process = GaswUtil.getProcess(logger,
                         "lcg-lr", "lfn:" + uri.getPath());
 
                 BufferedReader br = GaswUtil.getBufferedReader(process);
@@ -129,8 +129,8 @@ public class DataManager {
                             String[] source = getSourceTypeAndSURL(
                                     replica.getHost(), replica.getPath());
 
-                            process = GaswUtil.getProcess(logger, "lcg-rep", "-b",
-                                    "-U", "srmv2", "-d", getDestinationSURL(),
+                            process = GaswUtil.getProcess(logger, "lcg-rep", "-v",
+                                    "-b", "-U", "srmv2", "-d", getDestinationSURL(),
                                     "-T", source[0], source[1]);
 
                             br = GaswUtil.getBufferedReader(process);
@@ -156,10 +156,6 @@ public class DataManager {
                             logger.warn("Unable to replicate '" + uri.getPath()
                                     + "' from '" + replica + "'.");
                         }
-                    }
-                    if (!replicated) {
-                        throw new GaswException("Unable to replicate '"
-                                + uri.getPath() + "'.");
                     }
                 }
             } catch (InterruptedException ex) {
