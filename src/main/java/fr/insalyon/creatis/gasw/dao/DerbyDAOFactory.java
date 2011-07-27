@@ -153,7 +153,7 @@ public class DerbyDAOFactory extends DAOFactory {
                     + "id VARCHAR(255), "
                     + "minor_status INT, "
                     + "event_date TIMESTAMP, "
-                    + "PRIMARY KEY(id, minor_status), "
+                    + "PRIMARY KEY(id, minor_status, event_date), "
                     + "FOREIGN KEY(id) REFERENCES Jobs(id)"
                     + ")");
 

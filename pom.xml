@@ -5,7 +5,7 @@
     <groupId>fr.insalyon.creatis</groupId>
     <artifactId>gasw</artifactId>
     <packaging>jar</packaging>
-    <version>0.7</version>
+    <version>0.7.1</version>
     <name>GASW</name>
     <licenses>
         <license>
@@ -24,8 +24,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
+                    <source>1.6</source>
+                    <target>1.6</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -96,12 +96,12 @@
     <distributionManagement>
         <repository>
             <id>releases</id>
-            <url>http://kingkong.grid.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
+            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
         </repository>
         <snapshotRepository>
             <id>snapshots</id>
             <name>Internal Snapshots</name>
-            <url>http://kingkong.grid.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
+            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 </project>
