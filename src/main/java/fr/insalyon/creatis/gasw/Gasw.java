@@ -84,7 +84,7 @@ public class Gasw {
      * 
      * @return Instance of GASW
      */
-    public synchronized static Gasw getInstance(String version, String target) throws GaswException {
+    public synchronized static Gasw getInstance(Constants.Version version, Constants.Grid target) throws GaswException {
         if (instance == null) {
             instance = new Gasw(version, target);
         }
@@ -92,17 +92,17 @@ public class Gasw {
     }
 
     private Gasw() throws GaswException {
-        this(Constants.Version.GRID.name(), Constants.Grid.DIRAC.name());
+        this(Constants.Version.GRID, Constants.Grid.DIRAC);
     }
 
-    private Gasw(String version, String target) throws GaswException {
+    private Gasw(Constants.Version version, Constants.Grid target) throws GaswException {
         try {
             PropertyConfigurator.configure(
                     Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
             Configuration.setUp();
             ProxyConfiguration.initConfiguration();
-            Configuration.VERSION = Constants.Version.valueOf(version);
-            Configuration.GRID = Constants.Grid.valueOf(target);
+            Configuration.VERSION = version;
+            Configuration.GRID = target;
             finishedJobs = new HashMap<String, Proxy>();
             notification = new GaswNotification();
             notification.start();
