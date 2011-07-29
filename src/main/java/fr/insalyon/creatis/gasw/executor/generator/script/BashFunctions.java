@@ -35,7 +35,6 @@
 package fr.insalyon.creatis.gasw.executor.generator.script;
 
 import fr.insalyon.creatis.gasw.Constants;
-import org.apache.log4j.Logger;
 
 /**
  *
