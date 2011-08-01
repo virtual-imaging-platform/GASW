@@ -93,6 +93,8 @@ public class DiracServiceMonitor extends Thread {
                         logger.warn(ex);
                     }
                 }
+                in.close();
+                out.close();
                 socket.close();
                 break;
 

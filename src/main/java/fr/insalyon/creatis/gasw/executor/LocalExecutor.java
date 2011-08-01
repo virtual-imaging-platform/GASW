@@ -104,6 +104,7 @@ public class LocalExecutor extends Executor {
                 while ((s = r.readLine()) != null) {
                     cout += s + "\n";
                 }
+                r.close();
 
                 int exitValue = process.exitValue();
 

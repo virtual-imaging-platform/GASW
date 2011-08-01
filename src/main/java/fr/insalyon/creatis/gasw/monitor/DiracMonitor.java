@@ -190,6 +190,7 @@ public class DiracMonitor extends Monitor {
             while ((s = br.readLine()) != null) {
                 cout += s;
             }
+            br.close();
 
             if (process.exitValue() != 0) {
                 logger.error(cout);
@@ -216,6 +217,7 @@ public class DiracMonitor extends Monitor {
             while ((s = br.readLine()) != null) {
                 cout += s;
             }
+            br.close();
 
             if (process.exitValue() != 0) {
                 logger.error(cout);

@@ -77,6 +77,7 @@ public class GliteExecutor extends Executor {
             while ((s = br.readLine()) != null) {
                 out += s;
             }
+            br.close();
 
             if (process.exitValue() != 0) {
                 logger.error(out);

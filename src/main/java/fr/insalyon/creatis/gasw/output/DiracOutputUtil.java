@@ -121,6 +121,7 @@ public class DiracOutputUtil extends OutputUtil {
                         while ((s = br.readLine()) != null) {
                             cout += s;
                         }
+                        br.close();
 
                         logger.error(cout);
                         logger.error("Output files do not exist. Job ID: " + jobID);
