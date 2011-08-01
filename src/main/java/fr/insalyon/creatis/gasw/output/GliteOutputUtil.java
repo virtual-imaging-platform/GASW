@@ -95,6 +95,7 @@ public class GliteOutputUtil extends OutputUtil {
                         }
                         cout += s + "\n";
                     }
+                    br.close();
 
                     if (process.exitValue() == 0) {
                         stdOut = getStdFile(job, ".out", Constants.OUT_ROOT, outputPath);

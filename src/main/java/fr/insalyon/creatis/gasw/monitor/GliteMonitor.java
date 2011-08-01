@@ -103,6 +103,7 @@ public class GliteMonitor extends Monitor {
                         cout += s + "-";
                     }
                 }
+                br.close();
 
                 // Parsing status
                 if (!cout.equals("")) {
@@ -176,6 +177,7 @@ public class GliteMonitor extends Monitor {
                     while ((s = br.readLine()) != null) {
                         logger.error(s);
                     }
+                    br.close();
                 }
             } catch (GaswException ex) {
                 logException(logger, ex);
@@ -225,6 +227,7 @@ public class GliteMonitor extends Monitor {
             while ((s = br.readLine()) != null) {
                 cout += s;
             }
+            br.close();
 
             if (process.exitValue() != 0) {
                 logger.error(cout);
@@ -259,6 +262,7 @@ public class GliteMonitor extends Monitor {
             while ((s = br.readLine()) != null) {
                 cout += s;
             }
+            br.close();
 
             if (process.exitValue() != 0) {
                 logger.error(cout);

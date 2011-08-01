@@ -287,6 +287,7 @@ public class Configuration {
                     }
                 }
             }
+            r.close();
             process.waitFor();
 
             if (process.exitValue() != 0) {

@@ -94,6 +94,7 @@ public class DiracExecutor extends Executor {
             while ((s = br.readLine()) != null) {
                 cout += s + "\n";
             }
+            br.close();
 
             if (process.exitValue() != 0) {
                 logger.error(cout);

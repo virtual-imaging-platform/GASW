@@ -193,6 +193,7 @@ public abstract class OutputUtil {
                     uploadedResults.add(uri);
                 }
             }
+            br.close();
 
             if (node.getSiteName() != null && node.getNodeName() != null) {
                 DAOFactory.getDAOFactory().getNodeDAO().add(node);
@@ -243,6 +244,7 @@ public abstract class OutputUtil {
                     job.setExitCode(exitCode);
                 }
             }
+            br.close();
             DAOFactory.getDAOFactory().getJobDAO().update(job);
 
         } catch (DAOException ex) {

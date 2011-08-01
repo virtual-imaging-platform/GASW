@@ -121,6 +121,7 @@ public class DataManager {
                                 + uri.getPath() + "'.");
                     }
                 }
+                br.close();
 
                 if (!replicated) {
                     logger.info("Replicating '" + uri.getPath() + "'.");
@@ -141,6 +142,7 @@ public class DataManager {
                                 cout += s;
                             }
                             process.waitFor();
+                            br.close();
 
                             if (process.exitValue() == 0) {
                                 replicated = true;
