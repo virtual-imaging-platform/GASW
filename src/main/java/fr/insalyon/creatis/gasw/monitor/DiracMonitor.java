@@ -40,6 +40,7 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
+import fr.insalyon.creatis.gasw.executor.DiracExecutor;
 import grool.proxy.Proxy;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -157,15 +158,15 @@ public class DiracMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy) {
-        Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
-        add(job, fileName);
-        this.monitoredJobs.put(jobID, userProxy);
+    public synchronized void add(Job job, Proxy userProxy) {
+        add(job);
+        this.monitoredJobs.put(job.getId(), userProxy);
     }
 
     @Override
     protected synchronized void terminate() {
         super.terminate();
+        DiracExecutor.terminate();
         instance = null;
         if (Configuration.USE_DIRAC_SERVICE) {
             DiracServiceMonitor.getInstance().terminate();

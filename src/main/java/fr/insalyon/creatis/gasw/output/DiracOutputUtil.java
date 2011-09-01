@@ -166,7 +166,9 @@ public class DiracOutputUtil extends OutputUtil {
                 appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, message);
                 appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, message);
             }
-            return new GaswOutput(jobID, gaswExitCode, uploadedResults, appStdOut, appStdErr, stdOut, stdErr);
+            return new GaswOutput(job.getFileName() + ".jdl", gaswExitCode, 
+                    uploadedResults, appStdOut, appStdErr, stdOut, stdErr);
+            
         } catch (DAOException ex) {
             logException(logger, ex);
         } catch (InterruptedException ex) {

@@ -192,11 +192,10 @@ public class GliteMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy) {
-        logger.info("Adding job: " + jobID);
-        Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
-        add(job, fileName);
-        monitoredJobs.put(jobID, userProxy);
+    public synchronized void add(Job job, Proxy userProxy) {
+        logger.info("Adding job: " + job.getId());
+        add(job);
+        this.monitoredJobs.put(job.getId(), userProxy);
     }
 
     @Override

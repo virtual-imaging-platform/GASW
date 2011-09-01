@@ -70,18 +70,15 @@ public abstract class Monitor extends Thread {
     /**
      * 
      * @param job
-     * @param fileName
      */
-    protected synchronized void add(Job job, String fileName) {
+    protected synchronized void add(Job job) {
         try {
+            job.setStatus(GaswStatus.SUCCESSFULLY_SUBMITTED);
             if (startTime == -1) {
                 startTime = Integer.valueOf("" + (System.currentTimeMillis() / 1000));
             }
             job.setStartTime(startTime);
             job.setCreation(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
-
-            fileName = fileName.substring(0, fileName.lastIndexOf("."));
-            job.setFileName(fileName);
 
             jobDAO.add(job);
 
@@ -92,12 +89,10 @@ public abstract class Monitor extends Thread {
 
     /**
      *
-     * @param jobID
-     * @param symbolicName
-     * @param fileName
+     * @param job
      * @param userProxy user proxy (null in case of using default proxy or local execution)
      */
-    public abstract void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy);
+    public abstract void add(Job job, Proxy userProxy);
 
     /**
      * 

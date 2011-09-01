@@ -38,6 +38,8 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
+import fr.insalyon.creatis.gasw.bean.Job;
+import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -74,6 +76,18 @@ public class LocalExecutor extends Executor {
         super.submit();
         Random random = new Random(System.nanoTime());
         String jobID = "Local-" + random.nextInt(100000);
+
+        StringBuilder params = new StringBuilder();
+        for (String p : gaswInput.getParameters()) {
+            params.append(p);
+            params.append(" ");
+        }
+        Job job = new Job(
+                params.toString(),
+                gaswInput.getRelease().getSymbolicName(),
+                jdlName.substring(0, jdlName.lastIndexOf(".")));
+        MonitorFactory.getMonitor().add(job, userProxy);
+
         new Execution(jobID).start();
 
         logger.info("Local Executor Job ID: " + jobID);
@@ -92,9 +106,8 @@ public class LocalExecutor extends Executor {
         public void run() {
 
             try {
-                addJobToMonitor(jobID, userProxy);
 
-                Process process = GaswUtil.getProcess(logger, "chmod", "+x", 
+                Process process = GaswUtil.getProcess(logger, "chmod", "+x",
                         Constants.SCRIPT_ROOT + "/" + scriptName);
                 process.waitFor();
 

@@ -40,7 +40,7 @@ package fr.insalyon.creatis.gasw.monitor;
  */
 public enum GaswStatus {
 
-    COMPLETED, ERROR, RUNNING,
+    CREATED, COMPLETED, ERROR, RUNNING,
     QUEUED, NOT_SUBMITTED, SUCCESSFULLY_SUBMITTED,
     CANCELLED, STALLED, KILL, RESCHEDULE
 }
