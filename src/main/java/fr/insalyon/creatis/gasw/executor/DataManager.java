@@ -47,7 +47,6 @@ import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import org.apache.log4j.Logger;
@@ -93,6 +92,7 @@ public class DataManager extends Thread {
 
                         } catch (GaswException ex) {
                             logger.warn(ex);
+                            dataToReplicate.remove(uri);
                         }
                     }
                 }
