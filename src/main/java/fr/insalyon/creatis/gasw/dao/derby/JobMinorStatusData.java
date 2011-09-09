@@ -67,6 +67,7 @@ public class JobMinorStatusData extends AbstractData implements JobMinorStatusDA
      * @param minorStatus
      * @throws DAOException 
      */
+    @Override
     public void add(String jobId, int minorStatus) throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("INSERT INTO JobsMinorStatus "

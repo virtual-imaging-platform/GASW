@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -61,6 +61,7 @@ public class SEEntryPointData extends AbstractData implements SEEntryPointsDAO {
         super();
     }
 
+    @Override
     public synchronized void add(SEEntryPoint seEntryPoint) throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("INSERT INTO SEEntryPoints "
@@ -78,6 +79,7 @@ public class SEEntryPointData extends AbstractData implements SEEntryPointsDAO {
         }
     }
 
+    @Override
     public synchronized SEEntryPoint getByHostName(String hostname) throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("SELECT "
