@@ -47,7 +47,7 @@ public abstract class DAOFactory {
     private static int factory = DERBY;
     protected Connection connection;
 
-    public static DAOFactory getDAOFactory() {
+    public synchronized static DAOFactory getDAOFactory() {
 
         switch (factory) {
             case DERBY:

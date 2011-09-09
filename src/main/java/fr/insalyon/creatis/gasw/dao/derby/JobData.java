@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -66,6 +66,7 @@ public class JobData extends AbstractData implements JobDAO {
         super();
     }
 
+    @Override
     public synchronized void add(Job job) throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("INSERT INTO Jobs "
@@ -93,6 +94,7 @@ public class JobData extends AbstractData implements JobDAO {
         }
     }
 
+    @Override
     public synchronized void update(Job job) throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("UPDATE Jobs SET "
@@ -125,6 +127,7 @@ public class JobData extends AbstractData implements JobDAO {
         }
     }
 
+    @Override
     public synchronized void remove(Job job) throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("DELETE FROM Jobs "
@@ -138,6 +141,7 @@ public class JobData extends AbstractData implements JobDAO {
         }
     }
 
+    @Override
     public synchronized Job getJobByID(String id) throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("SELECT "
@@ -162,6 +166,7 @@ public class JobData extends AbstractData implements JobDAO {
         }
     }
 
+    @Override
     public void updateStatus(Map<GaswStatus, String> jobStatus) throws DAOException {
         try {
 
@@ -198,6 +203,7 @@ public class JobData extends AbstractData implements JobDAO {
      * @return
      * @throws DAOException 
      */
+    @Override
     public Map<String, GaswStatus> getSignaledJobs() throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("SELECT "

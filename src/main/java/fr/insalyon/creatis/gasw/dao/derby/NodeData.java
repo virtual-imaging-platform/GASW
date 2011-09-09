@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -61,6 +61,7 @@ public class NodeData extends AbstractData implements NodeDAO {
         super();
     }
 
+    @Override
     public synchronized void add(Node node) throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("INSERT INTO Nodes "
@@ -88,6 +89,7 @@ public class NodeData extends AbstractData implements NodeDAO {
         }
     }
 
+    @Override
     public synchronized Node getNodeBySiteAndNodeName(String site, String nodeName) throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("SELECT "

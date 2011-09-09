@@ -62,7 +62,7 @@ public abstract class AbstractData {
      * @return
      * @throws DAOException 
      */
-    protected PreparedStatement prepareStatement(String statement) throws DAOException {
+    protected synchronized PreparedStatement prepareStatement(String statement) throws DAOException {
         try {
             return connection.prepareStatement(statement);
         } catch (SQLException ex) {
@@ -80,7 +80,7 @@ public abstract class AbstractData {
      * @param ps
      * @throws DAOException 
      */
-    protected void execute(PreparedStatement ps) throws DAOException {
+    protected synchronized void execute(PreparedStatement ps) throws DAOException {
         try {
             ps.execute();
         } catch (SQLException ex) {
@@ -99,7 +99,7 @@ public abstract class AbstractData {
      * @return
      * @throws DAOException 
      */
-    protected ResultSet executeQuery(PreparedStatement ps) throws DAOException {
+    protected synchronized ResultSet executeQuery(PreparedStatement ps) throws DAOException {
         try {
             return ps.executeQuery();
         } catch (SQLException ex) {
@@ -126,7 +126,7 @@ public abstract class AbstractData {
         }
     }
 
-    private void recoverConnection() {
+    private synchronized void recoverConnection() {
         if (!recovering) {
             try {
                 if (DAOFactory.getDAOFactory().getConnection().isValid(10)) {

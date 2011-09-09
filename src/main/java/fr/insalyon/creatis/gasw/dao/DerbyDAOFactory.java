@@ -56,7 +56,7 @@ public class DerbyDAOFactory extends DAOFactory {
     private final String DRIVER = "org.apache.derby.jdbc.ClientDriver";
     private final String DBURL = "jdbc:derby://";
 
-    protected static DAOFactory getInstance() {
+    protected synchronized static DAOFactory getInstance() {
         if (instance == null) {
             instance = new DerbyDAOFactory();
         }
@@ -77,7 +77,7 @@ public class DerbyDAOFactory extends DAOFactory {
     }
 
     @Override
-    protected void connect() throws SQLException {
+    protected synchronized void connect() throws SQLException {
         try {
             Class.forName(DRIVER).newInstance();
 
@@ -105,7 +105,7 @@ public class DerbyDAOFactory extends DAOFactory {
     }
 
     @Override
-    protected void createTables() {
+    protected synchronized void createTables() {
         try {
             Statement stat = connection.createStatement();
             stat.executeUpdate("CREATE TABLE Nodes ("
@@ -163,7 +163,7 @@ public class DerbyDAOFactory extends DAOFactory {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         try {
             if (connection != null && connection.isValid(10)) {
                 connection.close();
