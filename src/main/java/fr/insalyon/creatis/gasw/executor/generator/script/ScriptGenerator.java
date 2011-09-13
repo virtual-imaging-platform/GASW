@@ -359,6 +359,8 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append("if [ $? -ne 0 ];\n"
                 + "then\n"
                 + "  error \"Exiting with return value 6\"\n"
+                + "  BEFOREUPLOAD=`date +%s`;\n"
+                + "  info \"Execution time: `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}` seconds\";\n"
                 + "  stopLog application_execution\n"
                 + "  cleanup\n"
                 + "  exit 6;\n"
