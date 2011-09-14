@@ -507,6 +507,7 @@ public class ScriptGenerator extends AbstractGenerator {
 
         sb.append(uploadTest(uploads, regexs, defaultDir));
         sb.append(inputs(release, downloads));
+        sb.append(applicationEnvironment(release));
         sb.append(applicationExecution(parameters));
         sb.append(resultsUpload(uploads, regexs, defaultDir));
         sb.append(footer());
