@@ -84,6 +84,7 @@ public class Configuration {
     public static String MYSQL_HOST = "localhost";
     public static int MYSQL_PORT = 3306;
     public static String MYSQL_DB_USER = "gasw";
+    public static String DIRAC_DEFAULT_POOL = "gLite";
     // Derby Configuraiton
     public static String DERBY_HOST = "localhost";
     public static int DERBY_PORT = 1527;
@@ -206,6 +207,11 @@ public class Configuration {
             if (diracServicePort != null && !diracServicePort.equals("")) {
                 DIRAC_SERVICE_PORT = new Integer(diracServicePort);
             }
+            
+            String diracDefaultPool = conf.getProperty("DIRAC_DEFAULT_POOL");
+            if (diracDefaultPool != null && !diracDefaultPool.equals("")) {
+                DIRAC_DEFAULT_POOL = diracDefaultPool;
+            }
 
             String diracHost = conf.getProperty("DIRAC_HOST");
             if (diracHost != null && !diracHost.equals("")) {
@@ -229,6 +235,7 @@ public class Configuration {
                 conf.setProperty("DIRAC_HOST", DIRAC_HOST);
                 conf.setProperty("USE_DIRAC_SERVICE", USE_DIRAC_SERVICE + "");
                 conf.setProperty("DIRAC_SERVICE_PORT", DIRAC_SERVICE_PORT + "");
+                conf.setProperty("DIRAC_DEFAULT_POOL", DIRAC_DEFAULT_POOL);
                 conf.setProperty("MYSQL_HOST", MYSQL_HOST);
                 conf.setProperty("MYSQL_PORT", MYSQL_PORT + "");
                 conf.setProperty("MYSQL_DB_USER", MYSQL_DB_USER);

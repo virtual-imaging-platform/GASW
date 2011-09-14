@@ -115,6 +115,8 @@ public class DiracExecutor extends Executor {
         DiracJdlGenerator generator = DiracJdlGenerator.getInstance();
 
         sb.append(generator.generate(scriptName));
+        sb.append(generator.parseEnvironment(
+                gaswInput.getRelease().getConfigurations()));
 
         return publishJdl(scriptName, sb.toString());
     }
