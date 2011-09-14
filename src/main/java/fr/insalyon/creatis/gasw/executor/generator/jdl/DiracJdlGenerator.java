@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -34,6 +34,10 @@
  */
 package fr.insalyon.creatis.gasw.executor.generator.jdl;
 
+import fr.insalyon.creatis.gasw.Configuration;
+import fr.insalyon.creatis.gasw.release.EnvVariable;
+import java.util.List;
+
 /**
  *
  * @author Rafael Silva
@@ -50,5 +54,33 @@ public class DiracJdlGenerator extends AbstractJdlGenerator {
     }
 
     private DiracJdlGenerator() {
+    }
+    
+    /**
+     * Parses a list of environment variables to add DIRAC submission pool.
+     * 
+     * @param list List of environment variables
+     * @return 
+     */
+    public String parseEnvironment(List<EnvVariable> list) {
+
+        StringBuilder sb = new StringBuilder();
+        boolean hasPoolRequirement = false;
+
+        for (EnvVariable v : list) {
+            
+            if (v.getCategory() == EnvVariable.Category.INFRASTRUCTURE
+                    && v.getName().equals("diracPool")) {
+                
+                sb.append("SubmitPools = {\"" + v.getValue() + "\"};\n");
+                hasPoolRequirement = true;
+            }
+        }
+        
+        if (!hasPoolRequirement) {
+            sb.append("SubmitPools = {\"" + Configuration.DIRAC_DEFAULT_POOL + "\"};\n");
+        }
+        
+        return sb.toString();
     }
 }
