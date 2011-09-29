@@ -55,7 +55,16 @@ public class DiracJdlGenerator extends AbstractJdlGenerator {
 
     private DiracJdlGenerator() {
     }
-    
+
+    @Override
+    public String generate(String scriptName) {
+        
+        StringBuilder sb = new StringBuilder(super.generate(scriptName));
+        sb.append("MaxCPUTime\t= \"86400\";\n");
+        
+        return sb.toString();
+    }
+
     /**
      * Parses a list of environment variables to add DIRAC submission pool.
      * 
@@ -68,19 +77,19 @@ public class DiracJdlGenerator extends AbstractJdlGenerator {
         boolean hasPoolRequirement = false;
 
         for (EnvVariable v : list) {
-            
+
             if (v.getCategory() == EnvVariable.Category.INFRASTRUCTURE
                     && v.getName().equals("diracPool")) {
-                
+
                 sb.append("SubmitPools = {\"" + v.getValue() + "\"};\n");
                 hasPoolRequirement = true;
             }
         }
-        
+
         if (!hasPoolRequirement) {
             sb.append("SubmitPools = {\"" + Configuration.DIRAC_DEFAULT_POOL + "\"};\n");
         }
-        
+
         return sb.toString();
     }
 }
