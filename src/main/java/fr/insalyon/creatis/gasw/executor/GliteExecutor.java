@@ -104,7 +104,7 @@ public class GliteExecutor extends Executor {
             job.setId(jobID);
 
             MonitorFactory.getMonitor().add(job, userProxy);
-            logger.info("Glite Executor Job ID: " + jobID);
+            logger.info("Glite Executor Job ID: " + jobID + " for " + job.getFileName());
             return jobID;
         } catch (InterruptedException ex) {
             logException(logger, ex);

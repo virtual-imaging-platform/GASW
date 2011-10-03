@@ -90,7 +90,7 @@ public class LocalExecutor extends Executor {
 
         new Execution(jobID).start();
 
-        logger.info("Local Executor Job ID: " + jobID);
+        logger.info("Local Executor Job ID: " + jobID + " for " + job.getFileName());
         return jobID;
     }
 

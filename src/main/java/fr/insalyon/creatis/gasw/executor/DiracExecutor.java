@@ -169,7 +169,7 @@ public class DiracExecutor extends Executor {
                                     Job job = jobsSubmitted.get(i++);
                                     job.setId(id);
                                     MonitorFactory.getMonitor().add(job, userProxy);
-                                    logger.info("Dirac Executor Job ID: " + id);
+                                    logger.info("Dirac Executor Job ID: " + id + " for " + job.getFileName());
 
                                 } catch (Exception ex) {
                                     Job job = jobsSubmitted.get(i++);
