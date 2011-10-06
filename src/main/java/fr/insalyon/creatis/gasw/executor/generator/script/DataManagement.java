@@ -408,6 +408,25 @@ public class DataManagement extends AbstractGenerator {
     }
 
     /**
+     * Generates the command to delete a file on LFC using low-level commands instead of lcg-del
+     * @param lfn lfn uri of the file to be deleted
+     * @return a string containing the code
+     */
+    protected String getDeleteCommand() {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("function deleteFile { \n");
+        sb.append("     guid=$(lcg-lg $1)\n");
+        sb.append("     surls=$(lcg-lr $1) \n");
+        sb.append("     for surl in $surls \n");
+        sb.append("     do\n");
+        sb.append("          lcg-uf -v $guid $surl\n");
+        sb.append("     done\n");
+        sb.append("}\n\n");
+        return sb.toString();
+    }
+
+    /**
      * Generates the command to upload a file from the worker node to the LFC.
      * The generated code calls function uploadFile.
      *
@@ -464,7 +483,7 @@ public class DataManagement extends AbstractGenerator {
             uploadTest = "-uploadTest";
         }
         sb.append("info \"Deleting file " + lfn.getPath() + uploadTest + "...\"\n");
-        sb.append("lcg-del -v -a lfn:" + lfn.getPath() + uploadTest + "\n");
+        sb.append("deleteFile lfn:" + lfn.getPath() + uploadTest + "\n");
 
         if (Configuration.useDataManager()) {
             sb.append("if [ $? != 0 ]\n");

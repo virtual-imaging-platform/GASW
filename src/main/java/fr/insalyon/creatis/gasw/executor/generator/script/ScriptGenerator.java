@@ -494,6 +494,7 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append(dataManagement.addToCacheCommand());
         sb.append(dataManagement.addToDataManagerCommand());
         sb.append(dataManagement.uploadFileCommand());
+        sb.append(dataManagement.getDeleteCommand());
 
         //GASW Service
         if (Configuration.USE_DIRAC_SERVICE) {
