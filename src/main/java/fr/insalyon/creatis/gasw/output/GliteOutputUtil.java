@@ -120,6 +120,9 @@ public class GliteOutputUtil extends OutputUtil {
                             case 2:
                                 gaswExitCode = GaswExitCode.ERROR_WRITE_GRID;
                                 break;
+                            case 3:
+                                gaswExitCode = GaswExitCode.ERROR_FILE_NOT_FOUND;
+                                break;
                             case 6:
                                 gaswExitCode = GaswExitCode.EXECUTION_FAILED;
                                 break;

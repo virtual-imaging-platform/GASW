@@ -106,6 +106,9 @@ public class DiracOutputUtil extends OutputUtil {
                             case 2:
                                 gaswExitCode = GaswExitCode.ERROR_WRITE_GRID;
                                 break;
+                            case 3:
+                                gaswExitCode = GaswExitCode.ERROR_FILE_NOT_FOUND;
+                                break;
                             case 6:
                                 gaswExitCode = GaswExitCode.EXECUTION_FAILED;
                                 break;
@@ -140,7 +143,7 @@ public class DiracOutputUtil extends OutputUtil {
                     appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, ex.getMessage());
                     appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
-                }catch(grool.proxy.VOMSExtensionException ex) {
+                } catch (grool.proxy.VOMSExtensionException ex) {
                     logger.error(ex.getMessage());
                     stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
                     stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());
@@ -148,7 +151,7 @@ public class DiracOutputUtil extends OutputUtil {
                     appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
                 }
-                
+
 
             } else {
 
@@ -166,9 +169,9 @@ public class DiracOutputUtil extends OutputUtil {
                 appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, message);
                 appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, message);
             }
-            return new GaswOutput(job.getFileName() + ".jdl", gaswExitCode, 
+            return new GaswOutput(job.getFileName() + ".jdl", gaswExitCode,
                     uploadedResults, appStdOut, appStdErr, stdOut, stdErr);
-            
+
         } catch (DAOException ex) {
             logException(logger, ex);
         } catch (InterruptedException ex) {
