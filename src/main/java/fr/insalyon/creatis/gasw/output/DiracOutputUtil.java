@@ -126,10 +126,10 @@ public class DiracOutputUtil extends OutputUtil {
                         }
                         br.close();
 
-                        parseNonStdOut(job, GaswExitCode.ERROR_GET_STD.getExitCode());
-
                         logger.error(cout);
                         logger.error("Output files do not exist. Job ID: " + jobID);
+                        
+                        parseNonStdOut(job, GaswExitCode.ERROR_GET_STD.getExitCode());
 
                         String message = "Output files do not exist.";
                         stdOut = saveFile(job, ".out", Constants.OUT_ROOT, message);
