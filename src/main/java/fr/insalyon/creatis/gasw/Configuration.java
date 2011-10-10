@@ -41,13 +41,12 @@ import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Properties;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
 
 /**
@@ -58,7 +57,6 @@ public class Configuration {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static final String CONF_FILE = "./conf/settings.conf";
-    private static Properties conf;
     // Properties
     public static final String EXECUTION_FOLDER = new File("").getAbsolutePath();
     public static final String MOTEUR_WORKFLOWID = EXECUTION_FOLDER.substring(EXECUTION_FOLDER.lastIndexOf("/") + 1);
@@ -104,166 +102,65 @@ public class Configuration {
     }
 
     private static void loadConfigurationFile() throws GaswException {
+        
         try {
-            conf = new Properties();
-            conf.load(new FileInputStream(CONF_FILE));
-
-            String grid = conf.getProperty("GRID");
-            if (grid != null && !grid.equals("")) {
-                GRID = Constants.Grid.valueOf(grid);
-            }
-
-            String vo = conf.getProperty("VO");
-            if (vo != null && !vo.equals("")) {
-                VO = vo;
-            }
-
-            String env = conf.getProperty("ENV");
-            if (env != null && !env.equals("")) {
-                ENV = env;
-            }
-
-            String se = conf.getProperty("SE");
-            if (se != null && !se.equals("")) {
-                SE = se;
-            }
-
-            String closeSE = conf.getProperty("USE_CLOSE_SE");
-            if (closeSE != null && !closeSE.equals("")) {
-                USE_CLOSE_SE = closeSE;
-            }
-
-            String backgroundScript = conf.getProperty("BACKGROUND_SCRIPT");
-            if (backgroundScript != null && !backgroundScript.equals("")) {
-                BACKGROUND_SCRIPT = backgroundScript;
-            }
-
-            String retryCount = conf.getProperty("RETRYCOUNT");
-            if (retryCount != null && !retryCount.equals("")) {
-                RETRY_COUNT = new Integer(retryCount);
-            }
-
-            String timeout = conf.getProperty("TIMEOUT");
-            if (timeout != null && !timeout.equals("")) {
-                TIMEOUT = new Integer(timeout);
-            }
-
-            String sleeptime = conf.getProperty("SLEEPTIME");
-            if (sleeptime != null && !sleeptime.equals("")) {
-                SLEEPTIME = new Integer(sleeptime) * 1000;
-            }
-
-            String requirements = conf.getProperty("REQUIREMENTS");
-            if (requirements != null && !requirements.equals("")) {
-                REQUIREMENTS = requirements;
-            }
-
-            String mysqlHost = conf.getProperty("MYSQL_HOST");
-            if (mysqlHost != null && !mysqlHost.equals("")) {
-                MYSQL_HOST = mysqlHost;
-            }
-
-            String mysqlPort = conf.getProperty("MYSQL_PORT");
-            if (mysqlPort != null && !mysqlPort.equals("")) {
-                MYSQL_PORT = new Integer(mysqlPort);
-            }
-
-            String mysqlDbUser = conf.getProperty("MYSQL_DB_USER");
-            if (mysqlDbUser != null && !mysqlDbUser.equals("")) {
-                MYSQL_DB_USER = mysqlDbUser;
-            }
-
-            String derbyHost = conf.getProperty("DERBY_HOST");
-            if (derbyHost != null && !derbyHost.equals("")) {
-                DERBY_HOST = derbyHost;
-            }
-
-            String derbyPort = conf.getProperty("DERBY_PORT");
-            if (derbyPort != null && !derbyPort.equals("")) {
-                DERBY_PORT = new Integer(derbyPort);
-            }
-
-            String dataManagerHost = conf.getProperty("DATA_MANAGER_HOST");
-            if (dataManagerHost != null && !dataManagerHost.equals("")) {
-                DATA_MANAGER_HOST = dataManagerHost;
-            }
-
-            String dataManagerPort = conf.getProperty("DATA_MANAGER_PORT");
-            if (dataManagerPort != null && !dataManagerPort.equals("")) {
-                DATA_MANAGER_PORT = new Integer(dataManagerPort);
-            }
-
-            String dataManagerHome = conf.getProperty("DATA_MANAGER_HOME");
-            if (dataManagerHome != null && !dataManagerHome.equals("")) {
-                DATA_MANAGER_HOME = dataManagerHome;
-            }
-
-            String useDiracService = conf.getProperty("USE_DIRAC_SERVICE");
-            if (useDiracService != null && !useDiracService.equals("")) {
-                USE_DIRAC_SERVICE = Boolean.valueOf(useDiracService);
-            }
-
-            String diracServicePort = conf.getProperty("DIRAC_SERVICE_PORT");
-            if (diracServicePort != null && !diracServicePort.equals("")) {
-                DIRAC_SERVICE_PORT = new Integer(diracServicePort);
-            }
+            PropertiesConfiguration config = new PropertiesConfiguration(new File(CONF_FILE));
             
-            String diracDefaultPool = conf.getProperty("DIRAC_DEFAULT_POOL");
-            if (diracDefaultPool != null && !diracDefaultPool.equals("")) {
-                DIRAC_DEFAULT_POOL = diracDefaultPool;
-            }
-
-            String diracHost = conf.getProperty("DIRAC_HOST");
-            if (diracHost != null && !diracHost.equals("")) {
-                DIRAC_HOST = diracHost;
-            }
-
-        } catch (IOException ex) {
-
-            logger.info("Failing to setup trying to create file");
-            try {
-                conf.setProperty("GRID", GRID.name());
-                conf.setProperty("VO", VO);
-                conf.setProperty("ENV", ENV);
-                conf.setProperty("SE", SE);
-                conf.setProperty("USE_CLOSE_SE", USE_CLOSE_SE);
-                conf.setProperty("BACKGROUND_SCRIPT", BACKGROUND_SCRIPT);
-                conf.setProperty("RETRYCOUNT", RETRY_COUNT + "");
-                conf.setProperty("TIMEOUT", TIMEOUT + "");
-                conf.setProperty("SLEEPTIME", (SLEEPTIME / 1000) + "");
-                conf.setProperty("REQUIREMENTS", REQUIREMENTS);
-                conf.setProperty("DIRAC_HOST", DIRAC_HOST);
-                conf.setProperty("USE_DIRAC_SERVICE", USE_DIRAC_SERVICE + "");
-                conf.setProperty("DIRAC_SERVICE_PORT", DIRAC_SERVICE_PORT + "");
-                conf.setProperty("DIRAC_DEFAULT_POOL", DIRAC_DEFAULT_POOL);
-                conf.setProperty("MYSQL_HOST", MYSQL_HOST);
-                conf.setProperty("MYSQL_PORT", MYSQL_PORT + "");
-                conf.setProperty("MYSQL_DB_USER", MYSQL_DB_USER);
-                conf.setProperty("DERBY_HOST", DERBY_HOST);
-                conf.setProperty("DERBY_PORT", DERBY_PORT + "");
-                conf.setProperty("DATA_MANAGER_HOST", DATA_MANAGER_HOST);
-                conf.setProperty("DATA_MANAGER_PORT", DATA_MANAGER_PORT + "");
-                conf.setProperty("DATA_MANAGER_HOME", DATA_MANAGER_HOME);
-
-                File confDir = new File("./conf");
-                if (!confDir.exists()) {
-                    confDir.mkdir();
-                }
-                conf.store(new FileOutputStream(CONF_FILE), "");
-
-            } catch (IOException ex1) {
-                logger.error(ex1);
-                if (logger.isDebugEnabled()) {
-                    for (StackTraceElement stack : ex1.getStackTrace()) {
-                        logger.debug(stack);
-                    }
-                }
-                throw new GaswException(ex1);
-            }
+            GRID = Grid.valueOf(config.getString("GRID", GRID.name()));
+            VO = config.getString("VO", VO);
+            ENV = config.getString("ENV", ENV);
+            SE = config.getString("SE", SE);
+            USE_CLOSE_SE = config.getString("USE_CLOSE_SE", USE_CLOSE_SE);
+            BACKGROUND_SCRIPT = config.getString("BACKGROUND_SCRIPT", BACKGROUND_SCRIPT);
+            RETRY_COUNT = config.getInt("RETRYCOUNT", RETRY_COUNT);
+            TIMEOUT = config.getInt("TIMEOUT", TIMEOUT);
+            SLEEPTIME = config.getInt("SLEEPTIME", SLEEPTIME);
+            REQUIREMENTS = config.getString("REQUIREMENTS", REQUIREMENTS);
+            MYSQL_HOST = config.getString("MYSQL_HOST", MYSQL_HOST);
+            MYSQL_PORT = config.getInt("MYSQL_PORT", MYSQL_PORT);
+            MYSQL_DB_USER = config.getString("MYSQL_DB_USER", MYSQL_DB_USER);
+            DERBY_HOST = config.getString("DERBY_HOST", DERBY_HOST);
+            DERBY_PORT = config.getInt("DERBY_PORT", DERBY_PORT);
+            DATA_MANAGER_HOST = config.getString("DATA_MANAGER_HOST", DATA_MANAGER_HOST);
+            DATA_MANAGER_PORT = config.getInt("DATA_MANAGER_PORT", DATA_MANAGER_PORT);
+            DATA_MANAGER_HOME = config.getString("DATA_MANAGER_HOME", DATA_MANAGER_HOME);
+            USE_DIRAC_SERVICE = config.getBoolean("USE_DIRAC_SERVICE", USE_DIRAC_SERVICE);
+            DIRAC_SERVICE_PORT = config.getInt("DIRAC_SERVICE_PORT", DIRAC_SERVICE_PORT);
+            DIRAC_DEFAULT_POOL = config.getString("DIRAC_DEFAULT_POOL", DIRAC_DEFAULT_POOL);
+            DIRAC_HOST = config.getString("DIRAC_HOST", DIRAC_HOST);
+            
+            config.setProperty("GRID", GRID.name());
+            config.setProperty("VO", VO);
+            config.setProperty("ENV", ENV);
+            config.setProperty("SE", SE);
+            config.setProperty("USE_CLOSE_SE", USE_CLOSE_SE);
+            config.setProperty("BACKGROUND_SCRIPT", BACKGROUND_SCRIPT);
+            config.setProperty("RETRYCOUNT", RETRY_COUNT);
+            config.setProperty("TIMEOUT", TIMEOUT);
+            config.setProperty("SLEEPTIME", SLEEPTIME);
+            config.setProperty("REQUIREMENTS", REQUIREMENTS);
+            config.setProperty("MYSQL_HOST", MYSQL_HOST);
+            config.setProperty("MYSQL_PORT", MYSQL_PORT);
+            config.setProperty("MYSQL_DB_USER", MYSQL_DB_USER);
+            config.setProperty("DERBY_HOST", DERBY_HOST);
+            config.setProperty("DERBY_PORT", DERBY_PORT);
+            config.setProperty("DATA_MANAGER_HOST", DATA_MANAGER_HOST);
+            config.setProperty("DATA_MANAGER_PORT", DATA_MANAGER_PORT);
+            config.setProperty("DATA_MANAGER_HOME", DATA_MANAGER_HOME);
+            config.setProperty("USE_DIRAC_SERVICE", USE_DIRAC_SERVICE);
+            config.setProperty("DIRAC_SERVICE_PORT", DIRAC_SERVICE_PORT);
+            config.setProperty("DIRAC_DEFAULT_POOL", DIRAC_DEFAULT_POOL);
+            config.setProperty("DIRAC_HOST", DIRAC_HOST);
+            
+            config.save();
+            
+        } catch (ConfigurationException ex) {
+            logger.error(ex);
         }
     }
 
     private static void loadSEEntryPoints() throws GaswException {
+        
         try {
             logger.info("Loading SEs entry points.");
             ProcessBuilder builder = new ProcessBuilder("lcg-info", "--list-service",
@@ -301,6 +198,8 @@ public class Configuration {
                 logger.error(cout);
                 throw new GaswException("Unable to load SEs entry points.");
             }
+            process = null;
+            
         } catch (InterruptedException ex) {
             logger.error(ex);
             throw new GaswException(ex);

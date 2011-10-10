@@ -34,8 +34,10 @@
  */
 package fr.insalyon.creatis.gasw.output;
 
+import fr.insalyon.creatis.gasw.Constants.MinorStatus;
 import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.bean.Job;
+import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
 import fr.insalyon.creatis.gasw.bean.Node;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
@@ -119,21 +121,22 @@ public abstract class OutputUtil {
                     appStdOut.append("\n");
                 }
 
-                if (strLine.contains("START date is")) {
-                    startExec = Integer.valueOf(strLine.split(" ")[13]).intValue() - startTime;
-                    job.setDownload(startExec);
+//                if (strLine.contains("START date is")) {
+//                    startExec = Integer.valueOf(strLine.split(" ")[13]).intValue() - startTime;
+//                    job.setDownload(startExec);
 
-                } else if (strLine.contains("Input download time:")) {
+//                } else if (strLine.contains("Input download time:")) {
+                if (strLine.contains("Input download time:")) {
                     int downloadTime = Integer.valueOf(strLine.split(" ")[13]).intValue();
-                    job.setRunning(startExec + downloadTime);
+                    job.setDownload(downloadTime);
 
                 } else if (strLine.contains("Execution time:")) {
                     int executionTime = Integer.valueOf(strLine.split(" ")[12]).intValue();
-                    job.setUpload(job.getRunning() + executionTime);
+                    job.setRunning(executionTime);
 
                 } else if (strLine.contains("Results upload time:")) {
                     int uploadTime = Integer.valueOf(strLine.split(" ")[13]).intValue();
-                    job.setEnd(job.getUpload() + uploadTime);
+                    job.setUpload(uploadTime);
 
                 } else if (strLine.contains("Exiting with return value")) {
                     String[] errmsg = strLine.split("\\s+");
@@ -195,11 +198,17 @@ public abstract class OutputUtil {
             }
             br.close();
 
+            DAOFactory factory = DAOFactory.getDAOFactory();
             if (node.getSiteName() != null && node.getNodeName() != null) {
-                DAOFactory.getDAOFactory().getNodeDAO().add(node);
+                factory.getNodeDAO().add(node);
                 job.setNode(node);
             }
-            DAOFactory.getDAOFactory().getJobDAO().update(job);
+
+            // Parse checkpoint
+            job = parseCheckpoint(job, 0);
+
+            // Update Job            
+            factory.getJobDAO().update(job);
 
         } catch (DAOException ex) {
             logException(logger, ex);
@@ -207,6 +216,109 @@ public abstract class OutputUtil {
             logException(logger, ex);
         }
         return exitCode;
+    }
+
+    /**
+     * 
+     * @param job
+     * @param exitCode 
+     */
+    protected void parseNonStdOut(Job job, int exitCode) {
+
+        try {
+            DAOFactory factory = DAOFactory.getDAOFactory();
+            int startedTime = 0;
+            int backgroundTime = 0;
+            int inputTime = 0;
+            int applicationTime = 0;
+            int outputTime = 0;
+            
+            for (JobMinorStatus minorStatus : factory.getJobMinorStatusDAO().getExecutionMinorStatus(job.getId())) {
+                
+                if (minorStatus.getStatus() == MinorStatus.Started) {
+                    startedTime = (int) (minorStatus.getDate().getTime() / 1000);
+                
+                } else if (minorStatus.getStatus() == MinorStatus.Background) {
+                    backgroundTime = (int) (minorStatus.getDate().getTime() / 1000);
+                    job.setDownload(backgroundTime - startedTime);
+                
+                } else if (minorStatus.getStatus() == MinorStatus.Inputs) {
+                    inputTime = (int) (minorStatus.getDate().getTime() / 1000);
+                    job.setDownload(job.getDownload() + (inputTime - backgroundTime));
+                
+                } else if (minorStatus.getStatus() == MinorStatus.Application) {
+                    applicationTime = (int) (minorStatus.getDate().getTime() / 1000);
+                    job.setDownload(job.getDownload() + (applicationTime - inputTime));
+                
+                } else if (minorStatus.getStatus() == MinorStatus.Outputs) {
+                    outputTime = (int) (minorStatus.getDate().getTime() / 1000);
+                    job.setRunning(outputTime - applicationTime);
+                }
+            }
+            
+            job = parseCheckpoint(job, applicationTime);
+            job.setExitCode(exitCode);
+            factory.getJobDAO().update(job);
+            
+        } catch (DAOException ex) {
+            logException(logger, ex);
+        }
+    }
+
+    /**
+     * 
+     * @param job
+     * @return 
+     */
+    private Job parseCheckpoint(Job job, int applicationTime) {
+
+        try {
+            DAOFactory factory = DAOFactory.getDAOFactory();
+
+            if (factory.getJobMinorStatusDAO().hasCheckpoint(job.getId())) {
+                int sumCheckpointInit = 0;
+                int sumCheckpointUpload = 0;
+                long startCheckpoint = -1;
+                long startUpload = -1;
+                long lastSignal = -1;
+
+                for (JobMinorStatus minorStatus : factory.getJobMinorStatusDAO().getCheckpoints(job.getId())) {
+
+                    if (minorStatus.getStatus() == MinorStatus.CheckPoint_Init) {
+                        startCheckpoint = minorStatus.getDate().getTime();
+                        lastSignal = minorStatus.getDate().getTime();
+
+                    } else if (minorStatus.getStatus() == MinorStatus.CheckPoint_Upload
+                            && startCheckpoint != -1) {
+
+                        startUpload = minorStatus.getDate().getTime();
+                        sumCheckpointInit += (int) (startUpload - startCheckpoint) / 1000;
+                        startCheckpoint = -1;
+                        lastSignal = minorStatus.getDate().getTime();
+
+                    } else if (minorStatus.getStatus() == MinorStatus.CheckPoint_End
+                            && startUpload != -1) {
+
+                        sumCheckpointUpload += (int) (minorStatus.getDate().getTime() - startUpload) / 1000;
+                        startUpload = -1;
+                        lastSignal = minorStatus.getDate().getTime();
+                    }
+                }
+                
+                if (job.getRunning() > 0) {
+                    job.setRunning(job.getRunning() - (sumCheckpointInit + sumCheckpointUpload));
+                    
+                } else {
+                    job.setRunning((int) (lastSignal/1000) - applicationTime - (sumCheckpointInit + sumCheckpointUpload));
+                }
+                
+                job.setCheckpointInit(sumCheckpointInit);
+                job.setCheckpointUpload(sumCheckpointUpload);
+            }
+        } catch (DAOException ex) {
+            logException(logger, ex);
+        }
+        return job;
     }
 
     /**

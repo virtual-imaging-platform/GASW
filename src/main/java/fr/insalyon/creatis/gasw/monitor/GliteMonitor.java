@@ -125,7 +125,7 @@ public class GliteMonitor extends Monitor {
                         } else if (status.contains("Scheduled")) {
                             Job job = jobDAO.getJobByID(jobId);
                             if (job.getStatus() != GaswStatus.QUEUED) {
-                                job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
+                                job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - job.getCreation())).intValue());
                                 jobDAO.update(job);
                             }
                             String list = jobStatus.get(GaswStatus.QUEUED);

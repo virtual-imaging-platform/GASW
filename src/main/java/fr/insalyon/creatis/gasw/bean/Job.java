@@ -51,6 +51,8 @@ public class Job {
     private int running;
     private int upload;
     private int end;
+    private int checkpointInit;
+    private int checkpointUpload;
     private Node node;
     private String command;
     private String fileName;
@@ -183,5 +185,21 @@ public class Job {
 
     public String getParameters() {
         return parameters;
+    }
+
+    public int getCheckpointUpload() {
+        return checkpointUpload;
+    }
+
+    public void setCheckpointUpload(int checkpointUpload) {
+        this.checkpointUpload = checkpointUpload;
+    }
+
+    public int getCheckpointInit() {
+        return checkpointInit;
+    }
+
+    public void setCheckpointInit(int checkpointInit) {
+        this.checkpointInit = checkpointInit;
     }
 }

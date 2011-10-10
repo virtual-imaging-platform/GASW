@@ -32,22 +32,36 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.dao;
+package fr.insalyon.creatis.gasw.bean;
 
-import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
-import java.util.List;
+import fr.insalyon.creatis.gasw.Constants.MinorStatus;
+import java.util.Date;
 
 /**
  *
  * @author Rafael Silva
  */
-public interface JobMinorStatusDAO {
-    
-    public void add(String jobId, int minorStatus) throws DAOException;
-    
-    public boolean hasCheckpoint(String jobId) throws DAOException;
-    
-    public List<JobMinorStatus> getCheckpoints(String jobID) throws DAOException;
-    
-    public List<JobMinorStatus> getExecutionMinorStatus(String jobID) throws DAOException;
+public class JobMinorStatus {
+
+    private String jobID;
+    private MinorStatus status;
+    private Date date;
+
+    public JobMinorStatus(String jobID, MinorStatus status, Date date) {
+        this.jobID = jobID;
+        this.status = status;
+        this.date = date;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public String getJobID() {
+        return jobID;
+    }
+
+    public MinorStatus getStatus() {
+        return status;
+    }
 }

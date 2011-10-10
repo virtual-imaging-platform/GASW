@@ -126,6 +126,8 @@ public class DiracOutputUtil extends OutputUtil {
                         }
                         br.close();
 
+                        parseNonStdOut(job, GaswExitCode.ERROR_GET_STD.getExitCode());
+
                         logger.error(cout);
                         logger.error("Output files do not exist. Job ID: " + jobID);
 
@@ -137,12 +139,14 @@ public class DiracOutputUtil extends OutputUtil {
                         gaswExitCode = GaswExitCode.ERROR_GET_STD;
                     }
                 } catch (grool.proxy.ProxyInitializationException ex) {
+
                     logger.error(ex.getMessage());
                     stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
                     stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());
                     appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, ex.getMessage());
                     appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
+
                 } catch (grool.proxy.VOMSExtensionException ex) {
                     logger.error(ex.getMessage());
                     stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
@@ -152,16 +156,17 @@ public class DiracOutputUtil extends OutputUtil {
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
                 }
 
-
             } else {
 
                 String message = "";
                 if (job.getStatus() == GaswStatus.CANCELLED) {
                     message = "Job Cancelled";
                     gaswExitCode = GaswExitCode.EXECUTION_CANCELED;
+                    parseNonStdOut(job, GaswExitCode.EXECUTION_CANCELED.getExitCode());
                 } else {
                     message = "Job Stalled";
                     gaswExitCode = GaswExitCode.EXECUTION_STALLED;
+                    parseNonStdOut(job, GaswExitCode.EXECUTION_STALLED.getExitCode());
                 }
 
                 stdOut = saveFile(job, ".out", Constants.OUT_ROOT, message);
@@ -191,6 +196,7 @@ public class DiracOutputUtil extends OutputUtil {
      * @return
      */
     private File getStdFile(Job job, String extension, String directory) {
+
         File stdDir = new File(directory);
         if (!stdDir.exists()) {
             stdDir.mkdir();

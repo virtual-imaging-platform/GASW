@@ -93,6 +93,11 @@ public class DiracMonitor extends Monitor {
                         String status = jobsStatus.get(jobId);
 
                         if (status.equals("Running")) {
+                            Job job = jobDAO.getJobByID(jobId);
+                            if (job.getStatus() != GaswStatus.RUNNING) {
+                                job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime);
+                                jobDAO.update(job);
+                            }
                             String list = jobStatus.get(GaswStatus.RUNNING);
                             list = list.isEmpty() ? jobId : list + "," + jobId;
                             jobStatus.put(GaswStatus.RUNNING, list);
@@ -100,7 +105,7 @@ public class DiracMonitor extends Monitor {
                         } else if (status.equals("Waiting")) {
                             Job job = jobDAO.getJobByID(jobId);
                             if (job.getStatus() != GaswStatus.QUEUED) {
-                                job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
+                                job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime - job.getCreation());
                                 jobDAO.update(job);
                             }
                             String list = jobStatus.get(GaswStatus.QUEUED);
