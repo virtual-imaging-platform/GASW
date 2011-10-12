@@ -212,14 +212,18 @@ public class JobData extends AbstractData implements JobDAO {
                     if (n > 0) {
                         sb.append(" OR ");
                     }
-                    sb.append("id = '");
-                    sb.append(id);
-                    sb.append("'");
+                    sb.append("id = ?");
+                    n++;
                 }
+
                 PreparedStatement ps = prepareStatement("UPDATE Jobs SET "
                         + "status = ? WHERE " + sb.toString());
 
                 ps.setString(1, status.toString());
+
+                for (int i = 0; i < n; i++) {
+                    ps.setString(i + 2, ids[i]);
+                }
                 execute(ps);
             }
         } catch (SQLException ex) {
