@@ -59,7 +59,9 @@ public class DiracJdlGenerator extends AbstractJdlGenerator {
     @Override
     public String generate(String scriptName) {
         
-        StringBuilder sb = new StringBuilder(super.generate(scriptName));
+        StringBuilder sb = new StringBuilder();
+        sb.append("JobName = \"").append(scriptName.split("\\.")[0]).append("\";\n");
+        sb.append(super.generate(scriptName));
         sb.append("MaxCPUTime\t= \"86400\";\n");
         
         return sb.toString();

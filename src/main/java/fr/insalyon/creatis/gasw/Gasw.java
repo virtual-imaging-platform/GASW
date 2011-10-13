@@ -215,6 +215,7 @@ public class Gasw {
                 if (!gettingOutputs) {
                     if (finishedJobs != null && finishedJobs.size() > 0) {
                         synchronized (client) {
+                            logger.debug("New tasks have finished execution. Notifying client...");
                             client.notify();
                         }
                     }
