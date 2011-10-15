@@ -83,12 +83,21 @@ public class GaswUtil {
         if (userProxy != null) {
             if (strings[0].contains("glite")) {
                 if (!userProxy.isValid()) {
-                    logger.warn("Proxy has expired. Downloading a new proxy from myProxy server.");
+                    if (userProxy.getProxy().length() <= 0){
+                        logger.warn("Proxy is not found. Downloading a new proxy from myProxy server...");
+                    } else {
+                        logger.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
+                    }
+                    
                     userProxy.init();
                 }
             } else if (strings[0].contains("dirac")) {
                 if (!userProxy.isRawProxyValid()) {
-                    logger.warn("Proxy has expired. Downloading a new proxy from myProxy server.");
+                    if (userProxy.getProxy().length() <= 0){
+                        logger.warn("Proxy is not found. Downloading a new proxy from myProxy server...");
+                    } else {
+                        logger.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
+                    }
                     userProxy.initRawProxy();
                 }
             }
