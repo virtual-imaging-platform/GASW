@@ -36,6 +36,7 @@ package fr.insalyon.creatis.gasw.dao;
 
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.monitor.GaswStatus;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -55,4 +56,6 @@ public interface JobDAO {
     public void updateStatus(Map<GaswStatus, String> jobStatus) throws DAOException;
        
     public Map<String, GaswStatus> getSignaledJobs() throws DAOException;
+    
+    public List<String> getActiveJobs() throws DAOException;
 }

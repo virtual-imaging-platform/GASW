@@ -169,22 +169,15 @@ public abstract class Executor {
      * @param jobID Job identification.
      */
     protected void addJobToMonitor(String jobID, Proxy userProxy) {
+
         StringBuilder params = new StringBuilder();
         for (String p : gaswInput.getParameters()) {
             params.append(p);
             params.append(" ");
         }
-        if (userProxy != null){
-                MonitorFactory.getMonitor().add(jobID,
+        MonitorFactory.getMonitor().add(jobID,
                 gaswInput.getRelease().getSymbolicName(),
                 jdlName, params.toString(), userProxy);
-            }else{
-                MonitorFactory.getMonitor().add(jobID,
-                gaswInput.getRelease().getSymbolicName(),
-                jdlName, params.toString(), null);
-            }
-        
-        
     }
 
     /**

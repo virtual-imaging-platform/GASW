@@ -44,7 +44,9 @@ import fr.insalyon.creatis.gasw.monitor.GaswStatus;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -154,7 +156,7 @@ public class JobData extends AbstractData implements JobDAO {
             ResultSet rs = executeQuery(ps);
             rs.next();
 
-            return new Job(rs.getString("id"), getStatus(rs.getString("status")),
+            return new Job(rs.getString("id"), GaswStatus.valueOf(rs.getString("status")),
                     rs.getInt("exit_code"), rs.getInt("creation"), rs.getInt("queued"),
                     rs.getInt("download"), rs.getInt("running"), rs.getInt("upload"),
                     rs.getInt("end_e"), getNode(rs.getString("node_site"),
@@ -217,7 +219,7 @@ public class JobData extends AbstractData implements JobDAO {
             Map<String, GaswStatus> jobs = new HashMap<String, GaswStatus>();
 
             while (rs.next()) {
-                jobs.put(rs.getString("id"), getStatus(rs.getString("status")));
+                jobs.put(rs.getString("id"), GaswStatus.valueOf(rs.getString("status")));
             }
 
             return jobs;
@@ -227,39 +229,42 @@ public class JobData extends AbstractData implements JobDAO {
         }
     }
 
-    private GaswStatus getStatus(String status) {
-        if (status.equals(GaswStatus.SUCCESSFULLY_SUBMITTED.toString())) {
-            return GaswStatus.SUCCESSFULLY_SUBMITTED;
-        }
-        if (status.equals(GaswStatus.QUEUED.name())) {
-            return GaswStatus.QUEUED;
-        }
-        if (status.equals(GaswStatus.RUNNING.name())) {
-            return GaswStatus.RUNNING;
-        }
-        if (status.equals(GaswStatus.COMPLETED.name())) {
-            return GaswStatus.COMPLETED;
-        }
-        if (status.equals(GaswStatus.ERROR.name())) {
-            return GaswStatus.ERROR;
-        }
-        if (status.equals(GaswStatus.CANCELLED.name())) {
-            return GaswStatus.CANCELLED;
-        }
-        if (status.equals(GaswStatus.KILL.name())) {
-            return GaswStatus.KILL;
-        }
-        if (status.equals(GaswStatus.RESCHEDULE.name())) {
-            return GaswStatus.RESCHEDULE;
-        }
-        return null;
-    }
-    
     private Node getNode(String siteName, String nodeName) throws DAOException {
         if (siteName != null && !siteName.equals("")) {
             return DAOFactory.getDAOFactory().getNodeDAO().getNodeBySiteAndNodeName(siteName, nodeName);
         } else {
             return null;
+        }
+    }
+
+    /**
+     * 
+     * @return
+     * @throws DAOException 
+     */
+    @Override
+    public List<String> getActiveJobs() throws DAOException {
+
+        try {
+            PreparedStatement ps = prepareStatement("SELECT "
+                    + "id FROM Jobs WHERE status = ? OR "
+                    + "status = ? OR status = ?");
+
+            ps.setString(1, GaswStatus.SUCCESSFULLY_SUBMITTED.name());
+            ps.setString(2, GaswStatus.QUEUED.name());
+            ps.setString(3, GaswStatus.RUNNING.name());
+            ResultSet rs = executeQuery(ps);
+
+            List<String> jobs = new ArrayList<String>();
+
+            while (rs.next()) {
+                jobs.add(rs.getString("id"));
+            }
+
+            return jobs;
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
         }
     }
 }

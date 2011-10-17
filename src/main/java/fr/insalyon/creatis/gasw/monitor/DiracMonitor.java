@@ -40,11 +40,18 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
+import fr.insalyon.creatis.gasw.executor.DiracExecutor;
+import fr.insalyon.creatis.gasw.monitor.DiracJobStatus.DiracStatus;
 import grool.proxy.Proxy;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 
@@ -57,6 +64,7 @@ public class DiracMonitor extends Monitor {
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static DiracMonitor instance;
     private volatile Map<String, Proxy> monitoredJobs;
+    private Connection connection;
 
     public synchronized static DiracMonitor getInstance() {
         if (instance == null) {
@@ -68,6 +76,7 @@ public class DiracMonitor extends Monitor {
 
     private DiracMonitor() {
         super();
+        connect();
         this.monitoredJobs = new HashMap<String, Proxy>();
         if (Configuration.USE_DIRAC_SERVICE) {
             DiracServiceMonitor.getInstance();
@@ -79,70 +88,82 @@ public class DiracMonitor extends Monitor {
 
         while (!stop) {
             try {
-                if (!monitoredJobs.isEmpty()) {
 
-                    verifySignaledJobs();
+                verifySignaledJobs();
 
-                    Map<String, Proxy> finishedJobs = new HashMap<String, Proxy>();
-                    Map<GaswStatus, String> jobStatus = getNewJobStatusMap();
-                    Map<String, String> jobsStatus = DiracDatabase.getInstance().getJobsStatus(new ArrayList(monitoredJobs.keySet()));
+                if (connection.isClosed() || !connection.isValid(10)) {
+                    connect();
+                }
 
-                    for (String jobId : jobsStatus.keySet()) {
-
-                        String status = jobsStatus.get(jobId);
-
-                        if (status.equals("Running")) {
-                            String list = jobStatus.get(GaswStatus.RUNNING);
-                            list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(GaswStatus.RUNNING, list);
-
-                        } else if (status.equals("Waiting")) {
-                            Job job = jobDAO.getJobByID(jobId);
-                            if (job.getStatus() != GaswStatus.QUEUED) {
-                                job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
-                                jobDAO.update(job);
-                            }
-                            String list = jobStatus.get(GaswStatus.QUEUED);
-                            list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(GaswStatus.QUEUED, list);
-
-                        } else {
-                            GaswStatus st = null;
-                            if (status.equals("Done")) {
-                                String list = jobStatus.get(GaswStatus.COMPLETED);
-                                list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(GaswStatus.COMPLETED, list);
-                                st = GaswStatus.COMPLETED;
-
-                            } else if (status.equals("Failed")) {
-                                String list = jobStatus.get(GaswStatus.ERROR);
-                                list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(GaswStatus.ERROR, list);
-                                st = GaswStatus.ERROR;
-
-                            } else if (status.equals("Killed")) {
-                                String list = jobStatus.get(GaswStatus.CANCELLED);
-                                list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(GaswStatus.CANCELLED, list);
-                                st = GaswStatus.CANCELLED;
-
-                            } else {
-                                String list = jobStatus.get(GaswStatus.STALLED);
-                                list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(GaswStatus.STALLED, list);
-                                st = GaswStatus.STALLED;
-                            }
-                            logger.info("Dirac Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
-                            finishedJobs.put(jobId + "--" + st, monitoredJobs.get(jobId));
-                            monitoredJobs.remove(jobId);
-                        }
+                List<String> idsList = jobDAO.getActiveJobs();
+                StringBuilder sb = new StringBuilder();
+                for (String id : idsList) {
+                    if (sb.length() > 0) {
+                        sb.append(" OR ");
                     }
-                    setStatus(jobStatus);
+                    sb.append("JobID='");
+                    sb.append(id);
+                    sb.append("'");
+                }
 
-                    if (finishedJobs.size() > 0) {
-                        Gasw.getInstance().addFinishedJob(finishedJobs);
+                PreparedStatement ps = connection.prepareStatement(
+                        "SELECT JobID, Status FROM Jobs WHERE (" + sb.toString()
+                        + ") AND (Status = 'Done' OR Status = 'Failed'"
+                        + " OR Status = 'Running' OR Status = 'Waiting'"
+                        + " OR Status = 'Killed' OR Status = 'Stalled');",
+                        ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+
+                ResultSet rs = ps.executeQuery();
+                Map<String, Proxy> finishedJobs = new HashMap<String, Proxy>();
+
+                while (rs.next()) {
+
+                    String jobID = rs.getString("JobID");
+                    DiracStatus status = DiracStatus.valueOf(rs.getString("Status"));
+
+                    Job job = jobDAO.getJobByID(jobID);
+
+                    if (status == DiracStatus.Running) {
+
+                        if (job.getStatus() != GaswStatus.RUNNING) {
+                            job.setStatus(GaswStatus.RUNNING);
+                            job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime);
+                            jobDAO.update(job);
+                        }
+
+                    } else if (status == DiracStatus.Waiting) {
+
+                        if (job.getStatus() != GaswStatus.QUEUED) {
+                            job.setStatus(GaswStatus.QUEUED);
+                            job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime - job.getCreation());
+                            jobDAO.update(job);
+                        }
+
+                    } else {
+
+                        if (status == DiracStatus.Done) {
+                            job.setStatus(GaswStatus.COMPLETED);
+
+                        } else if (status == DiracStatus.Failed) {
+                            job.setStatus(GaswStatus.ERROR);
+
+                        } else if (status == DiracStatus.Killed) {
+                            job.setStatus(GaswStatus.CANCELLED);
+
+                        } else if (status == DiracStatus.Stalled) {
+                            job.setStatus(GaswStatus.STALLED);
+
+                        }
+                        jobDAO.update(job);
+                        logger.info("Dirac Monitor: job \"" + jobID + "\" finished as \"" + status + "\"");
+                        finishedJobs.put(jobID + "--" + status, monitoredJobs.get(jobID));
                     }
                 }
+
+                if (finishedJobs.size() > 0) {
+                    Gasw.getInstance().addFinishedJob(finishedJobs);
+                }
+
                 Thread.sleep(Configuration.SLEEPTIME);
 
             } catch (GaswException ex) {
@@ -152,27 +173,34 @@ public class DiracMonitor extends Monitor {
                 logException(logger, ex);
             } catch (InterruptedException ex) {
                 logException(logger, ex);
+            } catch (SQLException ex) {
+                logException(logger, ex);
             }
         }
     }
 
     @Override
     public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy) {
-        Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
-        add(job, fileName);
+
+        add(new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED,
+                parameters, symbolicName), fileName);
         this.monitoredJobs.put(jobID, userProxy);
     }
 
     @Override
     protected synchronized void terminate() {
+
         super.terminate();
+        DiracExecutor.terminate();
         instance = null;
         if (Configuration.USE_DIRAC_SERVICE) {
             DiracServiceMonitor.getInstance().terminate();
         }
+        close();
     }
 
     public static void finish() {
+
         if (instance != null) {
             instance.terminate();
         }
@@ -180,6 +208,7 @@ public class DiracMonitor extends Monitor {
 
     @Override
     protected void kill(String jobID) {
+
         try {
             Process process = GaswUtil.getProcess(logger, "dirac-wms-job-kill", jobID);
             process.waitFor();
@@ -207,6 +236,7 @@ public class DiracMonitor extends Monitor {
 
     @Override
     protected void reschedule(String jobID) {
+
         try {
             Process process = GaswUtil.getProcess(logger, "dirac-wms-job-reschedule", jobID);
             process.waitFor();
@@ -234,6 +264,40 @@ public class DiracMonitor extends Monitor {
             logException(logger, ex);
         } catch (InterruptedException ex) {
             logException(logger, ex);
+        }
+    }
+
+    private synchronized void connect() {
+
+        int index = 0;
+        while (true) {
+            try {
+                Class.forName("com.mysql.jdbc.Driver");
+                connection = DriverManager.getConnection(
+                        "jdbc:mysql://" + Configuration.MYSQL_HOST + ":"
+                        + Configuration.MYSQL_PORT + "/JobDB",
+                        Configuration.MYSQL_DB_USER, "");
+                break;
+
+            } catch (ClassNotFoundException ex) {
+                logger.error(ex);
+                break;
+            } catch (SQLException ex) {
+                try {
+                    index = GaswUtil.sleep(logger, "Failed to reconnect to DIRAC database", index);
+                } catch (InterruptedException ex1) {
+                    logger.error(ex1);
+                }
+            }
+        }
+    }
+
+    private void close() {
+
+        try {
+            connection.close();
+        } catch (SQLException ex) {
+            logger.warn(ex);
         }
     }
 }

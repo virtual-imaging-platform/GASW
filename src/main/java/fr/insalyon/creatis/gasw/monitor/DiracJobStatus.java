@@ -32,66 +32,31 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.executor.generator.jdl;
-
-import fr.insalyon.creatis.gasw.Configuration;
-import fr.insalyon.creatis.gasw.release.EnvVariable;
-import java.util.List;
+package fr.insalyon.creatis.gasw.monitor;
 
 /**
  *
  * @author Rafael Silva
  */
-public class DiracJdlGenerator extends AbstractJdlGenerator {
+public class DiracJobStatus {
 
-    public static DiracJdlGenerator instance;
+    public static enum DiracStatus {
 
-    public static DiracJdlGenerator getInstance() {
-        if (instance == null) {
-            instance = new DiracJdlGenerator();
-        }
-        return instance;
+        Running, Waiting, Done, Failed, Killed, Stalled
+    };
+    private String jobID;
+    private DiracStatus status;
+
+    public DiracJobStatus(String jobID, DiracStatus status) {
+        this.jobID = jobID;
+        this.status = status;
     }
 
-    private DiracJdlGenerator() {
+    public String getJobID() {
+        return jobID;
     }
-    
-    @Override
-    public String generate(String scriptName) {
-        
-        StringBuilder sb = new StringBuilder();
-        sb.append("JobName = \"").append(scriptName.split("\\.")[0]).append("\";\n");
-        sb.append(super.generate(scriptName));
-        sb.append("MaxCPUTime\t= \"86400\";\n");
-        
-        return sb.toString();
-    }
-    
-    /**
-     * Parses a list of environment variables to add DIRAC submission pool.
-     * 
-     * @param list List of environment variables
-     * @return 
-     */
-    public String parseEnvironment(List<EnvVariable> list) {
 
-        StringBuilder sb = new StringBuilder();
-        boolean hasPoolRequirement = false;
-
-        for (EnvVariable v : list) {
-            
-            if (v.getCategory() == EnvVariable.Category.INFRASTRUCTURE
-                    && v.getName().equals("diracPool")) {
-                
-                sb.append("SubmitPools = {\"" + v.getValue() + "\"};\n");
-                hasPoolRequirement = true;
-            }
-        }
-        
-        if (!hasPoolRequirement) {
-            sb.append("SubmitPools = {\"" + Configuration.DIRAC_DEFAULT_POOL + "\"};\n");
-        }
-        
-        return sb.toString();
+    public DiracStatus getStatus() {
+        return status;
     }
 }

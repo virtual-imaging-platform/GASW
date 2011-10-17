@@ -55,29 +55,68 @@ import org.apache.log4j.Logger;
  *
  * @author Rafael Silva
  */
-public class DataManager {
+public class DataManager extends Thread {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static DataManager instance;
+    private volatile List<URI> dataToReplicate;
+    private volatile List<URI> replicatedData;
+    private volatile boolean stop = false;
 
     public synchronized static DataManager getInstance() {
         if (instance == null) {
             instance = new DataManager();
+            instance.start();
         }
         return instance;
     }
 
     private DataManager() {
+        dataToReplicate = new ArrayList<URI>();
+        replicatedData = new ArrayList<URI>();
     }
 
-    /**
-     * 
-     * @param downloads
-     * @throws GaswException 
-     */
-    public synchronized void replicate(List<URI> downloads) throws GaswException {
-        for (URI uri : downloads) {
-            replicate(uri);
+    @Override
+    public void run() {
+
+        while (!stop) {
+            try {
+                List<URI> dataToProcess = new ArrayList<URI>();
+                dataToProcess.addAll(dataToReplicate);
+                for (URI uri : dataToProcess) {
+                    if (!replicatedData.contains(uri)) {
+                        try {
+                            replicate(uri);
+                            replicatedData.add(uri);
+                            dataToReplicate.remove(uri);
+
+                        } catch (GaswException ex) {
+                            logger.warn(ex);
+                            dataToReplicate.remove(uri);
+                        }
+                    }
+                }
+                Thread.sleep(Configuration.SLEEPTIME);
+
+            } catch (InterruptedException ex) {
+                logger.error(ex);
+            }
+        }
+    }
+
+    public synchronized void terminate() {
+        this.stop = true;
+    }
+
+    public synchronized void addData(URI uri) {
+        if (!replicatedData.contains(uri)) {
+            dataToReplicate.add(uri);
+        }
+    }
+
+    public synchronized void addData(List<URI> uris) {
+        for (URI uri : uris) {
+            addData(uri);
         }
     }
 
@@ -86,7 +125,7 @@ public class DataManager {
      * @param uri
      * @throws GaswException 
      */
-    public synchronized void replicate(URI uri) throws GaswException {
+    private void replicate(URI uri) throws GaswException {
 
         String scheme = uri.getScheme();
         if (scheme == null || (!scheme.equalsIgnoreCase("file")
@@ -148,14 +187,14 @@ public class DataManager {
                                 replicated = true;
                                 break;
                             } else {
-                                logger.warn("Unable to replicate '" + uri.getPath()
+                                throw new GaswException("Unable to replicate '" + uri.getPath()
                                         + "' from '" + replica + "': " + cout);
                             }
                         } catch (DAOException ex) {
-                            logger.warn("Unable to find entry point for '"
+                            throw new GaswException("Unable to find entry point for '"
                                     + replica.getHost() + "'.");
                         } catch (InterruptedException ex) {
-                            logger.warn("Unable to replicate '" + uri.getPath()
+                            throw new GaswException("Unable to replicate '" + uri.getPath()
                                     + "' from '" + replica + "'.");
                         }
                     }

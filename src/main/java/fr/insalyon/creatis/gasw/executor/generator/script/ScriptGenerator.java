@@ -352,10 +352,10 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append("chmod 755 *\n");
         // the 1s delay is needed to ensure that the time between this file creation and the command line outputs
         // files creation is sufficient, and the subsequent "find -newer" call succeeds
-        sb.append("touch BEFORE_EXECUTION_REFERENCE_FILE; sleep 1\n");
-        sb.append("info \"Executing " + commandLine + " ...\"\n");
+        sb.append("echo \"BEFORE_EXECUTION_REFERENCE\" > BEFORE_EXECUTION_REFERENCE_FILE; sleep 1\n");
+        sb.append("info \"Executing ").append(commandLine).append(" ...\"\n");
         sb.append("startLog application_execution\n");
-        sb.append(commandLine + "\n");
+        sb.append(commandLine).append("\n");
         sb.append("if [ $? -ne 0 ];\n"
                 + "then\n"
                 + "  error \"Exiting with return value 6\"\n"
@@ -369,8 +369,8 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append("BEFOREUPLOAD=`date +%s`;\n");
         sb.append("stopLog application_execution\n");
         sb.append("info \"Execution time was `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}`s\"\n");
-        sb.append(edgesVar + "\"\n");
-        sb.append(edgesVar1 + "\"\n\n");
+        sb.append(edgesVar).append("\"\n");
+        sb.append(edgesVar1).append("\"\n\n");
         return sb.toString();
     }
 
@@ -409,20 +409,24 @@ public class ScriptGenerator extends AbstractGenerator {
             dir = dir.replaceFirst("lfn://[^/]+", "");
         }
         for (String regexp : regexs) {
-            //sb.append("  for f in `ls -A | grep -P '" + regexp + "'`\n");
-            sb.append("  for f in `find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '^\\.$' | sed 's#./##' | grep -P '");
-            sb.append(regexp);
-            sb.append("'`\n");
+            sb.append("files=$(find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '^\\.$' | sed 's#./##' | grep -P '").append(regexp).append("') \n");
+            sb.append("if [ $? -ne 0 ];\n");
+            sb.append("then\n");
+            sb.append("  error \"Exiting with return value 3\";\n");
+            sb.append("  exit 3;\n");
+            sb.append("fi\n");
+
+            sb.append("  for f in ${files} \n");
             sb.append("  do\n");
 
-            sb.append("startLog file_upload lfn=\"");
+            sb.append("    startLog file_upload lfn=\"");
             sb.append(dir);
             sb.append("${f}\"\n");
 
             sb.append("    uploadFile ");
             sb.append(dir);
             sb.append("${f} ${PWD}/${f} 1\n");
-            sb.append("stopLog file_upload\n");
+            sb.append("    stopLog file_upload\n");
             sb.append("    if [ \"x$__MOTEUR_OUT\" == \"x\" ]\n");
             sb.append("    then\n");
             sb.append("      __MOTEUR_OUT=\"");
@@ -494,6 +498,7 @@ public class ScriptGenerator extends AbstractGenerator {
         sb.append(dataManagement.addToCacheCommand());
         sb.append(dataManagement.addToDataManagerCommand());
         sb.append(dataManagement.uploadFileCommand());
+        sb.append(dataManagement.getDeleteCommand());
 
         //GASW Service
         if (Configuration.USE_DIRAC_SERVICE) {
@@ -507,6 +512,7 @@ public class ScriptGenerator extends AbstractGenerator {
 
         sb.append(uploadTest(uploads, regexs, defaultDir));
         sb.append(inputs(release, downloads));
+        sb.append(applicationEnvironment(release));
         sb.append(applicationExecution(parameters));
         sb.append(resultsUpload(uploads, regexs, defaultDir));
         sb.append(footer());

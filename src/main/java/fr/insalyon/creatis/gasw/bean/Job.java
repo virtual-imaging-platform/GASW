@@ -57,6 +57,11 @@ public class Job {
     private int startTime;
     private String parameters;
 
+    public Job(String parameters, String command, String fileName) {
+        this("", GaswStatus.CREATED, -1, 0, 0, 0, 0, 0, 0, null, command,
+                fileName, parameters);
+    }
+
     public Job(String id, GaswStatus status, String parameters, String command) {
         this(id, status, -1, 0, 0, 0, 0, 0, 0, null, command, "", parameters);
     }
@@ -114,6 +119,10 @@ public class Job {
 
     public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public Node getNode() {
