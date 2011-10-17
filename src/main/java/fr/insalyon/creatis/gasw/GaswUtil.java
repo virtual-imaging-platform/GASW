@@ -81,30 +81,41 @@ public class GaswUtil {
         builder.redirectErrorStream(true);
 
         if (userProxy != null) {
-            if (strings[0].contains("glite")) {
-                if (!userProxy.isValid()) {
-                    if (userProxy.getProxy().length() <= 0){
-                        logger.warn("Proxy is not found. Downloading a new proxy from myProxy server...");
-                    } else {
-                        logger.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
+
+            boolean exists = true;
+            boolean isValid = true;
+
+            if (userProxy.getProxy().length() <= 0) {
+                logger.warn("Proxy is not found. Downloading a new proxy from myProxy server...");
+                exists = false;
+            }
+
+            if (exists) {
+                if (strings[0].contains("glite")) {
+                    if (!userProxy.isValid()) {
+                        isValid = false;
                     }
-                    
-                    userProxy.init();
+                } else if (strings[0].contains("dirac")) {
+                    if (!userProxy.isRawProxyValid()) {
+                        isValid = false;
+                    }
                 }
-            } else if (strings[0].contains("dirac")) {
-                if (!userProxy.isRawProxyValid()) {
-                    if (userProxy.getProxy().length() <= 0){
-                        logger.warn("Proxy is not found. Downloading a new proxy from myProxy server...");
-                    } else {
-                        logger.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
-                    }
+                if (!isValid) {
+                    logger.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
+                }
+            }
+
+            if (!exists || !isValid) {
+                if (strings[0].contains("glite")) {
+                    userProxy.init();
+                } else if (strings[0].contains("dirac")) {
                     userProxy.initRawProxy();
                 }
             }
+
             File proxy = userProxy.getProxy();
             builder.environment().put("X509_USER_PROXY", proxy.getAbsolutePath());
         }
-
         return builder.start();
     }
 
