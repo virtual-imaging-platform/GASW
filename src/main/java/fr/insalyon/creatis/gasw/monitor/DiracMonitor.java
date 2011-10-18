@@ -101,9 +101,7 @@ public class DiracMonitor extends Monitor {
                     if (sb.length() > 0) {
                         sb.append(" OR ");
                     }
-                    sb.append("JobID='");
-                    sb.append(id);
-                    sb.append("'");
+                    sb.append("JobID='").append(id).append("'");
                 }
 
                 PreparedStatement ps = connection.prepareStatement(
@@ -156,7 +154,7 @@ public class DiracMonitor extends Monitor {
                         }
                         jobDAO.update(job);
                         logger.info("Dirac Monitor: job \"" + jobID + "\" finished as \"" + status + "\"");
-                        finishedJobs.put(jobID + "--" + status, monitoredJobs.get(jobID));
+                        finishedJobs.put(jobID, monitoredJobs.get(jobID));
                     }
                 }
 
@@ -180,7 +178,8 @@ public class DiracMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy) {
+    public synchronized void add(String jobID, String symbolicName,
+            String fileName, String parameters, Proxy userProxy) {
 
         add(new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED,
                 parameters, symbolicName), fileName);

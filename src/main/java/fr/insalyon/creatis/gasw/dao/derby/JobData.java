@@ -45,7 +45,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -200,35 +199,6 @@ public class JobData extends AbstractData implements JobDAO {
         }
     }
 
-    /**
-     * 
-     * @return
-     * @throws DAOException 
-     */
-    @Override
-    public Map<String, GaswStatus> getSignaledJobs() throws DAOException {
-        try {
-            PreparedStatement ps = prepareStatement("SELECT "
-                    + "id, status FROM Jobs "
-                    + "WHERE status = ? OR status = ?");
-
-            ps.setString(1, "KILL");
-            ps.setString(2, "RESCHEDULE");
-            ResultSet rs = executeQuery(ps);
-
-            Map<String, GaswStatus> jobs = new HashMap<String, GaswStatus>();
-
-            while (rs.next()) {
-                jobs.put(rs.getString("id"), GaswStatus.valueOf(rs.getString("status")));
-            }
-
-            return jobs;
-
-        } catch (SQLException ex) {
-            throw new DAOException(ex);
-        }
-    }
-
     private Node getNode(String siteName, String nodeName) throws DAOException {
         if (siteName != null && !siteName.equals("")) {
             return DAOFactory.getDAOFactory().getNodeDAO().getNodeBySiteAndNodeName(siteName, nodeName);
@@ -253,6 +223,35 @@ public class JobData extends AbstractData implements JobDAO {
             ps.setString(1, GaswStatus.SUCCESSFULLY_SUBMITTED.name());
             ps.setString(2, GaswStatus.QUEUED.name());
             ps.setString(3, GaswStatus.RUNNING.name());
+            ResultSet rs = executeQuery(ps);
+
+            List<String> jobs = new ArrayList<String>();
+
+            while (rs.next()) {
+                jobs.add(rs.getString("id"));
+            }
+
+            return jobs;
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
+        }
+    }
+
+    /**
+     * 
+     * @param status
+     * @return
+     * @throws DAOException 
+     */
+    @Override
+    public List<String> getJobs(GaswStatus status) throws DAOException {
+        
+        try {
+            PreparedStatement ps = prepareStatement("SELECT "
+                    + "id FROM Jobs WHERE status = ?");
+
+            ps.setString(1, status.name());
             ResultSet rs = executeQuery(ps);
 
             List<String> jobs = new ArrayList<String>();

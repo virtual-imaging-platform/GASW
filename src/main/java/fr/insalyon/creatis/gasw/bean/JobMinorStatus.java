@@ -32,31 +32,36 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.output;
+package fr.insalyon.creatis.gasw.bean;
+
+import fr.insalyon.creatis.gasw.Constants.MinorStatus;
+import java.util.Date;
 
 /**
  *
- * @author Tram Truong Huu
+ * @author Rafael Silva
  */
-public enum GaswExitCode {
+public class JobMinorStatus {
 
-    SUCCESS(0), // successfully executed
-    ERROR_READ_GRID(1), // error during download file from grid using lcg-cp
-    ERROR_WRITE_GRID(2), // error during write file to grid using lcg-cr
-    ERROR_WRITE_LOCAL(7), // error during create execution directory
-    ERROR_GET_STD(8), // error during download stderr/out of the application from grid
-    ERROR_FILE_NOT_FOUND(3), // error during match result files 
-    EXECUTION_FAILED(6), // execution failed
-    EXECUTION_CANCELED(9),// execution canceled
-    EXECUTION_STALLED(10),// execution stalled used in DIRAC execution 
-    UNDEFINED(-1);        // default exit code 
-    private int exitCode;
+    private String jobID;
+    private MinorStatus status;
+    private Date date;
 
-    private GaswExitCode(int exitCode) {
-        this.exitCode = exitCode;
+    public JobMinorStatus(String jobID, MinorStatus status, Date date) {
+        this.jobID = jobID;
+        this.status = status;
+        this.date = date;
     }
 
-    public int getExitCode() {
-        return this.exitCode;
+    public Date getDate() {
+        return date;
+    }
+
+    public String getJobID() {
+        return jobID;
+    }
+
+    public MinorStatus getStatus() {
+        return status;
     }
 }

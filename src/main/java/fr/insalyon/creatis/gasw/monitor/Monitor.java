@@ -80,7 +80,6 @@ public abstract class Monitor extends Thread {
             job.setStartTime(startTime);
             job.setCreation(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
 
-            fileName = fileName.substring(0, fileName.lastIndexOf("."));
             job.setFileName(fileName);
 
             jobDAO.add(job);
@@ -162,18 +161,15 @@ public abstract class Monitor extends Thread {
     }
 
     protected void verifySignaledJobs() {
-        try {
-            Map<String, GaswStatus> jobs = jobDAO.getSignaledJobs();
-            
-            for (String id : jobs.keySet()) {
-                GaswStatus status = jobs.get(id);
-                if (status == GaswStatus.KILL) {
-                    kill(id);
-                } else if (status.equals(GaswStatus.RESCHEDULE)) {
-                    reschedule(id);
-                }
+        
+        try {    
+            for (String id : jobDAO.getJobs(GaswStatus.KILL)) {
+                kill(id);
             }
-
+            
+            for (String id : jobDAO.getJobs(GaswStatus.RESCHEDULE)) {
+                reschedule(id);
+            }
         } catch (DAOException ex) {
             logException(logger, ex);
         }

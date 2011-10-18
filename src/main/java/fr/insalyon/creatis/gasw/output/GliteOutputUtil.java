@@ -56,8 +56,8 @@ public class GliteOutputUtil extends OutputUtil {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
 
-    public GliteOutputUtil(int startTime) {
-        super(startTime);
+    public GliteOutputUtil() {
+        super();
     }
 
     @Override

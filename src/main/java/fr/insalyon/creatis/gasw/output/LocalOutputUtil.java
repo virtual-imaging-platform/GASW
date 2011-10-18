@@ -52,8 +52,8 @@ public class LocalOutputUtil extends OutputUtil {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
 
-    public LocalOutputUtil(int startTime) {
-        super(startTime);
+    public LocalOutputUtil() {
+        super();
     }
 
     public GaswOutput getOutputs(String jobID, Proxy userProxy) {

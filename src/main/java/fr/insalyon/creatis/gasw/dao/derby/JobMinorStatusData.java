@@ -34,13 +34,18 @@
  */
 package fr.insalyon.creatis.gasw.dao.derby;
 
+import fr.insalyon.creatis.gasw.Constants.MinorStatus;
+import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
 import fr.insalyon.creatis.gasw.dao.AbstractData;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.JobMinorStatusDAO;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -60,7 +65,7 @@ public class JobMinorStatusData extends AbstractData implements JobMinorStatusDA
     private JobMinorStatusData() {
         super();
     }
-    
+
     /**
      * 
      * @param jobId
@@ -78,6 +83,109 @@ public class JobMinorStatusData extends AbstractData implements JobMinorStatusDA
             ps.setTimestamp(3, new Timestamp(new Date().getTime()));
 
             execute(ps);
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
+        }
+    }
+
+    /**
+     * 
+     * @param jobID
+     * @return
+     * @throws DAOException 
+     */
+    @Override
+    public boolean hasCheckpoint(String jobID) throws DAOException {
+
+        try {
+            PreparedStatement ps = prepareStatement("SELECT count(minor_status) AS cms "
+                    + "FROM JobsMinorStatus WHERE id = ? AND minor_status = ?");
+
+            ps.setString(1, jobID);
+            ps.setInt(2, MinorStatus.CheckPoint_Upload.getStatusCode());
+            ResultSet rs = ps.executeQuery();
+
+            rs.next();
+            if (rs.getInt("cms") > 0) {
+                return true;
+            }
+            return false;
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
+        }
+    }
+
+    /**
+     * 
+     * @param jobID
+     * @return
+     * @throws DAOException 
+     */
+    @Override
+    public List<JobMinorStatus> getCheckpoints(String jobID) throws DAOException {
+
+        try {
+            PreparedStatement ps = prepareStatement("SELECT "
+                    + "minor_status, event_date FROM JobsMinorStatus "
+                    + "WHERE id = ? AND (minor_status = ? OR minor_status = ? OR "
+                    + "minor_status = ?) ORDER BY event_date");
+
+            ps.setString(1, jobID);
+            ps.setInt(2, MinorStatus.CheckPoint_Init.getStatusCode());
+            ps.setInt(3, MinorStatus.CheckPoint_Upload.getStatusCode());
+            ps.setInt(4, MinorStatus.CheckPoint_End.getStatusCode());
+
+            ResultSet rs = ps.executeQuery();
+            List<JobMinorStatus> minorStatus = new ArrayList<JobMinorStatus>();
+
+            while (rs.next()) {
+                minorStatus.add(new JobMinorStatus(jobID,
+                        MinorStatus.valueOf(rs.getInt("minor_status")),
+                        new Date(rs.getTimestamp("event_date").getTime())));
+            }
+
+            return minorStatus;
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
+        }
+    }
+
+    /**
+     * 
+     * @param jobID
+     * @return
+     * @throws DAOException 
+     */
+    @Override
+    public List<JobMinorStatus> getExecutionMinorStatus(String jobID) throws DAOException {
+
+        try {
+            PreparedStatement ps = prepareStatement("SELECT "
+                    + "minor_status, event_date FROM JobsMinorStatus "
+                    + "WHERE id = ? AND (minor_status = ? OR minor_status = ? OR "
+                    + "minor_status = ? OR minor_status = ? OR minor_status = ?) "
+                    + "ORDER BY event_date");
+
+            ps.setString(1, jobID);
+            ps.setInt(2, MinorStatus.Started.getStatusCode());
+            ps.setInt(3, MinorStatus.Background.getStatusCode());
+            ps.setInt(4, MinorStatus.Inputs.getStatusCode());
+            ps.setInt(5, MinorStatus.Application.getStatusCode());
+            ps.setInt(6, MinorStatus.Outputs.getStatusCode());
+
+            ResultSet rs = ps.executeQuery();
+            List<JobMinorStatus> minorStatus = new ArrayList<JobMinorStatus>();
+
+            while (rs.next()) {
+                minorStatus.add(new JobMinorStatus(jobID,
+                        MinorStatus.valueOf(rs.getInt("minor_status")),
+                        new Date(rs.getTimestamp("event_date").getTime())));
+            }
+
+            return minorStatus;
 
         } catch (SQLException ex) {
             throw new DAOException(ex);

@@ -52,10 +52,10 @@ public interface JobDAO {
     public void remove(Job job) throws DAOException;
 
     public Job getJobByID(String id) throws DAOException;
-
-    public void updateStatus(Map<GaswStatus, String> jobStatus) throws DAOException;
-       
-    public Map<String, GaswStatus> getSignaledJobs() throws DAOException;
     
+    public void updateStatus(Map<GaswStatus, String> jobStatus) throws DAOException;
+           
     public List<String> getActiveJobs() throws DAOException;
+    
+    public List<String> getJobs(GaswStatus status) throws DAOException;
 }

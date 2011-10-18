@@ -44,17 +44,17 @@ import fr.insalyon.creatis.gasw.Constants;
  */
 public class OutputUtilFactory {
 
-    public static OutputUtil getOutputUtil(int startTime) {
+    public static OutputUtil getOutputUtil() {
 
         if (Configuration.VERSION == Constants.Version.GRID) {
             if (Configuration.GRID == Constants.Grid.DIRAC) {
-                return new DiracOutputUtil(startTime);
+                return new DiracOutputUtil();
             }
             if (Configuration.GRID == Constants.Grid.GLITE_WMS) {
-                return new GliteOutputUtil(startTime);
+                return new GliteOutputUtil();
             }
         } else if (Configuration.VERSION == Constants.Version.LOCAL) {
-            return new LocalOutputUtil(startTime);
+            return new LocalOutputUtil();
         }
 
         return null;
