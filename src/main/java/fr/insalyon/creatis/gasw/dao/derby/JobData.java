@@ -72,8 +72,9 @@ public class JobData extends AbstractData implements JobDAO {
         try {
             PreparedStatement ps = prepareStatement("INSERT INTO Jobs "
                     + "(id, status, exit_code, creation, queued, download, running, "
-                    + "upload, end_e, command, file_name, parameters) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    + "upload, end_e, command, file_name, parameters, "
+                    + "checkpoint_init, checkpoint_upload) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             ps.setString(1, job.getId());
             ps.setString(2, job.getStatus().toString());
@@ -87,6 +88,8 @@ public class JobData extends AbstractData implements JobDAO {
             ps.setString(10, job.getCommand());
             ps.setString(11, job.getFileName());
             ps.setString(12, job.getParameters());
+            ps.setInt(13, job.getCheckpointInit());
+            ps.setInt(14, job.getCheckpointUpload());
 
             execute(ps);
 
@@ -101,7 +104,8 @@ public class JobData extends AbstractData implements JobDAO {
             PreparedStatement ps = prepareStatement("UPDATE Jobs SET "
                     + "status = ?, exit_code = ?, creation = ?, queued = ?, "
                     + "download = ?, running = ?, upload = ?, end_e = ?, "
-                    + "node_site = ?, node_name = ? "
+                    + "node_site = ?, node_name = ?, checkpoint_init = ?, "
+                    + "checkpoint_upload = ? "
                     + "WHERE id = ?");
 
             ps.setString(1, job.getStatus().toString());
@@ -119,7 +123,9 @@ public class JobData extends AbstractData implements JobDAO {
                 ps.setString(9, null);
                 ps.setString(10, null);
             }
-            ps.setString(11, job.getId());
+            ps.setInt(11, job.getCheckpointInit());
+            ps.setInt(12, job.getCheckpointUpload());
+            ps.setString(13, job.getId());
 
             execute(ps);
 
@@ -246,7 +252,7 @@ public class JobData extends AbstractData implements JobDAO {
      */
     @Override
     public List<String> getJobs(GaswStatus status) throws DAOException {
-        
+
         try {
             PreparedStatement ps = prepareStatement("SELECT "
                     + "id FROM Jobs WHERE status = ?");

@@ -132,6 +132,8 @@ public class DerbyDAOFactory extends DAOFactory {
                     + "running INT, "
                     + "upload INT, "
                     + "end_e INT, "
+                    + "checkpoint_init INT, "
+                    + "checkpoint_upload INT, "
                     + "node_site VARCHAR(255), "
                     + "node_name VARCHAR(255), "
                     + "command VARCHAR(255), "
