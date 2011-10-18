@@ -156,10 +156,6 @@ public abstract class Monitor extends Thread {
         stop = true;
     }
 
-    public int getStartTime() {
-        return startTime;
-    }
-
     protected void verifySignaledJobs() {
         
         try {    

@@ -35,13 +35,13 @@
 package fr.insalyon.creatis.gasw.monitor;
 
 import fr.insalyon.creatis.gasw.Configuration;
+import fr.insalyon.creatis.gasw.Constants.DiracStatus;
 import fr.insalyon.creatis.gasw.Gasw;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.executor.DiracExecutor;
-import fr.insalyon.creatis.gasw.monitor.DiracJobStatus.DiracStatus;
 import grool.proxy.Proxy;
 import java.io.BufferedReader;
 import java.io.IOException;
