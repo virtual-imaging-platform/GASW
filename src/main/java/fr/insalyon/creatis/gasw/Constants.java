@@ -111,6 +111,7 @@ public class Constants {
 
     public static enum DiracStatus {
 
-        Running, Waiting, Done, Failed, Killed, Stalled
+        Running, Waiting, Done, Failed, Killed, Stalled, Received, Matched,
+        Rescheduled, Deleted, Completed, Checking
     };
 }
