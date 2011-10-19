@@ -245,11 +245,19 @@ public abstract class OutputUtil {
 
                 } else if (minorStatus.getStatus() == MinorStatus.Inputs) {
                     inputTime = (int) (minorStatus.getDate().getTime() / 1000);
-                    job.setDownload(job.getDownload() + (inputTime - backgroundTime));
+                    if (backgroundTime > 0) {
+                        job.setDownload(job.getDownload() + (inputTime - backgroundTime));
+                    } else {
+                        job.setDownload(inputTime - startedTime);
+                    }
 
                 } else if (minorStatus.getStatus() == MinorStatus.Application) {
                     applicationTime = (int) (minorStatus.getDate().getTime() / 1000);
-                    job.setDownload(job.getDownload() + (applicationTime - inputTime));
+                    if (inputTime > 0) {
+                        job.setDownload(job.getDownload() + (applicationTime - inputTime));
+                    } else {
+                        job.setDownload(applicationTime - startedTime);
+                    }
 
                 } else if (minorStatus.getStatus() == MinorStatus.Outputs) {
                     outputTime = (int) (minorStatus.getDate().getTime() / 1000);
@@ -315,8 +323,8 @@ public abstract class OutputUtil {
                         int wastedTime = job.getRunning() - runningTime;
                         job.setEnd(wastedTime);
                         job.setRunning(runningTime);
-                        
-                    } else if (job.getStatus() == GaswStatus.CANCELLED 
+
+                    } else if (job.getStatus() == GaswStatus.CANCELLED
                             || job.getStatus() == GaswStatus.STALLED) {
                         job.setRunning(runningTime);
                     }
