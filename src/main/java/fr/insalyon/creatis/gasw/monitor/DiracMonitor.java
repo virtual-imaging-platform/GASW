@@ -122,7 +122,7 @@ public class DiracMonitor extends Monitor {
 
                         if (job.getStatus() != GaswStatus.RUNNING) {
                             job.setStatus(GaswStatus.RUNNING);
-                            job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime);
+                            job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime - job.getCreation());
                             jobDAO.update(job);
                         }
 
