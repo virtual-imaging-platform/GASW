@@ -105,10 +105,7 @@ public class DiracMonitor extends Monitor {
                 }
 
                 PreparedStatement ps = connection.prepareStatement(
-                        "SELECT JobID, Status FROM Jobs WHERE (" + sb.toString()
-                        + ") AND (Status = 'Done' OR Status = 'Failed'"
-                        + " OR Status = 'Running' OR Status = 'Waiting'"
-                        + " OR Status = 'Killed' OR Status = 'Stalled');",
+                        "SELECT JobID, Status FROM Jobs WHERE (" + sb.toString() + ");",
                         ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
                 ResultSet rs = ps.executeQuery();
@@ -139,22 +136,30 @@ public class DiracMonitor extends Monitor {
 
                     } else {
 
+                        boolean updated = false;
+
                         if (status == DiracStatus.Done) {
                             job.setStatus(GaswStatus.COMPLETED);
+                            updated = true;
 
                         } else if (status == DiracStatus.Failed) {
                             job.setStatus(GaswStatus.ERROR);
+                            updated = true;
 
                         } else if (status == DiracStatus.Killed) {
                             job.setStatus(GaswStatus.CANCELLED);
+                            updated = true;
 
                         } else if (status == DiracStatus.Stalled) {
                             job.setStatus(GaswStatus.STALLED);
+                            updated = true;
 
                         }
-                        jobDAO.update(job);
-                        logger.info("Dirac Monitor: job \"" + jobID + "\" finished as \"" + status + "\"");
-                        finishedJobs.put(jobID, monitoredJobs.get(jobID));
+                        if (updated) {
+                            jobDAO.update(job);
+                            logger.info("Dirac Monitor: job \"" + jobID + "\" finished as \"" + status + "\"");
+                            finishedJobs.put(jobID, monitoredJobs.get(jobID));
+                        }
                     }
                 }
 

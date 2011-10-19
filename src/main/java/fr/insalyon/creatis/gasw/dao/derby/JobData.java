@@ -224,11 +224,12 @@ public class JobData extends AbstractData implements JobDAO {
         try {
             PreparedStatement ps = prepareStatement("SELECT "
                     + "id FROM Jobs WHERE status = ? OR "
-                    + "status = ? OR status = ?");
+                    + "status = ? OR status = ? OR status = ?");
 
             ps.setString(1, GaswStatus.SUCCESSFULLY_SUBMITTED.name());
             ps.setString(2, GaswStatus.QUEUED.name());
             ps.setString(3, GaswStatus.RUNNING.name());
+            ps.setString(4, GaswStatus.KILL.name());
             ResultSet rs = executeQuery(ps);
 
             List<String> jobs = new ArrayList<String>();
