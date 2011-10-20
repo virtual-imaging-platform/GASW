@@ -52,6 +52,9 @@ public class Constants {
     public static final String ERR_ROOT = "./err";
     public static final String CACHE_DIR = "${BASEDIR}/cache";
     public static final String CACHE_FILE = "cache.txt";
+    // DIRAC environment variables
+    public static final String ENV_DIRAC_POOL = "diracPool";
+    public static final String ENV_DIRAC_PRIORITY = "diracPriority";
     // Versions
 
     public static enum Version {
