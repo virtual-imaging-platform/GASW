@@ -42,12 +42,12 @@ import java.util.List;
  * @author Rafael Silva
  */
 public interface JobMinorStatusDAO {
-    
+
     public void add(String jobId, int minorStatus) throws DAOException;
-    
+
     public boolean hasCheckpoint(String jobId) throws DAOException;
-    
+
     public List<JobMinorStatus> getCheckpoints(String jobID) throws DAOException;
-    
+
     public List<JobMinorStatus> getExecutionMinorStatus(String jobID) throws DAOException;
 }

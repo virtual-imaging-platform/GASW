@@ -56,8 +56,8 @@ public class DiracOutputUtil extends OutputUtil {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
 
-    public DiracOutputUtil(int startTime) {
-        super(startTime);
+    public DiracOutputUtil() {
+        super();
     }
 
     @Override

@@ -68,18 +68,17 @@ public class JobMinorStatusData extends AbstractData implements JobMinorStatusDA
 
     /**
      * 
-     * @param jobID
+     * @param jobId
      * @param minorStatus
      * @throws DAOException 
      */
     @Override
-    public void add(String jobID, int minorStatus) throws DAOException {
-
+    public void add(String jobId, int minorStatus) throws DAOException {
         try {
             PreparedStatement ps = prepareStatement("INSERT INTO JobsMinorStatus "
                     + "(id, minor_status, event_date) VALUES (?, ?, ?)");
 
-            ps.setString(1, jobID);
+            ps.setString(1, jobId);
             ps.setInt(2, minorStatus);
             ps.setTimestamp(3, new Timestamp(new Date().getTime()));
 

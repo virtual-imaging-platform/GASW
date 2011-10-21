@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.rafaelsilva.com
+ * http://www.creatis.insa-lyon.fr/~silva
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -52,6 +52,9 @@ public class Constants {
     public static final String ERR_ROOT = "./err";
     public static final String CACHE_DIR = "${BASEDIR}/cache";
     public static final String CACHE_FILE = "cache.txt";
+    // DIRAC environment variables
+    public static final String ENV_DIRAC_POOL = "diracPool";
+    public static final String ENV_DIRAC_PRIORITY = "diracPriority";
     // Versions
 
     public static enum Version {
@@ -66,15 +69,14 @@ public class Constants {
 
     public static enum MinorStatus {
 
-        Started (1),                // Job started the execution 
-        Background (2),             // Downloading background script
-        Inputs (3),                 // Downloading inputs
-        Application (4),            // Application execution
-        Outputs (5),                // Uploading results
-        CheckPoint_Init (101),      // Initializing checkpoint
-        CheckPoint_Upload (105),    // Uploading checkpoint
-        CheckPoint_End (102);       // Checkpoint finished
-        
+        Started(1), // Job started the execution 
+        Background(2), // Downloading background script
+        Inputs(3), // Downloading inputs
+        Application(4), // Application execution
+        Outputs(5), // Uploading results
+        CheckPoint_Init(101), // Initializing checkpoint
+        CheckPoint_Upload(105), // Uploading checkpoint
+        CheckPoint_End(102);       // Checkpoint finished
         private int statusCode;
 
         private MinorStatus(int statusCode) {
@@ -84,20 +86,35 @@ public class Constants {
         public int getStatusCode() {
             return statusCode;
         }
-        
+
         public static MinorStatus valueOf(int statusCode) {
-            
-            switch(statusCode) {
-                case 1: return Started;
-                case 2: return Background;
-                case 3: return Inputs;
-                case 4: return Application;
-                case 5: return Outputs;
-                case 101: return CheckPoint_Init;
-                case 105: return CheckPoint_Upload;
-                case 102: return CheckPoint_End;
-                default: return Started;
+
+            switch (statusCode) {
+                case 1:
+                    return Started;
+                case 2:
+                    return Background;
+                case 3:
+                    return Inputs;
+                case 4:
+                    return Application;
+                case 5:
+                    return Outputs;
+                case 101:
+                    return CheckPoint_Init;
+                case 105:
+                    return CheckPoint_Upload;
+                case 102:
+                    return CheckPoint_End;
+                default:
+                    return Started;
             }
         }
     }
+
+    public static enum DiracStatus {
+
+        Running, Waiting, Done, Failed, Killed, Stalled, Received, Matched,
+        Rescheduled, Deleted, Completed, Checking
+    };
 }

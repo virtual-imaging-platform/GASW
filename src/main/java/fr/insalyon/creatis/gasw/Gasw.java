@@ -181,9 +181,8 @@ public class Gasw {
 
         if (finishedJobs != null) {
             for (String jobID : finishedJobs.keySet()) {
-                int startTime = MonitorFactory.getMonitor().getStartTime();
-                outputsList.add(OutputUtilFactory.getOutputUtil(startTime)
-                        .getOutputs(jobID.split("--")[0], finishedJobs.get(jobID)));
+                outputsList.add(OutputUtilFactory.getOutputUtil()
+                        .getOutputs(jobID, finishedJobs.get(jobID)));
 
                 jobsToRemove.add(jobID);
             }

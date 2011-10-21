@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw.executor.generator.jdl;
 
 import fr.insalyon.creatis.gasw.Configuration;
+import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.release.EnvVariable;
 import java.util.List;
 
@@ -58,12 +59,13 @@ public class DiracJdlGenerator extends AbstractJdlGenerator {
 
     @Override
     public String generate(String scriptName) {
-        
+
         StringBuilder sb = new StringBuilder();
-        sb.append("JobName = \"").append(scriptName.split("\\.")[0]).append("\";\n");
+        String jobName = scriptName.split("\\.")[0] + " - " + Configuration.MOTEUR_WORKFLOWID;
+        sb.append("JobName = \"").append(jobName).append("\";\n");
         sb.append(super.generate(scriptName));
         sb.append("MaxCPUTime\t= \"86400\";\n");
-        
+
         return sb.toString();
     }
 
@@ -80,16 +82,22 @@ public class DiracJdlGenerator extends AbstractJdlGenerator {
 
         for (EnvVariable v : list) {
 
-            if (v.getCategory() == EnvVariable.Category.INFRASTRUCTURE
-                    && v.getName().equals("diracPool")) {
+            if (v.getCategory() == EnvVariable.Category.INFRASTRUCTURE) {
+                
+                if (v.getName().equals(Constants.ENV_DIRAC_POOL)) {
+                    
+                    sb.append("SubmitPools = {\"").append(v.getValue()).append("\"};\n");
+                    hasPoolRequirement = true;
 
-                sb.append("SubmitPools = {\"" + v.getValue() + "\"};\n");
-                hasPoolRequirement = true;
+                } else if (v.getName().equals(Constants.ENV_DIRAC_PRIORITY)) {
+
+                    sb.append("Priority = ").append(v.getValue()).append(";\n");
+                }
             }
         }
 
         if (!hasPoolRequirement) {
-            sb.append("SubmitPools = {\"" + Configuration.DIRAC_DEFAULT_POOL + "\"};\n");
+            sb.append("SubmitPools = {\"").append(Configuration.DIRAC_DEFAULT_POOL).append("\"};\n");
         }
 
         return sb.toString();

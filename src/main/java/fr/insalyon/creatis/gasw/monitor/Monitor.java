@@ -70,15 +70,17 @@ public abstract class Monitor extends Thread {
     /**
      * 
      * @param job
+     * @param fileName
      */
-    protected synchronized void add(Job job) {
+    protected synchronized void add(Job job, String fileName) {
         try {
-            job.setStatus(GaswStatus.SUCCESSFULLY_SUBMITTED);
             if (startTime == -1) {
                 startTime = Integer.valueOf("" + (System.currentTimeMillis() / 1000));
             }
             job.setStartTime(startTime);
             job.setCreation(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
+
+            job.setFileName(fileName);
 
             jobDAO.add(job);
 
@@ -89,10 +91,12 @@ public abstract class Monitor extends Thread {
 
     /**
      *
-     * @param job
+     * @param jobID
+     * @param symbolicName
+     * @param fileName
      * @param userProxy user proxy (null in case of using default proxy or local execution)
      */
-    public abstract void add(Job job, Proxy userProxy);
+    public abstract void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy);
 
     /**
      * 
@@ -152,23 +156,16 @@ public abstract class Monitor extends Thread {
         stop = true;
     }
 
-    public int getStartTime() {
-        return startTime;
-    }
-
     protected void verifySignaledJobs() {
-        try {
-            Map<String, GaswStatus> jobs = jobDAO.getSignaledJobs();
-            
-            for (String id : jobs.keySet()) {
-                GaswStatus status = jobs.get(id);
-                if (status == GaswStatus.KILL) {
-                    kill(id);
-                } else if (status.equals(GaswStatus.RESCHEDULE)) {
-                    reschedule(id);
-                }
+        
+        try {    
+            for (String id : jobDAO.getJobs(GaswStatus.KILL)) {
+                kill(id);
             }
-
+            
+            for (String id : jobDAO.getJobs(GaswStatus.RESCHEDULE)) {
+                reschedule(id);
+            }
         } catch (DAOException ex) {
             logException(logger, ex);
         }

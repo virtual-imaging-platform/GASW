@@ -37,6 +37,7 @@ package fr.insalyon.creatis.gasw.dao;
 import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.dao.derby.JobData;
 import fr.insalyon.creatis.gasw.dao.derby.JobMinorStatusData;
+import fr.insalyon.creatis.gasw.dao.derby.JobPoolData;
 import fr.insalyon.creatis.gasw.dao.derby.NodeData;
 import fr.insalyon.creatis.gasw.dao.derby.SEEntryPointData;
 import java.io.File;
@@ -159,6 +160,13 @@ public class DerbyDAOFactory extends DAOFactory {
                     + "FOREIGN KEY(id) REFERENCES Jobs(id)"
                     + ")");
 
+            stat.executeUpdate("CREATE TABLE JobsPool ("
+                    + "parameters LONG VARCHAR, "
+                    + "command VARCHAR(255), "
+                    + "file_name VARCHAR(255), "
+                    + "PRIMARY KEY (file_name)"
+                    + ")");
+
         } catch (SQLException ex) {
             logger.info("Tables already created!");
         }
@@ -198,5 +206,10 @@ public class DerbyDAOFactory extends DAOFactory {
     @Override
     public SEEntryPointsDAO getSEEntryPointDAO() {
         return SEEntryPointData.getInstance();
+    }
+
+    @Override
+    public JobPoolDAO getJobPoolDAO() {
+        return JobPoolData.getInstance();
     }
 }

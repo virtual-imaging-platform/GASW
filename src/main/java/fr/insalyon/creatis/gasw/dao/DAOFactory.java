@@ -77,4 +77,6 @@ public abstract class DAOFactory {
     public abstract NodeDAO getNodeDAO();
     
     public abstract SEEntryPointsDAO getSEEntryPointDAO();
+    
+    public abstract JobPoolDAO getJobPoolDAO();
 }

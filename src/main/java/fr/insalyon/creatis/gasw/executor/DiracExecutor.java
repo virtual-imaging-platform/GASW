@@ -40,6 +40,8 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
+import fr.insalyon.creatis.gasw.dao.DAOException;
+import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.DiracJdlGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import fr.insalyon.creatis.gasw.release.Execution;
@@ -60,7 +62,6 @@ public class DiracExecutor extends Executor {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private volatile static SubmitPool submitPool;
-    private volatile static List<Job> jobsToSubmit;
 
     protected DiracExecutor(GaswInput gaswInput) {
         super(gaswInput);
@@ -89,19 +90,25 @@ public class DiracExecutor extends Executor {
 
     @Override
     public String submit() throws GaswException {
-        super.submit();
+        try {
+            super.submit();
 
-        StringBuilder params = new StringBuilder();
-        for (String p : gaswInput.getParameters()) {
-            params.append(p);
-            params.append(" ");
+            StringBuilder params = new StringBuilder();
+            for (String p : gaswInput.getParameters()) {
+                params.append(p);
+                params.append(" ");
+            }
+            DAOFactory.getDAOFactory().getJobPoolDAO().add(new Job(
+                    params.toString(),
+                    gaswInput.getRelease().getSymbolicName(),
+                    jdlName.substring(0, jdlName.lastIndexOf("."))));
+
+            return jdlName;
+
+        } catch (DAOException ex) {
+            logException(logger, ex);
+            throw new GaswException(ex);
         }
-        jobsToSubmit.add(new Job(
-                params.toString(),
-                gaswInput.getRelease().getSymbolicName(),
-                jdlName.substring(0, jdlName.lastIndexOf("."))));
-
-        return jdlName;
     }
 
     /**
@@ -129,7 +136,6 @@ public class DiracExecutor extends Executor {
         private boolean stop = false;
 
         public SubmitPool() {
-            jobsToSubmit = new ArrayList<Job>();
         }
 
         @Override
@@ -137,69 +143,74 @@ public class DiracExecutor extends Executor {
 
             while (!stop) {
                 try {
-                    if (!jobsToSubmit.isEmpty()) {
-                        try {
-                            List<Job> jobsSubmitted = new ArrayList<Job>();
-                            List<Job> submissionError = new ArrayList<Job>();
-                            jobsSubmitted.addAll(jobsToSubmit);
 
-                            List<String> command = new ArrayList<String>();
-                            command.add("dirac-wms-job-submit");
+                    List<String> command = new ArrayList<String>();
+                    command.add("dirac-wms-job-submit");
+                    List<Job> jobs = DAOFactory.getDAOFactory().getJobPoolDAO().get();
 
-                            for (Job job : jobsSubmitted) {
-                                command.add(Constants.JDL_ROOT + "/"
-                                        + job.getFileName() + ".jdl");
+                    if (!jobs.isEmpty()) {
+
+                        for (Job job : jobs) {
+                            command.add(Constants.JDL_ROOT + "/" + job.getFileName() + ".jdl");
+                        }
+
+                        Process process = GaswUtil.getProcess(logger, userProxy,
+                                command.toArray(new String[]{}));
+
+                        BufferedReader br = GaswUtil.getBufferedReader(process);
+                        String cout = "";
+                        String s = null;
+                        int i = 0;
+
+                        List<Job> submissionError = new ArrayList<Job>();
+
+                        while ((s = br.readLine()) != null) {
+                            cout += s + "\n";
+                            try {
+                                String id = s.substring(s.lastIndexOf("=")
+                                        + 2, s.length()).trim();
+
+                                Integer.parseInt(id);
+                                Job job = jobs.get(i++);
+                                job.setId(id);
+                                
+                                MonitorFactory.getMonitor().add(job.getId(),
+                                        job.getCommand(), job.getFileName(), 
+                                        job.getParameters(), userProxy);
+                                
+                                logger.info("Dirac Executor Job ID: " + id + " for " + job.getFileName());
+
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                logger.error("Unable to submit job. DIRAC Error: " + s);
+                                Job job = jobs.get(i++);
+                                submissionError.add(job);
                             }
+                        }
+                        process.waitFor();
+                        br.close();
 
-                            Process process = GaswUtil.getProcess(logger, userProxy,
-                                    command.toArray(new String[]{}));
+                        if (process.exitValue() != 0) {
+                            logger.error(cout);
+                        }
+                        jobs.removeAll(submissionError);
 
-                            BufferedReader br = GaswUtil.getBufferedReader(process);
-                            String cout = "";
-                            String s = null;
-                            int i = 0;
-
-                            while ((s = br.readLine()) != null) {
-                                cout += s + "\n";
-                                try {
-                                    String id = s.substring(s.lastIndexOf("=")
-                                            + 2, s.length()).trim();
-
-                                    Integer.parseInt(id);
-                                    Job job = jobsSubmitted.get(i++);
-                                    job.setId(id);
-                                    MonitorFactory.getMonitor().add(job, userProxy);
-                                    logger.info("Dirac Executor Job ID: " + id + " for " + job.getFileName());
-
-                                } catch (Exception ex) {
-                                    Job job = jobsSubmitted.get(i++);
-                                    submissionError.add(job);
-                                    logger.error("Unable to submit job. DIRAC Error: " + s);
-                                }
-                            }
-
-                            process.waitFor();
-                            br.close();
-
-                            if (process.exitValue() != 0) {
-                                logger.error(cout);
-                            }
-                            jobsSubmitted.removeAll(submissionError);
-                            jobsToSubmit.removeAll(jobsSubmitted);
-
-                        } catch (InterruptedException ex) {
-                            logException(logger, ex);
-                        } catch (IOException ex) {
-                            logException(logger, ex);
-                        } catch (ProxyInitializationException ex) {
-                            logException(logger, ex);
-                        } catch (VOMSExtensionException ex) {
-                            logException(logger, ex);
+                        for (Job job : jobs) {
+                            DAOFactory.getDAOFactory().getJobPoolDAO().remove(job);
                         }
                     }
+
                     Thread.sleep(Configuration.SLEEPTIME / 2);
 
+                } catch (DAOException ex) {
+                    logException(logger, ex);
                 } catch (InterruptedException ex) {
+                    logException(logger, ex);
+                } catch (IOException ex) {
+                    logException(logger, ex);
+                } catch (ProxyInitializationException ex) {
+                    logException(logger, ex);
+                } catch (VOMSExtensionException ex) {
                     logException(logger, ex);
                 }
             }

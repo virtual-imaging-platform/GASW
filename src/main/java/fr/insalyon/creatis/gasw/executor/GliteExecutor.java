@@ -38,9 +38,7 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
-import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.GliteJdlGenerator;
-import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import java.io.BufferedReader;
 import org.apache.log4j.Logger;
 
@@ -67,19 +65,8 @@ public class GliteExecutor extends Executor {
         String jobID = null;
         super.submit();
         try {
-
-            StringBuilder params = new StringBuilder();
-            for (String p : gaswInput.getParameters()) {
-                params.append(p);
-                params.append(" ");
-            }
-            Job job = new Job(
-                    params.toString(),
-                    gaswInput.getRelease().getSymbolicName(),
-                    jdlName.substring(0, jdlName.lastIndexOf(".")));
-
-            Process process = GaswUtil.getProcess(logger, userProxy,
-                    "glite-wms-job-submit", "-a",
+            Process process = GaswUtil.getProcess(logger, userProxy, 
+                    "glite-wms-job-submit", "-a", 
                     Constants.JDL_ROOT + "/" + jdlName);
 
             process.waitFor();
@@ -101,10 +88,9 @@ public class GliteExecutor extends Executor {
                     out.length()).trim();
 
             jobID = jobID.substring(0, jobID.indexOf("=")).trim();
-            job.setId(jobID);
 
-            MonitorFactory.getMonitor().add(job, userProxy);
-            logger.info("Glite Executor Job ID: " + jobID + " for " + job.getFileName());
+            addJobToMonitor(jobID, userProxy);
+            logger.info("Glite Executor Job ID: " + jobID);
             return jobID;
         } catch (InterruptedException ex) {
             logException(logger, ex);

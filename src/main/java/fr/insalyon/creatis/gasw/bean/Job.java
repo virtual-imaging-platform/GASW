@@ -64,6 +64,10 @@ public class Job {
                 fileName, parameters);
     }
 
+    public Job(String id, GaswStatus status, String parameters, String command) {
+        this(id, status, -1, 0, 0, 0, 0, 0, 0, null, command, "", parameters);
+    }
+
     public Job(String id, GaswStatus status, int exitCode, int creation, int queued,
             int download, int running, int upload, int end, Node node,
             String command, String fileName, String parameters) {
@@ -187,19 +191,19 @@ public class Job {
         return parameters;
     }
 
-    public int getCheckpointUpload() {
-        return checkpointUpload;
-    }
-
-    public void setCheckpointUpload(int checkpointUpload) {
-        this.checkpointUpload = checkpointUpload;
-    }
-
     public int getCheckpointInit() {
         return checkpointInit;
     }
 
     public void setCheckpointInit(int checkpointInit) {
         this.checkpointInit = checkpointInit;
+    }
+
+    public int getCheckpointUpload() {
+        return checkpointUpload;
+    }
+
+    public void setCheckpointUpload(int checkpointUpload) {
+        this.checkpointUpload = checkpointUpload;
     }
 }

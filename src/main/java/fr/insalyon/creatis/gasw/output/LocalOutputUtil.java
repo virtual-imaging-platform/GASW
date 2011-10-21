@@ -52,8 +52,8 @@ public class LocalOutputUtil extends OutputUtil {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
 
-    public LocalOutputUtil(int startTime) {
-        super(startTime);
+    public LocalOutputUtil() {
+        super();
     }
 
     public GaswOutput getOutputs(String jobID, Proxy userProxy) {
@@ -84,9 +84,6 @@ public class LocalOutputUtil extends OutputUtil {
                     break;
                 case 2:
                     gaswExitCode = GaswExitCode.ERROR_WRITE_GRID;
-                    break;
-                case 3:
-                    gaswExitCode = GaswExitCode.ERROR_FILE_NOT_FOUND;
                     break;
                 case 6:
                     gaswExitCode = GaswExitCode.EXECUTION_FAILED;

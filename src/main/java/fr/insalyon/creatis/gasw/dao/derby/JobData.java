@@ -44,9 +44,9 @@ import fr.insalyon.creatis.gasw.monitor.GaswStatus;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -54,7 +54,6 @@ import org.apache.log4j.Logger;
  */
 public class JobData extends AbstractData implements JobDAO {
 
-    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static JobData instance;
 
     public static JobData getInstance() {
@@ -95,12 +94,6 @@ public class JobData extends AbstractData implements JobDAO {
             execute(ps);
 
         } catch (SQLException ex) {
-            logger.error(ex);
-            if (logger.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    logger.debug(stack);
-                }
-            }
             throw new DAOException(ex);
         }
     }
@@ -137,12 +130,6 @@ public class JobData extends AbstractData implements JobDAO {
             execute(ps);
 
         } catch (SQLException ex) {
-            logger.error(ex);
-            if (logger.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    logger.debug(stack);
-                }
-            }
             throw new DAOException(ex);
         }
     }
@@ -157,12 +144,6 @@ public class JobData extends AbstractData implements JobDAO {
             execute(ps);
 
         } catch (SQLException ex) {
-            logger.error(ex);
-            if (logger.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    logger.debug(stack);
-                }
-            }
             throw new DAOException(ex);
         }
     }
@@ -188,12 +169,6 @@ public class JobData extends AbstractData implements JobDAO {
                     rs.getString("file_name"), rs.getString("parameters"));
 
         } catch (SQLException ex) {
-            logger.error(ex);
-            if (logger.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    logger.debug(stack);
-                }
-            }
             throw new DAOException(ex);
         }
     }
@@ -215,7 +190,6 @@ public class JobData extends AbstractData implements JobDAO {
                     sb.append("id = ?");
                     n++;
                 }
-
                 PreparedStatement ps = prepareStatement("UPDATE Jobs SET "
                         + "status = ? WHERE " + sb.toString());
 
@@ -227,47 +201,6 @@ public class JobData extends AbstractData implements JobDAO {
                 execute(ps);
             }
         } catch (SQLException ex) {
-            logger.error(ex);
-            if (logger.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    logger.debug(stack);
-                }
-            }
-            throw new DAOException(ex);
-        }
-    }
-
-    /**
-     * 
-     * @return
-     * @throws DAOException 
-     */
-    @Override
-    public Map<String, GaswStatus> getSignaledJobs() throws DAOException {
-        try {
-            PreparedStatement ps = prepareStatement("SELECT "
-                    + "id, status FROM Jobs "
-                    + "WHERE status = ? OR status = ?");
-
-            ps.setString(1, "KILL");
-            ps.setString(2, "RESCHEDULE");
-            ResultSet rs = executeQuery(ps);
-
-            Map<String, GaswStatus> jobs = new HashMap<String, GaswStatus>();
-
-            while (rs.next()) {
-                jobs.put(rs.getString("id"), GaswStatus.valueOf(rs.getString("status")));
-            }
-
-            return jobs;
-
-        } catch (SQLException ex) {
-            logger.error(ex);
-            if (logger.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    logger.debug(stack);
-                }
-            }
             throw new DAOException(ex);
         }
     }
@@ -277,6 +210,67 @@ public class JobData extends AbstractData implements JobDAO {
             return DAOFactory.getDAOFactory().getNodeDAO().getNodeBySiteAndNodeName(siteName, nodeName);
         } else {
             return null;
+        }
+    }
+
+    /**
+     * 
+     * @return
+     * @throws DAOException 
+     */
+    @Override
+    public List<String> getActiveJobs() throws DAOException {
+
+        try {
+            PreparedStatement ps = prepareStatement("SELECT "
+                    + "id FROM Jobs WHERE status = ? OR "
+                    + "status = ? OR status = ? OR status = ?");
+
+            ps.setString(1, GaswStatus.SUCCESSFULLY_SUBMITTED.name());
+            ps.setString(2, GaswStatus.QUEUED.name());
+            ps.setString(3, GaswStatus.RUNNING.name());
+            ps.setString(4, GaswStatus.KILL.name());
+            ResultSet rs = executeQuery(ps);
+
+            List<String> jobs = new ArrayList<String>();
+
+            while (rs.next()) {
+                jobs.add(rs.getString("id"));
+            }
+
+            return jobs;
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
+        }
+    }
+
+    /**
+     * 
+     * @param status
+     * @return
+     * @throws DAOException 
+     */
+    @Override
+    public List<String> getJobs(GaswStatus status) throws DAOException {
+
+        try {
+            PreparedStatement ps = prepareStatement("SELECT "
+                    + "id FROM Jobs WHERE status = ?");
+
+            ps.setString(1, status.name());
+            ResultSet rs = executeQuery(ps);
+
+            List<String> jobs = new ArrayList<String>();
+
+            while (rs.next()) {
+                jobs.add(rs.getString("id"));
+            }
+
+            return jobs;
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
         }
     }
 }

@@ -125,7 +125,7 @@ public class GliteMonitor extends Monitor {
                         } else if (status.contains("Scheduled")) {
                             Job job = jobDAO.getJobByID(jobId);
                             if (job.getStatus() != GaswStatus.QUEUED) {
-                                job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - job.getCreation())).intValue());
+                                job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
                                 jobDAO.update(job);
                             }
                             String list = jobStatus.get(GaswStatus.QUEUED);
@@ -192,10 +192,11 @@ public class GliteMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(Job job, Proxy userProxy) {
-        logger.info("Adding job: " + job.getId());
-        add(job);
-        this.monitoredJobs.put(job.getId(), userProxy);
+    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy) {
+        logger.info("Adding job: " + jobID);
+        Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
+        add(job, fileName);
+        monitoredJobs.put(jobID, userProxy);
     }
 
     @Override

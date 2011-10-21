@@ -37,13 +37,15 @@ package fr.insalyon.creatis.gasw.executor;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
-import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.executor.generator.script.ScriptGenerator;
 import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import grool.proxy.Proxy;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 /**
@@ -126,10 +128,9 @@ public abstract class Executor {
                 scriptsDir.mkdir();
             }
 
-            String fileName = symbolicName.replace(" ", "-")
-                    + "-" + System.nanoTime() + ".sh";
-            FileUtils.writeStringToFile(
-                    new File(Constants.SCRIPT_ROOT + "/" + fileName), script);
+            String fileName = symbolicName.replace(" ", "-");
+            fileName += "-" + System.nanoTime() + ".sh";
+            writeToFile(Constants.SCRIPT_ROOT + "/" + fileName, script);
 
             return fileName;
 
@@ -153,8 +154,7 @@ public abstract class Executor {
                 scriptsDir.mkdir();
             }
             String fileName = scriptName.substring(0, scriptName.lastIndexOf(".")) + ".jdl";
-            FileUtils.writeStringToFile(
-                    new File(Constants.JDL_ROOT + "/" + fileName), jdl);
+            writeToFile(Constants.JDL_ROOT + "/" + fileName, jdl);
 
             return fileName;
 
@@ -163,7 +163,23 @@ public abstract class Executor {
             return null;
         }
     }
-   
+
+    /**
+     * 
+     * @param jobID Job identification.
+     */
+    protected void addJobToMonitor(String jobID, Proxy userProxy) {
+
+        StringBuilder params = new StringBuilder();
+        for (String p : gaswInput.getParameters()) {
+            params.append(p);
+            params.append(" ");
+        }
+        MonitorFactory.getMonitor().add(jobID,
+                gaswInput.getRelease().getSymbolicName(),
+                jdlName, params.toString(), userProxy);
+    }
+
     /**
      * Logs an exception
      * 
@@ -199,13 +215,40 @@ public abstract class Executor {
 
         try {
             String newName = name.substring(0, name.lastIndexOf("-") + 1) + nanoTime + extension;
-            FileUtils.copyFile(new File(directory + "/" + name),
-                    new File(directory + "/" + newName));
+            FileOutputStream fos = null;
+            FileInputStream fis = new FileInputStream(new File(directory + "/" + name));
+
+            fos = new FileOutputStream(new File(directory + "/" + newName));
+            byte[] buf = new byte[1024];
+            int i = 0;
+            while ((i = fis.read(buf)) != -1) {
+                fos.write(buf, 0, i);
+            }
+            if (fis != null) {
+                fis.close();
+            }
+            if (fos != null) {
+                fos.close();
+            }
             return newName;
 
         } catch (Exception ex) {
             logException(logger, ex);
             return null;
         }
+    }
+
+    /**
+     * Writes a string to a file.
+     * 
+     * @param filePath Absolute file path.
+     * @param contents String to be written.
+     * @throws IOException 
+     */
+    private void writeToFile(String filePath, String contents) throws IOException {
+        FileWriter fstream = new FileWriter(filePath);
+        BufferedWriter out = new BufferedWriter(fstream);
+        out.write(contents);
+        out.close();
     }
 }

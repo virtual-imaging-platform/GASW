@@ -109,11 +109,15 @@ public class DataManager extends Thread {
     }
 
     public synchronized void addData(URI uri) {
-        dataToReplicate.add(uri);
+        if (!replicatedData.contains(uri)) {
+            dataToReplicate.add(uri);
+        }
     }
 
     public synchronized void addData(List<URI> uris) {
-        dataToReplicate.addAll(uris);
+        for (URI uri : uris) {
+            addData(uri);
+        }
     }
 
     /**

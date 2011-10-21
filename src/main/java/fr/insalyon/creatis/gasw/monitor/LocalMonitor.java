@@ -105,10 +105,11 @@ public class LocalMonitor extends Monitor {
     }
 
     @Override
-    public void add(Job job, Proxy userProxy) {
+    public void add(String jobID, String command, String fileName, String parameters, Proxy userProxy) {
         try {
-            if (jobsStatus.get(job.getId()) == null) {
-                add(job);
+            if (jobsStatus.get(jobID) == null) {
+                Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, command);
+                add(job, fileName);
                 job.setStatus(GaswStatus.RUNNING);
                 jobDAO.update(job);
             }
