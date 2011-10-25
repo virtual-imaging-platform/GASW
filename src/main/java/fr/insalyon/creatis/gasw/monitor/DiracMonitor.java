@@ -96,75 +96,78 @@ public class DiracMonitor extends Monitor {
                 }
 
                 List<String> idsList = jobDAO.getActiveJobs();
-                StringBuilder sb = new StringBuilder();
-                for (String id : idsList) {
-                    if (sb.length() > 0) {
-                        sb.append(" OR ");
+
+                if (!idsList.isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (String id : idsList) {
+                        if (sb.length() > 0) {
+                            sb.append(" OR ");
+                        }
+                        sb.append("JobID='").append(id).append("'");
                     }
-                    sb.append("JobID='").append(id).append("'");
-                }
 
-                PreparedStatement ps = connection.prepareStatement(
-                        "SELECT JobID, Status FROM Jobs WHERE (" + sb.toString() + ");",
-                        ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                    PreparedStatement ps = connection.prepareStatement(
+                            "SELECT JobID, Status FROM Jobs WHERE (" + sb.toString() + ");",
+                            ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
-                ResultSet rs = ps.executeQuery();
-                Map<String, Proxy> finishedJobs = new HashMap<String, Proxy>();
+                    ResultSet rs = ps.executeQuery();
+                    Map<String, Proxy> finishedJobs = new HashMap<String, Proxy>();
 
-                while (rs.next()) {
+                    while (rs.next()) {
 
-                    String jobID = rs.getString("JobID");
-                    DiracStatus status = DiracStatus.valueOf(rs.getString("Status"));
+                        String jobID = rs.getString("JobID");
+                        DiracStatus status = DiracStatus.valueOf(rs.getString("Status"));
 
-                    Job job = jobDAO.getJobByID(jobID);
+                        Job job = jobDAO.getJobByID(jobID);
 
-                    if (status == DiracStatus.Running) {
+                        if (status == DiracStatus.Running) {
 
-                        if (job.getStatus() != GaswStatus.RUNNING) {
-                            job.setStatus(GaswStatus.RUNNING);
-                            job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime - job.getCreation());
-                            jobDAO.update(job);
-                        }
+                            if (job.getStatus() != GaswStatus.RUNNING) {
+                                job.setStatus(GaswStatus.RUNNING);
+                                job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime - job.getCreation());
+                                jobDAO.update(job);
+                            }
 
-                    } else if (status == DiracStatus.Waiting) {
+                        } else if (status == DiracStatus.Waiting) {
 
-                        if (job.getStatus() != GaswStatus.QUEUED) {
-                            job.setStatus(GaswStatus.QUEUED);
-                            job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime - job.getCreation());
-                            jobDAO.update(job);
-                        }
+                            if (job.getStatus() != GaswStatus.QUEUED) {
+                                job.setStatus(GaswStatus.QUEUED);
+                                job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime - job.getCreation());
+                                jobDAO.update(job);
+                            }
 
-                    } else {
+                        } else {
 
-                        boolean updated = false;
+                            boolean updated = false;
 
-                        if (status == DiracStatus.Done) {
-                            job.setStatus(GaswStatus.COMPLETED);
-                            updated = true;
+                            if (status == DiracStatus.Done) {
+                                job.setStatus(GaswStatus.COMPLETED);
+                                updated = true;
 
-                        } else if (status == DiracStatus.Failed) {
-                            job.setStatus(GaswStatus.ERROR);
-                            updated = true;
+                            } else if (status == DiracStatus.Failed) {
+                                job.setStatus(GaswStatus.ERROR);
+                                updated = true;
 
-                        } else if (status == DiracStatus.Killed) {
-                            job.setStatus(GaswStatus.CANCELLED);
-                            updated = true;
+                            } else if (status == DiracStatus.Killed) {
+                                job.setStatus(GaswStatus.CANCELLED);
+                                updated = true;
 
-                        } else if (status == DiracStatus.Stalled) {
-                            job.setStatus(GaswStatus.STALLED);
-                            updated = true;
+                            } else if (status == DiracStatus.Stalled) {
+                                job.setStatus(GaswStatus.STALLED);
+                                updated = true;
 
-                        }
-                        if (updated) {
-                            jobDAO.update(job);
-                            logger.info("Dirac Monitor: job \"" + jobID + "\" finished as \"" + status + "\"");
-                            finishedJobs.put(jobID, monitoredJobs.get(jobID));
+                            }
+                            if (updated) {
+                                jobDAO.update(job);
+                                logger.info("Dirac Monitor: job \"" + jobID + "\" finished as \"" + status + "\"");
+                                finishedJobs.put(jobID, monitoredJobs.get(jobID));
+                            }
                         }
                     }
-                }
 
-                if (finishedJobs.size() > 0) {
-                    Gasw.getInstance().addFinishedJob(finishedJobs);
+                    if (finishedJobs.size() > 0) {
+                        Gasw.getInstance().addFinishedJob(finishedJobs);
+                    }
                 }
 
                 Thread.sleep(Configuration.SLEEPTIME);
