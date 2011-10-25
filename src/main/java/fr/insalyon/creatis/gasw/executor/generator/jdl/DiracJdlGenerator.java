@@ -64,7 +64,7 @@ public class DiracJdlGenerator extends AbstractJdlGenerator {
         String jobName = scriptName.split("\\.")[0] + " - " + Configuration.MOTEUR_WORKFLOWID;
         sb.append("JobName = \"").append(jobName).append("\";\n");
         sb.append(super.generate(scriptName));
-        sb.append("MaxCPUTime\t= \"86400\";\n");
+        sb.append("MaxCPUTime\t= \"").append(Configuration.CPU_TIME).append("\";\n");
 
         return sb.toString();
     }

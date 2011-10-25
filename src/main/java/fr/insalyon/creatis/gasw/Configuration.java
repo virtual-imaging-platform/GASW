@@ -73,6 +73,7 @@ public class Configuration {
     public static int RETRY_COUNT = 3;
     public static int TIMEOUT = 100000;
     public static int SLEEPTIME = 20000;
+    public static int CPU_TIME = 1800;
     // Data Manager Configuration
     public static String DATA_MANAGER_HOST = "";
     public static int DATA_MANAGER_PORT = -1;
@@ -151,6 +152,11 @@ public class Configuration {
             String sleeptime = conf.getProperty("SLEEPTIME");
             if (sleeptime != null && !sleeptime.equals("")) {
                 SLEEPTIME = new Integer(sleeptime) * 1000;
+            }
+            
+            String cpuTime = conf.getProperty("CPUTIME");
+            if (cpuTime != null && !cpuTime.equals("")) {
+                CPU_TIME = new Integer(cpuTime);
             }
 
             String requirements = conf.getProperty("REQUIREMENTS");
@@ -231,6 +237,7 @@ public class Configuration {
                 conf.setProperty("RETRYCOUNT", RETRY_COUNT + "");
                 conf.setProperty("TIMEOUT", TIMEOUT + "");
                 conf.setProperty("SLEEPTIME", (SLEEPTIME / 1000) + "");
+                conf.setProperty("CPUTIME", (CPU_TIME) + "");
                 conf.setProperty("REQUIREMENTS", REQUIREMENTS);
                 conf.setProperty("DIRAC_HOST", DIRAC_HOST);
                 conf.setProperty("USE_DIRAC_SERVICE", USE_DIRAC_SERVICE + "");
