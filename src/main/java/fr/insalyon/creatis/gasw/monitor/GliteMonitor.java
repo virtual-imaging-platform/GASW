@@ -160,7 +160,7 @@ public class GliteMonitor extends Monitor {
                                 st = GaswStatus.CANCELLED;
                             }
                             logger.info("Glite Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
-                            finishedJobs.put(jobId + "--" + st, monitoredJobs.get(jobId));
+                            finishedJobs.put(jobId, monitoredJobs.get(jobId));
                             jobsToRemove.add(jobId);
                         }
                     }
