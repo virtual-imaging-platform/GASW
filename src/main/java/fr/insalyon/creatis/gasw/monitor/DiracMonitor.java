@@ -191,7 +191,9 @@ public class DiracMonitor extends Monitor {
 
         add(new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED,
                 parameters, symbolicName), fileName);
-        this.monitoredJobs.put(jobID, userProxy);
+        if (userProxy != null) {
+            this.monitoredJobs.put(jobID, userProxy);
+        }
     }
 
     @Override

@@ -95,9 +95,9 @@ public class GliteMonitor extends Monitor {
                 String cout = "";
                 String s = null;
                 while ((s = br.readLine()) != null) {
-                    if (s.toLowerCase().contains("current") 
+                    if (s.toLowerCase().contains("current")
                             && s.toLowerCase().contains("status")) {
-                        
+
                         String[] res = s.split(" ");
                         s = res[res.length - 1];
                         cout += s + "-";
@@ -196,7 +196,9 @@ public class GliteMonitor extends Monitor {
         logger.info("Adding job: " + jobID);
         Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
         add(job, fileName);
-        monitoredJobs.put(jobID, userProxy);
+        if (userProxy != null) {
+            monitoredJobs.put(jobID, userProxy);
+        }
     }
 
     @Override
@@ -269,7 +271,7 @@ public class GliteMonitor extends Monitor {
             } else {
                 logger.info("Rescheduled Glite Job ID '" + jobID + "'");
             }
-            
+
         } catch (IOException ex) {
             logException(logger, ex);
         } catch (InterruptedException ex) {
