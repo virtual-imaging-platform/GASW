@@ -62,6 +62,7 @@ public class GliteMonitor extends Monitor {
     private volatile Map<String, Proxy> monitoredJobs;
 
     public synchronized static GliteMonitor getInstance() {
+
         if (instance == null) {
             instance = new GliteMonitor();
             instance.start();
@@ -76,109 +77,111 @@ public class GliteMonitor extends Monitor {
 
     @Override
     public void run() {
+
         while (!stop) {
             try {
 
-                sleep(Configuration.SLEEPTIME);
                 verifySignaledJobs();
 
                 // Getting Status
-                String ids = "";
-                for (String jobID : monitoredJobs.keySet()) {
-                    ids += jobID + " ";
-                }
-                // change this code line in case each job is submitted with different user and in case X509_USER_PROXY not set
-                Process process = Runtime.getRuntime().exec("glite-wms-job-status --verbosity 0 --noint " + ids);
-                process.waitFor();
-                BufferedReader br = GaswUtil.getBufferedReader(process);
+                List<String> ids = jobDAO.getActiveJobs();
 
-                String cout = "";
-                String s = null;
-                while ((s = br.readLine()) != null) {
-                    if (s.toLowerCase().contains("current")
-                            && s.toLowerCase().contains("status")) {
+                if (!ids.isEmpty()) {
 
-                        String[] res = s.split(" ");
-                        s = res[res.length - 1];
-                        cout += s + "-";
-                    }
-                }
-                br.close();
+                    List<String> command = new ArrayList<String>();
+                    command.add("glite-wms-job-status");
+                    command.add("--verbosity");
+                    command.add("0");
+                    command.add("--noint");
+                    command.addAll(ids);
 
-                // Parsing status
-                if (!cout.equals("")) {
-                    String[] gliteStatus = cout.split("-");
-                    String[] gliteIds = ids.split(" ");
-                    Map<String, Proxy> finishedJobs = new HashMap<String, Proxy>();
-                    List<String> jobsToRemove = new ArrayList<String>();
-                    Map<GaswStatus, String> jobStatus = getNewJobStatusMap();
+                    ProcessBuilder builder = new ProcessBuilder(command);
+                    builder.redirectErrorStream(true);
+                    Process process = builder.start();
 
-                    for (int i = 0; i < gliteIds.length; i++) {
-                        String status = gliteStatus[i];
-                        String jobId = gliteIds[i];
+                    BufferedReader br = GaswUtil.getBufferedReader(process);
 
-                        if (status.contains("Running")) {
-                            String list = jobStatus.get(GaswStatus.RUNNING);
-                            list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(GaswStatus.RUNNING, list);
+                    String cout = "";
+                    String s = null;
 
-                        } else if (status.contains("Scheduled")) {
-                            Job job = jobDAO.getJobByID(jobId);
-                            if (job.getStatus() != GaswStatus.QUEUED) {
-                                job.setQueued(Integer.valueOf("" + ((System.currentTimeMillis() / 1000) - startTime)).intValue());
-                                jobDAO.update(job);
-                            }
-                            String list = jobStatus.get(GaswStatus.QUEUED);
-                            list = list.isEmpty() ? jobId : list + "," + jobId;
-                            jobStatus.put(GaswStatus.QUEUED, list);
-
-                        } else if (status.contains("Ready")
-                                || status.contains("Waiting")
-                                || status.contains("Submitted")) {
-                            // do nothing
-                        } else {
-                            GaswStatus st = null;
-                            if (status.contains("Failed")
-                                    || status.contains("Error")
-                                    || status.contains("!=")
-                                    || status.contains("Aborted")) {
-                                String list = jobStatus.get(GaswStatus.ERROR);
-                                list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(GaswStatus.ERROR, list);
-                                st = GaswStatus.ERROR;
-
-                            } else if (status.contains("Success")) {
-                                String list = jobStatus.get(GaswStatus.COMPLETED);
-                                list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(GaswStatus.COMPLETED, list);
-                                st = GaswStatus.COMPLETED;
-
-                            } else if (status.contains("Cancelled")) {
-                                String list = jobStatus.get(GaswStatus.CANCELLED);
-                                list = list.isEmpty() ? jobId : list + "," + jobId;
-                                jobStatus.put(GaswStatus.CANCELLED, list);
-                                st = GaswStatus.CANCELLED;
-                            }
-                            logger.info("Glite Monitor: job \"" + jobId + "\" finished as \"" + status + "\"");
-                            finishedJobs.put(jobId, monitoredJobs.get(jobId));
-                            jobsToRemove.add(jobId);
-                        }
-                    }
-                    setStatus(jobStatus);
-
-                    if (finishedJobs.size() > 0) {
-                        Gasw.getInstance().addFinishedJob(finishedJobs);
-                        for (String jobID : jobsToRemove) {
-                            monitoredJobs.remove(jobID);
-                        }
-                    }
-                } else {
-                    br = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                     while ((s = br.readLine()) != null) {
-                        logger.error(s);
+                        if (s.toLowerCase().contains("current") && s.toLowerCase().contains("status")) {
+
+                            String[] res = s.split(" ");
+                            s = res[res.length - 1];
+                            cout += s + "-";
+                        }
                     }
+                    process.waitFor();
                     br.close();
+
+                    // Parsing status
+                    if (process.exitValue() == 0) {
+
+                        String[] gliteStatus = cout.split("-");
+                        Map<String, Proxy> finishedJobs = new HashMap<String, Proxy>();
+
+                        for (int i = 0; i < ids.size(); i++) {
+
+                            String status = gliteStatus[i];
+                            String jobID = ids.get(i);
+                            Job job = jobDAO.getJobByID(jobID);
+
+                            if (status.contains("Running")) {
+
+                                if (job.getStatus() != GaswStatus.RUNNING) {
+                                    job.setStatus(GaswStatus.RUNNING);
+                                    job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime - job.getCreation());
+                                    jobDAO.update(job);
+                                }
+
+                            } else if (status.contains("Scheduled")) {
+
+                                if (job.getStatus() != GaswStatus.QUEUED) {
+                                    job.setStatus(GaswStatus.QUEUED);
+                                    job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime - job.getCreation());
+                                    jobDAO.update(job);
+                                }
+
+                            } else if (status.contains("Ready")
+                                    || status.contains("Waiting")
+                                    || status.contains("Submitted")) {
+                                // do nothing
+                            } else {
+
+                                if (status.contains("Failed")
+                                        || status.contains("Error")
+                                        || status.contains("!=")
+                                        || status.contains("Aborted")) {
+                                    job.setStatus(GaswStatus.ERROR);
+
+                                } else if (status.contains("Success")) {
+                                    job.setStatus(GaswStatus.COMPLETED);
+
+                                } else if (status.contains("Cancelled")) {
+                                    job.setStatus(GaswStatus.CANCELLED);
+
+                                }
+                                jobDAO.update(job);
+                                logger.info("Glite Monitor: job \"" + jobID + "\" finished as \"" + status + "\"");
+                                finishedJobs.put(jobID, monitoredJobs.get(jobID));
+                            }
+                        }
+
+                        if (finishedJobs.size() > 0) {
+                            Gasw.getInstance().addFinishedJob(finishedJobs);
+                        }
+
+                    } else {
+                        br = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                        while ((s = br.readLine()) != null) {
+                            logger.error(s);
+                        }
+                        br.close();
+                    }
                 }
+                sleep(Configuration.SLEEPTIME);
+
             } catch (GaswException ex) {
                 logException(logger, ex);
             } catch (DAOException ex) {
@@ -192,10 +195,12 @@ public class GliteMonitor extends Monitor {
     }
 
     @Override
-    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy) {
+    public synchronized void add(String jobID, String symbolicName,
+            String fileName, String parameters, Proxy userProxy) {
+
         logger.info("Adding job: " + jobID);
-        Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, symbolicName);
-        add(job, fileName);
+        add(new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED,
+                parameters, symbolicName), fileName);
         if (userProxy != null) {
             monitoredJobs.put(jobID, userProxy);
         }
@@ -249,6 +254,8 @@ public class GliteMonitor extends Monitor {
         try {
             kill(jobID);
             Job job = jobDAO.getJobByID(jobID);
+            job.setStatus(GaswStatus.CANCELLED);
+            jobDAO.update(job);
 
             ProcessBuilder builder = new ProcessBuilder(
                     "glite-wms-job-submit", "-a", Constants.JDL_ROOT
@@ -269,9 +276,13 @@ public class GliteMonitor extends Monitor {
             if (process.exitValue() != 0) {
                 logger.error(cout);
             } else {
+                String newJobID = cout.substring(cout.lastIndexOf("https://"),
+                        cout.length()).trim();
+                add(newJobID.substring(0, newJobID.indexOf("=")).trim(),
+                        job.getCommand(), job.getFileName(), job.getParameters(),
+                        monitoredJobs.get(jobID));
                 logger.info("Rescheduled Glite Job ID '" + jobID + "'");
             }
-
         } catch (IOException ex) {
             logException(logger, ex);
         } catch (InterruptedException ex) {

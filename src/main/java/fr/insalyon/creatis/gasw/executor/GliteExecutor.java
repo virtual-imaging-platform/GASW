@@ -39,6 +39,7 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.executor.generator.jdl.GliteJdlGenerator;
+import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
 import java.io.BufferedReader;
 import org.apache.log4j.Logger;
 
@@ -62,11 +63,12 @@ public class GliteExecutor extends Executor {
 
     @Override
     public String submit() throws GaswException {
-        String jobID = null;
-        super.submit();
+
         try {
-            Process process = GaswUtil.getProcess(logger, userProxy, 
-                    "glite-wms-job-submit", "-a", 
+            super.submit();
+
+            Process process = GaswUtil.getProcess(logger, userProxy,
+                    "glite-wms-job-submit", "-a",
                     Constants.JDL_ROOT + "/" + jdlName);
 
             process.waitFor();
@@ -84,14 +86,24 @@ public class GliteExecutor extends Executor {
                 throw new GaswException("Unable to submit job: " + out);
             }
 
-            jobID = out.substring(out.lastIndexOf("https://"),
+            String jobID = out.substring(out.lastIndexOf("https://"),
                     out.length()).trim();
-
             jobID = jobID.substring(0, jobID.indexOf("=")).trim();
 
-            addJobToMonitor(jobID, userProxy);
-            logger.info("Glite Executor Job ID: " + jobID);
-            return jobID;
+            StringBuilder params = new StringBuilder();
+            for (String p : gaswInput.getParameters()) {
+                params.append(p).append(" ");
+            }
+
+            String fileName = jdlName.substring(0, jdlName.lastIndexOf("."));
+            MonitorFactory.getMonitor().add(jobID,
+                    gaswInput.getRelease().getSymbolicName(),
+                    fileName, params.toString(), userProxy);
+
+            logger.info("Glite Executor Job ID: " + jobID + " for " + fileName);
+
+            return jdlName;
+
         } catch (InterruptedException ex) {
             logException(logger, ex);
             throw new GaswException(ex);
