@@ -91,25 +91,38 @@ public class GaswUtil {
             }
 
             if (exists) {
-                if (strings[0].contains("glite")) {
+                if (Configuration.VERSION == Constants.Version.GRID) {
+                    if (Configuration.GRID == Constants.Grid.DIRAC) {
+                        if (!userProxy.isRawProxyValid()) {
+                            isValid = false;
+                        }
+                    }
+                    if (Configuration.GRID == Constants.Grid.GLITE_WMS) {
+                        if (!userProxy.isValid()) {
+                            isValid = false;
+                        }
+                    }
+                } else if (Configuration.VERSION == Constants.Version.LOCAL) {
                     if (!userProxy.isValid()) {
                         isValid = false;
                     }
-                } else if (strings[0].contains("dirac")) {
-                    if (!userProxy.isRawProxyValid()) {
-                        isValid = false;
-                    }
                 }
+
                 if (!isValid) {
                     logger.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
                 }
             }
 
             if (!exists || !isValid) {
-                if (strings[0].contains("glite")) {
+                if (Configuration.VERSION == Constants.Version.GRID) {
+                    if (Configuration.GRID == Constants.Grid.DIRAC) {
+                        userProxy.initRawProxy();
+                    }
+                    if (Configuration.GRID == Constants.Grid.GLITE_WMS) {
+                        userProxy.init();
+                    }
+                } else if (Configuration.VERSION == Constants.Version.LOCAL) {
                     userProxy.init();
-                } else if (strings[0].contains("dirac")) {
-                    userProxy.initRawProxy();
                 }
             }
 

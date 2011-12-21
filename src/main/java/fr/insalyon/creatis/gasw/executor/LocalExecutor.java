@@ -38,6 +38,8 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUtil;
+import grool.proxy.ProxyInitializationException;
+import grool.proxy.VOMSExtensionException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -45,7 +47,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.apache.log4j.Logger;
 
 /**
@@ -55,9 +58,12 @@ import org.apache.log4j.Logger;
 public class LocalExecutor extends Executor {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
-    private String cerr;
-    private String cout;
     private static List<String> finishedJobs = new ArrayList<String>();
+    // Thread pool containing all invocation threads
+    // Initialize a pool of threads with a maximum number of threads
+    // When pool size exceeds this number and if there are more tasks to execute, 
+    // these tasks will be put into a queue and execute when a thread is availableF
+    private static final ExecutorService executionThreadPool = Executors.newFixedThreadPool(500);
 
     protected LocalExecutor(GaswInput gaswInput) {
         super(gaswInput);
@@ -71,16 +77,17 @@ public class LocalExecutor extends Executor {
 
     @Override
     public String submit() throws GaswException {
-        super.submit();
-        Random random = new Random(System.nanoTime());
-        String jobID = "Local-" + random.nextInt(100000);
-        new Execution(jobID).start();
 
-        logger.info("Local Executor Job ID: " + jobID);
-        return jobID;
+        super.submit();
+    //    Random random = new Random(System.nanoTime());
+     //   String jobID = "Local-" + random.nextInt(100000);
+        executionThreadPool.execute(new Execution(jdlName));
+
+        logger.info("Local Executor Job ID: " + jdlName);
+        return jdlName;
     }
 
-    class Execution extends Thread {
+    class Execution implements Runnable {
 
         private String jobID;
 
@@ -94,28 +101,38 @@ public class LocalExecutor extends Executor {
             try {
                 addJobToMonitor(jobID, userProxy);
 
-                Process process = GaswUtil.getProcess(logger, "chmod", "+x", 
+                Process process = GaswUtil.getProcess(logger, userProxy, "/bin/sh",
                         Constants.SCRIPT_ROOT + "/" + scriptName);
-                process.waitFor();
-
+                
                 BufferedReader r = GaswUtil.getBufferedReader(process);
-                String cout = "";
+                StringBuilder cout = new StringBuilder();
                 String s = null;
                 while ((s = r.readLine()) != null) {
-                    cout += s + "\n";
+                    cout.append(s).append("\n");
                 }
                 r.close();
 
+                process.waitFor();
+                
                 int exitValue = process.exitValue();
 
-                File stdOut = new File(Constants.OUT_ROOT + "/" + scriptName + ".out");
+                File stdOutDir = new File(Constants.OUT_ROOT);
+                if (!stdOutDir.exists()) {
+                    stdOutDir.mkdirs();
+                }
+                File stdOut = new File(stdOutDir, scriptName + ".out");
                 BufferedWriter out = new BufferedWriter(new FileWriter(stdOut));
-                out.write(cout);
+                out.write(cout.toString());
                 out.close();
 
-                File stdErr = new File(Constants.ERR_ROOT + "/" + scriptName + ".err");
+                File stdErrDir = new File(Constants.ERR_ROOT);
+                if (!stdErrDir.exists()) {
+                    stdErrDir.mkdirs();
+                }
+
+                File stdErr = new File(stdErrDir, scriptName + ".err");
                 BufferedWriter err = new BufferedWriter(new FileWriter(stdErr));
-                err.write(cerr);
+                err.write(cout.toString());
                 err.close();
 
                 synchronized (this) {
@@ -125,8 +142,16 @@ public class LocalExecutor extends Executor {
                 logException(logger, ex);
             } catch (IOException ex) {
                 logException(logger, ex);
+            } catch (ProxyInitializationException ex) {
+                logException(logger, ex);
+            } catch (VOMSExtensionException ex) {
+                logException(logger, ex);
             }
         }
+    }
+
+    public static void terminate() {
+        executionThreadPool.shutdown();
     }
 
     public synchronized static String pullFinishedJobID() {
