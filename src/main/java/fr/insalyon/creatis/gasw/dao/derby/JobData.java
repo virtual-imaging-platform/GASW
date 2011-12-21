@@ -224,12 +224,14 @@ public class JobData extends AbstractData implements JobDAO {
         try {
             PreparedStatement ps = prepareStatement("SELECT "
                     + "id FROM Jobs WHERE status = ? OR "
-                    + "status = ? OR status = ? OR status = ?");
+                    + "status = ? OR status = ? OR status = ? "
+                    + "OR status = ?");
 
             ps.setString(1, GaswStatus.SUCCESSFULLY_SUBMITTED.name());
             ps.setString(2, GaswStatus.QUEUED.name());
             ps.setString(3, GaswStatus.RUNNING.name());
             ps.setString(4, GaswStatus.KILL.name());
+            ps.setString(5, GaswStatus.REPLICATE.name());
             ResultSet rs = executeQuery(ps);
 
             List<String> jobs = new ArrayList<String>();
@@ -268,6 +270,76 @@ public class JobData extends AbstractData implements JobDAO {
             }
 
             return jobs;
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
+        }
+    }
+
+    /**
+     * 
+     * @param fileName
+     * @return
+     * @throws DAOException 
+     */
+    @Override
+    public synchronized int getNumberOfCompletedJobsByFileName(String fileName) throws DAOException {
+
+        try {
+            PreparedStatement ps = prepareStatement("SELECT "
+                    + "COUNT(id) AS num FROM Jobs "
+                    + "WHERE (status = ? OR status = ? OR status = ?) "
+                    + "AND file_name = ?");
+
+            ps.setString(1, GaswStatus.COMPLETED.name());
+            ps.setString(2, GaswStatus.ERROR.name());
+            ps.setString(3, GaswStatus.STALLED.name());
+            ps.setString(4, fileName);
+
+            ResultSet rs = executeQuery(ps);
+            if (rs.next()) {
+                return rs.getInt("num");
+            }
+            return 0;
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex);
+        }
+    }
+
+    /**
+     * 
+     * @param fileName
+     * @return
+     * @throws DAOException 
+     */
+    @Override
+    public synchronized List<Job> getActiveJobsByFileName(String fileName) throws DAOException {
+
+        try {
+            PreparedStatement ps = prepareStatement("SELECT "
+                    + "id, status, exit_code, creation, queued, download, running, "
+                    + "upload, end_e, node_site, node_name, command, file_name, "
+                    + "parameters "
+                    + "FROM Jobs WHERE (status = ? OR status = ? OR status = ?) "
+                    + "AND file_name = ?");
+
+            ps.setString(1, GaswStatus.SUCCESSFULLY_SUBMITTED.name());
+            ps.setString(2, GaswStatus.QUEUED.name());
+            ps.setString(3, GaswStatus.RUNNING.name());
+            ps.setString(4, fileName);
+
+            ResultSet rs = executeQuery(ps);
+            List<Job> list = new ArrayList<Job>();
+            while (rs.next()) {
+                list.add(new Job(rs.getString("id"), GaswStatus.valueOf(rs.getString("status")),
+                        rs.getInt("exit_code"), rs.getInt("creation"), rs.getInt("queued"),
+                        rs.getInt("download"), rs.getInt("running"), rs.getInt("upload"),
+                        rs.getInt("end_e"), getNode(rs.getString("node_site"),
+                        rs.getString("node_name")), rs.getString("command"),
+                        rs.getString("file_name"), rs.getString("parameters")));
+            }
+            return list;
 
         } catch (SQLException ex) {
             throw new DAOException(ex);

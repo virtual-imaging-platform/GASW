@@ -158,7 +158,11 @@ public abstract class Monitor extends Thread {
 
     protected void verifySignaledJobs() {
         
-        try {    
+        try {
+            for (String id : jobDAO.getJobs(GaswStatus.REPLICATE)) {
+                replicate(id);
+            }
+            
             for (String id : jobDAO.getJobs(GaswStatus.KILL)) {
                 kill(id);
             }
@@ -174,4 +178,8 @@ public abstract class Monitor extends Thread {
     protected abstract void kill(String jobID);
     
     protected abstract void reschedule(String jobID);
+    
+    protected abstract void replicate(String jobID);
+    
+    protected abstract void killReplicas(String fileName);
 }

@@ -73,7 +73,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.17</version>
+            <version>5.1.18</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -97,7 +97,7 @@
     
     <repositories>
         <repository>
-            <id>releases</id>
+            <id>i3s-releases</id>
             <name>Modalis releases repository [modalis]</name>
             <url>http://nyx.unice.fr:9007/nexus/content/repositories/releases</url>    
         </repository>    

@@ -291,4 +291,12 @@ public class GliteMonitor extends Monitor {
             logException(logger, ex);
         }
     }
+
+    @Override
+    protected void replicate(String jobID) {
+    }
+
+    @Override
+    protected void killReplicas(String fileName) {
+    }
 }

@@ -58,4 +58,8 @@ public interface JobDAO {
     public List<String> getActiveJobs() throws DAOException;
     
     public List<String> getJobs(GaswStatus status) throws DAOException;
+    
+    public int getNumberOfCompletedJobsByFileName(String fileName) throws DAOException;
+    
+    public List<Job> getActiveJobsByFileName(String fileName) throws DAOException;
 }

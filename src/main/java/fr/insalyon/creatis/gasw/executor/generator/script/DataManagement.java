@@ -38,6 +38,7 @@ import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.UUID;
 import org.apache.log4j.Logger;
 
 /**
@@ -442,6 +443,7 @@ public class DataManagement extends AbstractGenerator {
         //to remove the trailing ("-$rep")
         lfn = getTemplate(lfn);
         String name = getLfnName(lfn);
+        String id = "-" + UUID.randomUUID().toString();
 
         StringBuilder sb = new StringBuilder();
 
@@ -452,7 +454,7 @@ public class DataManagement extends AbstractGenerator {
             sb.append("  echo \"test result\" > " + name + "\n");
         }
 
-        sb.append("  uploadFile " + removeLFCHost(lfn));
+        sb.append("  uploadFile " + removeLFCHost(lfn) + id);
         if (test) {
             sb.append("-uploadTest");
         }
@@ -460,6 +462,8 @@ public class DataManagement extends AbstractGenerator {
         if (test) {
             sb.append("  \\rm -f " + name + "-uploadTest\n");
         }
+
+        sb.append(getRenameCommand(removeLFCHost(lfn) + id, removeLFCHost(lfn)));
 
         sb.append("stopLog file_upload\n");
         return sb.toString();
@@ -598,6 +602,25 @@ public class DataManagement extends AbstractGenerator {
         sb.append(indentation + "  error \"Exiting with return value 1\"\n");
         sb.append(indentation + "  exit 1\n");
         sb.append(indentation + "fi\n");
+        return sb.toString();
+    }
+
+    private String getRenameCommand(String from, String to) {
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("info \"Renaming " + from + " to " + to + "\"\n");
+        sb.append("lfc-ls " + to + "\n");
+        sb.append("if [ $? != 0 ]\n");
+        sb.append("then\n");
+        sb.append("  lfc-rename " + from + " " + to + "\n");
+        sb.append("  if [ $? != 0]\n");
+        sb.append("  then\n");
+        sb.append("    exit 2\n");
+        sb.append("  fi\n");
+        sb.append("else\n");
+        sb.append("  lcg-del -a lfn:" + from + "\n");
+        sb.append("fi\n\n");
         return sb.toString();
     }
 }

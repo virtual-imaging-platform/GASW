@@ -132,11 +132,17 @@ public class LocalMonitor extends Monitor {
 
     @Override
     protected void kill(String jobID) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     protected void reschedule(String jobID) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected void replicate(String jobID) {
+    }
+
+    @Override
+    protected void killReplicas(String fileName) {
     }
 }

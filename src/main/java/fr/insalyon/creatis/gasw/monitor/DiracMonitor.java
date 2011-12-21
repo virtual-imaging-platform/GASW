@@ -41,6 +41,7 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
+import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.executor.DiracExecutor;
 import grool.proxy.Proxy;
 import java.io.BufferedReader;
@@ -158,9 +159,18 @@ public class DiracMonitor extends Monitor {
 
                             }
                             if (updated) {
-                                jobDAO.update(job);
-                                logger.info("Dirac Monitor: job \"" + jobID + "\" finished as \"" + status + "\"");
-                                finishedJobs.put(jobID, monitoredJobs.get(jobID));
+                                if (jobDAO.getNumberOfCompletedJobsByFileName(job.getFileName()) > 0) {
+                                    job.setStatus(GaswStatus.CANCELLED_REPLICA);
+                                    jobDAO.update(job);
+
+                                } else {
+                                    jobDAO.update(job);
+                                    logger.info("Dirac Monitor: job \"" + jobID + "\" finished as \"" + status + "\"");
+                                    finishedJobs.put(jobID, monitoredJobs.get(jobID));
+                                    if (job.getStatus() == GaswStatus.COMPLETED) {
+                                        killReplicas(job.getFileName());
+                                    }
+                                }
                             }
                         }
                     }
@@ -272,6 +282,34 @@ public class DiracMonitor extends Monitor {
         } catch (IOException ex) {
             logException(logger, ex);
         } catch (InterruptedException ex) {
+            logException(logger, ex);
+        }
+    }
+
+    @Override
+    protected void replicate(String jobID) {
+
+        try {
+            Job job = jobDAO.getJobByID(jobID);
+            logger.info("Replicating: " + job.getId() + " - " + job.getFileName());
+            DAOFactory.getDAOFactory().getJobPoolDAO().add(
+                    new Job(job.getParameters(), job.getCommand(), job.getFileName()));
+
+        } catch (DAOException ex) {
+            logException(logger, ex);
+        }
+    }
+
+    @Override
+    protected void killReplicas(String fileName) {
+
+        try {
+            for (Job job : jobDAO.getActiveJobsByFileName(fileName)) {
+                logger.info("Killing replica: " + job.getId() + " - " + job.getFileName());
+                kill(job.getId());
+            }
+
+        } catch (DAOException ex) {
             logException(logger, ex);
         }
     }
