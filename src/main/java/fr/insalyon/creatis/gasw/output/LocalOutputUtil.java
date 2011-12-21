@@ -56,10 +56,12 @@ public class LocalOutputUtil extends OutputUtil {
         super();
     }
 
+    @Override
     public GaswOutput getOutputs(String jobID, Proxy userProxy) {
         return getOutputs(jobID);
     }
 
+    @Override
     public GaswOutput getOutputs(String jobID) {
         try {
 

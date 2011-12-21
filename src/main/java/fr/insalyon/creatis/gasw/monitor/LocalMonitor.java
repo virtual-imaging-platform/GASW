@@ -87,7 +87,7 @@ public class LocalMonitor extends Monitor {
                         job.setStatus(GaswStatus.ERROR);
                     }
                     jobDAO.update(job);
-                    finishedJobs.put(job.getId() + "--" + job.getStatus(), null);
+                    finishedJobs.put(job.getId(), null);
                 }
                 if (isFinished) {
                     Gasw.getInstance().addFinishedJob(finishedJobs);
@@ -109,7 +109,7 @@ public class LocalMonitor extends Monitor {
         try {
             if (jobsStatus.get(jobID) == null) {
                 Job job = new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, command);
-                add(job, fileName);
+                add(job, fileName.substring(0, fileName.lastIndexOf(".")));
                 job.setStatus(GaswStatus.RUNNING);
                 jobDAO.update(job);
             }
@@ -121,6 +121,7 @@ public class LocalMonitor extends Monitor {
     @Override
     protected synchronized void terminate() {
         super.terminate();
+        LocalExecutor.terminate();
         instance = null;
     }
 
