@@ -241,7 +241,7 @@ public class DataManagement extends AbstractGenerator {
         sb.append("function addToDataManager {\n");
         sb.append("  local LFN=$1\n");
         sb.append("  local FILE=$2\n");
-        sb.append("  local REMOTEFILE=`lcg-lr lfn:${LFN} | grep " + Configuration.DATA_MANAGER_HOST + "`\n");
+        sb.append("  local REMOTEFILE=`lcg-lr lfn:${LFN} | grep ").append(Configuration.DATA_MANAGER_HOST).append("`\n");
         sb.append("  local RPFILE=${REMOTEFILE#*generated}\n");
         sb.append("  lcg-del --nobdii --defaultsetype srmv2 -v srm://"
                 + Configuration.DATA_MANAGER_HOST + ":"
@@ -579,15 +579,16 @@ public class DataManagement extends AbstractGenerator {
         StringBuilder sb = new StringBuilder();
         String scheme = uri.getScheme();
         if (scheme == null || scheme.equalsIgnoreCase("lfn")) {
-            sb.append(indentation + "checkCacheDownloadAndCacheLFN " + removeLFCHost(uri) + "\n");
+            sb.append(indentation).append("checkCacheDownloadAndCacheLFN ").append(removeLFCHost(uri)).append("\n");
             sb.append(validateDownload("Cannot download LFN file", indentation));
 
         } else if (scheme.equalsIgnoreCase("http")) {
-            sb.append(indentation + "wget --no-check-certificate " + uri.toString() + "\n");
+           // sb.append(indentation + "wget --no-check-certificate " + uri.toString() + "\n");
+            sb.append(indentation).append("curl --insecure -O ").append(uri.toString()).append("\n");
             sb.append(validateDownload("Cannot download HTTP file", indentation));
 
         } else if (scheme.equalsIgnoreCase("file")) {
-            sb.append(indentation + "cp " + uri.getPath() + " .\n");
+            sb.append(indentation).append("cp ").append(uri.getPath()).append(" .\n");
             sb.append(validateDownload("Cannot copy file", indentation));
         }
         return sb.toString();
@@ -596,12 +597,12 @@ public class DataManagement extends AbstractGenerator {
     private String validateDownload(String message, String indentation) {
 
         StringBuilder sb = new StringBuilder();
-        sb.append(indentation + "if [ $? != 0 ]\n");
-        sb.append(indentation + "then\n");
-        sb.append(indentation + "  error \"" + message + "\"\n");
-        sb.append(indentation + "  error \"Exiting with return value 1\"\n");
-        sb.append(indentation + "  exit 1\n");
-        sb.append(indentation + "fi\n");
+        sb.append(indentation).append("if [ $? != 0 ]\n");
+        sb.append(indentation).append("then\n");
+        sb.append(indentation).append("  error \"").append(message).append("\"\n");
+        sb.append(indentation).append("  error \"Exiting with return value 1\"\n");
+        sb.append(indentation).append("  exit 1\n");
+        sb.append(indentation).append("fi\n");
         return sb.toString();
     }
 
