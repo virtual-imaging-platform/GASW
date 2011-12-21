@@ -34,7 +34,7 @@
  */
 package fr.insalyon.creatis.gasw;
 
-import fr.insalyon.creatis.gasw.Constants.Grid;
+import fr.insalyon.creatis.gasw.Constants.DCI;
 import fr.insalyon.creatis.gasw.Constants.Version;
 import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
 import fr.insalyon.creatis.gasw.dao.DAOException;
@@ -60,8 +60,8 @@ public class Configuration {
     // Properties
     public static final String EXECUTION_FOLDER = new File("").getAbsolutePath();
     public static final String MOTEUR_WORKFLOWID = EXECUTION_FOLDER.substring(EXECUTION_FOLDER.lastIndexOf("/") + 1);
-    public static Version VERSION = Constants.Version.GRID;
-    public static Grid GRID = Constants.Grid.DIRAC;
+    public static Version VERSION = Constants.Version.DCI;
+    public static DCI DCI = Constants.DCI.DIRAC;
     public static String VO = "biomed";
     public static String ENV = "\"\"";
     public static String SE = "ccsrm02.in2p3.fr";
@@ -108,7 +108,9 @@ public class Configuration {
             
             PropertiesConfiguration config = new PropertiesConfiguration(new File(CONF_FILE));
 
-            GRID = Constants.Grid.valueOf(config.getString("GRID", GRID.toString()));
+            VERSION = Constants.Version.valueOf(config.getString("VERSION", VERSION.toString()));
+            DCI = Constants.DCI.valueOf(config.getString("GRID", DCI.toString()));
+            DCI = Constants.DCI.valueOf(config.getString("DCI", DCI.toString()));
             VO = config.getString("VO", VO);
             ENV = config.getString("ENV", ENV);
             SE = config.getString("SE", SE);
@@ -132,7 +134,8 @@ public class Configuration {
             DIRAC_DEFAULT_POOL = config.getString("DIRAC_DEFAULT_POOL", DIRAC_DEFAULT_POOL);
             DIRAC_HOST = config.getString("DIRAC_HOST", DIRAC_HOST);
             
-            config.setProperty("GRID", GRID.toString());
+            config.setProperty("VERSION", VERSION.toString());
+            config.setProperty("DCI", DCI.toString());
             config.setProperty("VO", VO);
             config.setProperty("ENV", ENV);
             config.setProperty("SE", SE);

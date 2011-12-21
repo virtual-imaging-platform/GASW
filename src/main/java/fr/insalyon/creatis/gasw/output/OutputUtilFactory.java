@@ -46,11 +46,11 @@ public class OutputUtilFactory {
 
     public static OutputUtil getOutputUtil() {
 
-        if (Configuration.VERSION == Constants.Version.GRID) {
-            if (Configuration.GRID == Constants.Grid.DIRAC) {
+        if (Configuration.VERSION == Constants.Version.DCI) {
+            if (Configuration.DCI == Constants.DCI.DIRAC) {
                 return new DiracOutputUtil();
             }
-            if (Configuration.GRID == Constants.Grid.GLITE_WMS) {
+            if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
                 return new GliteOutputUtil();
             }
         } else if (Configuration.VERSION == Constants.Version.LOCAL) {

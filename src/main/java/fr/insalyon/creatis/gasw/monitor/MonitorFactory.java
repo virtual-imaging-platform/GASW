@@ -45,11 +45,11 @@ public class MonitorFactory {
 
     public static Monitor getMonitor() {
 
-        if (Configuration.VERSION == Constants.Version.GRID) {
-            if (Configuration.GRID == Constants.Grid.DIRAC) {
+        if (Configuration.VERSION == Constants.Version.DCI) {
+            if (Configuration.DCI == Constants.DCI.DIRAC) {
                 return DiracMonitor.getInstance();
             }
-            if (Configuration.GRID == Constants.Grid.GLITE_WMS) {
+            if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
                 return GliteMonitor.getInstance();
             }
         } else {

@@ -59,10 +59,10 @@ public class Constants {
 
     public static enum Version {
 
-        GRID, LOCAL
+        DCI, LOCAL
     };
 
-    public static enum Grid {
+    public static enum DCI {
 
         DIRAC, GLITE_WMS
     };

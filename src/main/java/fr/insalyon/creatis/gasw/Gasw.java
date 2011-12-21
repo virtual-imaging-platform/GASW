@@ -68,7 +68,7 @@ public class Gasw {
     private volatile boolean gettingOutputs;
 
     /**
-     * Gets an instance of GASW
+     * Gets a default instance of GASW.
      * 
      * @return Instance of GASW
      */
@@ -80,34 +80,35 @@ public class Gasw {
     }
 
     /**
-     * Gets an instance of GASW
+     * Gets an instance of GASW.
      * 
-     * @return Instance of GASW
+     * @param version
+     * @param dci
+     * @return
+     * @throws GaswException 
      */
-    public synchronized static Gasw getInstance(Constants.Version version, Constants.Grid target) throws GaswException {
+    public synchronized static Gasw getInstance(Constants.Version version, Constants.DCI dci) throws GaswException {
         if (instance == null) {
-            instance = new Gasw(version, target);
+            instance = new Gasw();
+            Configuration.VERSION = version;
+            Configuration.DCI = dci;
         }
         return instance;
     }
 
     private Gasw() throws GaswException {
-        this(Constants.Version.GRID, Constants.Grid.DIRAC);
-    }
 
-    private Gasw(Constants.Version version, Constants.Grid target) throws GaswException {
         try {
             PropertyConfigurator.configure(
                     Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
             Configuration.setUp();
             ProxyConfiguration.initConfiguration();
-            Configuration.VERSION = version;
-            Configuration.GRID = target;
+
             finishedJobs = new HashMap<String, Proxy>();
             notification = new GaswNotification();
             notification.start();
             gettingOutputs = false;
-        
+
         } catch (IllegalArgumentException ex) {
             throw new GaswException(ex);
         }
@@ -140,7 +141,7 @@ public class Gasw {
         for (EnvVariable v : gaswInput.getRelease().getConfigurations()) {
             if (v.getCategory() == EnvVariable.Category.SYSTEM
                     && v.getName().equals("gridTarget")) {
-                Configuration.GRID = Constants.Grid.valueOf(v.getValue());
+                Configuration.DCI = Constants.DCI.valueOf(v.getValue());
             }
         }
         Executor executor = ExecutorFactory.getExecutor(gaswInput);
@@ -181,8 +182,7 @@ public class Gasw {
 
         if (finishedJobs != null) {
             for (String jobID : finishedJobs.keySet()) {
-                outputsList.add(OutputUtilFactory.getOutputUtil()
-                        .getOutputs(jobID, finishedJobs.get(jobID)));
+                outputsList.add(OutputUtilFactory.getOutputUtil().getOutputs(jobID, finishedJobs.get(jobID)));
 
                 jobsToRemove.add(jobID);
             }

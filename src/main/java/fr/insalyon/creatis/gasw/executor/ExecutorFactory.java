@@ -46,11 +46,11 @@ public class ExecutorFactory {
 
     public static Executor getExecutor(GaswInput gaswInput) {
 
-        if (Configuration.VERSION == Constants.Version.GRID) {
-            if (Configuration.GRID == Constants.Grid.DIRAC) {
+        if (Configuration.VERSION == Constants.Version.DCI) {
+            if (Configuration.DCI == Constants.DCI.DIRAC) {
                 return new DiracExecutor(gaswInput);
             }
-            if (Configuration.GRID == Constants.Grid.GLITE_WMS) {
+            if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
                 return new GliteExecutor(gaswInput);
             }
         } else if (Configuration.VERSION == Constants.Version.LOCAL) {
