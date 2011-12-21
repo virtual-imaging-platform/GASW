@@ -91,13 +91,13 @@ public class GaswUtil {
             }
 
             if (exists) {
-                if (Configuration.VERSION == Constants.Version.GRID) {
-                    if (Configuration.GRID == Constants.Grid.DIRAC) {
+                if (Configuration.VERSION == Constants.Version.DCI) {
+                    if (Configuration.DCI == Constants.DCI.DIRAC) {
                         if (!userProxy.isRawProxyValid()) {
                             isValid = false;
                         }
                     }
-                    if (Configuration.GRID == Constants.Grid.GLITE_WMS) {
+                    if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
                         if (!userProxy.isValid()) {
                             isValid = false;
                         }
@@ -114,11 +114,11 @@ public class GaswUtil {
             }
 
             if (!exists || !isValid) {
-                if (Configuration.VERSION == Constants.Version.GRID) {
-                    if (Configuration.GRID == Constants.Grid.DIRAC) {
+                if (Configuration.VERSION == Constants.Version.DCI) {
+                    if (Configuration.DCI == Constants.DCI.DIRAC) {
                         userProxy.initRawProxy();
                     }
-                    if (Configuration.GRID == Constants.Grid.GLITE_WMS) {
+                    if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
                         userProxy.init();
                     }
                 } else if (Configuration.VERSION == Constants.Version.LOCAL) {
