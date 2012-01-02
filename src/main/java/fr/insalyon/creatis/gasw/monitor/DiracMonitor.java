@@ -268,14 +268,15 @@ public class DiracMonitor extends Monitor {
             }
             br.close();
 
+            Job job = jobDAO.getJobByID(jobID);
             if (process.exitValue() != 0) {
+                job.setStatus(GaswStatus.QUEUED);
                 logger.error(cout);
-            } else {
-                Job job = jobDAO.getJobByID(jobID);
+            } else {    
                 job.setStatus(GaswStatus.SUCCESSFULLY_SUBMITTED);
-                jobDAO.update(job);
-                logger.info("Rescheduled DIRAC Job ID '" + jobID + "'");
+                logger.info("Rescheduled DIRAC Job ID '" + jobID + "'.");
             }
+            jobDAO.update(job);
 
         } catch (DAOException ex) {
             logException(logger, ex);
