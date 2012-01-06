@@ -59,7 +59,6 @@ public abstract class Executor {
     protected String scriptName;
     protected String jdlName;
     protected Proxy userProxy;
-    private boolean firstExecution;
 
     /**
      *
@@ -71,7 +70,6 @@ public abstract class Executor {
      */
     public Executor(GaswInput gaswInput) {
         this.gaswInput = gaswInput;
-        this.firstExecution = true;
         this.userProxy = null;
     }
 
@@ -85,16 +83,7 @@ public abstract class Executor {
     /**
      * Submits a job to a grid or local execution.
      */
-    public String submit() throws GaswException {
-        long nanoTime = System.nanoTime();
-        if (!firstExecution) {
-            scriptName = getNewName(scriptName, nanoTime, ".sh", Constants.SCRIPT_ROOT);
-            jdlName = getNewName(jdlName, nanoTime, ".jdl", Constants.JDL_ROOT);
-        } else {
-            firstExecution = false;
-        }
-        return null;
-    }
+    public abstract String submit() throws GaswException;
 
     /**
      * Generates job script

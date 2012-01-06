@@ -90,9 +90,8 @@ public class DiracExecutor extends Executor {
 
     @Override
     public String submit() throws GaswException {
-        try {
-            super.submit();
 
+        try {
             StringBuilder params = new StringBuilder();
             for (String p : gaswInput.getParameters()) {
                 params.append(p);
@@ -162,8 +161,6 @@ public class DiracExecutor extends Executor {
                         String s = null;
                         int i = 0;
 
-                        List<Job> submissionError = new ArrayList<Job>();
-
                         while ((s = br.readLine()) != null) {
                             cout += s + "\n";
                             try {
@@ -178,13 +175,12 @@ public class DiracExecutor extends Executor {
                                         job.getCommand(), job.getFileName(), 
                                         job.getParameters(), userProxy);
                                 
+                                DAOFactory.getDAOFactory().getJobPoolDAO().remove(job);
                                 logger.info("Dirac Executor Job ID: " + id + " for " + job.getFileName());
 
                             } catch (Exception ex) {
-                                ex.printStackTrace();
                                 logger.error("Unable to submit job. DIRAC Error: " + s);
-                                Job job = jobs.get(i++);
-                                submissionError.add(job);
+                                i++;
                             }
                         }
                         process.waitFor();
@@ -192,11 +188,6 @@ public class DiracExecutor extends Executor {
 
                         if (process.exitValue() != 0) {
                             logger.error(cout);
-                        }
-                        jobs.removeAll(submissionError);
-
-                        for (Job job : jobs) {
-                            DAOFactory.getDAOFactory().getJobPoolDAO().remove(job);
                         }
                     }
 

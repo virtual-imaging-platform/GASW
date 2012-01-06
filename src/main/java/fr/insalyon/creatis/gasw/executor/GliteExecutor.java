@@ -65,8 +65,6 @@ public class GliteExecutor extends Executor {
     public String submit() throws GaswException {
 
         try {
-            super.submit();
-
             Process process = GaswUtil.getProcess(logger, userProxy,
                     "glite-wms-job-submit", "-a",
                     Constants.JDL_ROOT + "/" + jdlName);

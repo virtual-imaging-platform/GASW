@@ -78,7 +78,6 @@ public class LocalExecutor extends Executor {
     @Override
     public String submit() throws GaswException {
 
-        super.submit();
     //    Random random = new Random(System.nanoTime());
      //   String jobID = "Local-" + random.nextInt(100000);
         executionThreadPool.execute(new Execution(jdlName));
