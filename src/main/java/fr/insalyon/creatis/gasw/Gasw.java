@@ -182,7 +182,7 @@ public class Gasw {
 
         if (finishedJobs != null) {
             for (String jobID : finishedJobs.keySet()) {
-                outputsList.add(OutputUtilFactory.getOutputUtil().getOutputs(jobID, finishedJobs.get(jobID)));
+                outputsList.add(OutputUtilFactory.getOutputUtil(jobID, finishedJobs.get(jobID)).getOutputs());
 
                 jobsToRemove.add(jobID);
             }

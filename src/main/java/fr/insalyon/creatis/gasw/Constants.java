@@ -52,6 +52,11 @@ public class Constants {
     public static final String ERR_ROOT = "./err";
     public static final String CACHE_DIR = "${BASEDIR}/cache";
     public static final String CACHE_FILE = "cache.txt";
+    // Extensions
+    public static final String OUT_EXT = ".out";
+    public static final String OUT_APP_EXT = ".app" + OUT_EXT;
+    public static final String ERR_EXT = ".err";
+    public static final String ERR_APP_EXT = ".app" + ERR_EXT;
     // DIRAC environment variables
     public static final String ENV_DIRAC_POOL = "diracPool";
     public static final String ENV_DIRAC_PRIORITY = "diracPriority";
@@ -69,14 +74,14 @@ public class Constants {
 
     public static enum MinorStatus {
 
-        Started(1), // Job started the execution 
-        Background(2), // Downloading background script
-        Inputs(3), // Downloading inputs
-        Application(4), // Application execution
-        Outputs(5), // Uploading results
-        CheckPoint_Init(101), // Initializing checkpoint
+        Started(1),             // Job started the execution 
+        Background(2),          // Downloading background script
+        Inputs(3),              // Downloading inputs
+        Application(4),         // Application execution
+        Outputs(5),             // Uploading results
+        CheckPoint_Init(101),   // Initializing checkpoint
         CheckPoint_Upload(105), // Uploading checkpoint
-        CheckPoint_End(102);       // Checkpoint finished
+        CheckPoint_End(102);    // Checkpoint finished
         private int statusCode;
 
         private MinorStatus(int statusCode) {

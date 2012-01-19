@@ -37,6 +37,7 @@ package fr.insalyon.creatis.gasw.output;
 
 import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
+import grool.proxy.Proxy;
 
 /**
  *
@@ -44,17 +45,17 @@ import fr.insalyon.creatis.gasw.Constants;
  */
 public class OutputUtilFactory {
 
-    public static OutputUtil getOutputUtil() {
+    public static OutputUtil getOutputUtil(String jobID, Proxy userProxy) {
 
         if (Configuration.VERSION == Constants.Version.DCI) {
             if (Configuration.DCI == Constants.DCI.DIRAC) {
-                return new DiracOutputUtil();
+                return new DiracOutputUtil(jobID, userProxy);
             }
             if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
-                return new GliteOutputUtil();
+                return new GliteOutputUtil(jobID, userProxy);
             }
         } else if (Configuration.VERSION == Constants.Version.LOCAL) {
-            return new LocalOutputUtil();
+            return new LocalOutputUtil(jobID, userProxy);
         }
 
         return null;

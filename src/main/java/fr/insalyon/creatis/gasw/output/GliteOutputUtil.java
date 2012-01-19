@@ -38,9 +38,6 @@ import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
-import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.dao.DAOFactory;
-import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.monitor.GaswStatus;
 import grool.proxy.Proxy;
 import java.io.BufferedReader;
@@ -55,34 +52,25 @@ import org.apache.log4j.Logger;
 public class GliteOutputUtil extends OutputUtil {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private File stdOut;
+    private File stdErr;
 
-    public GliteOutputUtil() {
-        super();
+    public GliteOutputUtil(String jobID, Proxy userProxy) {
+        super(jobID, userProxy);
     }
 
     @Override
-    public GaswOutput getOutputs(String jobID) {
-        return getOutputs(jobID, null);
-    }
+    public GaswOutput getOutputs() {
 
-    @Override
-    public GaswOutput getOutputs(String jobID, Proxy userProxy) {
         try {
-            JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
-            Job job = jobDAO.getJobByID(jobID);
-
             GaswExitCode gaswExitCode = GaswExitCode.UNDEFINED;
-            File stdOut = null;
-            File stdErr = null;
-            File appStdOut = null;
-            File appStdErr = null;
 
             if (job.getStatus() != GaswStatus.CANCELLED) {
 
                 String dir = "out";
                 try {
                     Process process = GaswUtil.getProcess(logger, userProxy,
-                            "glite-wms-job-output", "--dir", dir, jobID);
+                            "glite-wms-job-output", "--dir", dir, job.getId());
                     process.waitFor();
 
                     BufferedReader br = GaswUtil.getBufferedReader(process);
@@ -104,11 +92,8 @@ public class GliteOutputUtil extends OutputUtil {
                         File outTempDir = new File(outputPath);
                         outTempDir.delete();
 
-                        int exitCode = parseStdOut(job, stdOut);
-                        exitCode = parseStdErr(job, stdErr, exitCode);
-
-                        appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
-                        appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
+                        int exitCode = parseStdOut(stdOut);
+                        exitCode = parseStdErr(stdErr, exitCode);
 
                         switch (exitCode) {
                             case 0:
@@ -130,46 +115,33 @@ public class GliteOutputUtil extends OutputUtil {
 
                     } else {
                         logger.error(cout);
-                        logger.error("Output files do not exist. Job ID: " + jobID);
+                        String message = "Output files do not exist.";
+                        logger.error(message + " Job ID: " + job.getId());
 
-                        stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Output files do not exist.");
-                        stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Output files do not exist.");
-                        appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "Output files do not exist.");
-                        appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "Output files do not exist.");
+                        saveFiles(message);
                         gaswExitCode = GaswExitCode.ERROR_GET_STD;
                     }
                 } catch (grool.proxy.ProxyInitializationException ex) {
                     logger.error(ex.getMessage());
-                    stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
-                    stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());
-                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, ex.getMessage());
-                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
+                    saveFiles(ex.getMessage());
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
-                }catch(grool.proxy.VOMSExtensionException ex) {
+                } catch (grool.proxy.VOMSExtensionException ex) {
                     logger.error(ex.getMessage());
-                    stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
-                    stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());
-                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, ex.getMessage());
-                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
+                    saveFiles(ex.getMessage());
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
                 }
             } else {
-                stdOut = saveFile(job, ".out", Constants.OUT_ROOT, "Job Cancelled");
-                stdErr = saveFile(job, ".err", Constants.ERR_ROOT, "Job Cancelled");
-                appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, "Job Cancelled");
-                appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, "Job Cancelled");
+                saveFiles("Job Cancelled.");
                 gaswExitCode = GaswExitCode.EXECUTION_CANCELED;
             }
 
-            return new GaswOutput(job.getFileName() + ".jdl", gaswExitCode, 
+            return new GaswOutput(job.getFileName() + ".jdl", gaswExitCode,
                     uploadedResults, appStdOut, appStdErr, stdOut, stdErr);
 
-        } catch (DAOException ex) {
-            logException(logger, ex);
         } catch (InterruptedException ex) {
-            logException(logger, ex);
+            logger.error(ex);
         } catch (IOException ex) {
-            logException(logger, ex);
+            logger.error(ex);
         }
         return null;
     }
@@ -191,5 +163,17 @@ public class GliteOutputUtil extends OutputUtil {
         File stdRenamed = new File(outDir + "/" + job.getFileName() + ".sh" + extension);
         stdFile.renameTo(stdRenamed);
         return stdRenamed;
+    }
+
+    /**
+     *
+     * @param content
+     */
+    private void saveFiles(String content) {
+
+        stdOut = saveFile(Constants.OUT_EXT, Constants.OUT_ROOT, content);
+        stdErr = saveFile(Constants.ERR_EXT, Constants.ERR_ROOT, content);
+        appStdOut = saveFile(Constants.OUT_APP_EXT, Constants.OUT_ROOT, content);
+        appStdErr = saveFile(Constants.ERR_APP_EXT, Constants.ERR_ROOT, content);
     }
 }

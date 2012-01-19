@@ -36,10 +36,6 @@ package fr.insalyon.creatis.gasw.output;
 
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswOutput;
-import fr.insalyon.creatis.gasw.bean.Job;
-import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.dao.DAOFactory;
-import fr.insalyon.creatis.gasw.dao.JobDAO;
 import grool.proxy.Proxy;
 import java.io.File;
 import org.apache.log4j.Logger;
@@ -51,54 +47,40 @@ import org.apache.log4j.Logger;
 public class LocalOutputUtil extends OutputUtil {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private File stdOut;
+    private File stdErr;
 
-    public LocalOutputUtil() {
-        super();
+    public LocalOutputUtil(String jobID, Proxy userProxy) {
+        super(jobID, userProxy);
     }
 
     @Override
-    public GaswOutput getOutputs(String jobID, Proxy userProxy) {
-        return getOutputs(jobID);
-    }
+    public GaswOutput getOutputs() {
 
-    @Override
-    public GaswOutput getOutputs(String jobID) {
-        try {
+        stdOut = new File(Constants.OUT_ROOT + "/" + job.getFileName() + ".sh.out");
+        stdErr = new File(Constants.ERR_ROOT + "/" + job.getFileName() + ".sh.err");
 
-            JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
-            Job job = jobDAO.getJobByID(jobID);
+        int exitCode = parseStdOut(stdOut);
+        exitCode = parseStdErr(stdErr, exitCode);
 
-            File stdOut = new File(Constants.OUT_ROOT + "/" + job.getFileName() + ".sh.out");
-            File stdErr = new File(Constants.ERR_ROOT + "/" + job.getFileName() + ".sh.err");
-
-            int exitCode = parseStdOut(job, stdOut);
-            exitCode = parseStdErr(job, stdErr, exitCode);
-
-            File appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
-            File appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
-            GaswExitCode gaswExitCode = GaswExitCode.UNDEFINED;
-            switch (exitCode) {
-                case 0:
-                    gaswExitCode = GaswExitCode.SUCCESS;
-                    break;
-                case 1:
-                    gaswExitCode = GaswExitCode.ERROR_READ_GRID;
-                    break;
-                case 2:
-                    gaswExitCode = GaswExitCode.ERROR_WRITE_GRID;
-                    break;
-                case 6:
-                    gaswExitCode = GaswExitCode.EXECUTION_FAILED;
-                    break;
-                case 7:
-                    gaswExitCode = GaswExitCode.ERROR_WRITE_LOCAL;
-                    break;
-            }
-            return new GaswOutput(jobID, gaswExitCode, uploadedResults, appStdOut, appStdErr, stdOut, stdErr);
-
-        } catch (DAOException ex) {
-            logException(logger, ex);
+        GaswExitCode gaswExitCode = GaswExitCode.UNDEFINED;
+        switch (exitCode) {
+            case 0:
+                gaswExitCode = GaswExitCode.SUCCESS;
+                break;
+            case 1:
+                gaswExitCode = GaswExitCode.ERROR_READ_GRID;
+                break;
+            case 2:
+                gaswExitCode = GaswExitCode.ERROR_WRITE_GRID;
+                break;
+            case 6:
+                gaswExitCode = GaswExitCode.EXECUTION_FAILED;
+                break;
+            case 7:
+                gaswExitCode = GaswExitCode.ERROR_WRITE_LOCAL;
+                break;
         }
-        return null;
+        return new GaswOutput(job.getId(), gaswExitCode, uploadedResults, appStdOut, appStdErr, stdOut, stdErr);
     }
 }

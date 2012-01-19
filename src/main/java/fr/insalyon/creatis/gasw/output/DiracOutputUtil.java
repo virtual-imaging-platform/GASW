@@ -37,10 +37,6 @@ package fr.insalyon.creatis.gasw.output;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.GaswUtil;
-import fr.insalyon.creatis.gasw.bean.Job;
-import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.dao.DAOFactory;
-import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.monitor.GaswStatus;
 import grool.proxy.Proxy;
 import java.io.BufferedReader;
@@ -55,46 +51,35 @@ import org.apache.log4j.Logger;
 public class DiracOutputUtil extends OutputUtil {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private File stdOut;
+    private File stdErr;
 
-    public DiracOutputUtil() {
-        super();
+    public DiracOutputUtil(String jobID, Proxy userProxy) {
+        super(jobID, userProxy);
     }
 
     @Override
-    public GaswOutput getOutputs(String jobID) {
-        return getOutputs(jobID, null);
-    }
+    public GaswOutput getOutputs() {
 
-    @Override
-    public GaswOutput getOutputs(String jobID, Proxy userProxy) {
         try {
-            JobDAO jobDAO = DAOFactory.getDAOFactory().getJobDAO();
-            Job job = jobDAO.getJobByID(jobID);
             GaswExitCode gaswExitCode = GaswExitCode.UNDEFINED;
-            File stdOut = null;
-            File stdErr = null;
-            File appStdOut = null;
-            File appStdErr = null;
 
-            if (job.getStatus() != GaswStatus.CANCELLED
+            if (job.getStatus()
+                    != GaswStatus.CANCELLED
                     && job.getStatus() != GaswStatus.STALLED) {
                 try {
                     Process process = GaswUtil.getProcess(logger, userProxy,
-                            "dirac-wms-job-get-output", jobID);
+                            "dirac-wms-job-get-output", job.getId());
                     process.waitFor();
 
                     if (process.exitValue() == 0) {
-                        stdOut = getStdFile(job, ".out", Constants.OUT_ROOT);
-                        stdErr = getStdFile(job, ".err", Constants.ERR_ROOT);
+                        stdOut = getStdFile(Constants.OUT_EXT, Constants.OUT_ROOT);
+                        stdErr = getStdFile(Constants.ERR_EXT, Constants.ERR_ROOT);
 
-                        File outTempDir = new File("./" + jobID);
-                        outTempDir.delete();
+                        new File("./" + job.getId()).delete();
 
-                        int exitCode = parseStdOut(job, stdOut);
-                        exitCode = parseStdErr(job, stdErr, exitCode);
-
-                        appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, getAppStdOut());
-                        appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, getAppStdErr());
+                        int exitCode = parseStdOut(stdOut);
+                        exitCode = parseStdErr(stdErr, exitCode);
 
                         switch (exitCode) {
                             case 0:
@@ -127,75 +112,61 @@ public class DiracOutputUtil extends OutputUtil {
                         br.close();
 
                         logger.error(cout);
-                        logger.error("Output files do not exist. Job ID: " + jobID);
-                        
-                        parseNonStdOut(job, GaswExitCode.ERROR_GET_STD.getExitCode());
-
                         String message = "Output files do not exist.";
-                        stdOut = saveFile(job, ".out", Constants.OUT_ROOT, message);
-                        stdErr = saveFile(job, ".err", Constants.ERR_ROOT, message);
-                        appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, message);
-                        appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, message);
+                        logger.error(message + " Job ID: " + job.getId());
+
+                        parseNonStdOut(GaswExitCode.ERROR_GET_STD.getExitCode());
+
+                        saveFiles(message);
                         gaswExitCode = GaswExitCode.ERROR_GET_STD;
                     }
                 } catch (grool.proxy.ProxyInitializationException ex) {
 
                     logger.error(ex.getMessage());
-                    stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
-                    stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());
-                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, ex.getMessage());
-                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
+                    saveFiles(ex.getMessage());
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
 
                 } catch (grool.proxy.VOMSExtensionException ex) {
                     logger.error(ex.getMessage());
-                    stdOut = saveFile(job, ".out", Constants.OUT_ROOT, ex.getMessage());
-                    stdErr = saveFile(job, ".err", Constants.ERR_ROOT, ex.getMessage());
-                    appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, ex.getMessage());
-                    appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, ex.getMessage());
+                    saveFiles(ex.getMessage());
                     gaswExitCode = GaswExitCode.ERROR_GET_STD;
                 }
 
             } else {
 
-                String message = "";
+                String message;
                 if (job.getStatus() == GaswStatus.CANCELLED) {
                     message = "Job Cancelled";
                     gaswExitCode = GaswExitCode.EXECUTION_CANCELED;
-                    parseNonStdOut(job, GaswExitCode.EXECUTION_CANCELED.getExitCode());
+                    parseNonStdOut(GaswExitCode.EXECUTION_CANCELED.getExitCode());
                 } else {
                     message = "Job Stalled";
                     gaswExitCode = GaswExitCode.EXECUTION_STALLED;
-                    parseNonStdOut(job, GaswExitCode.EXECUTION_STALLED.getExitCode());
+                    parseNonStdOut(GaswExitCode.EXECUTION_STALLED.getExitCode());
                 }
-
-                stdOut = saveFile(job, ".out", Constants.OUT_ROOT, message);
-                stdErr = saveFile(job, ".err", Constants.ERR_ROOT, message);
-                appStdOut = saveFile(job, ".app.out", Constants.OUT_ROOT, message);
-                appStdErr = saveFile(job, ".app.err", Constants.ERR_ROOT, message);
+                
+                saveFiles(message);
             }
+
             return new GaswOutput(job.getFileName() + ".jdl", gaswExitCode,
                     uploadedResults, appStdOut, appStdErr, stdOut, stdErr);
 
-        } catch (DAOException ex) {
-            logException(logger, ex);
         } catch (InterruptedException ex) {
-            logException(logger, ex);
+            logger.error(ex);
         } catch (IOException ex) {
-            logException(logger, ex);
+            logger.error(ex);
         }
         return null;
     }
 
     /**
-     * 
-     * 
-     * @param job Job object
+     *
+     *
      * @param extension File extension
      * @param directory Output directory
      * @return
      */
-    private File getStdFile(Job job, String extension, String directory) {
+    private File getStdFile(String extension, String directory) {
 
         File stdDir = new File(directory);
         if (!stdDir.exists()) {
@@ -205,5 +176,17 @@ public class DiracOutputUtil extends OutputUtil {
         File stdRenamed = new File(directory + "/" + job.getFileName() + ".sh" + extension);
         stdFile.renameTo(stdRenamed);
         return stdRenamed;
+    }
+
+    /**
+     * 
+     * @param content 
+     */
+    private void saveFiles(String content) {
+
+        stdOut = saveFile(Constants.OUT_EXT, Constants.OUT_ROOT, content);
+        stdErr = saveFile(Constants.ERR_EXT, Constants.ERR_ROOT, content);
+        appStdOut = saveFile(Constants.OUT_APP_EXT, Constants.OUT_ROOT, content);
+        appStdErr = saveFile(Constants.ERR_APP_EXT, Constants.ERR_ROOT, content);
     }
 }

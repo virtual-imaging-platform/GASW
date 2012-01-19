@@ -34,6 +34,7 @@
  */
 package fr.insalyon.creatis.gasw.output;
 
+import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.Constants.MinorStatus;
 import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.bean.Job;
@@ -43,14 +44,7 @@ import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.monitor.GaswStatus;
 import grool.proxy.Proxy;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,33 +57,52 @@ import org.apache.log4j.Logger;
 public abstract class OutputUtil {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
-    private StringBuilder appStdOut;
-    private StringBuilder appStdErr;
+    protected Job job;
+    protected Proxy userProxy;
+    protected File appStdOut;
+    protected File appStdErr;
+    private BufferedWriter appStdOutWriter;
+    private BufferedWriter appStdErrWriter;
     protected List<URI> uploadedResults = null;
 
-    public OutputUtil() {
-        appStdOut = new StringBuilder();
-        appStdErr = new StringBuilder();
-    }
+    /**
+     *
+     * @param jobID job identification
+     * @param proxy associated proxy (null in case using default proxy)
+     */
+    public OutputUtil(String jobID, Proxy userProxy) {
 
-    public abstract GaswOutput getOutputs(String jobID);
+        try {
+            this.job = DAOFactory.getDAOFactory().getJobDAO().getJobByID(jobID);
+            this.userProxy = userProxy;
+
+            this.appStdOut = getAppStdFile(Constants.OUT_APP_EXT, Constants.OUT_ROOT);
+            this.appStdErr = getAppStdFile(Constants.ERR_APP_EXT, Constants.ERR_ROOT);
+
+            this.appStdOutWriter = new BufferedWriter(new FileWriter(appStdOut));
+            this.appStdErrWriter = new BufferedWriter(new FileWriter(appStdErr));
+
+        } catch (IOException ex) {
+            logger.error(ex);
+        } catch (DAOException ex) {
+            logger.error(ex);
+        }
+    }
 
     /**
      * Gets the standard output and error files and exit code.
-     * @param jobID job identification
-     * @param proxy associated proxy (null in case using default proxy)
+     *
      * @return Array with the standard output and error files respectively.
      *
      */
-    public abstract GaswOutput getOutputs(String jobID, Proxy userProxy);
+    public abstract GaswOutput getOutputs();
 
     /**
      *
-     * @param job Job object
      * @param stdOut Standard output file
      * @return Exit code
      */
-    protected int parseStdOut(Job job, File stdOut) {
+    protected int parseStdOut(File stdOut) {
 
         int exitCode = -1;
         try {
@@ -115,10 +128,10 @@ public abstract class OutputUtil {
                 } else if (strLine.contains("</application_execution>")) {
                     isAppExec = false;
                 } else if (isAppExec) {
-                    appStdOut.append(strLine);
-                    appStdOut.append("\n");
+                    appStdOutWriter.write(strLine + "\n");
                 }
 
+                // General Output
                 if (strLine.contains("Input download time:")) {
                     int downloadTime = Integer.valueOf(strLine.split(" ")[13]).intValue();
                     job.setDownload(downloadTime);
@@ -190,6 +203,7 @@ public abstract class OutputUtil {
                 }
             }
             br.close();
+            appStdOutWriter.close();
 
             DAOFactory factory = DAOFactory.getDAOFactory();
             if (node.getSiteName() != null && node.getNodeName() != null) {
@@ -206,25 +220,25 @@ public abstract class OutputUtil {
                     }
                 }
             }
-            job = parseCheckpoint(job, applicationTime);
+            job = parseCheckpoint(applicationTime);
 
             // Update Job            
             factory.getJobDAO().update(job);
 
         } catch (DAOException ex) {
-            logException(logger, ex);
+            logger.error(ex);
         } catch (IOException ex) {
-            logException(logger, ex);
+            logger.error(ex);
         }
         return exitCode;
     }
 
     /**
-     * 
+     *
      * @param job
-     * @param exitCode 
+     * @param exitCode
      */
-    protected void parseNonStdOut(Job job, int exitCode) {
+    protected void parseNonStdOut(int exitCode) {
 
         try {
             DAOFactory factory = DAOFactory.getDAOFactory();
@@ -232,7 +246,6 @@ public abstract class OutputUtil {
             int backgroundTime = 0;
             int inputTime = 0;
             int applicationTime = 0;
-            int outputTime = 0;
 
             for (JobMinorStatus minorStatus : factory.getJobMinorStatusDAO().getExecutionMinorStatus(job.getId())) {
 
@@ -260,26 +273,26 @@ public abstract class OutputUtil {
                     }
 
                 } else if (minorStatus.getStatus() == MinorStatus.Outputs) {
-                    outputTime = (int) (minorStatus.getDate().getTime() / 1000);
+                    int outputTime = (int) (minorStatus.getDate().getTime() / 1000);
                     job.setRunning(outputTime - applicationTime);
                 }
             }
 
-            job = parseCheckpoint(job, applicationTime);
+            job = parseCheckpoint(applicationTime);
             job.setExitCode(exitCode);
             factory.getJobDAO().update(job);
 
         } catch (DAOException ex) {
-            logException(logger, ex);
+            logger.error(ex);
         }
     }
 
     /**
-     * 
+     *
      * @param job
-     * @return 
+     * @return
      */
-    private Job parseCheckpoint(Job job, int applicationTime) {
+    private Job parseCheckpoint(int applicationTime) {
 
         try {
             DAOFactory factory = DAOFactory.getDAOFactory();
@@ -339,18 +352,17 @@ public abstract class OutputUtil {
                 job.setRunning(0);
             }
         } catch (DAOException ex) {
-            logException(logger, ex);
+            logger.error(ex);
         }
         return job;
     }
 
     /**
      *
-     * @param job Job object
-     * @param stdErr Standard error file
+     * @param exitCode
      * @return Exit code
      */
-    protected int parseStdErr(Job job, File stdErr, int exitCode) {
+    protected int parseStdErr(File stdErr, int exitCode) {
 
         try {
             DataInputStream in = new DataInputStream(new FileInputStream(stdErr));
@@ -369,8 +381,7 @@ public abstract class OutputUtil {
                     isAppExec = false;
 
                 } else if (isAppExec) {
-                    appStdErr.append(strLine);
-                    appStdErr.append("\n");
+                    appStdErrWriter.write(strLine + "\n");
                 }
 
                 if (strLine.contains("Exiting with return value")) {
@@ -380,17 +391,18 @@ public abstract class OutputUtil {
                 }
             }
             br.close();
+            appStdErrWriter.close();
             DAOFactory.getDAOFactory().getJobDAO().update(job);
 
         } catch (DAOException ex) {
-            logException(logger, ex);
+            logger.error(ex);
 
         } catch (IOException ex) {
-            logException(logger, ex);
+            logger.error(ex);
         }
         return exitCode;
     }
-
+    
     /**
      *
      * @param job Job object
@@ -399,7 +411,7 @@ public abstract class OutputUtil {
      * @param content File content
      * @return
      */
-    protected File saveFile(Job job, String extension, String dir, String content) {
+    protected File saveFile(String extension, String dir, String content) {
         FileWriter fstream = null;
         try {
             File stdDir = new File(dir);
@@ -415,46 +427,29 @@ public abstract class OutputUtil {
             return stdFile;
 
         } catch (IOException ex) {
-            logException(logger, ex);
+            logger.error(ex);
         } finally {
             try {
                 fstream.close();
             } catch (IOException ex) {
-                logException(logger, ex);
+                logger.error(ex);
             }
         }
         return null;
     }
 
     /**
-     * Gets the application execution log
      *
-     * @return The application execution log.
+     * @param extension
+     * @param dir
+     * @return
      */
-    protected String getAppStdOut() {
-        return appStdOut.toString();
-    }
+    private File getAppStdFile(String extension, String dir) {
 
-    /**
-     * Gets the application execution error log
-     *
-     * @return The application execution error log.
-     */
-    protected String getAppStdErr() {
-        return appStdErr.toString();
-    }
-
-    /**
-     * 
-     * @param logger
-     * @param ex
-     */
-    protected void logException(Logger logger, Exception ex) {
-        logger.error(ex);
-        if (logger.isDebugEnabled()) {
-            for (StackTraceElement stack : ex.getStackTrace()) {
-                logger.debug(stack);
-            }
+        File stdDir = new File(dir);
+        if (!stdDir.exists()) {
+            stdDir.mkdirs();
         }
+        return new File(dir + "/" + job.getFileName() + ".sh" + extension);
     }
 }
