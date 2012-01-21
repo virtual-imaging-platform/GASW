@@ -343,10 +343,15 @@ public class DataManagement extends AbstractGenerator {
         sb.append("  local FILE=$2\n");
         sb.append("  local nrep=$3\n");
         sb.append("  local SELIST=${SE}\n");
-        sb.append("  local OPTS=\"--connect-timeout " + Constants.CONNECT_TIMEOUT
-                + " --sendreceive-timeout " + Constants.SEND_RECEIVE_TIMEOUT
-                + " --bdii-timeout " + Constants.BDII_TIMEOUT
-                + " --srm-timeout " + Constants.SRM_TIMEOUT + "\"\n");
+        sb.append("  local OPTS=\"--connect-timeout ").
+                append(Constants.CONNECT_TIMEOUT).
+                append(" --sendreceive-timeout ").
+                append(Constants.SEND_RECEIVE_TIMEOUT).
+                append(" --bdii-timeout ").
+                append(Constants.BDII_TIMEOUT).
+                append(" --srm-timeout ").
+                append(Constants.SRM_TIMEOUT).
+                append("\"\n");
         sb.append("  local DEST=\"\"\n");
         sb.append("  if [ \"${USE_CLOSE_SE}\" = \"true\" ] && [ \"${VO_BIOMED_DEFAULT_SE}\" != \"\" ]\n");
         sb.append("  then\n");
@@ -417,12 +422,16 @@ public class DataManagement extends AbstractGenerator {
 
         StringBuilder sb = new StringBuilder();
         sb.append("function deleteFile { \n");
-        sb.append("     guid=$(lcg-lg $1)\n");
-        sb.append("     surls=$(lcg-lr $1) \n");
-        sb.append("     for surl in $surls \n");
-        sb.append("     do\n");
-        sb.append("          lcg-uf -v $guid $surl\n");
-        sb.append("     done\n");
+        sb.append("\t lcg-del -a $1\n");
+        sb.append("\t if [ $? != 0 ]\n");
+        sb.append("\t then\n");
+        sb.append("\t\t guid=$(lcg-lg $1)\n");
+        sb.append("\t\t surls=$(lcg-lr $1) \n");
+        sb.append("\t\t for surl in $surls \n");
+        sb.append("\t\t do\n");
+        sb.append("\t\t\t lcg-uf -v $guid $surl\n");
+        sb.append("\t\t done\n");
+        sb.append("\tfi\n\n");
         sb.append("}\n\n");
         return sb.toString();
     }
@@ -447,23 +456,26 @@ public class DataManagement extends AbstractGenerator {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("startLog file_upload lfn=\"" + removeLFCHost(lfn) + "\"\n");
-
+        String uploadTest = "";
         if (test) {
-            name += "-uploadTest";
-            sb.append("  echo \"test result\" > " + name + "\n");
+            uploadTest = "-uploadTest";
         }
 
-        sb.append("  uploadFile " + removeLFCHost(lfn) + id);
+        sb.append("startLog file_upload lfn=\"").append(removeLFCHost(lfn)).append(uploadTest).append("\"\n");
+
         if (test) {
-            sb.append("-uploadTest");
-        }
-        sb.append(" ${PWD}/" + name + " " + nreplicas + "\n");
-        if (test) {
-            sb.append("  \\rm -f " + name + "-uploadTest\n");
+            name += uploadTest;
+            sb.append("  echo \"test result\" > ").append(name).append("\n");
         }
 
-        sb.append(getRenameCommand(removeLFCHost(lfn) + id, removeLFCHost(lfn)));
+        sb.append("  uploadFile ").append(removeLFCHost(lfn)).append(id).append(uploadTest);
+
+        sb.append(" ${PWD}/").append(name).append(" ").append(nreplicas).append("\n");
+        if (test) {
+            sb.append("  \\rm -f ").append(name).append("\n");
+        }
+
+        sb.append(getRenameCommand(removeLFCHost(lfn) + id + uploadTest, removeLFCHost(lfn) + uploadTest));
 
         sb.append("stopLog file_upload\n");
         return sb.toString();
@@ -480,14 +492,14 @@ public class DataManagement extends AbstractGenerator {
 
         String uploadTest = "";
         StringBuilder sb = new StringBuilder();
-        sb.append("startLog file_delete lfn=\"" + lfn + "\"\n");
+        sb.append("startLog file_delete lfn=\"").append(lfn).append("\"\n");
         lfn = getTemplate(lfn);
 
         if (testUpload) {
             uploadTest = "-uploadTest";
         }
-        sb.append("info \"Deleting file " + lfn.getPath() + uploadTest + "...\"\n");
-        sb.append("deleteFile lfn:" + lfn.getPath() + uploadTest + "\n");
+        sb.append("info \"Deleting file ").append(lfn.getPath()).append(uploadTest).append("...\"\n");
+        sb.append("deleteFile lfn:").append(lfn.getPath()).append(uploadTest).append("\n");
 
         if (Configuration.useDataManager()) {
             sb.append("if [ $? != 0 ]\n");
@@ -583,7 +595,7 @@ public class DataManagement extends AbstractGenerator {
             sb.append(validateDownload("Cannot download LFN file", indentation));
 
         } else if (scheme.equalsIgnoreCase("http")) {
-           // sb.append(indentation + "wget --no-check-certificate " + uri.toString() + "\n");
+            // sb.append(indentation + "wget --no-check-certificate " + uri.toString() + "\n");
             sb.append(indentation).append("curl --insecure -O ").append(uri.toString()).append("\n");
             sb.append(validateDownload("Cannot download HTTP file", indentation));
 
@@ -610,17 +622,17 @@ public class DataManagement extends AbstractGenerator {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("info \"Renaming " + from + " to " + to + "\"\n");
-        sb.append("lfc-ls " + to + "\n");
+        sb.append("info \"Renaming ").append(from).append(" to ").append(to).append("\"\n");
+        sb.append("lfc-ls ").append(to).append("\n");
         sb.append("if [ $? != 0 ]\n");
         sb.append("then\n");
-        sb.append("  lfc-rename " + from + " " + to + "\n");
-        sb.append("  if [ $? != 0]\n");
+        sb.append("  lfc-rename ").append(from).append(" ").append(to).append("\n");
+        sb.append("  if [ $? != 0 ]\n");
         sb.append("  then\n");
         sb.append("    exit 2\n");
         sb.append("  fi\n");
         sb.append("else\n");
-        sb.append("  lcg-del -a lfn:" + from + "\n");
+        sb.append("  deleteFile lfn:").append(from).append("\n");
         sb.append("fi\n\n");
         return sb.toString();
     }
