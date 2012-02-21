@@ -42,6 +42,8 @@ import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import grool.proxy.Proxy;
+import grool.proxy.ProxyInitializationException;
+import grool.proxy.VOMSExtensionException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -80,7 +82,7 @@ public class GliteMonitor extends Monitor {
 
         while (!stop) {
             try {
-
+                logger.debug("Enter dans le monitoring...");
                 verifySignaledJobs();
 
                 // Getting Status
@@ -95,9 +97,9 @@ public class GliteMonitor extends Monitor {
                     command.add("--noint");
                     command.addAll(ids);
 
-                    ProcessBuilder builder = new ProcessBuilder(command);
-                    builder.redirectErrorStream(true);
-                    Process process = builder.start();
+                    Proxy userProxy = monitoredJobs.get(ids.get(0));
+                    Process process = GaswUtil.getProcess(logger, userProxy,
+                            command.toArray(new String[]{}));
 
                     BufferedReader br = GaswUtil.getBufferedReader(process);
 
@@ -112,8 +114,8 @@ public class GliteMonitor extends Monitor {
                             cout += s + "-";
                         }
                     }
-                    process.waitFor();
                     br.close();
+                    process.waitFor();
 
                     // Parsing status
                     if (process.exitValue() == 0) {
@@ -189,6 +191,10 @@ public class GliteMonitor extends Monitor {
             } catch (IOException ex) {
                 logException(logger, ex);
             } catch (InterruptedException ex) {
+                logException(logger, ex);
+            } catch (ProxyInitializationException ex) {
+                logException(logger, ex);
+            } catch (VOMSExtensionException ex) {
                 logException(logger, ex);
             }
         }
