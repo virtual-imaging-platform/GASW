@@ -82,7 +82,6 @@ public class GliteMonitor extends Monitor {
 
         while (!stop) {
             try {
-                logger.debug("Enter dans le monitoring...");
                 verifySignaledJobs();
 
                 // Getting Status
