@@ -154,44 +154,47 @@ public class DataManagement extends AbstractGenerator {
 
         StringBuilder sb = new StringBuilder();
         sb.append("function downloadLFN {\n");
-        sb.append("  local LFN=$1\n");
-        sb.append("  local LOCAL=${PWD}/`basename ${LFN}`\n");
-        sb.append("  info \"Removing file ${LOCAL} in case it is already here\"\n");
-        sb.append("  \\rm -f ${LOCAL}\n");
-        sb.append("  info \"Downloading file ${LFN}...\"\n");
-        sb.append("  LINE=\"lcg-cp -v --connect-timeout " + Constants.CONNECT_TIMEOUT
-                + " --sendreceive-timeout " + Constants.SEND_RECEIVE_TIMEOUT
-                + " --bdii-timeout " + Constants.BDII_TIMEOUT
-                + " --srm-timeout " + Constants.SRM_TIMEOUT
-                + " lfn:${LFN} file:`pwd`/`basename ${LFN}`\"\n");
-        sb.append("  info ${LINE}\n");
-        sb.append("  ${LINE}\n");
-        sb.append("  if [ $? = 0 ];\n");
-        sb.append("  then\n");
-        sb.append("    info \"lcg-cp worked fine\";\n");
-        sb.append("  else\n");
+        sb.append("\t local LFN=$1\n");
+        sb.append("\t local LOCAL=${PWD}/`basename ${LFN}`\n");
+        sb.append("\t info \"Removing file ${LOCAL} in case it is already here\"\n");
+        sb.append("\t \\rm -f ${LOCAL}\n");
+        sb.append("\t info \"Downloading file ${LFN}...\"\n");
+        sb.append("\t LINE=\"lcg-cp -v --connect-timeout ").append(Constants.CONNECT_TIMEOUT)
+                .append(" --sendreceive-timeout ").append(Constants.SEND_RECEIVE_TIMEOUT)
+                .append(" --bdii-timeout ").append(Constants.BDII_TIMEOUT)
+                .append(" --srm-timeout ").append(Constants.SRM_TIMEOUT)
+                .append(" lfn:${LFN} file:`pwd`/`basename ${LFN}`\"\n");
+        sb.append("\t info ${LINE}\n");
+        sb.append("\t ${LINE} &> lcg-log\n");
+        sb.append("\t if [ $? = 0 ];\n");
+        sb.append("\t then\n");
+        sb.append("\t\t info \"lcg-cp worked fine\";\n");
+        sb.append("\t else\n");
 
         if (Configuration.useDataManager()) {
-            sb.append("    local FILENAME=`lcg-lr lfn:${LFN} | grep " + Configuration.DATA_MANAGER_HOST + "`\n");
-            sb.append("    local PFILE=${FILENAME#*generated}\n");
-            sb.append("    lcg-cp --nobdii --defaultsetype srmv2 -v srm://"
-                    + Configuration.DATA_MANAGER_HOST + ":"
-                    + Configuration.DATA_MANAGER_PORT + "/srm/managerv2?SFN="
-                    + Configuration.DATA_MANAGER_HOME + "${PFILE} "
-                    + "file:`pwd`/`basename ${LFN}`\n");
-            sb.append("    if [ $? = 0 ];\n");
-            sb.append("    then\n");
-            sb.append("      info \"lcg-cp from Data Manager worked fine\";\n");
-            sb.append("    else\n");
-            sb.append("      error \"lcg-cp failed\"\n");
-            sb.append("      return 1\n");
-            sb.append("    fi\n");
+            sb.append("\t\t local FILENAME=`lcg-lr lfn:${LFN} | grep " + Configuration.DATA_MANAGER_HOST + "`\n");
+            sb.append("\t\t local PFILE=${FILENAME#*generated}\n");
+            sb.append("\t\t lcg-cp --nobdii --defaultsetype srmv2 -v srm://")
+                    .append(Configuration.DATA_MANAGER_HOST).append(":")
+                    .append(Configuration.DATA_MANAGER_PORT).append("/srm/managerv2?SFN=")
+                    .append(Configuration.DATA_MANAGER_HOME).append("${PFILE} ")
+                    .append("file:`pwd`/`basename ${LFN}`\n");
+            sb.append("\t\t if [ $? = 0 ];\n");
+            sb.append("\t\t then\n");
+            sb.append("\t\t\t info \"lcg-cp from Data Manager worked fine\";\n");
+            sb.append("\t\t else\n");
+            sb.append("\t\t\t error \"lcg-cp failed\"\n");
+            sb.append("\t\t\t error \"`cat lcg-log`\"\n");
+            sb.append("\t\t\t return 1\n");
+            sb.append("\t\t fi\n");
         } else {
-            sb.append("    error \"lcg-cp failed\"\n");
-            sb.append("    return 1\n");
+            sb.append("\t\t error \"lcg-cp failed\"\n");
+            sb.append("\t\t error \"`cat lcg-log`\"\n");
+            sb.append("\t\t return 1\n");
         }
 
-        sb.append("  fi\n");
+        sb.append("\t fi\n");
+        sb.append("\t \\rm lcg-log \n");
         sb.append("}\n");
         sb.append("export -f downloadLFN\n\n");
         return sb.toString();
@@ -373,17 +376,19 @@ public class DataManagement extends AbstractGenerator {
         sb.append("        lfc-rename ${LFN} ${LFN}-garbage-${HOSTNAME}-${PWD};\n");
         sb.append("      fi;\n");
         sb.append("      lfc-mkdir -p `dirname ${LFN}`;\n");
-        sb.append("      lcg-cr -v ${OPTS} -d ${DEST} -l lfn:${LFN} file:${FILE}\n");
+        sb.append("      lcg-cr -v ${OPTS} -d ${DEST} -l lfn:${LFN} file:${FILE} &> lcg-log\n");
         sb.append("    else\n");
-        sb.append("      lcg-rep -v ${OPTS} -d ${DEST} lfn:${LFN}\n");
+        sb.append("      lcg-rep -v ${OPTS} -d ${DEST} lfn:${LFN} &> lcg-log\n");
         sb.append("    fi\n");
         sb.append("    if [ $? = 0 ]\n");
         sb.append("    then\n");
         sb.append("      info \"lcg-cr/rep of ${LFN} to SE ${DEST} worked fine\"\n");
         sb.append("      done=`expr ${done} + 1`\n");
         sb.append("    else\n");
+        sb.append("      error \"`cat lcg-log`\"\n");
         sb.append("      warning \"lcg-cr/rep of ${LFN} to SE ${DEST} failed\" \n");
         sb.append("    fi\n");
+        sb.append("    \\rm lcg-log\n");
         sb.append("    chooseRandomSE\n");
         sb.append("    DEST=${RESULT}\n");
         sb.append("  done\n");
