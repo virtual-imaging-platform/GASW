@@ -36,10 +36,7 @@ package fr.insalyon.creatis.gasw.executor.generator.script;
 
 import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
-import fr.insalyon.creatis.gasw.release.EnvVariable;
-import fr.insalyon.creatis.gasw.release.Execution;
-import fr.insalyon.creatis.gasw.release.Infrastructure;
-import fr.insalyon.creatis.gasw.release.Release;
+import fr.insalyon.creatis.gasw.release.*;
 import java.io.File;
 import java.net.URI;
 import java.util.List;
@@ -204,7 +201,7 @@ public class ScriptGenerator extends AbstractGenerator {
      * @param defaultDir default directory to store files matched against regexp
      * @return the code, in a String
      */
-    public String uploadTest(List<URI> uploads, List<String> regexs, String defaultDir) {
+    public String uploadTest(List<Upload> uploads, List<String> regexs, String defaultDir) {
         StringBuilder sb = new StringBuilder();
         if (uploads.size() > 0 || regexs.size() > 0) {
             sb.append("startLog upload_test\n");
@@ -213,14 +210,11 @@ public class ScriptGenerator extends AbstractGenerator {
             sb.append("test -f " + Constants.CACHE_DIR + "/uploadChecked\n");
             sb.append("if [ $? != 0 ]\n");
             sb.append("then\n");
-            URI uri = null;
-            if (uploads.size() > 0) {
-                uri = uploads.get(0);
-            } else {
-                uri = URI.create(defaultDir + "regexp-do-not-name-a-file-such-as-this-one");
-            }
-            sb.append(dataManagement.getUploadCommand(true, uri));
-            sb.append(dataManagement.getDeleteCommand(true, uri));
+            Upload upload = uploads.size() > 0
+                    ? uploads.get(0)
+                    : new Upload(URI.create(defaultDir + "regexp-do-not-name-a-file-such-as-this-one"));
+            sb.append(dataManagement.getUploadCommand(true, upload));
+            sb.append(dataManagement.getDeleteCommand(true, upload));
             sb.append("  touch " + Constants.CACHE_DIR + "/" + "uploadChecked\n");
             sb.append("else\n");
             sb.append("  info \"Skipping upload test (it has already been done by a previous job)\"\n");
@@ -382,7 +376,7 @@ public class ScriptGenerator extends AbstractGenerator {
      * @param defaultDir default directory to store files matched against regexp
      * @return A string containing the code
      */
-    public String resultsUpload(List<URI> uploads, List<String> regexs, String defaultDir) {
+    public String resultsUpload(List<Upload> uploads, List<String> regexs, String defaultDir) {
 
         StringBuilder sb = new StringBuilder();
         String edgesVar = "__MOTEUR_OUT=\"";
@@ -391,7 +385,8 @@ public class ScriptGenerator extends AbstractGenerator {
             sb.append("python ../GASWServiceClient.py ${MOTEUR_WORKFLOWID} ${JOBID} 5\n");
         }
         boolean first = true;
-        for (URI lfn : uploads) {
+        for (Upload upload : uploads) {
+            URI lfn = upload.getURI();
             if (first) {
                 first = false;
                 edgesVar += lfn;
@@ -399,7 +394,7 @@ public class ScriptGenerator extends AbstractGenerator {
             } else {
                 edgesVar += ";" + lfn;
             }
-            sb.append(dataManagement.getUploadCommand(false, lfn));
+            sb.append(dataManagement.getUploadCommand(false, upload));
         }
         edgesVar += "\"";
         sb.append(edgesVar);
@@ -482,7 +477,7 @@ public class ScriptGenerator extends AbstractGenerator {
      * @return A string containing the bash script source
      */
     public String generateScript(Release release, List<URI> downloads,
-            List<URI> uploads, List<String> regexs, String defaultDir,
+            List<Upload> uploads, List<String> regexs, String defaultDir,
             List<String> parameters) {
 
         StringBuilder sb = new StringBuilder();

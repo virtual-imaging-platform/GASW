@@ -167,7 +167,7 @@ public class DiracMonitor extends Monitor {
                                     jobDAO.update(job);
                                     logger.info("Dirac Monitor: job \"" + jobID + "\" finished as \"" + status + "\"");
                                     finishedJobs.put(jobID, monitoredJobs.get(jobID));
-                                    if (job.getStatus() == GaswStatus.COMPLETED) {
+                                    if (job.getStatus() != GaswStatus.CANCELLED) {
                                         killReplicas(job.getFileName());
                                     }
                                 }

@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.gasw;
 
 import fr.insalyon.creatis.gasw.release.Release;
+import fr.insalyon.creatis.gasw.release.Upload;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +49,7 @@ public class GaswInput {
     private Release release;
     private List<String> parameters;
     private List<URI> downloads;
-    private List<URI> uploads;
+    private List<Upload> uploads;
     private List<String> regexs;
     private String defaultDir;
 
@@ -58,7 +59,7 @@ public class GaswInput {
      */
     public GaswInput(Release release) {
         this(release, new ArrayList<String>(), new ArrayList<URI>(),
-                new ArrayList<URI>());
+                new ArrayList<Upload>());
     }
 
     /**
@@ -69,7 +70,7 @@ public class GaswInput {
      * @param uploads List of output files to be uploaded to a Storage Element.
      */
     public GaswInput(Release release, List<String> parameters, List<URI> downloads,
-            List<URI> uploads) {
+            List<Upload> uploads) {
         this(release, parameters, downloads, uploads, new ArrayList<String>(), null);
     }
 
@@ -83,7 +84,7 @@ public class GaswInput {
      * @param defaultDir default directory where to store files matching the regular expressions.
      */
     public GaswInput(Release release, List<String> parameters, List<URI> downloads,
-            List<URI> uploads, List<String> regexs, String defaultDir) {
+            List<Upload> uploads, List<String> regexs, String defaultDir) {
 
         this.release = release;
         this.parameters = parameters;
@@ -116,7 +117,7 @@ public class GaswInput {
      * 
      * @param upload URI
      */
-    public void addUpload(URI upload) {
+    public void addUpload(Upload upload) {
         this.uploads.add(upload);
     }
 
@@ -149,7 +150,7 @@ public class GaswInput {
         return release;
     }
 
-    public List<URI> getUploads() {
+    public List<Upload> getUploads() {
         return uploads;
     }
 }

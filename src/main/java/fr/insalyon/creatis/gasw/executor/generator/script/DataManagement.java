@@ -36,8 +36,8 @@ package fr.insalyon.creatis.gasw.executor.generator.script;
 
 import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.release.Upload;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.UUID;
 import org.apache.log4j.Logger;
 
@@ -283,12 +283,13 @@ public class DataManagement extends AbstractGenerator {
 
     /**
      * Generates a few functions to upload a file to the LFC. Each output file
-     * has a number of replicas as defined in the GASW descriptor.
-     * If USE_CLOSE_SE is set to true then function uploadFile will try to upload
-     * the file on the site's closest SE, as defined by variable VO_BIOMED_DEFAULT_SE.
-     * Then uploadFile will randomly pick SEs from the list (defined in MOTEUR's
-     * settings.conf) until the file is replicated as wished.
-     * An error is raised in case the file couldn't be copied at least once.
+     * has a number of replicas as defined in the GASW descriptor. If
+     * USE_CLOSE_SE is set to true then function uploadFile will try to upload
+     * the file on the site's closest SE, as defined by variable
+     * VO_BIOMED_DEFAULT_SE. Then uploadFile will randomly pick SEs from the
+     * list (defined in MOTEUR's settings.conf) until the file is replicated as
+     * wished. An error is raised in case the file couldn't be copied at least
+     * once.
      *
      * @return A string containing the code
      */
@@ -296,32 +297,32 @@ public class DataManagement extends AbstractGenerator {
 
         StringBuilder sb = new StringBuilder();
         sb.append("function nSEs {\n");
-        sb.append("  i=0\n");
-        sb.append("  for n in ${SELIST}\n");
-        sb.append("  do\n");
-        sb.append("    i=`expr $i + 1`\n");
-        sb.append("  done\n");
-        sb.append("  return $i\n");
+        sb.append("\t i=0\n");
+        sb.append("\t for n in ${SELIST}\n");
+        sb.append("\t do\n");
+        sb.append("\t\t i=`expr $i + 1`\n");
+        sb.append("\t done\n");
+        sb.append("\t return $i\n");
         sb.append("}\n\n");
 
         sb.append("function getAndRemoveSE {\n");
-        sb.append("  local index=$1\n");
-        sb.append("  local i=0\n");
-        sb.append("  local NSE=\"\"\n");
-        sb.append("  RESULT=\"\"\n");
-        sb.append("  for n in ${SELIST}\n");
-        sb.append("  do\n");
-        sb.append("    if [ \"$i\" = \"${index}\" ]\n");
-        sb.append("      then\n");
-        sb.append("        RESULT=$n\n");
-        sb.append("        info \"result: $RESULT\"\n");
-        sb.append("      else\n");
-        sb.append("        NSE=\"${NSE} $n\"\n");
-        sb.append("      fi\n");
-        sb.append("    i=`expr $i + 1`\n");
-        sb.append("  done\n");
-        sb.append("  SELIST=${NSE}\n");
-        sb.append("  return 0\n");
+        sb.append("\t local index=$1\n");
+        sb.append("\t local i=0\n");
+        sb.append("\t local NSE=\"\"\n");
+        sb.append("\t RESULT=\"\"\n");
+        sb.append("\t for n in ${SELIST}\n");
+        sb.append("\t do\n");
+        sb.append("\t\t if [ \"$i\" = \"${index}\" ]\n");
+        sb.append("\t\t then\n");
+        sb.append("\t\t\t RESULT=$n\n");
+        sb.append("\t\t\t info \"result: $RESULT\"\n");
+        sb.append("\t\t else\n");
+        sb.append("\t\t\t NSE=\"${NSE} $n\"\n");
+        sb.append("\t\t fi\n");
+        sb.append("\t\t i=`expr $i + 1`\n");
+        sb.append("\t done\n");
+        sb.append("\t SELIST=${NSE}\n");
+        sb.append("\t return 0\n");
         sb.append("}\n\n");
 
         sb.append("function chooseRandomSE {\n");
@@ -414,7 +415,9 @@ public class DataManagement extends AbstractGenerator {
     }
 
     /**
-     * Generates the command to delete a file on LFC using low-level commands instead of lcg-del
+     * Generates the command to delete a file on LFC using low-level commands
+     * instead of lcg-del
+     *
      * @param lfn lfn uri of the file to be deleted
      * @return a string containing the code
      */
@@ -441,18 +444,15 @@ public class DataManagement extends AbstractGenerator {
      * The generated code calls function uploadFile.
      *
      * @param test Set to true when only a test upload is made
-     * @param lfn The destination LFN
+     * @param upload The destination LFN
      * @return A string containing the code
      */
-    protected String getUploadCommand(boolean test, URI lfn) {
+    protected String getUploadCommand(boolean test, Upload upload) {
 
-        //sets the number of replicas
-        int nreplicas = getNReplicas(lfn);
-
-        //to remove the trailing ("-$rep")
-        lfn = getTemplate(lfn);
+        int nreplicas = upload.getNumberOfReplicas();
+        URI lfn = upload.getURI();
         String name = getLfnName(lfn);
-        String id = "-" + UUID.randomUUID().toString();
+        String id = test ? "" : "-" + UUID.randomUUID().toString();
 
         StringBuilder sb = new StringBuilder();
 
@@ -481,19 +481,19 @@ public class DataManagement extends AbstractGenerator {
         return sb.toString();
     }
 
-    /** 
+    /**
      * Generates the code to delete an LFN
      *
      * @param testUpload Set to true in case a test upload is made
      * @param lfn The destination LFN
      * @return A string containing the generated code
      */
-    protected String getDeleteCommand(boolean testUpload, URI lfn) {
+    protected String getDeleteCommand(boolean testUpload, Upload upload) {
 
         String uploadTest = "";
         StringBuilder sb = new StringBuilder();
+        URI lfn = upload.getURI();
         sb.append("startLog file_delete lfn=\"").append(lfn).append("\"\n");
-        lfn = getTemplate(lfn);
 
         if (testUpload) {
             uploadTest = "-uploadTest";
@@ -504,53 +504,12 @@ public class DataManagement extends AbstractGenerator {
         if (Configuration.useDataManager()) {
             sb.append("if [ $? != 0 ]\n");
             sb.append("then\n");
-            sb.append("  lcg-del --nobdii --defaultsetype srmv2 ${DM_DEST}\n");
+            sb.append("\t lcg-del --nobdii --defaultsetype srmv2 ${DM_DEST}\n");
             sb.append("fi\n");
         }
 
         sb.append("stopLog file_delete\n");
         return sb.toString();
-    }
-
-    /**
-     * Extracts the number of replicas from template (temporary hack to avoid
-     * touching the jGASW schema)
-     * 
-     * @param temp
-     */
-    private int getNReplicas(URI temp) {
-        String template = temp.toString();
-        if (!template.contains("$rep-")) {
-            return 1;
-        }
-        String number = template.substring(template.lastIndexOf("-") + 1);
-        return Integer.parseInt(number);
-    }
-
-    /**
-     * Removes the number of replicas from template (temporary hack to avoid 
-     * touching the jGASW schema)
-     * 
-     * @param temp The template to be cleansed
-     * @return The URI of the template, without the trailing $rep
-     */
-    private URI getTemplate(URI temp) {
-        String template = temp.toString();
-        if (!template.contains("$rep-")) {
-            return temp;
-        }
-        try {
-            String r = template.replaceAll("\\$rep-[0-9]*", "");
-            return new URI(r);
-        } catch (URISyntaxException ex) {
-            logger.error(ex);
-            if (logger.isDebugEnabled()) {
-                for (StackTraceElement stack : ex.getStackTrace()) {
-                    logger.debug(stack);
-                }
-            }
-        }
-        return null;
     }
 
     /**
@@ -581,10 +540,10 @@ public class DataManagement extends AbstractGenerator {
     /**
      * Downloads a URI from the grid if it's a LFN, a file from a URL or makes a
      * local copy.
-     * 
+     *
      * @param uri
-     * @param indentation 
-     * @return 
+     * @param indentation
+     * @return
      */
     public String downloadURICommand(URI uri, String indentation) {
 
@@ -611,9 +570,9 @@ public class DataManagement extends AbstractGenerator {
         StringBuilder sb = new StringBuilder();
         sb.append(indentation).append("if [ $? != 0 ]\n");
         sb.append(indentation).append("then\n");
-        sb.append(indentation).append("  error \"").append(message).append("\"\n");
-        sb.append(indentation).append("  error \"Exiting with return value 1\"\n");
-        sb.append(indentation).append("  exit 1\n");
+        sb.append(indentation).append("\t error \"").append(message).append("\"\n");
+        sb.append(indentation).append("\t error \"Exiting with return value 1\"\n");
+        sb.append(indentation).append("\t exit 1\n");
         sb.append(indentation).append("fi\n");
         return sb.toString();
     }
@@ -626,13 +585,13 @@ public class DataManagement extends AbstractGenerator {
         sb.append("lfc-ls ").append(to).append("\n");
         sb.append("if [ $? != 0 ]\n");
         sb.append("then\n");
-        sb.append("  lfc-rename ").append(from).append(" ").append(to).append("\n");
-        sb.append("  if [ $? != 0 ]\n");
-        sb.append("  then\n");
-        sb.append("    exit 2\n");
-        sb.append("  fi\n");
+        sb.append("\t lfc-rename ").append(from).append(" ").append(to).append("\n");
+        sb.append("\t if [ $? != 0 ]\n");
+        sb.append("\t then\n");
+        sb.append("\t\t exit 2\n");
+        sb.append("\t fi\n");
         sb.append("else\n");
-        sb.append("  deleteFile lfn:").append(from).append("\n");
+        sb.append("\t deleteFile lfn:").append(from).append("\n");
         sb.append("fi\n\n");
         return sb.toString();
     }

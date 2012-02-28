@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -35,66 +35,35 @@
 package fr.insalyon.creatis.gasw.release;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
  * @author Rafael Silva
  */
-public class Release {
+public class Upload {
 
-    private String symbolicName;
-    private List<Infrastructure> infrastructures;
-    private List<EnvVariable> configurations;
-    private URI attachment;
+    private URI uri;
+    private int numberOfReplicas;
 
-    public Release(String symbolicName, Infrastructure infrastructure,
-            List<EnvVariable> configurations, URI attachment) {
-
-        this.symbolicName = symbolicName;
-        this.infrastructures = new ArrayList<Infrastructure>();
-        this.infrastructures.add(infrastructure);
-        this.configurations = configurations;
-        this.attachment = attachment;
+    public Upload(URI uri) {
+        this(uri, 1);
     }
 
-    public Release(String symbolicName, List<Infrastructure> infrastructures,
-            List<EnvVariable> configurations, URI attachement) {
+    public Upload(URI uri, int numberOfReplicas) {
 
-        this.symbolicName = symbolicName;
-        this.infrastructures = infrastructures;
-        this.configurations = configurations;
-        this.attachment = attachement;
+        this.uri = uri;
+        this.numberOfReplicas = numberOfReplicas;
     }
 
-    public String getSymbolicName() {
-        return symbolicName;
+    public int getNumberOfReplicas() {
+        return numberOfReplicas;
     }
 
-    public URI getAttachement() {
-        return attachment;
+    public URI getURI() {
+        return uri;
     }
 
-    public List<EnvVariable> getConfigurations() {
-        return configurations;
-    }
-
-    public List<Infrastructure> getInfrastructures() {
-        return infrastructures;
-    }
-
-    public boolean hasInfrastructures() {
-        if (infrastructures != null) {
-            return !infrastructures.isEmpty();
-        }
-        return false;
-    }
-
-    public boolean hasConfigurations() {
-        if (configurations != null) {
-            return !configurations.isEmpty();
-        }
-        return false;
+    public void setURI(URI uri) {
+        this.uri = uri;
     }
 }
