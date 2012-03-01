@@ -84,6 +84,7 @@ public class Configuration {
     public static int MYSQL_PORT = 3306;
     public static String MYSQL_DB_USER = "gasw";
     public static String DIRAC_DEFAULT_POOL = "gLite";
+    public static boolean DIRAC_BALANCE = false;
     // Derby Configuraiton
     public static String DERBY_HOST = "localhost";
     public static int DERBY_PORT = 1527;
@@ -133,6 +134,7 @@ public class Configuration {
             DIRAC_SERVICE_PORT = config.getInt("DIRAC_SERVICE_PORT", DIRAC_SERVICE_PORT);
             DIRAC_DEFAULT_POOL = config.getString("DIRAC_DEFAULT_POOL", DIRAC_DEFAULT_POOL);
             DIRAC_HOST = config.getString("DIRAC_HOST", DIRAC_HOST);
+            DIRAC_BALANCE = config.getBoolean("DIRAC_BALANCE", DIRAC_BALANCE);
             
             config.setProperty("VERSION", VERSION.toString());
             config.setProperty("DCI", DCI.toString());
@@ -158,6 +160,7 @@ public class Configuration {
             config.setProperty("DIRAC_SERVICE_PORT", DIRAC_SERVICE_PORT);
             config.setProperty("DIRAC_DEFAULT_POOL", DIRAC_DEFAULT_POOL);
             config.setProperty("DIRAC_HOST", DIRAC_HOST);
+            config.setProperty("DIRAC_BALANCE", DIRAC_BALANCE);
            
             new File(CONF_FILE).mkdirs();
             config.save();

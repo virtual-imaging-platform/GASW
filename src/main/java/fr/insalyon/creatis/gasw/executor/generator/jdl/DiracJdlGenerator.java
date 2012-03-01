@@ -38,6 +38,7 @@ import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
 import fr.insalyon.creatis.gasw.release.EnvVariable;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -46,6 +47,7 @@ import java.util.List;
 public class DiracJdlGenerator extends AbstractJdlGenerator {
 
     public static DiracJdlGenerator instance;
+    private int cpuTime;
 
     public static DiracJdlGenerator getInstance() {
         if (instance == null) {
@@ -55,6 +57,12 @@ public class DiracJdlGenerator extends AbstractJdlGenerator {
     }
 
     private DiracJdlGenerator() {
+
+        if (Configuration.DIRAC_BALANCE) {
+            cpuTime = Configuration.CPU_TIME + ((new Random()).nextInt(10) * 900);
+        } else {
+            cpuTime = Configuration.CPU_TIME;
+        }
     }
 
     @Override
@@ -64,16 +72,16 @@ public class DiracJdlGenerator extends AbstractJdlGenerator {
         String jobName = scriptName.split("\\.")[0] + " - " + Configuration.MOTEUR_WORKFLOWID;
         sb.append("JobName = \"").append(jobName).append("\";\n");
         sb.append(super.generate(scriptName));
-        sb.append("MaxCPUTime\t= \"").append(Configuration.CPU_TIME).append("\";\n");
+        sb.append("MaxCPUTime\t= \"").append(cpuTime).append("\";\n");
 
         return sb.toString();
     }
 
     /**
      * Parses a list of environment variables to add DIRAC submission pool.
-     * 
+     *
      * @param list List of environment variables
-     * @return 
+     * @return
      */
     public String parseEnvironment(List<EnvVariable> list) {
 
@@ -83,9 +91,9 @@ public class DiracJdlGenerator extends AbstractJdlGenerator {
         for (EnvVariable v : list) {
 
             if (v.getCategory() == EnvVariable.Category.INFRASTRUCTURE) {
-                
+
                 if (v.getName().equals(Constants.ENV_DIRAC_POOL)) {
-                    
+
                     sb.append("SubmitPools = {\"").append(v.getValue()).append("\"};\n");
                     hasPoolRequirement = true;
 

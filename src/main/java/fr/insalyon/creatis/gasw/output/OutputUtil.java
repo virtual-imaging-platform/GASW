@@ -149,22 +149,31 @@ public abstract class OutputUtil {
                     exitCode = Integer.valueOf(errmsg[errmsg.length - 1]).intValue();
                     job.setExitCode(exitCode);
 
-                } else if (strLine.startsWith("GLOBUS_CE")) {
-                    node.setSiteName(strLine.split("=")[1]);
-
-                } else if (strLine.startsWith("SITE_NAME") && node.getSiteName() == null) {
-                    node.setSiteName(strLine.split("=")[1]);
-
-                } else if (strLine.startsWith("PBS_SERVER") && node.getSiteName() == null) {
+                } else if (strLine.startsWith("SITE_NAME")) {
                     node.setSiteName(strLine.split("=")[1]);
 
                 } else if (strLine.startsWith("PBS_O_HOST") && node.getSiteName() == null) {
                     node.setSiteName(strLine.split("=")[1]);
+                    
+                    String code = node.getNodeName().substring(node.getNodeName().lastIndexOf(".") + 1, node.getNodeName().length());
+                    if (code.length() != 2) {
+                        String host = strLine.split("=")[1];
+                        String countryCode = host.substring(host.lastIndexOf("."), host.length());
+                        node.setNodeName(node.getNodeName() + countryCode);
+                    }
 
                 } else if (strLine.startsWith("===== uname =====")) {
                     strLine = br.readLine();
                     node.setNodeName(strLine.split(" ")[1]);
 
+                } else if (strLine.startsWith("CE_ID")) {
+                    String code = node.getNodeName().substring(node.getNodeName().lastIndexOf(".") + 1, node.getNodeName().length());
+                    if (code.length() != 2) {
+                        String host = URI.create("http://" + strLine.split("=")[1]).getHost();
+                        String countryCode = host.substring(host.lastIndexOf("."), host.length());
+                        node.setNodeName(node.getNodeName() + countryCode);
+                    }
+                    
                 } else if (strLine.startsWith("processor")) {
                     node.setnCpus(new Integer(strLine.split(":")[1].trim()) + 1);
 
@@ -402,7 +411,7 @@ public abstract class OutputUtil {
         }
         return exitCode;
     }
-    
+
     /**
      *
      * @param job Job object
