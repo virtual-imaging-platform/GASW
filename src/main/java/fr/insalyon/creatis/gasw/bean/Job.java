@@ -58,6 +58,10 @@ public class Job {
     private String fileName;
     private int startTime;
     private String parameters;
+    /**
+     * TODO: eliminate.
+     */
+    private Object DCISpecificJob;
 
     public Job(String parameters, String command, String fileName) {
         this("", GaswStatus.CREATED, -1, 0, 0, 0, 0, 0, 0, null, command,

@@ -88,7 +88,32 @@ public class Configuration {
     // Derby Configuraiton
     public static String DERBY_HOST = "localhost";
     public static int DERBY_PORT = 1527;
-   
+    // GRIDA Configuration
+
+    /**
+     * gridaClient = new GRIDAClient("kingkong.grid.creatis.insa-lyon.fr", 9006, "/var/www/.vip/proxies/x509up_server");
+     */
+
+    public static String GRIDA_HOST = "localhost";
+    public static int GRIDA_PORT = 9006;
+
+    //_______AHE Configuration_______
+    /**
+     * AHE Client properties.
+     */
+    public static String AHE_CLIENT_PROPERTIES = "/home/william/ahe4vip/properties/aheclient.properties";
+    //public static String AHE_CLIENT_PROPERTIES = "/home/wil-rome/.ahe/aheclient.properties";
+    /**
+     * AHE Client Log properties.
+     */
+    public static String AHE_CLIENT_CLILOG = "/home/william/ahe4vip/properties/clilog4j.properties";
+    //public static String AHE_CLIENT_CLILOG = "/home/wil-rome/.ahe/clilog4j.properties";
+    /**
+     * Temporary directory for data transfer.
+     */
+    public static String AHE_CLIENT_TMP_DIRECTORY = "/tmp/ahe/";
+
+
     /**
      * GASW setup
      * 
@@ -134,7 +159,17 @@ public class Configuration {
             DIRAC_SERVICE_PORT = config.getInt("DIRAC_SERVICE_PORT", DIRAC_SERVICE_PORT);
             DIRAC_DEFAULT_POOL = config.getString("DIRAC_DEFAULT_POOL", DIRAC_DEFAULT_POOL);
             DIRAC_HOST = config.getString("DIRAC_HOST", DIRAC_HOST);
+            GRIDA_HOST = config.getString("GRIDA_HOST", GRIDA_HOST);
             DIRAC_BALANCE = config.getBoolean("DIRAC_BALANCE", DIRAC_BALANCE);
+            GRIDA_PORT = config.getInt("GRIDA_PORT", GRIDA_PORT);
+
+            /**
+             * AHE Set-up
+             */
+            AHE_CLIENT_PROPERTIES = config.getString("AHE_CLIENT_PROPERTIES", AHE_CLIENT_PROPERTIES);
+            AHE_CLIENT_CLILOG = config.getString("AHE_CLIENT_CLILOG",AHE_CLIENT_CLILOG);
+            AHE_CLIENT_TMP_DIRECTORY = config.getString("AHE_CLIENT_TMP_DIRECTORY", AHE_CLIENT_TMP_DIRECTORY);
+
             
             config.setProperty("VERSION", VERSION.toString());
             config.setProperty("DCI", DCI.toString());
@@ -160,7 +195,15 @@ public class Configuration {
             config.setProperty("DIRAC_SERVICE_PORT", DIRAC_SERVICE_PORT);
             config.setProperty("DIRAC_DEFAULT_POOL", DIRAC_DEFAULT_POOL);
             config.setProperty("DIRAC_HOST", DIRAC_HOST);
-            config.setProperty("DIRAC_BALANCE", DIRAC_BALANCE);
+            config.setProperty("GRIDA_HOST", GRIDA_HOST);
+            config.setProperty("GRIDA_PORT", GRIDA_PORT);
+
+            /**
+             * AHE Set-up
+             */
+            config.setProperty("AHE_CLIENT_PROPERTIES", AHE_CLIENT_PROPERTIES);
+            config.setProperty("AHE_CLIENT_CLILOG",AHE_CLIENT_CLILOG);
+            config.setProperty("AHE_CLIENT_TMP_DIRECTORY", AHE_CLIENT_TMP_DIRECTORY);
            
             new File(CONF_FILE).mkdirs();
             config.save();

@@ -89,7 +89,11 @@
             <artifactId>log4j</artifactId>
             <version>1.2.16</version>
         </dependency>
-        
+        <dependency>
+            <groupId>fr.insalyon.creatis</groupId>
+            <artifactId>aheclient4vip</artifactId>
+            <version>0.1</version>
+        </dependency>
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
@@ -102,14 +106,27 @@
             <artifactId>grool-proxy</artifactId>
             <version>0.3.4</version>
         </dependency>
+
+        <dependency>
+            <groupId>fr.insalyon.creatis</groupId>
+            <artifactId>grida-client</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.1</version>
+        </dependency>
+        
     </dependencies>
     
     <repositories>
         <repository>
             <id>i3s-releases</id>
             <name>Modalis releases repository [modalis]</name>
-            <url>http://nyx.unice.fr:9007/nexus/content/repositories/releases</url>    
-        </repository>    
+            <url>http://nyx.unice.fr:9007/nexus/content/repositories/releases</url>
+        </repository>
     </repositories>
     
     <distributionManagement>

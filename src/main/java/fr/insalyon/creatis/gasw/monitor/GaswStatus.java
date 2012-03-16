@@ -38,10 +38,15 @@ package fr.insalyon.creatis.gasw.monitor;
  *
  * @author Rafael Silva
  */
+
+/**
+ * TODO: add UNDEFINED status.
+ * @author wil-rome
+ */
 public enum GaswStatus {
 
     CREATED, COMPLETED, ERROR, RUNNING,
     QUEUED, NOT_SUBMITTED, SUCCESSFULLY_SUBMITTED,
     CANCELLED, STALLED, KILL, RESCHEDULE, REPLICATE,
-    CANCELLED_REPLICA
+    CANCELLED_REPLICA, UNDEFINED
 }
