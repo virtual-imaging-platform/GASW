@@ -97,7 +97,13 @@
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
-            <version>1.7</version>
+            <version>1.8</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
         </dependency>
         
         <!--grool-proxy-->
@@ -126,6 +132,11 @@
             <id>i3s-releases</id>
             <name>Modalis releases repository [modalis]</name>
             <url>http://nyx.unice.fr:9007/nexus/content/repositories/releases</url>
+        </repository>
+        <repository>
+            <id>creatis-releases</id>
+            <name>Creatis Insa Lyon repository [creatis]</name>
+            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
         </repository>
     </repositories>
     
