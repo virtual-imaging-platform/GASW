@@ -52,6 +52,9 @@ public class MonitorFactory {
             if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
                 return GliteMonitor.getInstance();
             }
+            if (Configuration.DCI == Constants.DCI.AHE) {
+                return AHEMonitor.getInstance();
+            }
         } else {
             return LocalMonitor.getInstance();
         }
