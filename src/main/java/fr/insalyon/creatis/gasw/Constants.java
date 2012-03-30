@@ -69,7 +69,7 @@ public class Constants {
 
     public static enum DCI {
 
-        DIANE, DIRAC, GLITE_WMS
+        DIANE, DIRAC, GLITE_WMS, AHE
     };
 
     public static enum MinorStatus {
