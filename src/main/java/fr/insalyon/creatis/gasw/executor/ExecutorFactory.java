@@ -36,6 +36,7 @@ package fr.insalyon.creatis.gasw.executor;
 
 import fr.insalyon.creatis.gasw.Configuration;
 import fr.insalyon.creatis.gasw.Constants;
+import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 
 /**
@@ -46,15 +47,22 @@ public class ExecutorFactory {
 
     public static Executor getExecutor(GaswInput gaswInput) {
 
-        if (Configuration.VERSION == Constants.Version.DCI) {
-            if (Configuration.DCI == Constants.DCI.DIRAC) {
-                return new DiracExecutor(gaswInput);
+        try {
+            if (Configuration.VERSION == Constants.Version.DCI) {
+                if (Configuration.DCI == Constants.DCI.DIRAC) {
+                    return new DiracExecutor(gaswInput);
+                }
+                if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
+                    return new GliteExecutor(gaswInput);
+                }
+                if (Configuration.DCI == Constants.DCI.AHE) {
+                    return new AHEExecutor(gaswInput);
+                }
+            } else if (Configuration.VERSION == Constants.Version.LOCAL) {
+                return new LocalExecutor(gaswInput);
             }
-            if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
-                return new GliteExecutor(gaswInput);
-            }
-        } else if (Configuration.VERSION == Constants.Version.LOCAL) {
-            return new LocalExecutor(gaswInput);
+        } catch (GaswException ex) {
+            ex.printStackTrace();
         }
 
         return null;
