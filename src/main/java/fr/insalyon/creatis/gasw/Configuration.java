@@ -101,17 +101,23 @@ public class Configuration {
     /**
      * AHE Client properties.
      */
-    public static String AHE_CLIENT_PROPERTIES = "/home/william/ahe4vip/properties/aheclient.properties";
-    //public static String AHE_CLIENT_PROPERTIES = "/home/wil-rome/.ahe/aheclient.properties";
+    // public static String AHE_CLIENT_PROPERTIES = "/home/william/ahe4vip/properties/aheclient.properties";
+    public static String AHE_CLIENT_PROPERTIES = "/var/www/cgi-bin/m2Server-william/ahe/aheclient.properties";
     /**
      * AHE Client Log properties.
      */
-    public static String AHE_CLIENT_CLILOG = "/home/william/ahe4vip/properties/clilog4j.properties";
-    //public static String AHE_CLIENT_CLILOG = "/home/wil-rome/.ahe/clilog4j.properties";
+    // public static String AHE_CLIENT_CLILOG = "/home/william/ahe4vip/properties/clilog4j.properties";
+    public static String AHE_CLIENT_CLILOG = "/var/www/cgi-bin/m2Server-william/ahe/clilog4j.properties";
     /**
      * Temporary directory for data transfer.
      */
     public static String AHE_CLIENT_TMP_DIRECTORY = "/tmp/ahe/";
+
+    /**
+     * Config file.
+     */
+    // public static String AHE_CLIENT_CONF_FILE = "/home/william/ahe4vip/properties/config.txt";
+    public static String AHE_CLIENT_CONF_FILE = "/var/www/cgi-bin/m2Server-william/ahe/config.txt";
 
 
     /**
@@ -169,7 +175,7 @@ public class Configuration {
             AHE_CLIENT_PROPERTIES = config.getString("AHE_CLIENT_PROPERTIES", AHE_CLIENT_PROPERTIES);
             AHE_CLIENT_CLILOG = config.getString("AHE_CLIENT_CLILOG",AHE_CLIENT_CLILOG);
             AHE_CLIENT_TMP_DIRECTORY = config.getString("AHE_CLIENT_TMP_DIRECTORY", AHE_CLIENT_TMP_DIRECTORY);
-
+            AHE_CLIENT_CONF_FILE = config.getString("AHE_CLIENT_CONF_FILE", AHE_CLIENT_CONF_FILE);
             
             config.setProperty("VERSION", VERSION.toString());
             config.setProperty("DCI", DCI.toString());
@@ -204,6 +210,7 @@ public class Configuration {
             config.setProperty("AHE_CLIENT_PROPERTIES", AHE_CLIENT_PROPERTIES);
             config.setProperty("AHE_CLIENT_CLILOG",AHE_CLIENT_CLILOG);
             config.setProperty("AHE_CLIENT_TMP_DIRECTORY", AHE_CLIENT_TMP_DIRECTORY);
+            config.setProperty("AHE_CLIENT_CONF_FILE", AHE_CLIENT_CONF_FILE);
            
             new File(CONF_FILE).mkdirs();
             config.save();
