@@ -5,7 +5,7 @@
     <groupId>fr.insalyon.creatis</groupId>
     <artifactId>gasw</artifactId>
     <packaging>jar</packaging>
-    <version>0.8</version>
+    <version>0.7.8</version>
     <name>GASW</name>
     <licenses>
         <license>
@@ -142,11 +142,11 @@
     
     <distributionManagement>
         <repository>
-            <id>releases</id>
+            <id>creatis-releases</id>
             <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
         </repository>
         <snapshotRepository>
-            <id>snapshots</id>
+            <id>creatis-snapshots</id>
             <name>Internal Snapshots</name>
             <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
         </snapshotRepository>

@@ -182,7 +182,7 @@ public class AHEExecutor extends Executor {
             /**
              * Mandatory.
              */
-            aheLauncher.setConfigFile(Configuration.AHE_CLIENT_CONF_FILE);
+//            aheLauncher.setConfigFile(Configuration.AHE_CLIENT_CONF_FILE);
             aheLauncher.setOutputFile("/home/romero/ahe4vip/stdout.txt");
             aheLauncher.setOutputFile("/home/romero/ahe4vip/stderr.txt");
 
