@@ -40,17 +40,20 @@ import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
+import fr.insalyon.creatis.gasw.monitor.AHEMonitor;
 import fr.insalyon.creatis.gasw.monitor.GaswStatus;
 import fr.insalyon.creatis.gasw.release.EnvVariable;
 import fr.insalyon.creatis.gasw.release.Upload;
 import fr.insalyon.creatis.grida.client.GRIDAClient;
 import fr.insalyon.creatis.grida.client.GRIDAClientException;
+import java.io.File;
 
 import java.util.List;
 import java.util.Random;
 import java.net.URI;
 import java.util.Vector;
 import java.util.logging.Level;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 /**
  * AHE API Classes.
@@ -149,15 +152,32 @@ public class AHEExecutor extends Executor {
             for ( URI uri : gaswInput.getDownloads() ) {
 
                 // TODO: REMOVE
-                System.out.println(" [AHEExecutor]: input files - " + uri.getPath());
+                System.out.println("[AHEExecutor] input files - " + uri.getPath());
 
                 /**
                  * i. From EGI to a local directory.
                  */
-                String localPath = gridaClient.getRemoteFile(uri.getPath(), Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory);
+                
+                String localPath = null;
+                
+                try {
+                
+                    localPath = gridaClient.getRemoteFile(uri.getPath(), Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory);
+                
+                    if ( localPath == null || localPath.equals("") ) {
+                    
+                        throw new GaswException("[AHEExecutor] Data transfer error from EGI to local directory.");
+
+                    }
+                             
+                } catch (GRIDAClientException gex) {
+
+                    throw new GaswException( "[AHEExecutor] Data transfer error from EGI to local directory. " + gex.getMessage());
+                
+                }
 
                 // TODO: REMOVE
-                System.out.println(" [AHEExecutor]: local path - " + localPath);
+                System.out.println("[AHEExecutor] local path - " + localPath);
 
                 /**
                  * ii. From the local directory to AHE machine.
@@ -170,31 +190,31 @@ public class AHEExecutor extends Executor {
              * Get list of output files to be uploaded to a Storage Element
              * from the GASW input.
              */
+            
             for (Upload upload : gaswInput.getUploads()) {
 
                 //TODO: REMOVE
-                System.out.println(" [AHEExecutor]: output files - " + upload.getURI().getPath());
+                System.out.println("[AHEExecutor] output files - " + upload.getURI().getPath());
 
                 aheLauncher.setOutputFile( upload.getURI().getPath() );
 
             }
+            
 
             /**
              * Mandatory.
              */
-//            aheLauncher.setConfigFile(Configuration.AHE_CLIENT_CONF_FILE);
+            aheLauncher.setConfigFile(Configuration.AHE_CLIENT_CONF_FILE);
             aheLauncher.setOutputFile("/home/romero/ahe4vip/stdout.txt");
             aheLauncher.setOutputFile("/home/romero/ahe4vip/stderr.txt");
-
+                        
             /**
              * iii. Stage files.
              */
+            //TODO: REMOVE
+            System.out.println("[AHEExecutor] Staging files...");
             aheLauncher.stageFiles();
-
-
-        } catch (GRIDAClientException gex) {
-
-            throw new GaswException(gex.getMessage());
+            System.out.println("[AHEExecutor] stageFiles() done!");
 
         } catch (AHELauncherException aex) {
 
@@ -222,7 +242,7 @@ public class AHEExecutor extends Executor {
             }
 
             // TODO: REMOVE
-            System.out.println(" [AHEExecutor]: arguments - " + arguments.toString());
+            System.out.println("[AHEExecutor] arguments: " + arguments.toString());
 
             aheLauncher.setArguments(arguments.toString());
 
@@ -313,7 +333,7 @@ public class AHEExecutor extends Executor {
              */
             aheConstraints.setWallTimeLimit(12 * 60);
 
-            System.out.println(" [AHEExecutor]: Constraints before prepare: ");
+            System.out.println("[AHEExecutor] Constraints before prepare: ");
             System.out.println(aheConstraints.toString());
             System.out.println(" __________________________________________");
 
@@ -331,8 +351,9 @@ public class AHEExecutor extends Executor {
              */
             aheLauncher.setResource(0);
 
-            System.out.println(" [AHEExecutor]: constraints ");
+            System.out.println("[AHEExecutor] constraints after prepare:");
             System.out.println(aheConstraints.toString());
+            System.out.println(" __________________________________________");
 
             this.stageFiles();
             this.setArguments();
@@ -356,18 +377,34 @@ public class AHEExecutor extends Executor {
 
         AHEJobObject newJob = null;
 
+        System.out.println("[AHEExecutor] Submitting...");
+
         try {
             /**
              * Verify if the minimum number of the required fields have been set.
              */
-            if (aheLauncher.verify()) {
+            if ( aheLauncher.verify() ) {
 
-                System.out.println("[AHEExecutor]: Verification OK.");
+                System.out.println("[AHEExecutor] Verification OK.");
 
                 /**
                  * Job submission.
                  */
-                newJob = aheLauncher.submit();
+                
+                try {
+                    
+                    newJob = aheLauncher.submit();
+                    
+                } catch (AHELauncherException aex) {
+
+                    System.out.println("[AHEExecutor] ERROR - " + aex.getError());
+                    
+                    logException(logger, aex);
+
+                    throw new GaswException( aex.getError() );
+                }
+
+
 
                 /**
                  * Method signature:
@@ -382,23 +419,20 @@ public class AHEExecutor extends Executor {
                  */
                 if (newJob == null) {
 
-                    throw new GaswException("[AHEExecutor]: Error submitting job.");
+                    throw new GaswException("[AHEExecutor] Error submitting job.");
 
                 }
 
-                Job newGaswJob = new Job(newJob.getEndPoint(),
-                        GaswStatus.SUCCESSFULLY_SUBMITTED,
-                        newJob.getArgument(),
-                        newJob.getSimName());
-
-
-                DAOFactory.getDAOFactory().getJobPoolDAO().add(newGaswJob);
-
+                AHEMonitor.getInstance().add(newJob.getEndPoint(), 
+                        newJob.getSimName(), System.nanoTime() + "", 
+                        newJob.getArgument(), userProxy);
+                
                 /**
                  * Delete the compressed input file stored temporarily
                  * on the VIP server.
                  */
-                this.gridaClient.delete(this.localJobDirectory);
+
+                FileUtils.deleteQuietly(new File(this.localJobDirectory));
 
             } else {
 
@@ -412,26 +446,13 @@ public class AHEExecutor extends Executor {
              */
             return newJob.getEndPoint();
 
-
         } catch (AHELauncherException aex) {
 
             logException(logger, aex);
 
             throw new GaswException(aex.getError());
 
-        } catch (DAOException dex) {
-
-            logException(logger, dex);
-
-            throw new GaswException(dex);
-
-        } catch (GRIDAClientException gex) {
-
-            logException(logger, gex);
-
-            throw new GaswException(gex);
-
-        }
+        } 
 
     }
 }

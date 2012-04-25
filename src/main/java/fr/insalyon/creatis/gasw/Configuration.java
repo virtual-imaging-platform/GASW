@@ -111,7 +111,7 @@ public class Configuration {
     /**
      * Temporary directory for data transfer.
      */
-    public static String AHE_CLIENT_TMP_DIRECTORY = "/tmp/ahe/";
+    public static String AHE_CLIENT_TMP_DIRECTORY = "/var/www/cgi-bin/m2Server-william/tmp/";
 
     /**
      * Config file.

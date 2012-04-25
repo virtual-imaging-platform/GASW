@@ -54,6 +54,9 @@ public class OutputUtilFactory {
             if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
                 return new GliteOutputUtil(jobID, userProxy);
             }
+            if (Configuration.DCI == Constants.DCI.AHE) {
+                return new AHEOutputUtil(jobID, userProxy);
+            }
         } else if (Configuration.VERSION == Constants.Version.LOCAL) {
             return new LocalOutputUtil(jobID, userProxy);
         }

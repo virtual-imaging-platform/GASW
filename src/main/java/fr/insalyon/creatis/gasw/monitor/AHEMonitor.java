@@ -32,7 +32,6 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
 package fr.insalyon.creatis.gasw.monitor;
 
 import fr.insalyon.creatis.gasw.Configuration;
@@ -41,10 +40,15 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import grool.proxy.Proxy;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
+
+/**
+ * AHE API classes.
+ */
 import uk.ac.ucl.chem.ccs.aheclient.api.AHEJobMonitor;
 import uk.ac.ucl.chem.ccs.aheclient.api.AHEJobMonitorException;
 import uk.ac.ucl.chem.ccs.aheclient.api.AHESetupException;
@@ -57,33 +61,29 @@ import uk.ac.ucl.chem.ccs.aheclient.util.AHEJobObject;
  */
 public class AHEMonitor extends Monitor {
 
-     /**
+    /**
      * LOG
      */
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
-
     /**
      * TODO: No idea.
      */
     private volatile Map<String, Proxy> monitoredJobs;
-
     /**
      * Single object ( AHEMonitor ) reference (Singleton).
      */
     private static AHEMonitor instance;
-
     /**
      *  Monitoring methods for AHE Job Objects.
      */
     private AHEJobMonitor aheJobMonitor = null;
-
 
     /**
      * Return the instance of AHEMonitor class (Singleton)
      * @return the instance of AHEMonitor class.
      */
     public synchronized static AHEMonitor getInstance() {
-        
+
         if (instance == null) {
 
             instance = new AHEMonitor();
@@ -100,7 +100,8 @@ public class AHEMonitor extends Monitor {
     private AHEMonitor() {
 
         super();
-
+        monitoredJobs = new HashMap<String, Proxy>();
+        
         try {
 
             //_______CODE FOR LOCAL TEST_______
@@ -113,12 +114,11 @@ public class AHEMonitor extends Monitor {
             this.aheJobMonitor = new AHEJobMonitor(logConfigurationfile, aheProperties);
              *
              */
-
             this.aheJobMonitor = new AHEJobMonitor(Configuration.AHE_CLIENT_CLILOG, Configuration.AHE_CLIENT_PROPERTIES);
 
         } catch (AHESetupException ex) {
 
-            logException( logger, ex );
+            logException(logger, ex);
 
         }
 
@@ -128,10 +128,11 @@ public class AHEMonitor extends Monitor {
      * Main monitor thread.
      */
     @Override
-    public void run()  {
+    public void run() {
+        
         try {
 
-             while (!stop) {
+            while (!stop) {
 
                 /**
                  * List of jobs in the DB.
@@ -145,14 +146,13 @@ public class AHEMonitor extends Monitor {
 
                     String jobID = activeJobs.get(i);
                     Job job = jobDAO.getJobByID(jobID);
-                     
-                     /**
-                      * Get the Resource end point.
-                      */
 
+                    /**
+                     * Get the Resource end point.
+                     */
                     String resourceEndpoint = job.getId();
 
-                    AHEJobObject ajo = this.aheJobMonitor.getAJO( resourceEndpoint );
+                    AHEJobObject ajo = this.aheJobMonitor.getAJO(resourceEndpoint);
 
 
                     int state = AHEJobObject.GRIDSAM_UNDEFINED;
@@ -160,7 +160,7 @@ public class AHEMonitor extends Monitor {
                     /**
                      * Get the current job state from AHE job registry.
                      */
-                    state = this.aheJobMonitor.observe( ajo );
+                    state = this.aheJobMonitor.observe(ajo);
 
                     /**
                      *     AHE Job states                 GASW Job states
@@ -192,130 +192,129 @@ public class AHEMonitor extends Monitor {
                      *
                      * It should report PENDING when a job is QUEUED via QCG.
                      */
-
                     /**
                      * TODO: How does "minor status" work?
                      */
+                    switch (state) {
+                        case AHEJobObject.AHE_PREPARING:
 
-                    switch ( state ) {
-                            case AHEJobObject.AHE_PREPARING:
+                            job.setStatus(GaswStatus.SUCCESSFULLY_SUBMITTED);
 
-                                    job.setStatus(GaswStatus.SUCCESSFULLY_SUBMITTED);
+                            break;
 
-                                    break;
+                        case AHEJobObject.AHE_FILES_STAGED:
 
-                            case AHEJobObject.AHE_FILES_STAGED:
+                            job.setStatus(GaswStatus.CREATED);
 
-                                    job.setStatus(GaswStatus.CREATED);
+                            break;
 
-                                    break;
+                        case AHEJobObject.AHE_JOB_BUILT:
 
-                            case AHEJobObject.AHE_JOB_BUILT:
+                            job.setStatus(GaswStatus.CREATED);
 
-                                    job.setStatus(GaswStatus.CREATED);
+                            break;
 
-                                    break;
+                        case AHEJobObject.GRIDSAM_PENDING:
 
-                            case AHEJobObject.GRIDSAM_PENDING:
+                            job.setStatus(GaswStatus.QUEUED);
 
-                                    job.setStatus(GaswStatus.QUEUED);
+                            break;
 
-                                    break;
+                        case AHEJobObject.GRIDSAM_STAGING_IN:
 
-                            case AHEJobObject.GRIDSAM_STAGING_IN:
+                            job.setStatus(GaswStatus.RUNNING);
 
-                                    job.setStatus(GaswStatus.RUNNING);
+                            break;
 
-                                    break;
+                        case AHEJobObject.GRIDSAM_STAGED_IN:
 
-                            case AHEJobObject.GRIDSAM_STAGED_IN:
+                            job.setStatus(GaswStatus.RUNNING);
 
-                                    job.setStatus(GaswStatus.RUNNING);
+                            break;
 
-                                    break;
+                        case AHEJobObject.GRIDSAM_STAGING_OUT:
 
-                            case AHEJobObject.GRIDSAM_STAGING_OUT:
+                            job.setStatus(GaswStatus.CREATED);
 
-                                    job.setStatus(GaswStatus.CREATED);
+                            break;
 
-                                    break;
+                        case AHEJobObject.GRIDSAM_STAGED_OUT:
 
-                            case AHEJobObject.GRIDSAM_STAGED_OUT:
+                            job.setStatus(GaswStatus.CREATED);
 
-                                    job.setStatus(GaswStatus.CREATED);
+                            break;
 
-                                    break;
+                        case AHEJobObject.GRIDSAM_ACTIVE:
 
-                            case AHEJobObject.GRIDSAM_ACTIVE:
+                            if (job.getStatus() != GaswStatus.RUNNING) {
 
-                                    if ( job.getStatus() != GaswStatus.RUNNING ) {
+                                job.setStatus(GaswStatus.RUNNING);
+                                job.setQueued((int) (System.currentTimeMillis() / 1000) - startTime - job.getCreation());
+                                jobDAO.update(job);
 
-                                    job.setStatus( GaswStatus.RUNNING );
-                                    job.setQueued( (int) (System.currentTimeMillis() / 1000) - startTime - job.getCreation() );
-                                    jobDAO.update(job);
+                            }
 
-                                    }
+                            break;
 
-                                    break;
+                        case AHEJobObject.GRIDSAM_EXECUTED:
 
-                            case AHEJobObject.GRIDSAM_EXECUTED:
+                            job.setStatus(GaswStatus.RUNNING);
 
-                                    job.setStatus(GaswStatus.RUNNING);
+                            break;
 
-                                    break;
+                        case AHEJobObject.GRIDSAM_FAILED:
 
-                            case AHEJobObject.GRIDSAM_FAILED:
+                            job.setStatus(GaswStatus.ERROR);
 
-                                    job.setStatus(GaswStatus.ERROR);
+                            finishedJobs.put(jobID, monitoredJobs.get(jobID));
 
-                                    finishedJobs.put( jobID, monitoredJobs.get(jobID) );
+                            break;
 
-                                    break;
+                        case AHEJobObject.GRIDSAM_DONE:
 
-                            case AHEJobObject.GRIDSAM_DONE:
+                            job.setStatus(GaswStatus.COMPLETED);
 
-                                    job.setStatus(GaswStatus.COMPLETED);
+                            finishedJobs.put(jobID, monitoredJobs.get(jobID));
 
-                                    finishedJobs.put(jobID, monitoredJobs.get(jobID));
+                            break;
 
-                                    break;
+                        case AHEJobObject.GRIDSAM_TERMINATING:
 
-                            case AHEJobObject.GRIDSAM_TERMINATING:
-                                    
-                                    job.setStatus(GaswStatus.KILL);
+                            job.setStatus(GaswStatus.KILL);
 
-                                    this.aheJobMonitor.destroyJob(ajo);
+                            this.aheJobMonitor.destroyJob(ajo);
 
-                                    break;
+                            break;
 
-                            case AHEJobObject.GRIDSAM_TERMINATED:
+                        case AHEJobObject.GRIDSAM_TERMINATED:
 
-                                    job.setStatus(GaswStatus.KILL);
+                            job.setStatus(GaswStatus.KILL);
 
-                                    this.aheJobMonitor.destroyJob(ajo);
+                            this.aheJobMonitor.destroyJob(ajo);
 
-                                    break;
+                            break;
 
-                            case AHEJobObject.GRIDSAM_UNDEFINED:
+                        case AHEJobObject.GRIDSAM_UNDEFINED:
 
-                                    /**
-                                     * By now, this requires a manual
-                                     * verification by the system
-                                     * administrator.
-                                     */
-                                    job.setStatus(GaswStatus.UNDEFINED);
-                                    
-                                    break;
+                            /**
+                             * By now, this requires a manual
+                             * verification by the system
+                             * administrator.
+                             */
+                            job.setStatus(GaswStatus.UNDEFINED);
+
+                            break;
                     }
 
                     jobDAO.update(job);
 
-                 }
+                }
 
-                if (finishedJobs.size() > 0) {
-                
-                        Gasw.getInstance().addFinishedJob( finishedJobs );
-            
+                if ( finishedJobs.size() > 0 ) {
+
+                    System.out.println("FINISHED JOBS: " + finishedJobs);
+                    Gasw.getInstance().addFinishedJob(finishedJobs);
+
                 }
 
                 sleep(Configuration.SLEEPTIME);
@@ -324,19 +323,18 @@ public class AHEMonitor extends Monitor {
 
         } catch (GaswException gex) {
 
-                logException(logger, gex);
-        }
-        catch (AHEJobMonitorException aex) {
+            logException(logger, gex);
+        } catch (AHEJobMonitorException aex) {
 
-                logException(logger, aex);
+            logException(logger, aex);
 
         } catch (DAOException dex) {
 
-                logException(logger, dex);
+            logException(logger, dex);
 
         } catch (InterruptedException iex) {
 
-                logException(logger, iex);
+            logException(logger, iex);
 
         }
 
@@ -351,10 +349,10 @@ public class AHEMonitor extends Monitor {
      * @param userProxy
      */
     @Override
-    public synchronized void add( String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy ) {
+    public synchronized void add(String jobID, String symbolicName, String fileName, String parameters, Proxy userProxy) {
 
         logger.info("Adding AHE job: " + jobID);
-        super.add( new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED,parameters, symbolicName), fileName );
+        super.add(new Job(jobID, GaswStatus.SUCCESSFULLY_SUBMITTED, parameters, symbolicName), fileName);
 
         if (userProxy != null) {
 
@@ -370,29 +368,29 @@ public class AHEMonitor extends Monitor {
      */
     @Override
     protected void kill(String jobID) {
+        
         try {
 
-            Job job = jobDAO.getJobByID( jobID );
+            Job job = jobDAO.getJobByID(jobID);
 
             String resourceEndpoint = job.getId();
 
-            AHEJobObject ajo = this.aheJobMonitor.getAJO( resourceEndpoint );
+            AHEJobObject ajo = this.aheJobMonitor.getAJO(resourceEndpoint);
 
-            this.aheJobMonitor.destroyJob( ajo );
-            
+            this.aheJobMonitor.destroyJob(ajo);
+
         } catch (DAOException dex) {
 
-                logException(logger, dex);
+            logException(logger, dex);
 
         } catch (AHEJobMonitorException aex) {
 
-                logException(logger, aex);
+            logException(logger, aex);
 
         }
 
     }
 
-    
     /**
      * Not in service.
      * @param jobID

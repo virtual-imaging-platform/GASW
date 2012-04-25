@@ -90,8 +90,8 @@ public class Gasw {
     public synchronized static Gasw getInstance(Constants.Version version, Constants.DCI dci) throws GaswException {
         if (instance == null) {
             instance = new Gasw();
-            Configuration.VERSION = version;
-            Configuration.DCI = dci;
+//            Configuration.VERSION = version;
+//            Configuration.DCI = dci;
         }
         return instance;
     }
@@ -138,12 +138,12 @@ public class Gasw {
             this.client = client;
         }
         // if the jigsaw descriptor contains a target infrastruture, this overides the default target
-        for (EnvVariable v : gaswInput.getRelease().getConfigurations()) {
-            if (v.getCategory() == EnvVariable.Category.SYSTEM
-                    && v.getName().equals("gridTarget")) {
-                Configuration.DCI = Constants.DCI.valueOf(v.getValue());
-            }
-        }
+//        for (EnvVariable v : gaswInput.getRelease().getConfigurations()) {
+//            if (v.getCategory() == EnvVariable.Category.SYSTEM
+//                    && v.getName().equals("gridTarget")) {
+//                Configuration.DCI = Constants.DCI.valueOf(v.getValue());
+//            }
+//        }
         Executor executor = ExecutorFactory.getExecutor(gaswInput);
         executor.preProcess();
 

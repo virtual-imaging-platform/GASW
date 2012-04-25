@@ -40,6 +40,7 @@ import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.grida.client.GRIDAClient;
 import fr.insalyon.creatis.grida.client.GRIDAClientException;
 import grool.proxy.Proxy;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -50,6 +51,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+
+/**
+ * AHE API classes.
+ */
 import uk.ac.ucl.chem.ccs.aheclient.api.AHEJobMonitor;
 import uk.ac.ucl.chem.ccs.aheclient.api.AHEJobMonitorException;
 import uk.ac.ucl.chem.ccs.aheclient.api.AHESetupException;
@@ -57,8 +62,8 @@ import uk.ac.ucl.chem.ccs.aheclient.util.AHEJobObject;
 import uk.ac.ucl.chem.ccs.aheclient.util.JobFileElement;
 
 /**
- * This class implements a monitor for
- * the Application Hosting Environment (AHE)
+ * This class implements a monitor for the Application Hosting Environment (AHE)
+ *
  * @author William A. Romero R.
  */
 public class AHEOutputUtil extends OutputUtil {
@@ -76,7 +81,7 @@ public class AHEOutputUtil extends OutputUtil {
      */
     private File stdErr;
     /**
-     *  Monitoring methods for AHE Job Objects.
+     * Monitoring methods for AHE Job Objects.
      */
     private AHEJobMonitor aheJobMonitor = null;
     /**
@@ -90,6 +95,7 @@ public class AHEOutputUtil extends OutputUtil {
 
     /**
      * Default constructor.
+     *
      * @param startTime
      */
     public AHEOutputUtil(String jobID, Proxy userProxy) {
@@ -100,38 +106,46 @@ public class AHEOutputUtil extends OutputUtil {
             //_______CODE FOR LOCAL TEST_______
             /**
              *
-            String logConfigurationfile = "/home/wil-rome/.ahe/clilog4j.properties";
-
-            String aheProperties = "/home/wil-rome/.ahe/aheclient.properties";
-
-            this.aheJobMonitor = new AHEJobMonitor(logConfigurationfile, aheProperties);
-
-            gridaClient = new GRIDAClient("kingkong.grid.creatis.insa-lyon.fr", 9006, "/var/www/.vip/proxies/x509up_server");
+             * String logConfigurationfile =
+             * "/home/wil-rome/.ahe/clilog4j.properties";
+             *
+             * String aheProperties =
+             * "/home/wil-rome/.ahe/aheclient.properties";
+             *
+             * this.aheJobMonitor = new AHEJobMonitor(logConfigurationfile,
+             * aheProperties);
+             *
+             * gridaClient = new
+             * GRIDAClient("kingkong.grid.creatis.insa-lyon.fr", 9006,
+             * "/var/www/.vip/proxies/x509up_server");
              *
              */
             this.aheJobMonitor = new AHEJobMonitor(Configuration.AHE_CLIENT_CLILOG, Configuration.AHE_CLIENT_PROPERTIES);
 
             /**
-             * To create an instance of a GRIDA client, the following parameters must be specified.
-             * host (GRIDA server)  := kingkong.grid.creatis.insa-lyon.fr
-             *                 port := 9006
-             *            proxyPath := /var/www/.vip/proxies/x509up_server
+             * To create an instance of a GRIDA client, the following parameters
+             * must be specified. host (GRIDA server) :=
+             * kingkong.grid.creatis.insa-lyon.fr port := 9006 proxyPath :=
+             * /var/www/.vip/proxies/x509up_server
              */
             /**
              * TODO: Proxy path.
              */
-            this.gridaClient = new GRIDAClient(Configuration.GRIDA_HOST, Configuration.GRIDA_PORT, "/var/www/.vip/proxies/x509up_server");
+            String proxyPath = userProxy != null ? userProxy.getProxy().getAbsolutePath() : System.getenv("X509_USER_PROXY");
+
+            this.gridaClient = new GRIDAClient(Configuration.GRIDA_HOST, Configuration.GRIDA_PORT, proxyPath);
 
 
-        } catch (AHESetupException ex) {
+        } catch (AHESetupException aex) {
 
-            logger.error(ex);
+            logger.error(aex);
 
         }
     }
 
     /**
      * Return the GASW log files.
+     *
      * @param jobID
      * @return
      */
@@ -152,53 +166,62 @@ public class AHEOutputUtil extends OutputUtil {
              */
             this.localJobDirectory = "AHE-OUTPUT-" + ajo.getResourceID() + "/";
 
-            System.out.println( "[AHEOutputUtil]: Local output directory: " + Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory);
+            System.out.println("[AHEOutputUtil]: Local output directory: " + Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory);
 
-            FileUtils.forceMkdir(new File (Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory));
+            FileUtils.forceMkdir(new File(Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory));
 
             /**
              * Backup
              *
-             * *** IMPORTANT ***
-             * i.  To download the result to the local machine (VIP/GASW server)
-             *     the method 'getOutput' modifies the -local path- of the
-             *     output file.
-             * ii. Initially, the -local path- stores the final storage location
-             *     of the output file; that means, the path on EGI.
+             * *** IMPORTANT *** 
+             * i. To download the result to the local machine (VIP/GASW server)
+             * the method 'getOutput' modifies the -local path- of the output 
+             * file. 
+             * ii. Initially, the -local path- stores the final storage location 
+             * of the output file; that means, the path on EGI.
              *
-             *     Consequently, it is necessary a backup of this information.
+             * Consequently, it is necessary a backup of this information.
              */
-
             Map<String, String> outfiles = new HashMap<String, String>();
 
-            for ( JobFileElement jfe : ajo.getOutfiles() ) {
+            for (JobFileElement jfe : ajo.getOutfiles()) {
 
                 outfiles.put(jfe.getName(), jfe.getLocalpath());
 
-                System.out.println( "[AHEOutputUtil]:  file: " + jfe.getName() + " path " + jfe.getLocalpath() );
+                System.out.println("[AHEOutputUtil]:  file: " + jfe.getName() + " path " + jfe.getLocalpath());
 
             }
 
             /**
              * From AHE computing resource to the local directory.
              */
-            aheJobMonitor.getOutput( ajo, Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory );
+            try {
+
+                aheJobMonitor.getOutput(ajo, Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory);
+
+            } catch (AHEJobMonitorException aex) {
+
+                logger.error(aex);
+                System.out.println("[AHEOutputUtil]  **** ERROR  " + aex.getMessage());
+            }
+
 
             /**
              * List of results.
              */
             uploadedResults = new ArrayList<URI>();
 
-            for ( Map.Entry<String, String> outfile : outfiles.entrySet() ) {
+            for (Map.Entry<String, String> outfile : outfiles.entrySet()) {
 
-                File file = new File( outfile.getValue() );
+                File file = new File(outfile.getValue());
 
                 String remotePath = null;
 
-                System.out.println( "[AHEOutputUtil]:  Preparing to copy the file: " + file.getName() + ", EGI storage location: " + file.getParent() );
+                System.out.println("[AHEOutputUtil]:  Preparing to copy the file: " + file.getName() + ", EGI storage location: " + file.getParent());
 
                 /**
-                 * Copy executing logs to the default 'out' and 'err' directories.
+                 * Copy executing logs to the default 'out' and 'err'
+                 * directories.
                  */
                 if (file.getName().equalsIgnoreCase("stdout.txt")) {
 
@@ -211,27 +234,28 @@ public class AHEOutputUtil extends OutputUtil {
                             new File(Constants.ERR_ROOT + "/" + "ahe-stderr" + ".err"));
 
                 } else {
+                    /**
+                    * From local directory to EGI.
+                    */                    
+                    remotePath = gridaClient.uploadFile(Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory + file.getName(), file.getParent());
+                    
+                    // remotePath = file.getParent();
 
-                    remotePath = gridaClient.uploadFile(Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory + file.getName(),
-                            file.getParent());
+                    System.out.println("[AHEOutputUtil]: file: " + Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory + file.getName() + ", remote path (GRIDA Client return): " + remotePath);
 
-                    System.out.println( "[AHEOutputUtil]: file: " + Configuration.AHE_CLIENT_TMP_DIRECTORY + this.localJobDirectory + file.getName() + ", remote path (GRIDA Client return): " + remotePath );
-
+                    /**
+                     * New result added from AHE computing resource.
+                     */
+                    uploadedResults.add(new URI(remotePath));
                 }
-
-                /**
-                 * New result added from AHE computing resource.
-                 */
-                uploadedResults.add(new URI(remotePath));
-
             }
 
 
-            System.out.println( "[AHEOutputUtil]: Cool ");
+            System.out.println("[AHEOutputUtil]: Cool ");
 
             GaswExitCode gaswExitCode = GaswExitCode.UNDEFINED;
 
-            switch ( job.getStatus() ) {
+            switch (job.getStatus()) {
 
                 case COMPLETED:
 
@@ -246,27 +270,27 @@ public class AHEOutputUtil extends OutputUtil {
 
             return new GaswOutput(job.getId(), gaswExitCode, uploadedResults, appStdOut, appStdErr, stdOut, stdErr);
 
-        } catch ( GRIDAClientException ex ) {
+        } catch ( GRIDAClientException gex ) {
 
-            logger.error(ex);
+            logger.error(gex);
             return null;
 
-        } catch (IOException ex) {
+        } catch (IOException iex) {
 
-            logger.error(ex);
+            logger.error(iex);
             return null;
 
-        } catch (URISyntaxException ex) {
+        } catch (URISyntaxException uex) {
 
-            logger.error(ex);
+            logger.error(uex);
             return null;
 
-        } catch (AHEJobMonitorException ex) {
+        } catch (AHEJobMonitorException aex) {
 
-            logger.error(ex);
+            logger.error(aex);
             return null;
+
         }
 
     }
-
 }
