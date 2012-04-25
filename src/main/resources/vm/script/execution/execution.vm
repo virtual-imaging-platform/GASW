@@ -1,0 +1,49 @@
+## execution.vm
+
+## Variables
+## $minorStatusEnabled, $serviceCall, $params
+
+#if( $minorStatusEnabled && $serviceCall )
+$serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 4
+#end
+
+tar -zxf $GASW_EXEC_BUNDLE
+
+chmod 755 *
+
+## the 1s delay is needed to ensure that the time between this file creation and the command line outputs
+## files creation is sufficient, and the subsequent "find -newer" call succeeds
+
+echo "BEFORE_EXECUTION_REFERENCE" > BEFORE_EXECUTION_REFERENCE_FILE
+sleep 1
+
+#set( $parameters = "" )
+#foreach( $param in $params )
+    #set( $parameters = "$parameters $param" )
+#end
+
+export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}
+
+COMMAND_LINE="./$GASW_EXEC_COMMAND $parameters"
+
+info "Executing $COMMAND_LINE..."
+
+startLog application_execution
+$COMMAND_LINE
+if [ $? -ne 0 ]
+then
+    error "Exiting with return value 6"
+    BEFOREUPLOAD=`date +%s`
+    info "Execution time: `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}` seconds"
+    stopLog application_execution
+    cleanup
+    exit 6
+fi
+rm -rf DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
+BEFOREUPLOAD=`date +%s`
+stopLog application_execution
+
+info "Execution time was `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}`s"
+
+__MOTEUR_ARGS="$parameters"
+__MOTEUR_EXE="$GASW_EXEC_COMMAND"

@@ -1,0 +1,43 @@
+## deleteFunctions.vm
+
+## Variables
+## $failOverEnabled
+
+function deleteFile {
+
+    lcg-del -a $1 
+    if [ $? != 0 ] 
+    then 
+        guid=$(lcg-lg $1) 
+        surls=$(lcg-lr $1)  
+        for surl in $surls  
+        do 
+            lcg-uf -v $guid $surl 
+        done 
+    fi
+}
+
+function delete {
+
+    local LFN=$1
+    local TEST=$2
+
+    startLog file_delete lfn="${LFN}"
+
+    if [ "${TEST}" = true ] 
+    then
+        LFN=${LFN}-uploadTest;
+    fi
+
+    info "Deleting file ${LFN}..."
+    deleteFile lfn:${LFN}
+
+    #if ( $failOverEnabled )
+    if [ $? != 0 ]
+    then
+        lcg-del --nobdii --defaultsetype srmv2 ${DM_DEST}
+    fi
+    #end
+
+    stopLog file_delete
+}

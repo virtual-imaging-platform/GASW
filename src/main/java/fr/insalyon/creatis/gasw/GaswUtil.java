@@ -35,6 +35,8 @@
 package fr.insalyon.creatis.gasw;
 
 import grool.proxy.Proxy;
+import grool.proxy.ProxyInitializationException;
+import grool.proxy.VOMSExtensionException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -75,7 +77,7 @@ public class GaswUtil {
      * @return 
      */
     public static Process getProcess(Logger logger, Proxy userProxy, String... strings)
-            throws IOException, grool.proxy.ProxyInitializationException, grool.proxy.VOMSExtensionException {
+            throws IOException, ProxyInitializationException, VOMSExtensionException {
 
         ProcessBuilder builder = new ProcessBuilder(strings);
         builder.redirectErrorStream(true);
@@ -90,41 +92,41 @@ public class GaswUtil {
                 exists = false;
             }
 
-            if (exists) {
-                if (Configuration.VERSION == Constants.Version.DCI) {
-                    if (Configuration.DCI == Constants.DCI.DIRAC) {
-                        if (!userProxy.isRawProxyValid()) {
-                            isValid = false;
-                        }
-                    }
-                    if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
-                        if (!userProxy.isValid()) {
-                            isValid = false;
-                        }
-                    }
-                } else if (Configuration.VERSION == Constants.Version.LOCAL) {
-                    if (!userProxy.isValid()) {
-                        isValid = false;
-                    }
-                }
-
-                if (!isValid) {
-                    logger.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
-                }
-            }
-
-            if (!exists || !isValid) {
-                if (Configuration.VERSION == Constants.Version.DCI) {
-                    if (Configuration.DCI == Constants.DCI.DIRAC) {
-                        userProxy.initRawProxy();
-                    }
-                    if (Configuration.DCI == Constants.DCI.GLITE_WMS) {
-                        userProxy.init();
-                    }
-                } else if (Configuration.VERSION == Constants.Version.LOCAL) {
-                    userProxy.init();
-                }
-            }
+//            if (exists) {
+//                if (GaswConfiguration.VERSION == GaswConstants.Version.DCI) {
+//                    if (GaswConfiguration.DCI == GaswConstants.DCI.DIRAC) {
+//                        if (!userProxy.isRawProxyValid()) {
+//                            isValid = false;
+//                        }
+//                    }
+//                    if (GaswConfiguration.DCI == GaswConstants.DCI.GLITE_WMS) {
+//                        if (!userProxy.isValid()) {
+//                            isValid = false;
+//                        }
+//                    }
+//                } else if (GaswConfiguration.VERSION == GaswConstants.Version.LOCAL) {
+//                    if (!userProxy.isValid()) {
+//                        isValid = false;
+//                    }
+//                }
+//
+//                if (!isValid) {
+//                    logger.warn("Proxy has expired. Downloading a new proxy from myProxy server...");
+//                }
+//            }
+//
+//            if (!exists || !isValid) {
+//                if (GaswConfiguration.VERSION == GaswConstants.Version.DCI) {
+//                    if (GaswConfiguration.DCI == GaswConstants.DCI.DIRAC) {
+//                        userProxy.initRawProxy();
+//                    }
+//                    if (GaswConfiguration.DCI == GaswConstants.DCI.GLITE_WMS) {
+//                        userProxy.init();
+//                    }
+//                } else if (GaswConfiguration.VERSION == GaswConstants.Version.LOCAL) {
+//                    userProxy.init();
+//                }
+//            }
 
             File proxy = userProxy.getProxy();
             builder.environment().put("X509_USER_PROXY", proxy.getAbsolutePath());

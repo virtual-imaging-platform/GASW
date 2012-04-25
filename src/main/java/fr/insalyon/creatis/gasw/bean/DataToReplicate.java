@@ -32,20 +32,63 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.dao;
+package fr.insalyon.creatis.gasw.bean;
 
-import fr.insalyon.creatis.gasw.bean.Job;
-import java.util.List;
+import java.net.URI;
+import java.util.Date;
+import javax.persistence.*;
 
 /**
  *
  * @author Rafael Silva
  */
-public interface JobPoolDAO {
+@Entity
+@NamedQuery(name = "DataToReplicate.list", query = "FROM DataToReplicate ORDER BY eventDate")
+@Table(name = "DataToReplicate")
+public class DataToReplicate {
 
-    public void add(Job job) throws DAOException;
+    private URI url;
+    private int retries;
+    private Date eventDate;
 
-    public void remove(Job job) throws DAOException;
+    public DataToReplicate() {
+    }
 
-    public List<Job> get() throws DAOException;
+    public DataToReplicate(URI url) {
+        this(url, 0);
+    }
+
+    public DataToReplicate(URI url, int retries) {
+        this.url = url;
+        this.retries = retries;
+    }
+
+    @Column(name = "retries")
+    public int getRetries() {
+        return retries;
+    }
+
+    public void setRetries(int retries) {
+        this.retries = retries;
+    }
+
+    @Id
+    @Column(name = "url")
+    public URI getUrl() {
+        return url;
+    }
+
+    public void setUrl(URI url) {
+        this.url = url;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "event_date")
+    public Date getEventDate() {
+        return eventDate;
+    }
+
+    public void setEventDate(Date eventDate) {
+        this.eventDate = eventDate;
+    }
 }

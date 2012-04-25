@@ -35,9 +35,8 @@
 package fr.insalyon.creatis.gasw.dao;
 
 import fr.insalyon.creatis.gasw.bean.Job;
-import fr.insalyon.creatis.gasw.monitor.GaswStatus;
+import fr.insalyon.creatis.gasw.execution.GaswStatus;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -52,14 +51,12 @@ public interface JobDAO {
     public void remove(Job job) throws DAOException;
 
     public Job getJobByID(String id) throws DAOException;
+              
+    public List<Job> getActiveJobs() throws DAOException;
     
-    public void updateStatus(Map<GaswStatus, String> jobStatus) throws DAOException;
-           
-    public List<String> getActiveJobs() throws DAOException;
+    public List<Job> getJobs(GaswStatus status) throws DAOException;
     
-    public List<String> getJobs(GaswStatus status) throws DAOException;
-    
-    public int getNumberOfCompletedJobsByFileName(String fileName) throws DAOException;
+    public long getNumberOfCompletedJobsByFileName(String fileName) throws DAOException;
     
     public List<Job> getActiveJobsByFileName(String fileName) throws DAOException;
 }

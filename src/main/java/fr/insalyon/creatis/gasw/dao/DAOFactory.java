@@ -34,42 +34,22 @@
  */
 package fr.insalyon.creatis.gasw.dao;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 /**
  *
  * @author Rafael Silva
  */
 public abstract class DAOFactory {
 
-    private static final int DERBY = 1;
-    private static int factory = DERBY;
-    protected Connection connection;
+    public synchronized static DAOFactory getDAOFactory() throws DAOException {
 
-    public synchronized static DAOFactory getDAOFactory() {
-
-        switch (factory) {
-            case DERBY:
-                return DerbyDAOFactory.getInstance();
-            default:
-                return null;
-        }
+        return HibernateDAOFactory.getInstance();
     }
 
     protected DAOFactory() {
     }
 
-    protected abstract void connect() throws SQLException;
-    
-    protected abstract void createTables();
-
     public abstract void close();
     
-    public Connection getConnection() {
-        return connection;
-    }
-
     public abstract JobDAO getJobDAO();
     
     public abstract JobMinorStatusDAO getJobMinorStatusDAO();
@@ -78,5 +58,5 @@ public abstract class DAOFactory {
     
     public abstract SEEntryPointsDAO getSEEntryPointDAO();
     
-    public abstract JobPoolDAO getJobPoolDAO();
+    public abstract DataToReplicateDAO getDataToReplicateDAO();
 }

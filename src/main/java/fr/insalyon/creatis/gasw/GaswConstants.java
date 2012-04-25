@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -38,13 +38,33 @@ package fr.insalyon.creatis.gasw;
  *
  * @author Rafael Silva
  */
-public class Constants {
+public class GaswConstants {
 
+    // Configuration File Labels
+    public static final String LAB_DEFAULT_BACKGROUD_SCRIPT = "default.background.script";
+    public static final String LAB_DEFAULT_CPUTIME = "default.cputime";
+    public static final String LAB_DEFAULT_ENVIRONMENT = "default.environment";
+    public static final String LAB_DEFAULT_EXECUTOR = "default.executor";
+    public static final String LAB_DEFAULT_REQUIREMENTS = "default.requirements";
+    public static final String LAB_DEFAULT_RETRY_COUNT = "default.retry.count";
+    public static final String LAB_DEFAULT_SLEEPTIME = "default.sleeptime";
+    public static final String LAB_DEFAULT_TIMEOUT = "default.timeout";
+    public static final String LAB_FAILOVER_ENABLED = "failover.server.enabled";
+    public static final String LAB_FAILOVER_HOME = "failover.server.home";
+    public static final String LAB_FAILOVER_HOST = "failover.server.host";
+    public static final String LAB_FAILOVER_PORT = "failover.server.port";
+    public static final String LAB_FAILOVER_RETRY = "failover.max.retry";
+    public static final String LAB_MINORSTATUS_ENABLED = "minorstatus.service.enabled";
+    public static final String LAB_PLUGIN_DB = "plugin.db";
+    public static final String LAB_PLUGIN_EXECUTOR = "plugin.executor";
+    public static final String LAB_VO_DEFAULT_SE = "vo.default.se";
+    public static final String LAB_VO_NAME = "vo.name";
+    public static final String LAB_VO_USE_CLOSE_SE = "vo.use.close.se";
     // timeouts used in lcg-c*
-    public static int CONNECT_TIMEOUT = 10;
-    public static int SEND_RECEIVE_TIMEOUT = 900;
-    public static int BDII_TIMEOUT = 10;
-    public static int SRM_TIMEOUT = 30;
+    public static final int CONNECT_TIMEOUT = 10;
+    public static final int SEND_RECEIVE_TIMEOUT = 900;
+    public static final int BDII_TIMEOUT = 10;
+    public static final int SRM_TIMEOUT = 30;
     // Directories
     public static final String SCRIPT_ROOT = "./sh";
     public static final String JDL_ROOT = "./jdl";
@@ -57,69 +77,6 @@ public class Constants {
     public static final String OUT_APP_EXT = ".app" + OUT_EXT;
     public static final String ERR_EXT = ".err";
     public static final String ERR_APP_EXT = ".app" + ERR_EXT;
-    // DIRAC environment variables
-    public static final String ENV_DIRAC_POOL = "diracPool";
-    public static final String ENV_DIRAC_PRIORITY = "diracPriority";
-    // Versions
-
-    public static enum Version {
-
-        DCI, LOCAL
-    };
-
-    public static enum DCI {
-
-        DIANE, DIRAC, GLITE_WMS, AHE
-    };
-
-    public static enum MinorStatus {
-
-        Started(1),             // Job started the execution 
-        Background(2),          // Downloading background script
-        Inputs(3),              // Downloading inputs
-        Application(4),         // Application execution
-        Outputs(5),             // Uploading results
-        CheckPoint_Init(101),   // Initializing checkpoint
-        CheckPoint_Upload(105), // Uploading checkpoint
-        CheckPoint_End(102);    // Checkpoint finished
-        private int statusCode;
-
-        private MinorStatus(int statusCode) {
-            this.statusCode = statusCode;
-        }
-
-        public int getStatusCode() {
-            return statusCode;
-        }
-
-        public static MinorStatus valueOf(int statusCode) {
-
-            switch (statusCode) {
-                case 1:
-                    return Started;
-                case 2:
-                    return Background;
-                case 3:
-                    return Inputs;
-                case 4:
-                    return Application;
-                case 5:
-                    return Outputs;
-                case 101:
-                    return CheckPoint_Init;
-                case 105:
-                    return CheckPoint_Upload;
-                case 102:
-                    return CheckPoint_End;
-                default:
-                    return Started;
-            }
-        }
-    }
-
-    public static enum DiracStatus {
-
-        Running, Waiting, Done, Failed, Killed, Stalled, Received, Matched,
-        Rescheduled, Deleted, Completed, Checking
-    };
+    // Environment Variables
+    public static final String ENV_EXECUTOR = "executor";
 }

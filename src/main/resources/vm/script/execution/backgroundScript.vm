@@ -1,0 +1,16 @@
+## backgroundScript.vm
+
+## Variables
+## $minorStatusEnabled, $serviceCall, $backgroundScript
+
+startLog background
+
+#if( $minorStatusEnabled && $serviceCall )
+$serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 2
+#end
+
+checkCacheDownloadAndCacheLFN $backgroundScript
+bash `basename $backgroundScript` 1>background.out 2>background.err &
+BACKPID=$!
+
+stopLog background

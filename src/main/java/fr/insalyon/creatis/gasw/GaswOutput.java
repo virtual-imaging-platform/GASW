@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -34,7 +34,6 @@
  */
 package fr.insalyon.creatis.gasw;
 
-import fr.insalyon.creatis.gasw.output.GaswExitCode;
 import java.io.File;
 import java.net.URI;
 import java.util.List;
@@ -47,6 +46,7 @@ public class GaswOutput {
 
     private String jobID;
     private GaswExitCode exitCode;
+    private String exitMessage;
     private List<URI> uploadedResults;
     private File appStdOut;
     private File appStdErr;
@@ -55,7 +55,7 @@ public class GaswOutput {
 
     /**
      * Creates an output object.
-     * 
+     *
      * @param jobID Job identification
      * @param exitCode Exit code
      * @param appStdOut Application standard output file
@@ -63,11 +63,12 @@ public class GaswOutput {
      * @param stdOut Job standard output file
      * @param stdErr Job standard error file
      */
-    public GaswOutput(String jobID, GaswExitCode exitCode, List<URI> uploadedResults, File appStdOut,
-            File appStdErr, File stdOut, File stdErr) {
+    public GaswOutput(String jobID, GaswExitCode exitCode, String exitMessage,
+            List<URI> uploadedResults, File appStdOut, File appStdErr, File stdOut, File stdErr) {
 
         this.jobID = jobID;
         this.exitCode = exitCode;
+        this.exitMessage = exitMessage;
         this.uploadedResults = uploadedResults;
         this.appStdOut = appStdOut;
         this.appStdErr = appStdErr;
@@ -81,6 +82,10 @@ public class GaswOutput {
 
     public GaswExitCode getExitCode() {
         return exitCode;
+    }
+
+    public String getExitMessage() {
+        return exitMessage;
     }
 
     public List<URI> getUploadedResults() {

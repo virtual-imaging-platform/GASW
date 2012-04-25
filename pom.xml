@@ -5,8 +5,9 @@
     <groupId>fr.insalyon.creatis</groupId>
     <artifactId>gasw</artifactId>
     <packaging>jar</packaging>
-    <version>0.7.8</version>
+    <version>1.0</version>
     <name>GASW</name>
+    
     <licenses>
         <license>
             <name>CeCILL-B, Version 1.0</name>
@@ -14,10 +15,12 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+    
     <organization>
         <name>CREATIS</name>
         <url>http://www.creatis.insa-lyon.fr/</url>
     </organization>
+    
     <build>
         <plugins>
             <plugin>
@@ -35,7 +38,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>fr.insalyon.creatis.gasw.Gasw</mainClass>
+                            <mainClass>fr.insalyon.creatis.gasw.GaswTest</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -58,42 +61,15 @@
             </plugin>
         </plugins>
     </build>
+    
     <dependencies>
-        <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derby</artifactId>
-            <version>10.6.1.0</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derbyclient</artifactId>
-            <version>10.6.1.0</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.18</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.10</version>
-            <scope>test</scope>
-        </dependency>
         
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.16</version>
         </dependency>
-        <dependency>
-            <groupId>fr.insalyon.creatis</groupId>
-            <artifactId>aheclient4vip</artifactId>
-            <version>0.1</version>
-        </dependency>
+        
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
@@ -106,52 +82,87 @@
             <version>2.6</version>
         </dependency>
         
-        <!--grool-proxy-->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.8.3</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>code.google.com</groupId>
+            <artifactId>jspf.core</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>4.1.2</version>
+        </dependency>      
+    
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity</artifactId>
+            <version>1.6.4</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity-tools</artifactId>
+            <version>2.0</version>
+        </dependency>
+            
         <dependency>
             <groupId>fr.cnrs.i3s</groupId>
             <artifactId>grool-proxy</artifactId>
             <version>0.3.4</version>
         </dependency>
-
+        
         <dependency>
-            <groupId>fr.insalyon.creatis</groupId>
-            <artifactId>grida-client</artifactId>
-            <version>1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.1</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
         </dependency>
         
     </dependencies>
     
     <repositories>
+        
         <repository>
             <id>i3s-releases</id>
             <name>Modalis releases repository [modalis]</name>
             <url>http://nyx.unice.fr:9007/nexus/content/repositories/releases</url>
         </repository>
+
+        <repository>
+            <id>creatis-thirdparty</id>
+            <name>Creatis Insa Lyon repository [creatis]</name>
+            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/thirdparty/</url>
+        </repository>
+
+    </repositories>
+    
+    <distributionManagement>
+        
         <repository>
             <id>creatis-releases</id>
             <name>Creatis Insa Lyon repository [creatis]</name>
             <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
         </repository>
-    </repositories>
-    
-    <distributionManagement>
-        <repository>
-            <id>creatis-releases</id>
-            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
-        </repository>
+        
         <snapshotRepository>
             <id>creatis-snapshots</id>
-            <name>Internal Snapshots</name>
+            <name>Creatis Insa Lyon repository [snapshots]</name>
             <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
         </snapshotRepository>
+        
     </distributionManagement>
+    
 </project>
-
-
-

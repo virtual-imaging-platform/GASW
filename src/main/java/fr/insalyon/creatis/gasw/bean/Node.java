@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -34,14 +34,20 @@
  */
 package fr.insalyon.creatis.gasw.bean;
 
+import javax.persistence.*;
+
 /**
  *
  * @author Rafael Silva
  */
+@Entity
+@NamedQueries({
+    @NamedQuery(name = "Node.findBySiteAndNodeName", query = "FROM Node n WHERE n.nodeID.siteName = :siteName AND n.nodeID.nodeName = :nodeName")
+})
+@Table(name = "Nodes")
 public class Node {
 
-    private String siteName;
-    private String nodeName;
+    private NodeID nodeID;
     private int nCpus;
     private String cpuModelName;
     private double cpuMhz;
@@ -52,9 +58,10 @@ public class Node {
     public Node() {
     }
 
-    public Node(String siteName, String nodeName, int nCpus, String cpuModelName, double cpuMhz, int cpuCacheSize, double cpuBogoMips, int memTotal) {
-        this.siteName = siteName;
-        this.nodeName = nodeName;
+    public Node(NodeID nodeID, int nCpus, String cpuModelName, double cpuMhz,
+            int cpuCacheSize, double cpuBogoMips, int memTotal) {
+
+        this.nodeID = nodeID;
         this.nCpus = nCpus;
         this.cpuModelName = cpuModelName;
         this.cpuMhz = cpuMhz;
@@ -63,36 +70,43 @@ public class Node {
         this.memTotal = memTotal;
     }
 
+    @EmbeddedId
+    public NodeID getNodeID() {
+        return nodeID;
+    }
+
+    @Column(name = "cpu_bogomips")
     public double getCpuBogoMips() {
         return cpuBogoMips;
     }
 
+    @Column(name = "cpu_cache_size")
     public int getCpuCacheSize() {
         return cpuCacheSize;
     }
 
+    @Column(name = "cpu_mhz")
     public double getCpuMhz() {
         return cpuMhz;
     }
 
+    @Column(name = "cpu_model_name")
     public String getCpuModelName() {
         return cpuModelName;
     }
 
+    @Column(name = "mem_total")
     public int getMemTotal() {
         return memTotal;
     }
 
+    @Column(name = "ncpus")
     public int getnCpus() {
         return nCpus;
     }
 
-    public String getNodeName() {
-        return nodeName;
-    }
-
-    public String getSiteName() {
-        return siteName;
+    public void setNodeID(NodeID nodeID) {
+        this.nodeID = nodeID;
     }
 
     public void setCpuBogoMips(double cpuBogoMips) {
@@ -117,13 +131,5 @@ public class Node {
 
     public void setnCpus(int nCpus) {
         this.nCpus = nCpus;
-    }
-
-    public void setNodeName(String nodeName) {
-        this.nodeName = nodeName;
-    }
-
-    public void setSiteName(String siteName) {
-        this.siteName = siteName;
     }
 }

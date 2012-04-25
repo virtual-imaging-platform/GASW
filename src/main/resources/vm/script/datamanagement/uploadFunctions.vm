@@ -1,0 +1,162 @@
+## uploadFunctions.vm
+
+## Variables
+## $timeout, $sendReceiveTimeout, $bdiiTimeout, $srmTimeout, $failOverEnabled
+
+function nSEs {
+
+    i=0
+    for n in ${SELIST}
+    do
+        i=`expr $i + 1`
+    done
+    return $i
+}
+
+function getAndRemoveSE {
+          
+    local index=$1
+    local i=0
+    local NSE=""
+    RESULT=""
+    for n in ${SELIST}
+    do
+        if [ "$i" = "${index}" ]
+        then
+            RESULT=$n
+            info "result: $RESULT"
+        else
+            NSE="${NSE} $n"
+        fi
+        i=`expr $i + 1`
+    done
+    SELIST=${NSE}
+    return 0
+}
+
+function chooseRandomSE {
+
+    nSEs
+    local n=$?
+    if [ "$n" = "0" ]
+    then
+        info "SE list is empty"
+        RESULT=""
+    else
+        local r=${RANDOM}
+        local id=`expr $r  % $n`
+        getAndRemoveSE ${id}
+    fi
+}
+
+function renameFile {
+    
+    local FROM=$1
+    local TO=$2
+
+    info "Renaming ${FROM} to ${TO}"
+    lfc-ls ${TO}
+    if [ $? != 0 ]
+    then
+        lfc-rename ${FROM} ${TO}
+        if [ $? != 0 ]
+        then
+            exit 2
+        fi
+    else
+        deleteFile lfn:${FROM}
+    fi
+}
+
+function uploadFile {
+
+    local LFN=$1
+    local FILE=$2
+    local nrep=$3
+    local SELIST=${SE}
+    local OPTS="--connect-timeout $timeout --sendreceive-timeout $sendReceiveTimeout --bdii-timeout $bdiiTimeout --srm-timeout $srmTimeout"
+    local DEST=""
+    if [ "${USE_CLOSE_SE}" = "true" ] && [ "${VO_BIOMED_DEFAULT_SE}" != "" ]
+    then
+        DEST=${VO_BIOMED_DEFAULT_SE}
+    else
+        chooseRandomSE
+        DEST=${RESULT}
+    fi
+    done=0
+    while [ $nrep -gt $done ] && [ "${DEST}" != "" ]
+    do
+        if [ "${done}" = "0" ]
+        then
+            lcg-del -v -a ${OPTS} lfn:${LFN} &>/dev/null
+            lfc-ls ${LFN}
+            if [ $? = 0 ]
+            then
+                lfc-rename ${LFN} ${LFN}-garbage-${HOSTNAME}-${PWD}
+            fi
+            lfc-mkdir -p `dirname ${LFN}`
+            lcg-cr -v ${OPTS} -d ${DEST} -l lfn:${LFN} file:${FILE} &> lcg-log
+        else
+            lcg-rep -v ${OPTS} -d ${DEST} lfn:${LFN} &> lcg-log
+        fi
+        if [ $? = 0 ]
+        then
+            info "lcg-cr/rep of ${LFN} to SE ${DEST} worked fine"
+            done=`expr ${done} + 1`
+        else
+            error "`cat lcg-log`"
+            warning "lcg-cr/rep of ${LFN} to SE ${DEST} failed" 
+        fi
+        \rm lcg-log
+        chooseRandomSE
+        DEST=${RESULT}
+    done
+    if [ "${done}" = "0" ]
+    then
+#if( $failOverEnabled )
+        addToFailOver ${LFN} ${FILE}
+        if [ $? = 0 ]
+        then
+            addToCache ${LFN} ${FILE}
+        else
+            error "Cannot lcg-cr file ${FILE} to lfn ${LFN}"
+            error "Exiting with return value 2"
+            exit 2
+        fi
+#else
+        error "Cannot lcg-cr file ${FILE} to lfn ${LFN}"
+        error "Exiting with return value 2"
+        exit 2
+#end
+    else
+        addToCache ${LFN} ${FILE}
+    fi
+}
+
+function upload {
+
+    local LFN=$1
+    local ID=$2
+    local NREP=$3
+    local TEST=$4
+#set( $fileName = '${LFN##*/}' )
+    local NAME=${fileName}
+
+    if [ "${TEST}" = "true" ]
+    then
+        LFN=${LFN}-uploadTest
+        echo "test result" > ${NAME}
+    fi
+
+    startLog file_upload lfn="${LFN}"
+
+    uploadFile ${LFN}${ID} ${PWD}/${NAME} ${NREP}
+    renameFile ${LFN}${ID} ${LFN}
+
+    if [ "${TEST}" = "true" ]
+    then
+        \rm -f ${NAME}
+    fi
+
+    stopLog file_upload
+}

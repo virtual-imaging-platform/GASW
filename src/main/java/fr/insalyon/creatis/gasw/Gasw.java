@@ -34,12 +34,11 @@
  */
 package fr.insalyon.creatis.gasw;
 
+import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
-import fr.insalyon.creatis.gasw.executor.Executor;
-import fr.insalyon.creatis.gasw.executor.ExecutorFactory;
-import fr.insalyon.creatis.gasw.monitor.MonitorFactory;
-import fr.insalyon.creatis.gasw.output.OutputUtilFactory;
-import fr.insalyon.creatis.gasw.release.EnvVariable;
+import fr.insalyon.creatis.gasw.execution.ExecutorFactory;
+import fr.insalyon.creatis.gasw.execution.FailOver;
+import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
 import grool.access.GridUserCredentials;
 import grool.proxy.Proxy;
 import grool.proxy.ProxyConfiguration;
@@ -47,10 +46,7 @@ import grool.proxy.myproxy.GlobusMyproxy;
 import grool.server.MyproxyServer;
 import grool.server.VOMSServer;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -63,35 +59,16 @@ public class Gasw {
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     private static Gasw instance;
     private GaswNotification notification;
-    private Object client;
-    private volatile Map<String, Proxy> finishedJobs;
-    private volatile boolean gettingOutputs;
 
     /**
      * Gets a default instance of GASW.
-     * 
+     *
      * @return Instance of GASW
      */
     public synchronized static Gasw getInstance() throws GaswException {
-        if (instance == null) {
-            instance = new Gasw();
-        }
-        return instance;
-    }
 
-    /**
-     * Gets an instance of GASW.
-     * 
-     * @param version
-     * @param dci
-     * @return
-     * @throws GaswException 
-     */
-    public synchronized static Gasw getInstance(Constants.Version version, Constants.DCI dci) throws GaswException {
         if (instance == null) {
             instance = new Gasw();
-//            Configuration.VERSION = version;
-//            Configuration.DCI = dci;
         }
         return instance;
     }
@@ -101,51 +78,51 @@ public class Gasw {
         try {
             PropertyConfigurator.configure(
                     Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
-            Configuration.setUp();
+            logger.info("Initializing GASW.");
+            GaswConfiguration.getInstance().loadHibernate();
             ProxyConfiguration.initConfiguration();
 
-            finishedJobs = new HashMap<String, Proxy>();
-            notification = new GaswNotification();
-            notification.start();
-            gettingOutputs = false;
+            notification = GaswNotification.getInstance();
 
         } catch (IllegalArgumentException ex) {
             throw new GaswException(ex);
         }
     }
-
+    
     /**
-     *
-     * @param client
-     * @param gaswInput
-     * @return
+     * Sets the client which will receive notifications.
+     * 
+     * @param client 
      */
-    public synchronized String submit(Object client, GaswInput gaswInput) throws GaswException {
-        return submit(client, gaswInput, null, null, null);
+    public synchronized void setNotificationClient(Object client) {
+        
+        notification.setClient(client);
     }
 
     /**
-     * 
-     * @param client
+     *
      * @param gaswInput
-     * @param proxy user's proxy
      * @return
+     * @throws GaswException
      */
-    public synchronized String submit(Object client, GaswInput gaswInput, GridUserCredentials credentials,
+    public synchronized String submit(GaswInput gaswInput) throws GaswException {
+
+        return submit(gaswInput, null, null, null);
+    }
+
+    /**
+     *
+     * @param gaswInput
+     * @param credentials
+     * @param myproxyServer
+     * @param vomsServer
+     * @return
+     * @throws GaswException
+     */
+    public synchronized String submit(GaswInput gaswInput, GridUserCredentials credentials,
             MyproxyServer myproxyServer, VOMSServer vomsServer) throws GaswException {
 
-        if (this.client == null) {
-            this.client = client;
-        }
-        // if the jigsaw descriptor contains a target infrastruture, this overides the default target
-//        for (EnvVariable v : gaswInput.getRelease().getConfigurations()) {
-//            if (v.getCategory() == EnvVariable.Category.SYSTEM
-//                    && v.getName().equals("gridTarget")) {
-//                Configuration.DCI = Constants.DCI.valueOf(v.getValue());
-//            }
-//        }
-        Executor executor = ExecutorFactory.getExecutor(gaswInput);
-        executor.preProcess();
+        ExecutorPlugin executor = ExecutorFactory.getExecutor(gaswInput);
 
         Proxy userProxy = null;
         if (credentials != null) {
@@ -156,84 +133,46 @@ public class Gasw {
                 userProxy = new GlobusMyproxy(myproxyServer, vomsServer, new File(proxyPath));
             }
         }
-        executor.setUserProxy(userProxy);
 
+        executor.load(gaswInput, userProxy);
         return executor.submit();
     }
 
     /**
-     * 
-     * @param finishedJobs
-     */
-    public synchronized void addFinishedJob(Map<String, Proxy> finishedJobs) {
-        this.finishedJobs.putAll(finishedJobs);
-    }
-
-    /**
      * Gets the list of output objects of all finished jobs
-     * 
+     *
      * @return List of output objects of finished jobs.
      */
     public synchronized List<GaswOutput> getFinishedJobs() {
-
-        gettingOutputs = true;
-        List<GaswOutput> outputsList = new ArrayList<GaswOutput>();
-        List<String> jobsToRemove = new ArrayList<String>();
-
-        if (finishedJobs != null) {
-            for (String jobID : finishedJobs.keySet()) {
-                outputsList.add(OutputUtilFactory.getOutputUtil(jobID, finishedJobs.get(jobID)).getOutputs());
-
-                jobsToRemove.add(jobID);
-            }
-            for (String jobID : jobsToRemove) {
-                finishedJobs.remove(jobID);
-            }
-        }
-
-        return outputsList;
+        return notification.getFinishedJobs();
     }
 
+    /**
+     * The client informs GASW that it is waiting for new notifications.
+     */
     public synchronized void waitForNotification() {
-        gettingOutputs = false;
+        notification.waitForNotification();
     }
 
-    public synchronized void terminate() {
-        MonitorFactory.terminate();
-        notification.terminate();
-        DAOFactory.getDAOFactory().close();
-    }
-
-    private class GaswNotification extends Thread {
-
-        private boolean stop = false;
-
-        @Override
-        public void run() {
-            while (!stop) {
-                if (!gettingOutputs) {
-                    if (finishedJobs != null && finishedJobs.size() > 0) {
-                        logger.debug("New tasks have finished execution. Notifying client...");
-                        synchronized (client) {
-                            client.notify();
-                        }
-                    }
-                }
-                try {
-                    sleep(10000);
-                } catch (InterruptedException ex) {
-                    logger.error(ex);
-                    if (logger.isDebugEnabled()) {
-                        for (StackTraceElement stack : ex.getStackTrace()) {
-                            logger.debug(stack);
-                        }
-                    }
-                }
+    /**
+     * Terminates all GASW threads and close the connection with the database.
+     *
+     * @throws GaswException
+     */
+    public synchronized void terminate() throws GaswException {
+        
+        try {
+            DAOFactory.getDAOFactory().close();
+            notification.terminate();
+            
+            if (GaswConfiguration.getInstance().isFailOverEnabled()) {
+                FailOver.getInstance().terminate();
             }
-        }
-
-        public void terminate() {
-            stop = true;
+            
+            GaswConfiguration.getInstance().terminate();
+            
+        } catch (DAOException ex) {
+            throw new GaswException(ex);
         }
     }
 }

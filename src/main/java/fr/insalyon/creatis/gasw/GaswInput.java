@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -46,6 +46,7 @@ import java.util.List;
  */
 public class GaswInput {
 
+    private String executorName;
     private Release release;
     private List<String> parameters;
     private List<URI> downloads;
@@ -54,16 +55,15 @@ public class GaswInput {
     private String defaultDir;
 
     /**
-     * 
+     *
      * @param release
      */
-    public GaswInput(Release release) {
-        this(release, new ArrayList<String>(), new ArrayList<URI>(),
+    public GaswInput(String executorName, Release release) {
+        this(executorName, release, new ArrayList<String>(), new ArrayList<URI>(),
                 new ArrayList<Upload>());
     }
 
     /**
-     * 
      * @param release
      * @param parameters List of parameters associated with the command.
      * @param downloads List of input files to be downloaded in the worker node.
@@ -71,21 +71,52 @@ public class GaswInput {
      */
     public GaswInput(Release release, List<String> parameters, List<URI> downloads,
             List<Upload> uploads) {
-        this(release, parameters, downloads, uploads, new ArrayList<String>(), null);
+        this(null, release, parameters, downloads, uploads, new ArrayList<String>(), null);
     }
 
     /**
-     * 
+     * @param executorName
+     * @param release
+     * @param parameters List of parameters associated with the command.
+     * @param downloads List of input files to be downloaded in the worker node.
+     * @param uploads List of output files to be uploaded to a Storage Element.
+     */
+    public GaswInput(String executorName, Release release, List<String> parameters, List<URI> downloads,
+            List<Upload> uploads) {
+        this(executorName, release, parameters, downloads, uploads, new ArrayList<String>(), null);
+    }
+
+    /**
+     *
      * @param release
      * @param parameters List of parameters associated with the command.
      * @param downloads List of input files to be downloaded in the worker node.
      * @param uploads List of output files to be uploaded to a Storage Element.
      * @param regexs list of regular expressions to match against outputs.
-     * @param defaultDir default directory where to store files matching the regular expressions.
+     * @param defaultDir default directory where to store files matching the
+     * regular expressions.
      */
     public GaswInput(Release release, List<String> parameters, List<URI> downloads,
             List<Upload> uploads, List<String> regexs, String defaultDir) {
+        
+        this(null, release, parameters, downloads, uploads, regexs, defaultDir);
+    }
+    
+    /**
+     *
+     * @param executorName
+     * @param release
+     * @param parameters List of parameters associated with the command.
+     * @param downloads List of input files to be downloaded in the worker node.
+     * @param uploads List of output files to be uploaded to a Storage Element.
+     * @param regexs list of regular expressions to match against outputs.
+     * @param defaultDir default directory where to store files matching the
+     * regular expressions.
+     */
+    public GaswInput(String executorName, Release release, List<String> parameters, List<URI> downloads,
+            List<Upload> uploads, List<String> regexs, String defaultDir) {
 
+        this.executorName = executorName;
         this.release = release;
         this.parameters = parameters;
         this.downloads = downloads;
@@ -96,7 +127,7 @@ public class GaswInput {
 
     /**
      * Adds a parameter to the list of parameters.
-     * 
+     *
      * @param param Parameter
      */
     public void addParameter(String param) {
@@ -114,7 +145,7 @@ public class GaswInput {
 
     /**
      * Adds an URI to the list of URIs to be uploaded.
-     * 
+     *
      * @param upload URI
      */
     public void addUpload(Upload upload) {
@@ -122,7 +153,7 @@ public class GaswInput {
     }
 
     /**
-     * Adds an 
+     * Adds an
      *
      * @param regex
      */
@@ -152,5 +183,9 @@ public class GaswInput {
 
     public List<Upload> getUploads() {
         return uploads;
+    }
+
+    public String getExecutorName() {
+        return executorName;
     }
 }

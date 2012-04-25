@@ -1,0 +1,30 @@
+## cleanupFunction.vm
+
+## Variables
+## $cacheDir, $cacheFile
+
+function cleanup {
+
+    startLog cleanup
+    info "=== ls -a ==="
+    ls -a
+    info "=== ls $cacheDir/$cacheFile ==="
+    ls $cacheDir/$cacheFile
+    info "=== cat $cacheDir/$cacheFile === "
+    cat $cacheDir/$cacheFile
+    info "Cleaning up: rm * -Rf"
+    \rm * -Rf
+    if [ "${BACKPID}" != "" ]
+    then
+        for i in `ps --ppid ${BACKPID} -o pid | grep -v PID`
+        do
+            info "Killing child of background script (pid ${i})"
+            kill -9 ${i}
+        done
+        info "Killing background script (pid ${BACKPID})"
+        kill -9 ${BACKPID}
+    fi
+    info "END date:"
+    date +%s
+    stopLog cleanup
+}

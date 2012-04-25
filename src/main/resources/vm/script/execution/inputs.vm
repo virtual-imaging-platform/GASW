@@ -1,0 +1,41 @@
+## inputs.vm
+
+## Variables
+## $minorStatusEnabled, $serviceCall, $infrastructures, $downloads
+
+startLog inputs_download
+
+__MOTEUR_IN=$GASW_EXEC_URL
+
+#if( $minorStatusEnabled && $serviceCall )
+$serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 3
+#end
+
+touch DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
+
+#foreach( $infrastructure in $infrastructures )
+if [[ "$GASW_EXEC_ENV" == "$infrastructure.Type" ]]
+then
+#foreach( $execution in $infrastructure.Executions )
+    if [[ "$GASW_JOB_ENV" == "$execution.Type" ]]
+    then
+        downloadURI $execution.BoundArtifact.Path
+        export GASW_EXEC_URL="$execution.BoundArtifact.Path"
+#set( $fileName = '${GASW_EXEC_URL##*/}' )
+        fName=${fileName}
+        export GASW_EXEC_BUNDLE="$fName"
+        export GASW_EXEC_COMMAND="$execution.Target"
+    fi
+#end
+fi
+#end
+
+#foreach( $download in $downloads )
+downloadURI $download.Path
+__MOTEUR_IN="${__MOTEUR_IN};$download"
+#end
+
+chmod 755 *
+AFTERDOWNLOAD=`date +%s`;
+
+stopLog inputs_download

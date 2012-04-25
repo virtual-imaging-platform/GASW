@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -34,31 +34,44 @@
  */
 package fr.insalyon.creatis.gasw.bean;
 
+import javax.persistence.*;
+
 /**
  *
  * @author Rafael Silva
  */
+@Entity
+@NamedQuery(name = "EntryPoints.findByHostname", query = "from SEEntryPoint e WHERE e.id.hostname = :hostname")
+@Table(name = "SEEntryPoints")
 public class SEEntryPoint {
 
-    private String hostname;
-    private int port;
-    private String path;
+    private SEEntryPointID id;
+    private String home;
 
-    public SEEntryPoint(String hostname, int port, String path) {
-        this.hostname = hostname;
-        this.port = port;
-        this.path = path;
+    public SEEntryPoint() {
     }
 
-    public String getHostName() {
-        return hostname;
+    public SEEntryPoint(SEEntryPointID id, String home) {
+
+        this.id = id;
+        this.home = home;
     }
 
-    public String getPath() {
-        return path;
+    @Column(name = "home")
+    public String getHome() {
+        return home;
     }
 
-    public int getPort() {
-        return port;
+    public void setHome(String home) {
+        this.home = home;
+    }
+
+    @EmbeddedId
+    public SEEntryPointID getId() {
+        return id;
+    }
+
+    public void setId(SEEntryPointID id) {
+        this.id = id;
     }
 }

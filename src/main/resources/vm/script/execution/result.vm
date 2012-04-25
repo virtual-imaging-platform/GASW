@@ -1,0 +1,51 @@
+## result.vm
+
+## Variables
+## $minorStatusEnabled, $serviceCall, $uploads, $regexs, $defaultDir, $dir
+
+startLog results_upload
+
+#if( $minorStatusEnabled && $serviceCall )
+$serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 5
+#end
+
+#set( $uploadsList = "" )
+#set( $count = 0 )
+#foreach( $upload in $uploads )
+    #set( $URI = $upload.URI )
+    #if( $count > 0 )
+        #set( $uploadsList = "$uploadsList;$URI" )
+    #else
+        #set( $uploadsList = $URI )
+    #end
+
+upload $URI.Path "`tr -dc "[:alpha:]" < /dev/urandom | head -c 32`" $upload.NumberOfReplicas false    
+#end
+
+__MOTEUR_OUT="$uploadsList"
+
+#foreach( $regexp in $regexs )
+#set( $D = '#' )
+#set( $regexCommand = "$(find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '^\\.$' | sed 's#.${D}${D}' | grep -P '$regexp')" )
+files=$regexCommand
+if [ $? -ne 0 ]
+then
+    error "Exiting with return value 3"
+    exit 3
+fi
+
+for f in ${files}
+do
+    startLog file_upload lfn="$dir${f}"
+    uploadFile $dir${f} ${PWD}/${f} 1
+    stopLog file_upload
+    if [ "x$__MOTEUR_OUT" == "x" ]
+    then
+        __MOTEUR_OUT="$defaultDir${f}"
+    else
+        __MOTEUR_OUT="${__MOTEUR_OUT};$defaultDir${f}"
+    fi
+done
+#end
+
+stopLog results_upload

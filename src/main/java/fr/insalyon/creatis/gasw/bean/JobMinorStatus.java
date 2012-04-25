@@ -34,34 +34,80 @@
  */
 package fr.insalyon.creatis.gasw.bean;
 
-import fr.insalyon.creatis.gasw.Constants.MinorStatus;
+import fr.insalyon.creatis.gasw.execution.GaswMinorStatus;
 import java.util.Date;
+import javax.persistence.*;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  *
  * @author Rafael Silva
  */
+@Entity
+@NamedQueries({
+    @NamedQuery(name = "MinorStatus.findCheckpointById", query = "FROM "
+    + "JobMinorStatus j WHERE j.job.id = :jobId AND (j.status = :checkpointInit "
+    + "OR j.status = :checkpointUpload OR j.status = :checkpointEnd) ORDER BY j.date"),
+    @NamedQuery(name = "MinorStatus.findExecutionById", query = "FROM "
+    + "JobMinorStatus j WHERE j.job.id = :jobId AND (j.status = :start "
+    + "OR j.status = :background OR j.status = :input OR j.status = :application "
+    + "OR j.status = :output) ORDER BY j.date")
+})
+@Table(name = "JobsMinorStatus")
 public class JobMinorStatus {
 
-    private String jobID;
-    private MinorStatus status;
+    private int statusId;
+    private Job job;
+    private GaswMinorStatus status;
     private Date date;
 
-    public JobMinorStatus(String jobID, MinorStatus status, Date date) {
-        this.jobID = jobID;
+    public JobMinorStatus() {
+    }
+
+    public JobMinorStatus(Job job, GaswMinorStatus status, Date date) {
+        this.job = job;
         this.status = status;
         this.date = date;
     }
 
+    @Id
+    @GeneratedValue(generator = "increment")
+    @GenericGenerator(name = "increment", strategy = "increment")
+    public int getStatusId() {
+        return statusId;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "event_date")
     public Date getDate() {
         return date;
     }
 
-    public String getJobID() {
-        return jobID;
+    @ManyToOne
+    @JoinColumn(name = "id")
+    public Job getJob() {
+        return job;
     }
 
-    public MinorStatus getStatus() {
+    @Enumerated(EnumType.ORDINAL)
+    @Column(name = "minor_status")
+    public GaswMinorStatus getStatus() {
         return status;
+    }
+
+    public void setStatusId(int statusId) {
+        this.statusId = statusId;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public void setJob(Job job) {
+        this.job = job;
+    }
+
+    public void setStatus(GaswMinorStatus status) {
+        this.status = status;
     }
 }

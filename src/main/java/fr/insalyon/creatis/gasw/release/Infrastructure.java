@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -35,7 +35,7 @@
 package fr.insalyon.creatis.gasw.release;
 
 import java.net.URI;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -58,16 +58,7 @@ public class Infrastructure {
     public Infrastructure(String type, Execution execution,
             List<EnvVariable> sharedEnvironment, URI sharedArtifact) {
 
-        try {
-            this.type = Type.valueOf(type.toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            this.type = Type.LOCAL;
-        }
-        List<Execution> executions = new ArrayList<Execution>();
-        executions.add(execution);
-        this.executions = executions;
-        this.sharedEnvironment = sharedEnvironment;
-        this.sharedArtifact = sharedArtifact;
+        this(type, Arrays.asList(execution), sharedEnvironment, sharedArtifact);        
     }
 
     public Infrastructure(String type, List<Execution> executions,

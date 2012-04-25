@@ -43,9 +43,7 @@ import java.util.List;
  */
 public interface JobMinorStatusDAO {
 
-    public void add(String jobId, int minorStatus) throws DAOException;
-
-    public boolean hasCheckpoint(String jobId) throws DAOException;
+    public void add(JobMinorStatus jobMinorStatus) throws DAOException;
 
     public List<JobMinorStatus> getCheckpoints(String jobID) throws DAOException;
 

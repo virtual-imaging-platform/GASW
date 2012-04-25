@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -34,51 +34,93 @@
  */
 package fr.insalyon.creatis.gasw.bean;
 
-import fr.insalyon.creatis.gasw.monitor.GaswStatus;
+import fr.insalyon.creatis.gasw.execution.GaswStatus;
+import java.util.Date;
+import javax.persistence.*;
 
 /**
  *
  * @author Rafael Silva
  */
+@Entity
+@NamedQueries({
+    @NamedQuery(name = "Job.findById", query = "FROM Job j WHERE j.id = :id"),
+    @NamedQuery(name = "Job.findByStatus", query = "FROM Job j WHERE j.status = :status"),
+    @NamedQuery(name = "Job.getActive", query = "FROM Job j WHERE status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate"),
+    @NamedQuery(name = "Job.findActiveByFileName", query = "FROM Job j WHERE j.fileName = :fileName AND (status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate)"),
+    @NamedQuery(name = "Job.getCompletedJobsByFileName", query = "SELECT COUNT(j.id) FROM Job j WHERE j.fileName = :fileName AND (status = :completed OR status = :failed OR status = :cancelled OR status = :stalled)")
+})
+@Table(name = "Jobs")
 public class Job {
 
     private String id;
+    private String simulationID;
     private GaswStatus status;
     private int exitCode;
-    private int creation;
-    private int queued;
-    private int download;
-    private int running;
-    private int upload;
-    private int end;
+    private String exitMessage;
+    private Date creation;
+    private Date queued;
+    private Date download;
+    private Date running;
+    private Date upload;
+    private Date end;
     private int checkpointInit;
     private int checkpointUpload;
     private Node node;
     private String command;
     private String fileName;
-    private int startTime;
     private String parameters;
+    private String executor;
+
+    public Job() {
+    }
+
     /**
-     * TODO: eliminate.
+     *
+     * @param id
+     * @param simulationID
+     * @param status
+     * @param command
+     * @param fileName
+     * @param parameters
+     * @param executor
      */
-    private Object DCISpecificJob;
+    public Job(String id, String simulationID, GaswStatus status, String command,
+            String fileName, String parameters, String executor) {
 
-    public Job(String parameters, String command, String fileName) {
-        this("", GaswStatus.CREATED, -1, 0, 0, 0, 0, 0, 0, null, command,
-                fileName, parameters);
+        this(id, simulationID, status, -1, "", null, null, null, null, null,
+                null, null, command, fileName, parameters, executor);
     }
 
-    public Job(String id, GaswStatus status, String parameters, String command) {
-        this(id, status, -1, 0, 0, 0, 0, 0, 0, null, command, "", parameters);
-    }
-
-    public Job(String id, GaswStatus status, int exitCode, int creation, int queued,
-            int download, int running, int upload, int end, Node node,
-            String command, String fileName, String parameters) {
+    /**
+     *
+     * @param id
+     * @param simulationID
+     * @param status
+     * @param exitCode
+     * @param exitMessage
+     * @param creation
+     * @param queued
+     * @param download
+     * @param running
+     * @param upload
+     * @param end
+     * @param node
+     * @param command
+     * @param fileName
+     * @param parameters
+     * @param executor
+     */
+    public Job(String id, String simulationID, GaswStatus status, int exitCode,
+            String exitMessage, Date creation, Date queued, Date download,
+            Date running, Date upload, Date end, Node node, String command,
+            String fileName, String parameters, String executor) {
 
         this.id = id;
+        this.simulationID = simulationID;
         this.status = status;
         this.exitCode = exitCode;
+        this.exitMessage = exitMessage;
         this.creation = creation;
         this.queued = queued;
         this.download = download;
@@ -89,40 +131,11 @@ public class Job {
         this.command = command;
         this.fileName = fileName;
         this.parameters = parameters;
+        this.executor = executor;
     }
 
-    public int getCreation() {
-        return creation;
-    }
-
-    public void setCreation(int creation) {
-        this.creation = creation;
-    }
-
-    public int getDownload() {
-        return download;
-    }
-
-    public void setDownload(int download) {
-        this.download = download;
-    }
-
-    public int getEnd() {
-        return end;
-    }
-
-    public void setEnd(int end) {
-        this.end = end;
-    }
-
-    public int getExitCode() {
-        return exitCode;
-    }
-
-    public void setExitCode(int exitCode) {
-        this.exitCode = exitCode;
-    }
-
+    @Id
+    @Column(name = "id")
     public String getId() {
         return id;
     }
@@ -131,6 +144,68 @@ public class Job {
         this.id = id;
     }
 
+    @Column(name = "simulation_id")
+    public String getSimulationID() {
+        return simulationID;
+    }
+
+    public void setSimulationID(String simulationID) {
+        this.simulationID = simulationID;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "creation")
+    public Date getCreation() {
+        return creation;
+    }
+
+    public void setCreation(Date creation) {
+        this.creation = creation;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "download")
+    public Date getDownload() {
+        return download;
+    }
+
+    public void setDownload(Date download) {
+        this.download = download;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "end_e")
+    public Date getEnd() {
+        return end;
+    }
+
+    public void setEnd(Date end) {
+        this.end = end;
+    }
+
+    @Column(name = "exit_code")
+    public int getExitCode() {
+        return exitCode;
+    }
+
+    public void setExitCode(int exitCode) {
+        this.exitCode = exitCode;
+    }
+
+    @Column(name = "exit_message")
+    public String getExitMessage() {
+        return exitMessage;
+    }
+
+    public void setExitMessage(String exitMessage) {
+        this.exitMessage = exitMessage;
+    }
+
+    @ManyToOne
+    @JoinColumns({
+        @JoinColumn(name = "node_site", referencedColumnName = "site"),
+        @JoinColumn(name = "node_name", referencedColumnName = "node_name")
+    })
     public Node getNode() {
         return node;
     }
@@ -139,22 +214,28 @@ public class Job {
         this.node = node;
     }
 
-    public int getQueued() {
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "queued")
+    public Date getQueued() {
         return queued;
     }
 
-    public void setQueued(int queued) {
+    public void setQueued(Date queued) {
         this.queued = queued;
     }
 
-    public int getRunning() {
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "running")
+    public Date getRunning() {
         return running;
     }
 
-    public void setRunning(int running) {
+    public void setRunning(Date running) {
         this.running = running;
     }
 
+    @Column(name = "status")
+    @Enumerated(value = EnumType.STRING)
     public GaswStatus getStatus() {
         return status;
     }
@@ -163,18 +244,22 @@ public class Job {
         this.status = status;
     }
 
-    public int getUpload() {
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "upload")
+    public Date getUpload() {
         return upload;
     }
 
-    public void setUpload(int upload) {
+    public void setUpload(Date upload) {
         this.upload = upload;
     }
 
+    @Column(name = "command")
     public String getCommand() {
         return command;
     }
 
+    @Column(name = "file_name")
     public String getFileName() {
         return fileName;
     }
@@ -183,18 +268,12 @@ public class Job {
         this.fileName = fileName;
     }
 
-    public int getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(int startTime) {
-        this.startTime = startTime;
-    }
-
+    @Column(name = "parameters")
     public String getParameters() {
         return parameters;
     }
 
+    @Column(name = "checkpoint_init")
     public int getCheckpointInit() {
         return checkpointInit;
     }
@@ -203,11 +282,29 @@ public class Job {
         this.checkpointInit = checkpointInit;
     }
 
+    @Column(name = "checkpoint_upload")
     public int getCheckpointUpload() {
         return checkpointUpload;
     }
 
     public void setCheckpointUpload(int checkpointUpload) {
         this.checkpointUpload = checkpointUpload;
+    }
+
+    public void setCommand(String command) {
+        this.command = command;
+    }
+
+    public void setParameters(String parameters) {
+        this.parameters = parameters;
+    }
+
+    @Column(name = "executor")
+    public String getExecutor() {
+        return executor;
+    }
+
+    public void setExecutor(String executor) {
+        this.executor = executor;
     }
 }
