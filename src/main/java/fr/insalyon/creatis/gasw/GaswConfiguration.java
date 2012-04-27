@@ -312,6 +312,7 @@ public class GaswConfiguration {
             executorPlugin.terminate();
         }
         pm.shutdown();
+        sessionFactory.close();
     }
 
     public PropertiesConfiguration getPropertiesConfiguration() {
