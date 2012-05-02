@@ -43,19 +43,69 @@ import net.xeoh.plugins.base.Plugin;
  */
 public interface DatabasePlugin extends Plugin {
 
+    /**
+     * Gets the name of the plugin.
+     * 
+     * @return 
+     */
     public String getName();
 
+    /**
+     * This is the first method invoked by GASW. This method is called when GASW 
+     * is loading its configuration. It is useful to load plugin properties from 
+     * the configuration file.
+     * 
+     * @throws GaswException 
+     */
     public void load() throws GaswException;
 
+    /**
+     * Gets the database schema name.
+     * 
+     * @return
+     * @throws GaswException 
+     */
     public String getSchema() throws GaswException;
 
+    /**
+     * Gets the JDBC driver.
+     * 
+     * @return
+     * @throws GaswException 
+     */
     public String getDriverClass() throws GaswException;
 
+    /**
+     * Gets the JDBC connection URL.
+     * 
+     * @return
+     * @throws GaswException 
+     */
     public String getConnectionUrl() throws GaswException;
 
+    /**
+     * Gets the hibernate dialect.
+     * The list of supported databases and dialects can be found at
+     * http://docs.jboss.org/hibernate/orm/4.1/manual/en-US/html/ch03.html#configuration-optional-dialects
+     * 
+     * @return
+     * @throws GaswException 
+     */
     public String getHibernateDialect() throws GaswException;
 
+    /**
+     * Gets the database username.
+     * 
+     * @return
+     * @throws GaswException 
+     */
     public String getUserName() throws GaswException;
 
+    /**
+     * Gets the database password.
+     * 
+     * @return
+     * @throws GaswException 
+     */
     public String getPassword() throws GaswException;
 }
