@@ -22,7 +22,8 @@ fi
 
 ## Builds the custom environment
 export BASEDIR=${PWD}
-export $ENV=$defaultEnvironment
+ENV=$defaultEnvironment
+export $ENV
 __MOTEUR_ENV=$defaultEnvironment
 export SE=$voDefaultSE
 USE_CLOSE_SE=$voUseCloseSE
