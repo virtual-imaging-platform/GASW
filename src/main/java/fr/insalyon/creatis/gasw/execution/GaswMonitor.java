@@ -64,7 +64,8 @@ public abstract class GaswMonitor extends Thread {
     }
 
     /**
-     *
+     * Adds a job to the database.
+     * 
      * @param job
      * @param fileName
      */
@@ -79,6 +80,8 @@ public abstract class GaswMonitor extends Thread {
     }
 
     /**
+     * Adds a job to be monitored. it should constructs a Job object and 
+     * invoke the protected method add(job).
      *
      * @param jobID
      * @param symbolicName
@@ -109,11 +112,31 @@ public abstract class GaswMonitor extends Thread {
         }
     }
 
+    /**
+     * Kills a job.
+     * 
+     * @param jobID 
+     */
     protected abstract void kill(String jobID);
 
+    /**
+     * Reschedule a job.
+     * 
+     * @param jobID 
+     */
     protected abstract void reschedule(String jobID);
 
+    /**
+     * Replicates a job.
+     * 
+     * @param jobID 
+     */
     protected abstract void replicate(String jobID);
 
+    /**
+     * Kills job replicas.
+     * 
+     * @param fileName 
+     */
     protected abstract void killReplicas(String fileName);
 }

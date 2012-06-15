@@ -64,7 +64,7 @@ public class JobData implements JobDAO {
         try {
             Session session = sessionFactory.openSession();
             session.beginTransaction();
-            session.save(job);
+            session.saveOrUpdate(job);
             session.getTransaction().commit();
             session.close();
 

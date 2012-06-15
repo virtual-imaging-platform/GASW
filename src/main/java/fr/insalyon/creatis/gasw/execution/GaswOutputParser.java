@@ -38,10 +38,7 @@ import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswNotification;
 import fr.insalyon.creatis.gasw.GaswOutput;
-import fr.insalyon.creatis.gasw.bean.Job;
-import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
-import fr.insalyon.creatis.gasw.bean.Node;
-import fr.insalyon.creatis.gasw.bean.NodeID;
+import fr.insalyon.creatis.gasw.bean.*;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import grool.proxy.Proxy;
@@ -63,7 +60,8 @@ public abstract class GaswOutputParser extends Thread {
     protected File appStdErr;
     private BufferedWriter appStdOutWriter;
     private BufferedWriter appStdErrWriter;
-    protected List<URI> uploadedResults = null;
+    protected List<Data> dataList;
+    protected List<URI> uploadedResults;
     private StringBuilder inputsDownloadErrBuf;
     private StringBuilder resultsUploadErrBuf;
     private StringBuilder appStdOutBuf;
@@ -90,6 +88,9 @@ public abstract class GaswOutputParser extends Thread {
             this.resultsUploadErrBuf = new StringBuilder();
             this.appStdOutBuf = new StringBuilder();
             this.appStdErrBuf = new StringBuilder();
+            
+            this.dataList = new ArrayList<Data>();
+            this.uploadedResults = null;
 
         } catch (IOException ex) {
             logger.error(ex);
@@ -137,6 +138,7 @@ public abstract class GaswOutputParser extends Thread {
             Scanner scanner = new Scanner(new FileInputStream(stdOut));
 
             boolean isAppExec = false;
+            boolean isInputDownload = false;
             boolean isResultUpload = false;
             String lfcHost = "";
 
@@ -161,6 +163,10 @@ public abstract class GaswOutputParser extends Thread {
                         job.setRunning(addDate(job.getDownload(), Calendar.SECOND, downloadTime));
 
                     } else if (line.contains("Execution time:")) {
+
+                        if (job.getRunning() == null) {
+                            job.setRunning(job.getDownload());
+                        }
                         int executionTime = Integer.valueOf(line.split(" ")[12]).intValue();
                         job.setUpload(addDate(job.getRunning(), Calendar.SECOND, executionTime));
 
@@ -173,26 +179,27 @@ public abstract class GaswOutputParser extends Thread {
                         exitCode = Integer.valueOf(errmsg[errmsg.length - 1]).intValue();
                         job.setExitCode(exitCode);
 
+                    } else if (line.startsWith("===== uname =====")) {
+                        line = scanner.nextLine();
+                        nodeID.setNodeName(line.split(" ")[1]);
+
                     } else if (line.startsWith("SITE_NAME")) {
                         nodeID.setSiteName(line.split("=")[1]);
 
                     } else if (line.startsWith("PBS_O_HOST") && nodeID.getSiteName() == null) {
                         nodeID.setSiteName(line.split("=")[1]);
-                        String code = nodeID.getNodeName().substring(nodeID.getNodeName().lastIndexOf(".") + 1, nodeID.getNodeName().length());
+                        String code = nodeID.getNodeName().substring(nodeID.getNodeName().lastIndexOf(".") + 1);
                         if (code.length() != 2) {
                             String host = line.split("=")[1];
-                            String countryCode = host.substring(host.lastIndexOf("."), host.length());
+                            String countryCode = host.substring(host.lastIndexOf("."));
                             nodeID.setNodeName(nodeID.getNodeName() + countryCode);
                         }
-                    } else if (line.startsWith("===== uname =====")) {
-                        line = scanner.nextLine();
-                        nodeID.setNodeName(line.split(" ")[1]);
 
                     } else if (line.startsWith("CE_ID")) {
-                        String code = nodeID.getNodeName().substring(nodeID.getNodeName().lastIndexOf(".") + 1, nodeID.getNodeName().length());
+                        String code = nodeID.getNodeName().substring(nodeID.getNodeName().lastIndexOf(".") + 1);
                         if (code.length() != 2) {
                             String host = URI.create("http://" + line.split("=")[1]).getHost();
-                            String countryCode = host.substring(host.lastIndexOf("."), host.length());
+                            String countryCode = host.substring(host.lastIndexOf("."));
                             nodeID.setNodeName(nodeID.getNodeName() + countryCode);
                         }
 
@@ -214,6 +221,16 @@ public abstract class GaswOutputParser extends Thread {
                     } else if (line.startsWith("MemTotal:")) {
                         node.setMemTotal(new Integer(line.split("\\s+")[1]));
 
+                    } else if (line.startsWith("<inputs_download>")) {
+                        isInputDownload = true;
+
+                    } else if (line.startsWith("</inputs_download>")) {
+                        isInputDownload = false;
+                        
+                    } else if (line.contains("Downloading file") && isInputDownload) {
+                        String downloadedFile = line.split(" ")[12].replace("...", "");
+                        dataList.add(new Data(downloadedFile, GaswConstants.DataType.Input));
+                        
                     } else if (line.startsWith("<results_upload>")) {
                         isResultUpload = true;
                         uploadedResults = new ArrayList<URI>();
@@ -231,8 +248,11 @@ public abstract class GaswOutputParser extends Thread {
                                 ? URI.create("file://" + uploadedFile)
                                 : URI.create("lfn://" + lfcHost + uploadedFile);
                         uploadedResults.add(uri);
+                        dataList.add(new Data(uri.toString(), GaswConstants.DataType.Output));
                     }
                 }
+            } catch (Exception ex) {
+                logger.error(ex);
             } finally {
                 scanner.close();
             }
@@ -248,7 +268,8 @@ public abstract class GaswOutputParser extends Thread {
             // Parse checkpoint
             job = parseCheckpoint();
 
-            // Update Job            
+            // Update Job
+            job.setData(dataList);
             factory.getJobDAO().update(job);
 
         } catch (DAOException ex) {

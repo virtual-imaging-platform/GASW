@@ -79,4 +79,8 @@ public class GaswConstants {
     public static final String ERR_APP_EXT = ".app" + ERR_EXT;
     // Environment Variables
     public static final String ENV_EXECUTOR = "executor";
+    // Data Type
+    public enum DataType {
+        Input, Output
+    };
 }

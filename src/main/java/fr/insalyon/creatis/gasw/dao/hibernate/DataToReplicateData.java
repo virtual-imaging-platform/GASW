@@ -35,7 +35,6 @@
 package fr.insalyon.creatis.gasw.dao.hibernate;
 
 import fr.insalyon.creatis.gasw.bean.DataToReplicate;
-import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DataToReplicateDAO;
 import java.util.List;
@@ -64,7 +63,7 @@ public class DataToReplicateData implements DataToReplicateDAO {
         try {
             Session session = sessionFactory.openSession();
             session.beginTransaction();
-            session.save(dataToReplicate);
+            session.saveOrUpdate(dataToReplicate);
             session.getTransaction().commit();
             session.close();
 

@@ -32,64 +32,50 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.dao.hibernate;
+package fr.insalyon.creatis.gasw.bean;
 
-import fr.insalyon.creatis.gasw.bean.Node;
-import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.dao.NodeDAO;
-import org.apache.log4j.Logger;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import fr.insalyon.creatis.gasw.GaswConstants.DataType;
+import javax.persistence.*;
 
 /**
  *
  * @author Rafael Silva
  */
-public class NodeData implements NodeDAO {
+@Entity
+@NamedQueries({
+    @NamedQuery(name = "Data.findByPath", query = "FROM Data d WHERE d.dataPath = :path")
+})
+@Table(name = "Data")
+public class Data {
 
-    private static final Logger logger = Logger.getLogger(JobData.class);
-    private SessionFactory sessionFactory;
+    private String dataPath;
+    private DataType dataType;
 
-    public NodeData(SessionFactory sessionFactory) {
-
-        this.sessionFactory = sessionFactory;
+    public Data() {
     }
 
-    @Override
-    public void add(Node node) throws DAOException {
-        
-        try {
-            Session session = sessionFactory.openSession();
-            session.beginTransaction();
-            session.saveOrUpdate(node);
-            session.getTransaction().commit();
-            session.close();
-
-        } catch (HibernateException ex) {
-            logger.error(ex);
-            throw new DAOException(ex);
-        }
+    public Data(String dataPath, DataType dataType) {
+        this.dataPath = dataPath;
+        this.dataType = dataType;
     }
 
-    @Override
-    public Node getNodeBySiteAndNodeName(String site, String nodeName) throws DAOException {
-        
-        try {
-            Session session = sessionFactory.openSession();
-            session.beginTransaction();
-            Node node = (Node) session.getNamedQuery("Node.findBySiteAndNodeName")
-                    .setString("siteName", site)
-                    .setString("nodeName", nodeName)
-                    .uniqueResult();
-            session.getTransaction().commit();
-            session.close();
+    @Id
+    @Column(name = "data_path")
+    public String getDataPath() {
+        return dataPath;
+    }
 
-            return node;
+    public void setDataPath(String dataPath) {
+        this.dataPath = dataPath;
+    }
 
-        } catch (HibernateException ex) {
-            logger.error(ex);
-            throw new DAOException(ex);
-        }
+    @Column(name = "data_type")
+    @Enumerated(value = EnumType.STRING)
+    public DataType getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(DataType dataType) {
+        this.dataType = dataType;
     }
 }

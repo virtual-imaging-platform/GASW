@@ -89,7 +89,7 @@ public class JobMinorStatus {
         return job;
     }
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.ORDINAL)
     @Column(name = "minor_status")
     public GaswMinorStatus getStatus() {
         return status;

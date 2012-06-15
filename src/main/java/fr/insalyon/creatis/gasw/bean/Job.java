@@ -35,7 +35,9 @@
 package fr.insalyon.creatis.gasw.bean;
 
 import fr.insalyon.creatis.gasw.execution.GaswStatus;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.*;
 
 /**
@@ -71,6 +73,7 @@ public class Job {
     private String fileName;
     private String parameters;
     private String executor;
+    private List<Data> data;
 
     public Job() {
     }
@@ -88,8 +91,8 @@ public class Job {
     public Job(String id, String simulationID, GaswStatus status, String command,
             String fileName, String parameters, String executor) {
 
-        this(id, simulationID, status, -1, "", null, null, null, null, null,
-                null, null, command, fileName, parameters, executor);
+        this(id, simulationID, status, -1, "", null, null, null, null, null, null,
+                null, command, fileName, parameters, executor, new ArrayList<Data>());
     }
 
     /**
@@ -110,11 +113,12 @@ public class Job {
      * @param fileName
      * @param parameters
      * @param executor
+     * @param data
      */
     public Job(String id, String simulationID, GaswStatus status, int exitCode,
             String exitMessage, Date creation, Date queued, Date download,
             Date running, Date upload, Date end, Node node, String command,
-            String fileName, String parameters, String executor) {
+            String fileName, String parameters, String executor, List<Data> data) {
 
         this.id = id;
         this.simulationID = simulationID;
@@ -132,6 +136,7 @@ public class Job {
         this.fileName = fileName;
         this.parameters = parameters;
         this.executor = executor;
+        this.data = data;
     }
 
     @Id
@@ -306,5 +311,19 @@ public class Job {
 
     public void setExecutor(String executor) {
         this.executor = executor;
+    }
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "job_data",
+    joinColumns = {
+        @JoinColumn(name = "id")},
+    inverseJoinColumns = {
+        @JoinColumn(name = "data_path")})
+    public List<Data> getData() {
+        return data;
+    }
+
+    public void setData(List<Data> data) {
+        this.data = data;
     }
 }

@@ -21,6 +21,7 @@
         <mapping class="fr.insalyon.creatis.gasw.bean.NodeID"/>
         <mapping class="fr.insalyon.creatis.gasw.bean.Job"/>
         <mapping class="fr.insalyon.creatis.gasw.bean.JobMinorStatus"/>
+        <mapping class="fr.insalyon.creatis.gasw.bean.Data"/>
         
     </session-factory>
 </hibernate-configuration> 
