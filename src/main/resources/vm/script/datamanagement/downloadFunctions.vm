@@ -49,7 +49,8 @@ function downloadURI {
 
     if [[ ${URI_LOWER} == lfn* ]] || [[ $URI_LOWER == /* ]]
     then
-        URI=`echo $URI | sed 's/lfn:\/\/.*[^ ]:[0-9]*\///g'`
+        URI=`echo $URI | sed 's/lfn:\/\/.[^ :]\+:[0-9]\+\//\//g'`
+        URI=`echo $URI | sed 's/lfn:\/\/.[^ /]\+//g'`
         URI=`echo $URI | sed 's/lfn://g'`
         checkCacheDownloadAndCacheLFN $URI
         validateDownload "Cannot download LFN file"
