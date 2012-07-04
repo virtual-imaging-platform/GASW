@@ -6,8 +6,6 @@
 
 startLog inputs_download
 
-__MOTEUR_IN=$GASW_EXEC_URL
-
 #if( $minorStatusEnabled && $serviceCall )
 $serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 3
 #end
@@ -20,7 +18,7 @@ then
 #foreach( $execution in $infrastructure.Executions )
     if [[ "$GASW_JOB_ENV" == "$execution.Type" ]]
     then
-        downloadURI $execution.BoundArtifact.Path
+        downloadURI $execution.BoundArtifact
         export GASW_EXEC_URL="$execution.BoundArtifact.Path"
 #set( $fileName = '${GASW_EXEC_URL##*/}' )
         fName=${fileName}
@@ -29,17 +27,19 @@ then
     fi
 #end
 #if( $infrastructure.SharedArtifact )
-    downloadURI $infrastructure.SharedArtifact.Path
+    downloadURI $infrastructure.SharedArtifact
 #end
 fi
 #end
 
+__MOTEUR_IN=$GASW_EXEC_URL
+
 #if( $attachment )
-downloadURI $attachment.Path
+downloadURI $attachment
 #end
 
 #foreach( $download in $downloads )
-downloadURI $download.Path
+downloadURI $download
 __MOTEUR_IN="${__MOTEUR_IN};$download"
 #end
 
