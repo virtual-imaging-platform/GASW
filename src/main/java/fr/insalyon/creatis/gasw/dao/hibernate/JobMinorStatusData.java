@@ -83,9 +83,9 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
             List<JobMinorStatus> list = (List<JobMinorStatus>) session
                     .getNamedQuery("MinorStatus.findCheckpointById")
                     .setString("jobId", jobID)
-                    .setInteger("checkpointInit", GaswMinorStatus.CheckPoint_Init.getStatusCode())
-                    .setInteger("checkpointUpload", GaswMinorStatus.CheckPoint_Upload.getStatusCode())
-                    .setInteger("checkpointEnd", GaswMinorStatus.CheckPoint_Upload.getStatusCode())
+                    .setString("checkpointInit", GaswMinorStatus.CheckPoint_Init.name())
+                    .setString("checkpointUpload", GaswMinorStatus.CheckPoint_Upload.name())
+                    .setString("checkpointEnd", GaswMinorStatus.CheckPoint_Upload.name())
                     .list();
             session.getTransaction().commit();
             session.close();
@@ -107,11 +107,11 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
             List<JobMinorStatus> list = (List<JobMinorStatus>) session
                     .getNamedQuery("MinorStatus.findExecutionById")
                     .setString("jobId", jobID)
-                    .setInteger("start", GaswMinorStatus.Started.getStatusCode())
-                    .setInteger("background", GaswMinorStatus.Background.getStatusCode())
-                    .setInteger("input", GaswMinorStatus.Inputs.getStatusCode())
-                    .setInteger("application", GaswMinorStatus.Application.getStatusCode())
-                    .setInteger("output", GaswMinorStatus.Outputs.getStatusCode())
+                    .setString("start", GaswMinorStatus.Started.name())
+                    .setString("background", GaswMinorStatus.Background.name())
+                    .setString("input", GaswMinorStatus.Inputs.name())
+                    .setString("application", GaswMinorStatus.Application.name())
+                    .setString("output", GaswMinorStatus.Outputs.name())
                     .list();
             session.getTransaction().commit();
             session.close();

@@ -273,7 +273,7 @@ public class Job {
         this.fileName = fileName;
     }
 
-    @Column(name = "parameters")
+    @Column(name = "parameters", columnDefinition="LONGTEXT")
     public String getParameters() {
         return parameters;
     }

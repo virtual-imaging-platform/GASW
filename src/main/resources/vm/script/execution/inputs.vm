@@ -2,6 +2,7 @@
 
 ## Variables
 ## $minorStatusEnabled, $serviceCall, $infrastructures, $downloads
+## $attachment
 
 startLog inputs_download
 
@@ -27,7 +28,14 @@ then
         export GASW_EXEC_COMMAND="$execution.Target"
     fi
 #end
+#if( $infrastructure.SharedArtifact )
+    downloadURI $infrastructure.SharedArtifact.Path
+#end
 fi
+#end
+
+#if( $attachment )
+downloadURI $attachment.Path
 #end
 
 #foreach( $download in $downloads )

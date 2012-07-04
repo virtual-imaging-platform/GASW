@@ -188,6 +188,7 @@ public class ExecutionGenerator {
         velocity.put("serviceCall", serviceCall);
         velocity.put("infrastructures", release.getInfrastructures());
         velocity.put("downloads", downloads);
+        velocity.put("attachment", release.getAttachement());
 
         return velocity.merge().toString();
     }
