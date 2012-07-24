@@ -216,7 +216,7 @@ public class ExecutionGenerator {
     /**
      * Generates the code to upload the results.
      *
-     * @param serviceCall 
+     * @param serviceCall
      * @param Uploads the list of URIs to be uploaded
      * @param regexs list of regular expressions to match with results
      * @param defaultDir default directory to store files matched against regexp
@@ -249,9 +249,13 @@ public class ExecutionGenerator {
      * @return A string containing the footer
      * @throws Exception
      */
-    protected String loadFooter() throws Exception {
+    protected String loadFooter(String serviceCall) throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/execution/footer.vm");
+
+        velocity.put("minorStatusEnabled", conf.isMinorStatusEnabled());
+        velocity.put("serviceCall", serviceCall);
+
         return velocity.merge().toString();
     }
 }

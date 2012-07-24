@@ -30,10 +30,6 @@ USE_CLOSE_SE=$voUseCloseSE
 
 export MOTEUR_WORKFLOWID="$simulationID"
 
-#if( $minorStatusEnabled && $serviceCall )
-$serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 1  
-#end
-
 ## if the execution environment is a cluster, the vlet binaries should be added to the path
 if [[ "$GASW_EXEC_ENV" == "PBS" ]]
 then
@@ -54,6 +50,10 @@ else
     echo "Exiting with return value 7"
     exit 7
 fi
+
+#if( $minorStatusEnabled && $serviceCall )
+$serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 1  
+#end
 
 BACKPID=""
 

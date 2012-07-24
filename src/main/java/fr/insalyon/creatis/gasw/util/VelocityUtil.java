@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -52,7 +52,7 @@ import org.apache.velocity.runtime.resource.util.StringResourceRepository;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class VelocityUtil {
 
@@ -114,9 +114,6 @@ public class VelocityUtil {
             logger.error(ex);
             throw new GaswException(ex);
         } catch (MethodInvocationException ex) {
-            logger.error(ex);
-            throw new GaswException(ex);
-        } catch (IOException ex) {
             logger.error(ex);
             throw new GaswException(ex);
         }

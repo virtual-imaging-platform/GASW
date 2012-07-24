@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -45,7 +45,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author Rafael Silva, Tristan Glatard
+ * @author Rafael Ferreira da Silva, Tristan Glatard
  */
 public class ScriptGenerator {
 
@@ -113,7 +113,7 @@ public class ScriptGenerator {
             sb.append(execution.loadApplicationEnvironment(release));
             sb.append(execution.loadApplicationExecution(minorStatusService.getServiceCall(), parameters));
             sb.append(execution.loadResultsUpload(minorStatusService.getServiceCall(), uploads, regexs, defaultDir));
-            sb.append(execution.loadFooter());
+            sb.append(execution.loadFooter(minorStatusService.getServiceCall()));
 
         } catch (Exception ex) {
             logger.error(ex);

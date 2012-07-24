@@ -1,8 +1,14 @@
 ## footer.vm
 
-##
+## Variables
+## $minorStatusEnabled, $serviceCall
 
 startLog footer
+
+#if( $minorStatusEnabled && $serviceCall )
+$serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 6
+#end
+
 cleanup
 STOP=`date +%s`
 info "Stop date is ${STOP}"
