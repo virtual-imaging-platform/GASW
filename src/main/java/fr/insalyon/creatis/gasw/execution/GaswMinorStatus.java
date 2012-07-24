@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -36,7 +36,7 @@ package fr.insalyon.creatis.gasw.execution;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public enum GaswMinorStatus {
 
@@ -45,6 +45,7 @@ public enum GaswMinorStatus {
     Inputs(3), // Downloading inputs
     Application(4), // Application execution
     Outputs(5), // Uploading results
+    Finished(6), // Finished job execution
     CheckPoint_Init(101), // Initializing checkpoint
     CheckPoint_Upload(105), // Uploading checkpoint
     CheckPoint_End(102);    // Checkpoint finished
@@ -71,6 +72,8 @@ public enum GaswMinorStatus {
                 return Application;
             case 5:
                 return Outputs;
+            case 6:
+                return Finished;
             case 101:
                 return CheckPoint_Init;
             case 105:
