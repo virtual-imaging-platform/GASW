@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -46,7 +46,7 @@ import org.hibernate.SessionFactory;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class JobData implements JobDAO {
 
@@ -112,7 +112,9 @@ public class JobData implements JobDAO {
         try {
             Session session = sessionFactory.openSession();
             session.beginTransaction();
-            Job job = (Job) session.getNamedQuery("Job.findById").setString("id", id).uniqueResult();
+            Job job = (Job) session.getNamedQuery("Job.findById")
+                    .setString("id", id)
+                    .uniqueResult();
             session.getTransaction().commit();
             session.close();
 
@@ -135,7 +137,9 @@ public class JobData implements JobDAO {
                     .setString("queued", GaswStatus.QUEUED.name())
                     .setString("running", GaswStatus.RUNNING.name())
                     .setString("kill", GaswStatus.KILL.name())
-                    .setString("replicate", GaswStatus.REPLICATE.name()).list();
+                    .setString("replicate", GaswStatus.REPLICATE.name())
+                    .setString("reschedule", GaswStatus.RESCHEDULE.name())
+                    .list();
             session.getTransaction().commit();
             session.close();
 
@@ -203,12 +207,37 @@ public class JobData implements JobDAO {
                     .setString("running", GaswStatus.RUNNING.name())
                     .setString("kill", GaswStatus.KILL.name())
                     .setString("replicate", GaswStatus.REPLICATE.name())
+                    .setString("reschedule", GaswStatus.RESCHEDULE.name())
                     .list();
             session.getTransaction().commit();
             session.close();
 
             return list;
 
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
+
+    @Override
+    public List<Job> getRunningByCommand(String command) throws DAOException {
+        
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            List<Job> list = (List<Job>) session.getNamedQuery("Job.getRunningByCommand")
+                    .setString("command", command)
+                    .setString("running", GaswStatus.RUNNING.name())
+                    .setString("kill", GaswStatus.KILL.name())
+                    .setString("replicate", GaswStatus.REPLICATE.name())
+                    .setString("reschedule", GaswStatus.RESCHEDULE.name())
+                    .list();
+            session.getTransaction().commit();
+            session.close();
+            
+            return list;
+            
         } catch (HibernateException ex) {
             logger.error(ex);
             throw new DAOException(ex);

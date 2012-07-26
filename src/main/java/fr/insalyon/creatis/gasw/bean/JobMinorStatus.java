@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -41,7 +41,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 @Entity
 @NamedQueries({
@@ -51,7 +51,10 @@ import org.hibernate.annotations.GenericGenerator;
     @NamedQuery(name = "MinorStatus.findExecutionById", query = "FROM "
     + "JobMinorStatus j WHERE j.job.id = :jobId AND (j.status = :start "
     + "OR j.status = :background OR j.status = :input OR j.status = :application "
-    + "OR j.status = :output) ORDER BY j.date")
+    + "OR j.status = :output) ORDER BY j.date"),
+    @NamedQuery(name = "MinorStatus.dateDiff", query = "FROM "
+    + "JobMinorStatus j WHERE j.job.id = :jobId AND (j.status = :start "
+    + "OR j.status = :end) ORDER BY j.date")
 })
 @Table(name = "JobsMinorStatus")
 public class JobMinorStatus {

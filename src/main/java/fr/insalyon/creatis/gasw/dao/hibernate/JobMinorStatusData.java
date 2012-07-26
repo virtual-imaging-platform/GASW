@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -46,7 +46,7 @@ import org.hibernate.SessionFactory;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class JobMinorStatusData implements JobMinorStatusDAO {
 
@@ -117,6 +117,29 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
             session.close();
 
             return list;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
+
+    @Override
+    public long getDateDiff(String jobID, GaswMinorStatus start, 
+            GaswMinorStatus end) throws DAOException {
+
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            List<JobMinorStatus> list = (List<JobMinorStatus>) session
+                    .getNamedQuery("MinorStatus.dateDiff")
+                    .setString("jobId", jobID)
+                    .setString("start", start.name())
+                    .setString("end", end.name())
+                    .list();
+            session.close();
+            
+            return Math.abs(list.get(1).getDate().getTime() - list.get(0).getDate().getTime());
 
         } catch (HibernateException ex) {
             logger.error(ex);

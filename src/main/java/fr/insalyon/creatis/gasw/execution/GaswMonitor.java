@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -34,18 +34,20 @@
  */
 package fr.insalyon.creatis.gasw.execution;
 
+import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.dao.NodeDAO;
+import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 import grool.proxy.Proxy;
 import java.util.Date;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public abstract class GaswMonitor extends Thread {
 
@@ -65,7 +67,7 @@ public abstract class GaswMonitor extends Thread {
 
     /**
      * Adds a job to the database.
-     * 
+     *
      * @param job
      * @param fileName
      */
@@ -74,14 +76,19 @@ public abstract class GaswMonitor extends Thread {
             job.setCreation(new Date());
             jobDAO.add(job);
 
+            // Listeners notification
+            for (ListenerPlugin listener : GaswConfiguration.getInstance().getListenerPlugins()) {
+                listener.jobSubmitted(job);
+            }
+
         } catch (DAOException ex) {
             throw new GaswException(ex);
         }
     }
 
     /**
-     * Adds a job to be monitored. it should constructs a Job object and 
-     * invoke the protected method add(job).
+     * Adds a job to be monitored. it should constructs a Job object and invoke
+     * the protected method add(job).
      *
      * @param jobID
      * @param symbolicName
@@ -93,17 +100,23 @@ public abstract class GaswMonitor extends Thread {
     public abstract void add(String jobID, String symbolicName, String fileName,
             String parameters, Proxy userProxy) throws GaswException;
 
+    /**
+     * Verifies if there are signaled jobs.
+     */
     protected void verifySignaledJobs() {
 
         try {
             for (Job job : jobDAO.getJobs(GaswStatus.REPLICATE)) {
                 replicate(job.getId());
             }
-
+            for (Job job : jobDAO.getJobs(GaswStatus.KILL_REPLICA)) {
+                job.setStatus(GaswStatus.CANCELLED_REPLICA);
+                jobDAO.update(job);
+                kill(job.getId());
+            }
             for (Job job : jobDAO.getJobs(GaswStatus.KILL)) {
                 kill(job.getId());
             }
-
             for (Job job : jobDAO.getJobs(GaswStatus.RESCHEDULE)) {
                 reschedule(job.getId());
             }
@@ -114,29 +127,29 @@ public abstract class GaswMonitor extends Thread {
 
     /**
      * Kills a job.
-     * 
-     * @param jobID 
+     *
+     * @param jobID
      */
     protected abstract void kill(String jobID);
 
     /**
      * Reschedule a job.
-     * 
-     * @param jobID 
+     *
+     * @param jobID
      */
     protected abstract void reschedule(String jobID);
 
     /**
      * Replicates a job.
-     * 
-     * @param jobID 
+     *
+     * @param jobID
      */
     protected abstract void replicate(String jobID);
 
     /**
      * Kills job replicas.
-     * 
-     * @param fileName 
+     *
+     * @param fileName
      */
     protected abstract void killReplicas(String fileName);
 }

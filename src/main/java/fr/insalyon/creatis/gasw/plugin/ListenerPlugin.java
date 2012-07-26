@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -35,10 +35,10 @@
 package fr.insalyon.creatis.gasw.plugin;
 
 import fr.insalyon.creatis.gasw.GaswException;
-import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
+import java.util.List;
 import net.xeoh.plugins.base.Plugin;
 
 /**
@@ -49,11 +49,23 @@ public interface ListenerPlugin extends Plugin {
 
     public String getPluginName();
 
-    public void jobSubmitted(GaswInput gaswInput) throws GaswException;
+    /**
+     * Gets a list of persistent classes to be loaded in Hibernate.
+     *
+     * @return List of persistent classes
+     * @throws GaswException
+     */
+    public List<Class> getPersistentClasses() throws GaswException;
+    
+    public void load() throws GaswException;
+
+    public void jobSubmitted(Job job) throws GaswException;
 
     public void jobFinished(GaswOutput gaswOutput) throws GaswException;
 
     public void jobStatusChanged(Job job) throws GaswException;
 
     public void jobMinorStatusReported(JobMinorStatus jobMinorStatus) throws GaswException;
+
+    public void terminate() throws GaswException;
 }

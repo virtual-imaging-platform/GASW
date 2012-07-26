@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -34,13 +34,11 @@
  */
 package fr.insalyon.creatis.gasw.execution;
 
-import fr.insalyon.creatis.gasw.GaswConstants;
-import fr.insalyon.creatis.gasw.GaswException;
-import fr.insalyon.creatis.gasw.GaswNotification;
-import fr.insalyon.creatis.gasw.GaswOutput;
+import fr.insalyon.creatis.gasw.*;
 import fr.insalyon.creatis.gasw.bean.*;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
+import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 import grool.proxy.Proxy;
 import java.io.*;
 import java.net.URI;
@@ -49,7 +47,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public abstract class GaswOutputParser extends Thread {
 
@@ -103,7 +101,11 @@ public abstract class GaswOutputParser extends Thread {
     public void run() {
 
         try {
-            GaswNotification.getInstance().addFinishedJob(getGaswOutput());
+            GaswOutput gaswOutput = getGaswOutput();
+            for (ListenerPlugin listener : GaswConfiguration.getInstance().getListenerPlugins()) {
+                listener.jobFinished(gaswOutput);
+            }
+            GaswNotification.getInstance().addFinishedJob(gaswOutput);
         } catch (GaswException ex) {
             // do nothing
         }

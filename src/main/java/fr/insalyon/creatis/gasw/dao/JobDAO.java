@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -40,7 +40,7 @@ import java.util.List;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public interface JobDAO {
 
@@ -59,4 +59,6 @@ public interface JobDAO {
     public long getNumberOfCompletedJobsByFileName(String fileName) throws DAOException;
     
     public List<Job> getActiveJobsByFileName(String fileName) throws DAOException;
+    
+    public List<Job> getRunningByCommand(String command) throws DAOException;
 }

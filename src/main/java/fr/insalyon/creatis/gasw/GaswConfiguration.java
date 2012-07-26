@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -40,6 +40,7 @@ import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.plugin.DatabasePlugin;
 import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
+import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -61,7 +62,7 @@ import org.hibernate.service.ServiceRegistryBuilder;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class GaswConfiguration {
 
@@ -99,6 +100,8 @@ public class GaswConfiguration {
     private List<ExecutorPlugin> executorPlugins;
     private String dbPluginURI;
     private DatabasePlugin dbPlugin;
+    private List<Object> listenerPluginsURI;
+    private List<ListenerPlugin> listenerPlugins;
     private SessionFactory sessionFactory;
 
     /**
@@ -158,9 +161,10 @@ public class GaswConfiguration {
             failOverMaxRetry = config.getInt(GaswConstants.LAB_FAILOVER_RETRY, 3);
 
             minorStatusEnabled = config.getBoolean(GaswConstants.LAB_MINORSTATUS_ENABLED, false);
-            
+
             dbPluginURI = config.getString(GaswConstants.LAB_PLUGIN_DB, "");
             executorPluginsURI = config.getList(GaswConstants.LAB_PLUGIN_EXECUTOR);
+            listenerPluginsURI = config.getList(GaswConstants.LAB_PLUGIN_LISTENER);
 
             // Save
             config.setProperty(GaswConstants.LAB_DEFAULT_EXECUTOR, defaultExecutor);
@@ -169,7 +173,7 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_DEFAULT_REQUIREMENTS, defaultRequirements);
             config.setProperty(GaswConstants.LAB_DEFAULT_RETRY_COUNT, defaultRetryCount);
             config.setProperty(GaswConstants.LAB_DEFAULT_TIMEOUT, defaultTimeout);
-            config.setProperty(GaswConstants.LAB_DEFAULT_SLEEPTIME, defaultSleeptime);
+            config.setProperty(GaswConstants.LAB_DEFAULT_SLEEPTIME, defaultSleeptime / 1000);
             config.setProperty(GaswConstants.LAB_DEFAULT_CPUTIME, defaultCPUTime);
 
             config.setProperty(GaswConstants.LAB_VO_NAME, voName);
@@ -185,6 +189,7 @@ public class GaswConfiguration {
 
             config.setProperty(GaswConstants.LAB_PLUGIN_DB, dbPluginURI);
             config.setProperty(GaswConstants.LAB_PLUGIN_EXECUTOR, executorPluginsURI);
+            config.setProperty(GaswConstants.LAB_PLUGIN_LISTENER, listenerPluginsURI);
 
             new File(configFile).mkdirs();
             config.save();
@@ -205,10 +210,14 @@ public class GaswConfiguration {
         props.setProperty(PluginManager.class, "classpath.filter.default.pattern", "jre;com;javax;jena");
 
         pm = PluginManagerFactory.createPluginManager(props);
-               
+
         pm.addPluginsFrom(new File(dbPluginURI).toURI());
-        
+
         for (Object o : executorPluginsURI) {
+            pm.addPluginsFrom(new File((String) o).toURI());
+        }
+
+        for (Object o : listenerPluginsURI) {
             pm.addPluginsFrom(new File((String) o).toURI());
         }
 
@@ -216,6 +225,7 @@ public class GaswConfiguration {
 
         dbPlugin = pmu.getPlugin(DatabasePlugin.class);
         executorPlugins = (List<ExecutorPlugin>) pmu.getPlugins(ExecutorPlugin.class);
+        listenerPlugins = (List<ListenerPlugin>) pmu.getPlugins(ListenerPlugin.class);
     }
 
     /**
@@ -241,6 +251,12 @@ public class GaswConfiguration {
             for (Class c : executor.getPersistentClasses()) {
                 cfg.addAnnotatedClass(c);
             }
+        }
+        for (ListenerPlugin listener : listenerPlugins) {
+            for (Class c : listener.getPersistentClasses()) {
+                cfg.addAnnotatedClass(c);
+            }
+            listener.load();
         }
 
         ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(cfg.getProperties()).buildServiceRegistry();
@@ -311,6 +327,9 @@ public class GaswConfiguration {
         for (ExecutorPlugin executorPlugin : executorPlugins) {
             executorPlugin.terminate();
         }
+        for (ListenerPlugin listenerPlugin : listenerPlugins) {
+            listenerPlugin.terminate();
+        }
         pm.shutdown();
         sessionFactory.close();
     }
@@ -321,6 +340,10 @@ public class GaswConfiguration {
 
     public List<ExecutorPlugin> getExecutorPlugins() {
         return executorPlugins;
+    }
+
+    public List<ListenerPlugin> getListenerPlugins() {
+        return listenerPlugins;
     }
 
     public SessionFactory getSessionFactory() {

@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -36,7 +36,7 @@ package fr.insalyon.creatis.gasw;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class GaswConstants {
 
@@ -57,6 +57,7 @@ public class GaswConstants {
     public static final String LAB_MINORSTATUS_ENABLED = "minorstatus.service.enabled";
     public static final String LAB_PLUGIN_DB = "plugin.db";
     public static final String LAB_PLUGIN_EXECUTOR = "plugin.executor";
+    public static final String LAB_PLUGIN_LISTENER = "plugin.listener";
     public static final String LAB_VO_DEFAULT_SE = "vo.default.se";
     public static final String LAB_VO_NAME = "vo.name";
     public static final String LAB_VO_USE_CLOSE_SE = "vo.use.close.se";

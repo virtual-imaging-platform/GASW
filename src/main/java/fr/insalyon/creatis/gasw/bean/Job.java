@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -42,15 +42,16 @@ import javax.persistence.*;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 @Entity
 @NamedQueries({
     @NamedQuery(name = "Job.findById", query = "FROM Job j WHERE j.id = :id"),
     @NamedQuery(name = "Job.findByStatus", query = "FROM Job j WHERE j.status = :status"),
-    @NamedQuery(name = "Job.getActive", query = "FROM Job j WHERE status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate"),
-    @NamedQuery(name = "Job.findActiveByFileName", query = "FROM Job j WHERE j.fileName = :fileName AND (status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate)"),
-    @NamedQuery(name = "Job.getCompletedJobsByFileName", query = "SELECT COUNT(j.id) FROM Job j WHERE j.fileName = :fileName AND (status = :completed OR status = :failed OR status = :cancelled OR status = :stalled)")
+    @NamedQuery(name = "Job.getActive", query = "FROM Job j WHERE status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate OR status = :reschedule"),
+    @NamedQuery(name = "Job.findActiveByFileName", query = "FROM Job j WHERE j.fileName = :fileName AND (status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate OR status = :reschedule)"),
+    @NamedQuery(name = "Job.getCompletedJobsByFileName", query = "SELECT COUNT(j.id) FROM Job j WHERE j.fileName = :fileName AND (status = :completed OR status = :failed OR status = :cancelled OR status = :stalled)"),
+    @NamedQuery(name = "Job.getRunningByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :running OR status = :kill OR status = :replicate OR status = :reschedule)")
 })
 @Table(name = "Jobs")
 public class Job {
@@ -273,7 +274,7 @@ public class Job {
         this.fileName = fileName;
     }
 
-    @Column(name = "parameters", columnDefinition="LONGTEXT")
+    @Column(name = "parameters", columnDefinition = "LONGTEXT")
     public String getParameters() {
         return parameters;
     }

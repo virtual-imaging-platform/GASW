@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -35,11 +35,12 @@
 package fr.insalyon.creatis.gasw.dao;
 
 import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
+import fr.insalyon.creatis.gasw.execution.GaswMinorStatus;
 import java.util.List;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public interface JobMinorStatusDAO {
 
@@ -48,4 +49,6 @@ public interface JobMinorStatusDAO {
     public List<JobMinorStatus> getCheckpoints(String jobID) throws DAOException;
 
     public List<JobMinorStatus> getExecutionMinorStatus(String jobID) throws DAOException;
+
+    public long getDateDiff(String jobID, GaswMinorStatus start, GaswMinorStatus end) throws DAOException;
 }

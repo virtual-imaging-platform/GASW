@@ -46,6 +46,7 @@ public enum GaswStatus {
     CREATED,
     ERROR,
     KILL,
+    KILL_REPLICA,
     NOT_SUBMITTED,
     QUEUED,
     REPLICATE,

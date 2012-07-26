@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -38,6 +38,7 @@ import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
+import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 import fr.insalyon.creatis.gasw.release.Execution;
 import fr.insalyon.creatis.gasw.release.Infrastructure;
 import fr.insalyon.creatis.gasw.script.ScriptGenerator;
@@ -50,7 +51,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public abstract class GaswSubmit {
 
@@ -67,9 +68,10 @@ public abstract class GaswSubmit {
      *
      * @param gaswInput
      * @param userProxy
+     * @param minorStatusServiceGenerator
      * @throws GaswException
      */
-    public GaswSubmit(GaswInput gaswInput, Proxy userProxy, 
+    public GaswSubmit(GaswInput gaswInput, Proxy userProxy,
             GaswMinorStatusServiceGenerator minorStatusServiceGenerator) throws GaswException {
 
         this.gaswInput = gaswInput;
@@ -90,13 +92,16 @@ public abstract class GaswSubmit {
 
     /**
      * Submits a job to a grid or local execution.
+     * 
+     * @throws GaswException
      */
     public abstract String submit() throws GaswException;
 
     /**
-     * Generates job script
+     * Generates job script.
      *
      * @return
+     * @throws GaswException
      */
     protected String generateScript() throws GaswException {
 
