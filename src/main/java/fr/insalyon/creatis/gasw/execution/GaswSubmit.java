@@ -38,7 +38,6 @@ import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
-import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 import fr.insalyon.creatis.gasw.release.Execution;
 import fr.insalyon.creatis.gasw.release.Infrastructure;
 import fr.insalyon.creatis.gasw.script.ScriptGenerator;

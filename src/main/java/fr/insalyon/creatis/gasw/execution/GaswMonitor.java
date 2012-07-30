@@ -101,6 +101,20 @@ public abstract class GaswMonitor extends Thread {
             String parameters, Proxy userProxy) throws GaswException;
 
     /**
+     * Updates the job status and notifies listeners.
+     * 
+     * @param job
+     * @throws DAOException 
+     */
+    protected void updateStatus(Job job) throws GaswException, DAOException {
+
+        for (ListenerPlugin listener : GaswConfiguration.getInstance().getListenerPlugins()) {
+            listener.jobStatusChanged(job);
+        }
+        jobDAO.update(job);
+    }
+
+    /**
      * Verifies if there are signaled jobs.
      */
     protected void verifySignaledJobs() {
