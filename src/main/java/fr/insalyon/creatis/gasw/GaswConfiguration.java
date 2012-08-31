@@ -137,6 +137,8 @@ public class GaswConfiguration {
 
         try {
             executionPath = new File("").getAbsolutePath();
+
+            // TODO check if ID has the good format for pool
             simulationID = executionPath.substring(executionPath.lastIndexOf("/") + 1);
 
             config = new PropertiesConfiguration(new File(configFile));
@@ -191,7 +193,8 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_PLUGIN_EXECUTOR, executorPluginsURI);
             config.setProperty(GaswConstants.LAB_PLUGIN_LISTENER, listenerPluginsURI);
 
-            new File(configFile).mkdirs();
+            // dirty fix to create configuration dir (BUG #1594)
+            new File("./conf").mkdirs();
             config.save();
 
         } catch (ConfigurationException ex) {
