@@ -67,7 +67,8 @@ import org.hibernate.service.ServiceRegistryBuilder;
 public class GaswConfiguration {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
-    private static final String configFile = "./conf/settings.conf";
+    private static final String configDir = "./conf";
+    private static final String configFile = "settings.conf";
     private static GaswConfiguration instance;
     private PropertiesConfiguration config;
     private PluginManager pm;
@@ -137,11 +138,9 @@ public class GaswConfiguration {
 
         try {
             executionPath = new File("").getAbsolutePath();
-
-            // TODO check if ID has the good format for pool
             simulationID = executionPath.substring(executionPath.lastIndexOf("/") + 1);
 
-            config = new PropertiesConfiguration(new File(configFile));
+            config = new PropertiesConfiguration(new File(configDir + "/" + configFile));
 
             defaultExecutor = config.getString(GaswConstants.LAB_DEFAULT_EXECUTOR, "Local");
             defaultEnvironment = config.getString(GaswConstants.LAB_DEFAULT_ENVIRONMENT, "\"\"");
@@ -193,8 +192,7 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_PLUGIN_EXECUTOR, executorPluginsURI);
             config.setProperty(GaswConstants.LAB_PLUGIN_LISTENER, listenerPluginsURI);
 
-            // dirty fix to create configuration dir (BUG #1594)
-            new File("./conf").mkdirs();
+            new File(configDir).mkdirs();
             config.save();
 
         } catch (ConfigurationException ex) {
