@@ -1,6 +1,6 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
@@ -45,19 +45,19 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class GaswUtil {
 
     private static final int[] times = {0, 10, 30, 45, 60, 90, 150, 300, 600, 900};
 
     /**
-     * 
+     *
      * @param logger
      * @param message
      * @param index
      * @return
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public static int sleep(Logger logger, String message, int index)
             throws InterruptedException {
@@ -72,9 +72,9 @@ public class GaswUtil {
     }
 
     /**
-     * 
+     *
      * @param strings
-     * @return 
+     * @return
      */
     public static Process getProcess(Logger logger, Proxy userProxy, String... strings)
             throws IOException, ProxyInitializationException, VOMSExtensionException {
@@ -135,9 +135,9 @@ public class GaswUtil {
     }
 
     /**
-     * 
+     *
      * @param strings
-     * @return 
+     * @return
      */
     public static Process getProcess(Logger logger, String... strings) throws IOException {
         try {
@@ -150,11 +150,25 @@ public class GaswUtil {
     }
 
     /**
-     * 
+     *
      * @param process
-     * @return 
+     * @return
      */
     public static BufferedReader getBufferedReader(Process process) {
         return new BufferedReader(new InputStreamReader(process.getInputStream()));
+    }
+
+    /**
+     * Closes a process.
+     *
+     * @param process
+     * @throws IOException
+     */
+    public static void closeProcess(Process process) throws IOException {
+
+        process.getOutputStream().close();
+        process.getInputStream().close();
+        process.getErrorStream().close();
+        process = null;
     }
 }
