@@ -57,4 +57,12 @@ $serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 1
 
 BACKPID=""
 
+#DIRAC may wrongly position this variable
+test -d ${X509_CERT_DIR}
+if [ $? != 0 ]
+then
+        info "Unsetting invalid X509_CERT_DIR (${X509_CERT_DIR})"
+        unset X509_CERT_DIR
+fi
+
 stopLog header
