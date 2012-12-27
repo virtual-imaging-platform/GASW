@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.*;
+import org.hibernate.annotations.Index;
 
 /**
  *
@@ -274,7 +275,8 @@ public class Job {
         this.fileName = fileName;
     }
 
-    @Column(name = "parameters", columnDefinition = "LONGTEXT")
+    @Column(name = "parameters", length = 10000)
+    @Index(name = "paramIndex")
     public String getParameters() {
         return parameters;
     }
