@@ -86,13 +86,29 @@ public abstract class GaswOutputParser extends Thread {
             this.resultsUploadErrBuf = new StringBuilder();
             this.appStdOutBuf = new StringBuilder();
             this.appStdErrBuf = new StringBuilder();
-            
+
             this.dataList = new ArrayList<Data>();
             this.uploadedResults = null;
 
         } catch (IOException ex) {
+            closeBuffers();
             logger.error(ex);
         } catch (DAOException ex) {
+            closeBuffers();
+            logger.error(ex);
+        }
+    }
+
+    private void closeBuffers() {
+        
+        try {
+            if (appStdOutWriter != null) {
+                appStdOutWriter.close();
+            }
+            if (appStdErrWriter != null) {
+                appStdErrWriter.close();
+            }
+        } catch (IOException ex) {
             logger.error(ex);
         }
     }
@@ -228,11 +244,11 @@ public abstract class GaswOutputParser extends Thread {
 
                     } else if (line.startsWith("</inputs_download>")) {
                         isInputDownload = false;
-                        
+
                     } else if (line.contains("Downloading file") && isInputDownload) {
                         String downloadedFile = line.split(" ")[12].replace("...", "");
                         dataList.add(new Data(downloadedFile, GaswConstants.DataType.Input));
-                        
+
                     } else if (line.startsWith("<results_upload>")) {
                         isResultUpload = true;
                         uploadedResults = new ArrayList<URI>();
@@ -275,8 +291,10 @@ public abstract class GaswOutputParser extends Thread {
             factory.getJobDAO().update(job);
 
         } catch (DAOException ex) {
+            closeBuffers();
             // do nothing
         } catch (IOException ex) {
+            closeBuffers();
             logger.error(ex);
         }
         return exitCode;
@@ -355,9 +373,11 @@ public abstract class GaswOutputParser extends Thread {
             DAOFactory.getDAOFactory().getJobDAO().update(job);
 
         } catch (DAOException ex) {
+            closeBuffers();
             logger.error(ex);
 
         } catch (IOException ex) {
+            closeBuffers();
             logger.error(ex);
         }
         return exitCode;
@@ -389,6 +409,7 @@ public abstract class GaswOutputParser extends Thread {
             factory.getJobDAO().update(job);
 
         } catch (DAOException ex) {
+            closeBuffers();
             logger.error(ex);
         }
     }
@@ -435,6 +456,7 @@ public abstract class GaswOutputParser extends Thread {
                 job.setCheckpointUpload(sumCheckpointUpload);
             }
         } catch (DAOException ex) {
+            closeBuffers();
             logger.error(ex);
         }
         return job;

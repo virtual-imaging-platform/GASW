@@ -194,5 +194,6 @@ public abstract class GaswSubmit {
         BufferedWriter out = new BufferedWriter(fstream);
         out.write(contents);
         out.close();
+        fstream.close();
     }
 }
