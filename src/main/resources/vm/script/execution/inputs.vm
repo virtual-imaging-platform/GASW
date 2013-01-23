@@ -10,7 +10,7 @@ startLog inputs_download
 $serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 3
 #end
 
-touch DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
+touch ../DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
 
 #foreach( $infrastructure in $infrastructures )
 if [[ "$GASW_EXEC_ENV" == "$infrastructure.Type" ]]

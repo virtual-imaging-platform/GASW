@@ -39,7 +39,6 @@ then
     cleanup
     exit 6
 fi
-rm -rf DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
 BEFOREUPLOAD=`date +%s`
 stopLog application_execution
 
