@@ -56,14 +56,14 @@ public abstract class GaswOutputParser extends Thread {
     protected Proxy userProxy;
     protected File appStdOut;
     protected File appStdErr;
-    private BufferedWriter appStdOutWriter;
-    private BufferedWriter appStdErrWriter;
+    protected BufferedWriter appStdOutWriter;
+    protected BufferedWriter appStdErrWriter;
     protected List<Data> dataList;
     protected List<URI> uploadedResults;
-    private StringBuilder inputsDownloadErrBuf;
-    private StringBuilder resultsUploadErrBuf;
-    private StringBuilder appStdOutBuf;
-    private StringBuilder appStdErrBuf;
+    protected StringBuilder inputsDownloadErrBuf;
+    protected StringBuilder resultsUploadErrBuf;
+    protected StringBuilder appStdOutBuf;
+    protected StringBuilder appStdErrBuf;
 
     /**
      *
@@ -270,6 +270,7 @@ public abstract class GaswOutputParser extends Thread {
                     }
                 }
             } catch (Exception ex) {
+                ex.printStackTrace();
                 logger.error(ex);
             } finally {
                 scanner.close();
