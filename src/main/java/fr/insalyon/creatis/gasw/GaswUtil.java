@@ -4,8 +4,6 @@
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
- * This software is a grid-enabled data-driven workflow manager and editor.
- *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
@@ -79,8 +77,17 @@ public class GaswUtil {
     public static Process getProcess(Logger logger, Proxy userProxy, String... strings)
             throws IOException, ProxyInitializationException, VOMSExtensionException {
 
+        return getProcess(logger, true, userProxy, strings);
+    }
+
+    public static Process getProcess(Logger logger, boolean redirectError,
+            Proxy userProxy, String... strings)
+            throws IOException, ProxyInitializationException, VOMSExtensionException {
+
         ProcessBuilder builder = new ProcessBuilder(strings);
-        builder.redirectErrorStream(true);
+        if (redirectError) {
+            builder.redirectErrorStream(true);
+        }
 
         if (userProxy != null) {
 
