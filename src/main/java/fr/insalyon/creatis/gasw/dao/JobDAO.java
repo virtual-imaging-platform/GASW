@@ -4,8 +4,6 @@
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
- * This software is a grid-enabled data-driven workflow manager and editor.
- *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
@@ -56,9 +54,11 @@ public interface JobDAO {
     
     public List<Job> getJobs(GaswStatus status) throws DAOException;
     
-    public long getNumberOfCompletedJobsByFileName(String fileName) throws DAOException;
+    public long getNumberOfCompletedJobsByInvocationID(int invocationID) throws DAOException;
     
-    public List<Job> getActiveJobsByFileName(String fileName) throws DAOException;
+    public List<Job> getActiveJobsByInvocationID(int invocationID) throws DAOException;
     
     public List<Job> getRunningByCommand(String command) throws DAOException;
+    
+    public List<Job> getByParameters(String parameters) throws DAOException;
 }

@@ -4,8 +4,6 @@
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
- * This software is a grid-enabled data-driven workflow manager and editor.
- *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
@@ -171,17 +169,14 @@ public class JobData implements JobDAO {
     }
 
     @Override
-    public long getNumberOfCompletedJobsByFileName(String fileName) throws DAOException {
+    public long getNumberOfCompletedJobsByInvocationID(int invocationID) throws DAOException {
         
         try {
             Session session = sessionFactory.openSession();
             session.beginTransaction();
-            long completedJobs = (Long) session.getNamedQuery("Job.getCompletedJobsByFileName")
-                    .setString("fileName", fileName)
+            long completedJobs = (Long) session.getNamedQuery("Job.getCompletedJobsByInvocationID")
+                    .setInteger("invocationID", invocationID)
                     .setString("completed", GaswStatus.COMPLETED.name())
-                    .setString("failed", GaswStatus.ERROR.name())
-                    .setString("cancelled", GaswStatus.CANCELLED.name())
-                    .setString("stalled", GaswStatus.STALLED.name())
                     .uniqueResult();
             session.getTransaction().commit();
             session.close();
@@ -195,13 +190,13 @@ public class JobData implements JobDAO {
     }
 
     @Override
-    public List<Job> getActiveJobsByFileName(String fileName) throws DAOException {
+    public List<Job> getActiveJobsByInvocationID(int invocationID) throws DAOException {
         
         try {
             Session session = sessionFactory.openSession();
             session.beginTransaction();
-            List<Job> list = (List<Job>) session.getNamedQuery("Job.findActiveByFileName")
-                    .setString("fileName", fileName)
+            List<Job> list = (List<Job>) session.getNamedQuery("Job.findActiveByInvocationID")
+                    .setInteger("invocationID", invocationID)
                     .setString("submitted", GaswStatus.SUCCESSFULLY_SUBMITTED.name())
                     .setString("queued", GaswStatus.QUEUED.name())
                     .setString("running", GaswStatus.RUNNING.name())
@@ -232,6 +227,26 @@ public class JobData implements JobDAO {
                     .setString("kill", GaswStatus.KILL.name())
                     .setString("replicate", GaswStatus.REPLICATE.name())
                     .setString("reschedule", GaswStatus.RESCHEDULE.name())
+                    .list();
+            session.getTransaction().commit();
+            session.close();
+            
+            return list;
+            
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
+
+    @Override
+    public List<Job> getByParameters(String parameters) throws DAOException {
+        
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            List<Job> list = (List<Job>) session.getNamedQuery("Job.findByParameters")
+                    .setString("parameters", parameters)
                     .list();
             session.getTransaction().commit();
             session.close();

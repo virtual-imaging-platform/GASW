@@ -4,8 +4,6 @@
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
- * This software is a grid-enabled data-driven workflow manager and editor.
- *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
@@ -44,6 +42,7 @@ import fr.insalyon.creatis.gasw.dao.NodeDAO;
 import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 import grool.proxy.Proxy;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -51,6 +50,7 @@ import java.util.Date;
  */
 public abstract class GaswMonitor extends Thread {
 
+    private volatile static int INVOCATION_ID = 1;
     protected JobDAO jobDAO;
     protected NodeDAO nodeDAO;
 
@@ -73,6 +73,14 @@ public abstract class GaswMonitor extends Thread {
      */
     protected synchronized void add(Job job) throws GaswException {
         try {
+            // Defining invocation ID
+            List<Job> list = jobDAO.getByParameters(job.getParameters());
+            if (!list.isEmpty()) {
+                job.setInvocationID(list.get(0).getInvocationID());
+            } else {
+                job.setInvocationID(INVOCATION_ID++);
+            }
+
             job.setCreation(new Date());
             jobDAO.add(job);
 
@@ -102,9 +110,9 @@ public abstract class GaswMonitor extends Thread {
 
     /**
      * Updates the job status and notifies listeners.
-     * 
+     *
      * @param job
-     * @throws DAOException 
+     * @throws DAOException
      */
     protected void updateStatus(Job job) throws GaswException, DAOException {
 
@@ -140,6 +148,25 @@ public abstract class GaswMonitor extends Thread {
     }
 
     /**
+     * Verifies if a job is replica and handles it in case it is.
+     * 
+     * @param job
+     * @return
+     * @throws GaswException
+     * @throws DAOException 
+     */
+    protected boolean isReplica(Job job) throws GaswException, DAOException {
+
+        if (jobDAO.getNumberOfCompletedJobsByInvocationID(job.getInvocationID()) > 0) {
+            job.setStatus(GaswStatus.CANCELLED_REPLICA);
+            job.setEnd(new Date());
+            updateStatus(job);
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Kills a job.
      *
      * @param jobID
@@ -163,7 +190,7 @@ public abstract class GaswMonitor extends Thread {
     /**
      * Kills job replicas.
      *
-     * @param fileName
+     * @param invocationID
      */
-    protected abstract void killReplicas(String fileName);
+    protected abstract void killReplicas(int invocationID);
 }

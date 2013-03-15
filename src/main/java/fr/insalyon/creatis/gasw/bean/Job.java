@@ -4,8 +4,6 @@
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
- * This software is a grid-enabled data-driven workflow manager and editor.
- *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
@@ -49,9 +47,10 @@ import org.hibernate.annotations.Index;
 @NamedQueries({
     @NamedQuery(name = "Job.findById", query = "FROM Job j WHERE j.id = :id"),
     @NamedQuery(name = "Job.findByStatus", query = "FROM Job j WHERE j.status = :status"),
+    @NamedQuery(name = "Job.findByParameters", query = "FROM Job j WHERE j.parameters = :parameters"),
+    @NamedQuery(name = "Job.findActiveByInvocationID", query = "FROM Job j WHERE j.invocationID = :invocationID AND (status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate OR status = :reschedule)"),
     @NamedQuery(name = "Job.getActive", query = "FROM Job j WHERE status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate OR status = :reschedule"),
-    @NamedQuery(name = "Job.findActiveByFileName", query = "FROM Job j WHERE j.fileName = :fileName AND (status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate OR status = :reschedule)"),
-    @NamedQuery(name = "Job.getCompletedJobsByFileName", query = "SELECT COUNT(j.id) FROM Job j WHERE j.fileName = :fileName AND (status = :completed OR status = :failed OR status = :cancelled OR status = :stalled)"),
+    @NamedQuery(name = "Job.getCompletedJobsByInvocationID", query = "SELECT COUNT(j.id) FROM Job j WHERE j.invocationID = :invocationID AND status = :completed"),
     @NamedQuery(name = "Job.getRunningByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :running OR status = :kill OR status = :replicate OR status = :reschedule)")
 })
 @Table(name = "Jobs")
@@ -76,6 +75,7 @@ public class Job {
     private String parameters;
     private String executor;
     private List<Data> data;
+    private int invocationID;
 
     public Job() {
     }
@@ -93,8 +93,9 @@ public class Job {
     public Job(String id, String simulationID, GaswStatus status, String command,
             String fileName, String parameters, String executor) {
 
-        this(id, simulationID, status, -1, "", null, null, null, null, null, null,
-                null, command, fileName, parameters, executor, new ArrayList<Data>());
+        this(id, simulationID, status, -1, "", null, null, null, null, null,
+                null, null, command, fileName, parameters, executor, 
+                new ArrayList<Data>(), -1);
     }
 
     /**
@@ -116,11 +117,13 @@ public class Job {
      * @param parameters
      * @param executor
      * @param data
+     * @param invocationID
      */
     public Job(String id, String simulationID, GaswStatus status, int exitCode,
             String exitMessage, Date creation, Date queued, Date download,
             Date running, Date upload, Date end, Node node, String command,
-            String fileName, String parameters, String executor, List<Data> data) {
+            String fileName, String parameters, String executor, List<Data> data,
+            int invocationID) {
 
         this.id = id;
         this.simulationID = simulationID;
@@ -139,6 +142,7 @@ public class Job {
         this.parameters = parameters;
         this.executor = executor;
         this.data = data;
+        this.invocationID = invocationID;
     }
 
     @Id
@@ -318,9 +322,9 @@ public class Job {
 
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "job_data",
-    joinColumns = {
+            joinColumns = {
         @JoinColumn(name = "id")},
-    inverseJoinColumns = {
+            inverseJoinColumns = {
         @JoinColumn(name = "data_path")})
     public List<Data> getData() {
         return data;
@@ -328,5 +332,15 @@ public class Job {
 
     public void setData(List<Data> data) {
         this.data = data;
+    }
+
+    @Column(name = "invocation_id")
+    @Index(name = "invocationIndex")
+    public int getInvocationID() {
+        return invocationID;
+    }
+
+    public void setInvocationID(int invocationID) {
+        this.invocationID = invocationID;
     }
 }
