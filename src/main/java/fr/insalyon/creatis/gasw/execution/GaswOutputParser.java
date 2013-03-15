@@ -4,8 +4,6 @@
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
- * This software is a grid-enabled data-driven workflow manager and editor.
- *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
@@ -285,10 +283,13 @@ public abstract class GaswOutputParser extends Thread {
             }
 
             // Parse checkpoint
-            job = parseCheckpoint();
+            parseCheckpoint();
 
             // Update Job
             job.setData(dataList);
+            if (job.getEnd() == null) {
+                job.setEnd(new Date());
+            }
             factory.getJobDAO().update(job);
 
         } catch (DAOException ex) {
@@ -392,6 +393,7 @@ public abstract class GaswOutputParser extends Thread {
     protected void parseNonStdOut(int exitCode) {
 
         try {
+            job.setEnd(new Date());
             DAOFactory factory = DAOFactory.getDAOFactory();
 
             for (JobMinorStatus minorStatus : factory.getJobMinorStatusDAO().getExecutionMinorStatus(job.getId())) {
@@ -405,7 +407,7 @@ public abstract class GaswOutputParser extends Thread {
                         job.setUpload(minorStatus.getDate());
                 }
             }
-            job = parseCheckpoint();
+            parseCheckpoint();
             job.setExitCode(exitCode);
             factory.getJobDAO().update(job);
 
@@ -420,7 +422,7 @@ public abstract class GaswOutputParser extends Thread {
      * @param job
      * @return
      */
-    private Job parseCheckpoint() {
+    private void parseCheckpoint() {
 
         try {
             DAOFactory factory = DAOFactory.getDAOFactory();
@@ -460,7 +462,6 @@ public abstract class GaswOutputParser extends Thread {
             closeBuffers();
             logger.error(ex);
         }
-        return job;
     }
 
     /**
