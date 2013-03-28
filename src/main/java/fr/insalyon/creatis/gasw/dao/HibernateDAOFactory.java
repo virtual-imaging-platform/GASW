@@ -71,6 +71,10 @@ public class HibernateDAOFactory extends DAOFactory {
         sessionFactory.close();
     }
 
+    public SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
+
     @Override
     public JobDAO getJobDAO() {
         return new JobData(sessionFactory);
