@@ -11,6 +11,27 @@ function downloadLFN {
 
     info "Removing file ${LOCAL} in case it is already here"
     \rm -f ${LOCAL}
+    
+    info "Checking if the file is on local SE ${VO_BIOMED_DEFAULT_SE}"
+    local closeSURL=`lcg-lr lfn:${LFN} | grep ${VO_BIOMED_DEFAULT_SE}`
+    if [ "${closeSURL}" != "" ]
+    then
+        info "It is. Trying to download the file from there"
+        LINE="lcg-cp -v --connect-timeout $timeout --sendreceive-timeout $sendReceiveTimeout --bdii-timeout $bdiiTimeout --srm-timeout $srmTimeout ${closeSURL} file:${LOCAL}"
+        info ${LINE}
+        ${LINE} &> lcg-log
+        if [ $? = 0 ]
+        then
+            info "lcg-cp worked fine"
+            return 0
+        else
+            error "It failed, falling back on regular lcg-cp"
+        fi
+    else
+        info "It's not, falling back on regular lcg-cp"
+    fi
+
+
     info "Downloading file ${LFN}..."
     LINE="lcg-cp -v --connect-timeout $timeout --sendreceive-timeout $sendReceiveTimeout --bdii-timeout $bdiiTimeout --srm-timeout $srmTimeout lfn:${LFN} file:${LOCAL}"
     info ${LINE}
