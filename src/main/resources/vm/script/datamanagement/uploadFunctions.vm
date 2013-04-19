@@ -1,7 +1,7 @@
 ## uploadFunctions.vm
 
 ## Variables
-## $timeout, $sendReceiveTimeout, $bdiiTimeout, $srmTimeout, $failOverEnabled
+## $timeout, $minAvgDownloadThroughput, $bdiiTimeout, $srmTimeout, $failOverEnabled
 
 function nSEs {
 
@@ -74,6 +74,12 @@ function uploadFile {
     local FILE=$2
     local nrep=$3
     local SELIST=${SE}
+
+    info "getting file size and computing sendReceiveTimeout"
+    size=`ls -l ${FILE} | awk -F' ' '{print $5}'`
+    sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
+    if [ "$sendReceiveTimeout" = "" ] || [  $sendReceiveTimeout -le 900 ]; then echo "sendReceiveTimeout empty or too small, setting it to 900s"; sendReceiveTimeout=900; else echo "sendReceiveTimeout is $sendReceiveTimeout"; fi;
+
     local OPTS="--connect-timeout $timeout --sendreceive-timeout $sendReceiveTimeout --bdii-timeout $bdiiTimeout --srm-timeout $srmTimeout"
     local DEST=""
     if [ "${USE_CLOSE_SE}" = "true" ] && [ "${VO_BIOMED_DEFAULT_SE}" != "" ]

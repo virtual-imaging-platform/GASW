@@ -1,7 +1,7 @@
 ## downloadFunctions.vm
 
 ## Variables
-## $timeout, $sendReceiveTimeout, $bdiiTimeout, $srmTimeout, $failOverEnabled 
+## $timeout, $minAvgDownloadThroughput, $bdiiTimeout, $srmTimeout, $failOverEnabled 
 ## $failOverHost, $failOverPort, $failOverHome
 
 function downloadLFN {
@@ -9,6 +9,10 @@ function downloadLFN {
     local LFN=$1
     local LOCAL=${PWD}/`basename ${LFN}`
 
+    info "getting file size and computing sendReceiveTimeout"
+    size=`lfc-ls -l ${LFN} | awk -F' ' '{print $5}'`
+    sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
+    if [ "$sendReceiveTimeout" = "" ] || [  $sendReceiveTimeout -le 900 ]; then echo "sendReceiveTimeout empty or too small, setting it to 900s"; sendReceiveTimeout=900; else echo "sendReceiveTimeout is $sendReceiveTimeout"; fi;
     info "Removing file ${LOCAL} in case it is already here"
     \rm -f ${LOCAL}
     

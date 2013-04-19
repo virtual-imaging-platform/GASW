@@ -94,6 +94,8 @@ public class GaswConfiguration {
     private int failOverPort;
     private String failOverHome;
     private int failOverMaxRetry;
+    //MIN_AVG_DOWNLOAD_THROUGHPUT for the lcg-c* SEND_RECEIVE_TIMEOUT
+    private int minAvgDownloadThroughput;
     // Minor Status Service
     private boolean minorStatusEnabled;
     // Plugins
@@ -160,6 +162,8 @@ public class GaswConfiguration {
             failOverPort = config.getInt(GaswConstants.LAB_FAILOVER_PORT, 8446);
             failOverHome = config.getString(GaswConstants.LAB_FAILOVER_HOME, "/dpm/localhost/generated");
             failOverMaxRetry = config.getInt(GaswConstants.LAB_FAILOVER_RETRY, 3);
+            
+            minAvgDownloadThroughput=config.getInt(GaswConstants.LAB_MIN_AVG_DOWNLOAD_THROUGHPUT, 150);
 
             minorStatusEnabled = config.getBoolean(GaswConstants.LAB_MINORSTATUS_ENABLED, false);
 
@@ -185,6 +189,8 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_FAILOVER_HOST, failOverHost);
             config.setProperty(GaswConstants.LAB_FAILOVER_PORT, failOverPort);
             config.setProperty(GaswConstants.LAB_FAILOVER_HOME, failOverHome);
+            
+            config.setProperty(GaswConstants.LAB_MIN_AVG_DOWNLOAD_THROUGHPUT, minAvgDownloadThroughput);
 
             config.setProperty(GaswConstants.LAB_MINORSTATUS_ENABLED, minorStatusEnabled);
 
@@ -409,5 +415,9 @@ public class GaswConfiguration {
 
     public boolean isMinorStatusEnabled() {
         return minorStatusEnabled;
+    }
+    
+    public int getMinAvgDownloadThroughput() {
+        return minAvgDownloadThroughput;
     }
 }

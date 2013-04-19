@@ -85,7 +85,8 @@ public class DataManagementGenerator {
         VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/downloadFunctions.vm");
         
         velocity.put("timeout", GaswConstants.CONNECT_TIMEOUT);
-        velocity.put("sendReceiveTimeout", GaswConstants.SEND_RECEIVE_TIMEOUT);
+        //velocity.put("sendReceiveTimeout", GaswConstants.SEND_RECEIVE_TIMEOUT);
+        velocity.put("minAvgDownloadThroughput", conf.getMinAvgDownloadThroughput());    
         velocity.put("bdiiTimeout", GaswConstants.BDII_TIMEOUT);
         velocity.put("srmTimeout", GaswConstants.SRM_TIMEOUT);
         velocity.put("failOverEnabled", conf.isFailOverEnabled());
@@ -146,7 +147,8 @@ public class DataManagementGenerator {
         VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/uploadFunctions.vm");
         
         velocity.put("timeout", GaswConstants.CONNECT_TIMEOUT);
-        velocity.put("sendReceiveTimeout", GaswConstants.SEND_RECEIVE_TIMEOUT);
+        //velocity.put("sendReceiveTimeout", GaswConstants.SEND_RECEIVE_TIMEOUT);
+        velocity.put("minAvgDownloadThroughput", conf.getMinAvgDownloadThroughput()); 
         velocity.put("bdiiTimeout", GaswConstants.BDII_TIMEOUT);
         velocity.put("srmTimeout", GaswConstants.SRM_TIMEOUT);
         velocity.put("failOverEnabled", conf.isFailOverEnabled());

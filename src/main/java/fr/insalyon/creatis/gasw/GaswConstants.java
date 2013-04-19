@@ -62,8 +62,9 @@ public class GaswConstants {
     public static final String LAB_VO_NAME = "vo.name";
     public static final String LAB_VO_USE_CLOSE_SE = "vo.use.close.se";
     // timeouts used in lcg-c*
+    //public static final int SEND_RECEIVE_TIMEOUT = 900;
+    public static final String LAB_MIN_AVG_DOWNLOAD_THROUGHPUT = "min.avg.download.throughput";
     public static final int CONNECT_TIMEOUT = 10;
-    public static final int SEND_RECEIVE_TIMEOUT = 900;
     public static final int BDII_TIMEOUT = 10;
     public static final int SRM_TIMEOUT = 30;
     // Directories
