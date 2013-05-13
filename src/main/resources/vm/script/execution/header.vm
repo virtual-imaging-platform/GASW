@@ -12,7 +12,8 @@ info "START date is ${START}"
 ## Determines if the execution environment is a grid or a cluster
 export GASW_JOB_ENV=NORMAL
 #set( $wmsLocation = '${GLITE_WMS_LOCATION:+x}' )
-if [[ -n "$wmsLocation" ]]
+#set( $gliteLocation = '${GLITE_LOCATION:+x}' )
+if [[ -n "$wmsLocation" ]] || [[ -n "$gliteLocation" ]]
 then
     export GASW_EXEC_ENV=EGEE
 else
