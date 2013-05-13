@@ -9,6 +9,9 @@ function downloadLFN {
     local LFN=$1
     local LOCAL=${PWD}/`basename ${LFN}`
 
+    #hacking LFN for N4U
+    LFN=`echo $LFN | sed s/\\\/grid\\\/vo\\\.neugrid\\\.eu\\\/home\\\/vip/\\\/grid\\\/biomed\\\/creatis\\\/vip/g`
+
     info "getting file size and computing sendReceiveTimeout"
     size=`lfc-ls -l ${LFN} | awk -F' ' '{print $5}'`
     sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
