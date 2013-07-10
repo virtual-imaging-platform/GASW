@@ -98,7 +98,7 @@ public abstract class GaswOutputParser extends Thread {
     }
 
     private void closeBuffers() {
-        
+
         try {
             if (appStdOutWriter != null) {
                 appStdOutWriter.close();
@@ -116,12 +116,18 @@ public abstract class GaswOutputParser extends Thread {
 
         try {
             GaswOutput gaswOutput = getGaswOutput();
+
             for (ListenerPlugin listener : GaswConfiguration.getInstance().getListenerPlugins()) {
-                listener.jobFinished(gaswOutput);
+                try {
+                    listener.jobFinished(gaswOutput);
+                } catch (GaswException ex) {
+                    logger.warn(ex);
+                }
             }
             GaswNotification.getInstance().addFinishedJob(gaswOutput);
+            
         } catch (GaswException ex) {
-            // do nothing
+            logger.error(ex);
         }
     }
 
