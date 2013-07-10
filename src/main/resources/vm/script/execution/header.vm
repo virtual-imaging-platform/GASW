@@ -9,17 +9,9 @@ startLog header
 START=`date +%s`
 info "START date is ${START}"
 
-## Determines if the execution environment is a grid or a cluster
+## Execution environment setup
 export GASW_JOB_ENV=NORMAL
-#set( $wmsLocation = '${GLITE_WMS_LOCATION:+x}' )
-#set( $gliteLocation = '${GLITE_LOCATION:+x}' )
-if [[ -n "$wmsLocation" ]] || [[ -n "$gliteLocation" ]]
-then
-    export GASW_EXEC_ENV=EGEE
-else
-    export GASW_EXEC_ENV=PBS
-    export X509_USER_PROXY=$CLUSTER_PROXY
-fi
+export GASW_EXEC_ENV=EGEE
 
 ## Builds the custom environment
 export BASEDIR=${PWD}
