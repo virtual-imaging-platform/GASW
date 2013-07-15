@@ -120,7 +120,7 @@ public abstract class GaswOutputParser extends Thread {
             for (ListenerPlugin listener : GaswConfiguration.getInstance().getListenerPlugins()) {
                 try {
                     listener.jobFinished(gaswOutput);
-                } catch (GaswException ex) {
+                } catch (Exception ex) {
                     logger.warn(ex);
                 }
             }
