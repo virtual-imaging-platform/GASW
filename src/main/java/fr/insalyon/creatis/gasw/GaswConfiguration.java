@@ -4,8 +4,6 @@
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
- * This software is a grid-enabled data-driven workflow manager and editor.
- *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
@@ -88,6 +86,7 @@ public class GaswConfiguration {
     private String voName;
     private String voDefaultSE;
     private String voUseCloseSE;
+    private String voLFCHost;
     // Failover Server
     private boolean failOverEnabled;
     private String failOverHost;
@@ -148,7 +147,7 @@ public class GaswConfiguration {
             defaultEnvironment = config.getString(GaswConstants.LAB_DEFAULT_ENVIRONMENT, "\"\"");
             defaultBackgroundScript = config.getString(GaswConstants.LAB_DEFAULT_BACKGROUD_SCRIPT, "");
             defaultRequirements = config.getString(GaswConstants.LAB_DEFAULT_REQUIREMENTS, "");
-            defaultRetryCount = config.getInt(GaswConstants.LAB_DEFAULT_RETRY_COUNT, 3);
+            defaultRetryCount = config.getInt(GaswConstants.LAB_DEFAULT_RETRY_COUNT, 5);
             defaultTimeout = config.getInt(GaswConstants.LAB_DEFAULT_TIMEOUT, 100000);
             defaultSleeptime = config.getInt(GaswConstants.LAB_DEFAULT_SLEEPTIME, 20) * 1000;
             defaultCPUTime = config.getInt(GaswConstants.LAB_DEFAULT_CPUTIME, 1800);
@@ -156,14 +155,15 @@ public class GaswConfiguration {
             voName = config.getString(GaswConstants.LAB_VO_NAME, "biomed");
             voDefaultSE = config.getString(GaswConstants.LAB_VO_DEFAULT_SE, "ccsrm02.in2p3.fr");
             voUseCloseSE = config.getString(GaswConstants.LAB_VO_USE_CLOSE_SE, "\"true\"");
+            voLFCHost = config.getString(GaswConstants.LAB_VO_LFC_HOST, "lfc-biomed.in2p3.fr");
 
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
             failOverHost = config.getString(GaswConstants.LAB_FAILOVER_HOST, "localhost");
             failOverPort = config.getInt(GaswConstants.LAB_FAILOVER_PORT, 8446);
             failOverHome = config.getString(GaswConstants.LAB_FAILOVER_HOME, "/dpm/localhost/generated");
             failOverMaxRetry = config.getInt(GaswConstants.LAB_FAILOVER_RETRY, 3);
-            
-            minAvgDownloadThroughput=config.getInt(GaswConstants.LAB_MIN_AVG_DOWNLOAD_THROUGHPUT, 150);
+
+            minAvgDownloadThroughput = config.getInt(GaswConstants.LAB_MIN_AVG_DOWNLOAD_THROUGHPUT, 150);
 
             minorStatusEnabled = config.getBoolean(GaswConstants.LAB_MINORSTATUS_ENABLED, false);
 
@@ -184,12 +184,13 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_VO_NAME, voName);
             config.setProperty(GaswConstants.LAB_VO_DEFAULT_SE, voDefaultSE);
             config.setProperty(GaswConstants.LAB_VO_USE_CLOSE_SE, voUseCloseSE);
+            config.setProperty(GaswConstants.LAB_VO_LFC_HOST, voLFCHost);
 
             config.setProperty(GaswConstants.LAB_FAILOVER_ENABLED, failOverEnabled);
             config.setProperty(GaswConstants.LAB_FAILOVER_HOST, failOverHost);
             config.setProperty(GaswConstants.LAB_FAILOVER_PORT, failOverPort);
             config.setProperty(GaswConstants.LAB_FAILOVER_HOME, failOverHome);
-            
+
             config.setProperty(GaswConstants.LAB_MIN_AVG_DOWNLOAD_THROUGHPUT, minAvgDownloadThroughput);
 
             config.setProperty(GaswConstants.LAB_MINORSTATUS_ENABLED, minorStatusEnabled);
@@ -393,6 +394,10 @@ public class GaswConfiguration {
         return voUseCloseSE;
     }
 
+    public String getVoLFCHost() {
+        return voLFCHost;
+    }
+
     public boolean isFailOverEnabled() {
         return failOverEnabled;
     }
@@ -416,8 +421,12 @@ public class GaswConfiguration {
     public boolean isMinorStatusEnabled() {
         return minorStatusEnabled;
     }
-    
+
     public int getMinAvgDownloadThroughput() {
         return minAvgDownloadThroughput;
+    }
+
+    public int getDefaultRetryCount() {
+        return defaultRetryCount;
     }
 }

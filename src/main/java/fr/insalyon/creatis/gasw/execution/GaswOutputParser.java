@@ -37,7 +37,6 @@ import fr.insalyon.creatis.gasw.bean.*;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
-import grool.proxy.Proxy;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
@@ -51,7 +50,6 @@ public abstract class GaswOutputParser extends Thread {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
     protected Job job;
-    protected Proxy userProxy;
     protected File appStdOut;
     protected File appStdErr;
     protected BufferedWriter appStdOutWriter;
@@ -66,13 +64,11 @@ public abstract class GaswOutputParser extends Thread {
     /**
      *
      * @param jobID job identification
-     * @param proxy associated proxy (null in case using default proxy)
      */
-    public GaswOutputParser(String jobID, Proxy userProxy) {
+    public GaswOutputParser(String jobID) {
 
         try {
             this.job = DAOFactory.getDAOFactory().getJobDAO().getJobByID(jobID);
-            this.userProxy = userProxy;
 
             this.appStdOut = getAppStdFile(GaswConstants.OUT_APP_EXT, GaswConstants.OUT_ROOT);
             this.appStdErr = getAppStdFile(GaswConstants.ERR_APP_EXT, GaswConstants.ERR_ROOT);
@@ -124,8 +120,31 @@ public abstract class GaswOutputParser extends Thread {
                     logger.warn(ex);
                 }
             }
+            if (gaswOutput.getExitCode() != GaswExitCode.SUCCESS) {
+                try {
+                    int retries = DAOFactory.getDAOFactory().getJobDAO().getFailedJobsByInvocationID(job.getInvocationID()).size() - 1;
+                    if (retries < GaswConfiguration.getInstance().getDefaultRetryCount()) {
+                        logger.warn("Job [" + job.getId() + "] finished as \"" + job.getStatus().name() + "\" (retried " + retries + " times).");
+                        resubmit();
+
+                    } else {
+                        logger.warn("Job [" + job.getId() + "] finished as \"" + job.getStatus().name() + "\": holding job (max retries reached).");
+                        if (job.getStatus() == GaswStatus.ERROR) {
+                            job.setStatus(GaswStatus.ERROR_HELD);
+                        } else if (job.getStatus() == GaswStatus.STALLED) {
+                            job.setStatus(GaswStatus.STALLED_HELD);
+                        }
+                        DAOFactory.getDAOFactory().getJobDAO().update(job);
+                    }
+                    return;
+                } catch (DAOException ex) {
+                    // do nothing
+                } catch (GaswException ex) {
+                    // do nothing
+                }
+            }
             GaswNotification.getInstance().addFinishedJob(gaswOutput);
-            
+
         } catch (GaswException ex) {
             logger.error(ex);
         }
@@ -139,6 +158,8 @@ public abstract class GaswOutputParser extends Thread {
      * @throws GaswException
      */
     public abstract GaswOutput getGaswOutput() throws GaswException;
+
+    protected abstract void resubmit() throws GaswException;
 
     /**
      *
@@ -251,7 +272,7 @@ public abstract class GaswOutputParser extends Thread {
 
                     } else if (line.contains("Downloading file") && isInputDownload) {
                         String downloadedFile = line.split(" ")[12].replace("...", "");
-                        dataList.add(new Data(downloadedFile, GaswConstants.DataType.Input));
+                        dataList.add(new Data(downloadedFile, Data.Type.Input));
 
                     } else if (line.startsWith("<results_upload>")) {
                         isResultUpload = true;
@@ -270,7 +291,7 @@ public abstract class GaswOutputParser extends Thread {
                                 ? URI.create("file://" + uploadedFile)
                                 : URI.create("lfn://" + lfcHost + uploadedFile);
                         uploadedResults.add(uri);
-                        dataList.add(new Data(uri.toString(), GaswConstants.DataType.Output));
+                        dataList.add(new Data(uri.toString(), Data.Type.Output));
                     }
                 }
             } catch (Exception ex) {

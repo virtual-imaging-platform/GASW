@@ -1,10 +1,8 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
- *
- * This software is a grid-enabled data-driven workflow manager and editor.
  *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
@@ -39,11 +37,10 @@ import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
-import fr.insalyon.creatis.gasw.release.EnvVariable;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class ExecutorFactory {
 
@@ -55,17 +52,11 @@ public class ExecutorFactory {
      */
     public static ExecutorPlugin getExecutor(GaswInput gaswInput) throws GaswException {
 
-        String executorName = gaswInput.getExecutorName();
+        String executorName = GaswConfiguration.getInstance().getDefaultExecutor();
 
-        if (executorName == null) {
-            executorName = GaswConfiguration.getInstance().getDefaultExecutor();
-        }
-
-        for (EnvVariable variable : gaswInput.getRelease().getConfigurations()) {
-            if (variable.getName().equals(GaswConstants.ENV_EXECUTOR)) {
-                executorName = variable.getValue();
-                break;
-            }
+        String variable = gaswInput.getGaswVariable(GaswConstants.ENV_EXECUTOR);
+        if (variable != null) {
+            executorName = variable;
         }
 
         for (ExecutorPlugin executor : GaswConfiguration.getInstance().getExecutorPlugins()) {
@@ -73,8 +64,6 @@ public class ExecutorFactory {
                 return executor;
             }
         }
-
-        throw new GaswException("There is no executor available for '"
-                + executorName + "'.");
+        throw new GaswException("There is no executor available for '" + executorName + "'.");
     }
 }

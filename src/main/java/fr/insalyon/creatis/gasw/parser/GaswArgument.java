@@ -30,53 +30,60 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.bean;
-
-import javax.persistence.*;
+package fr.insalyon.creatis.gasw.parser;
 
 /**
  *
  * @author Rafael Ferreira da Silva
  */
-@Entity
-@NamedQueries({
-    @NamedQuery(name = "Data.findByPath", query = "FROM Data d WHERE d.dataPath = :path")
-})
-@Table(name = "Data")
-public class Data {
+public abstract class GaswArgument {
+
+    public enum Hookup {
+
+        Input,
+        Output
+    }
 
     public enum Type {
 
-        Input, Output
-    };
-    private String dataPath;
-    private Type dataType;
+        String,
+        URI
+    }
+    protected String name;
+    protected String option;
+    protected Hookup hookup;
+    protected Type type;
+    protected boolean implicit;
 
-    public Data() {
+    public GaswArgument(String name, String option, Hookup hookup, Type type, boolean implicit) {
+        this.name = name;
+        this.option = option;
+        this.hookup = hookup;
+        this.type = type;
+        this.implicit = implicit;
     }
 
-    public Data(String dataPath, Type dataType) {
-        this.dataPath = dataPath;
-        this.dataType = dataType;
+    public String getName() {
+        return name;
     }
 
-    @Id
-    @Column(name = "data_path")
-    public String getDataPath() {
-        return dataPath;
+    public String getOption() {
+        return option;
     }
 
-    public void setDataPath(String dataPath) {
-        this.dataPath = dataPath;
+    public Hookup getHookup() {
+        return hookup;
     }
 
-    @Column(name = "data_type")
-    @Enumerated(value = EnumType.STRING)
-    public Type getDataType() {
-        return dataType;
+    public Type getType() {
+        return type;
     }
 
-    public void setDataType(Type dataType) {
-        this.dataType = dataType;
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public boolean isImplicit() {
+        return implicit;
     }
 }

@@ -40,7 +40,6 @@ import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.dao.NodeDAO;
 import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
-import grool.proxy.Proxy;
 import java.util.Date;
 import java.util.List;
 
@@ -95,18 +94,16 @@ public abstract class GaswMonitor extends Thread {
     }
 
     /**
-     * Adds a job to be monitored. it should constructs a Job object and invoke
+     * Adds a job to be monitored. It should constructs a Job object and invoke
      * the protected method add(job).
      *
      * @param jobID
      * @param symbolicName
      * @param fileName
-     * @param userProxy user proxy (null in case of using default proxy or local
-     * execution)
      * @throws GaswException
      */
     public abstract void add(String jobID, String symbolicName, String fileName,
-            String parameters, Proxy userProxy) throws GaswException;
+            String parameters) throws GaswException;
 
     /**
      * Updates the job status and notifies listeners.
@@ -128,19 +125,34 @@ public abstract class GaswMonitor extends Thread {
     protected void verifySignaledJobs() {
 
         try {
+            // Replicate jobs
             for (Job job : jobDAO.getJobs(GaswStatus.REPLICATE)) {
-                replicate(job.getId());
+                replicate(job);
             }
+            // Kill job replicas
             for (Job job : jobDAO.getJobs(GaswStatus.KILL_REPLICA)) {
                 job.setStatus(GaswStatus.CANCELLED_REPLICA);
                 jobDAO.update(job);
-                kill(job.getId());
+                kill(job);
             }
+            // Kill jobs
             for (Job job : jobDAO.getJobs(GaswStatus.KILL)) {
-                kill(job.getId());
+                kill(job);
             }
+            // Reschedule jobs
             for (Job job : jobDAO.getJobs(GaswStatus.RESCHEDULE)) {
-                reschedule(job.getId());
+                reschedule(job);
+            }
+            // Resume held jobs
+            for (Job job : jobDAO.getJobs(GaswStatus.UNHOLD_ERROR)) {
+                job.setStatus(GaswStatus.ERROR);
+                jobDAO.update(job);
+                resume(job);
+            }
+            for (Job job : jobDAO.getJobs(GaswStatus.UNHOLD_STALLED)) {
+                job.setStatus(GaswStatus.STALLED);
+                jobDAO.update(job);
+                resume(job);
             }
         } catch (DAOException ex) {
             // do nothing
@@ -149,11 +161,11 @@ public abstract class GaswMonitor extends Thread {
 
     /**
      * Verifies if a job is replica and handles it in case it is.
-     * 
+     *
      * @param job
      * @return
      * @throws GaswException
-     * @throws DAOException 
+     * @throws DAOException
      */
     protected boolean isReplica(Job job) throws GaswException, DAOException {
 
@@ -171,26 +183,33 @@ public abstract class GaswMonitor extends Thread {
      *
      * @param jobID
      */
-    protected abstract void kill(String jobID);
+    protected abstract void kill(Job job);
 
     /**
      * Reschedule a job.
      *
      * @param jobID
      */
-    protected abstract void reschedule(String jobID);
+    protected abstract void reschedule(Job job);
 
     /**
      * Replicates a job.
      *
      * @param jobID
      */
-    protected abstract void replicate(String jobID);
+    protected abstract void replicate(Job job);
 
     /**
      * Kills job replicas.
      *
      * @param invocationID
      */
-    protected abstract void killReplicas(int invocationID);
+    protected abstract void killReplicas(Job job);
+
+    /**
+     * Resumes a job.
+     *
+     * @param jobID
+     */
+    protected abstract void resume(Job job);
 }

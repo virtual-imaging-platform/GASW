@@ -1,10 +1,8 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
- *
- * This software is a grid-enabled data-driven workflow manager and editor.
  *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
@@ -37,16 +35,15 @@ package fr.insalyon.creatis.gasw.script;
 import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
-import fr.insalyon.creatis.gasw.release.EnvVariable;
-import fr.insalyon.creatis.gasw.release.Release;
-import fr.insalyon.creatis.gasw.release.Upload;
+import fr.insalyon.creatis.gasw.GaswUpload;
 import fr.insalyon.creatis.gasw.util.VelocityUtil;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class ExecutionGenerator {
 
@@ -72,7 +69,7 @@ public class ExecutionGenerator {
      * @return A string containing the header
      * @throws Exception
      */
-    protected String loadHeader(String serviceCall) throws Exception {
+    public String loadHeader(String serviceCall) throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/execution/header.vm");
 
@@ -92,7 +89,7 @@ public class ExecutionGenerator {
      * @return A String containing the code
      * @throws Exception
      */
-    protected String loadHostConfiguration() throws Exception {
+    public String loadHostConfiguration() throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/execution/hostConfiguration.vm");
 
@@ -108,7 +105,7 @@ public class ExecutionGenerator {
      * @return A String containing the code
      * @throws Exception
      */
-    protected String loadBackgroundScript(String serviceCall) throws Exception {
+    public String loadBackgroundScript(String serviceCall) throws Exception {
 
         if (!conf.getDefaultBackgroundScript().isEmpty()) {
 
@@ -127,20 +124,14 @@ public class ExecutionGenerator {
      * Generates the code to perform an upload test before the job is executed.
      *
      * @param uploads The list of URIs to be uploaded
-     * @param regexs List of regular expressions to match with results
-     * @param defaultDir Default directory to store files matched against regexp
      * @return The code, in a String
      * @throws Exception
      */
-    protected String loadUploadTest(List<Upload> uploads, List<String> regexs,
-            String defaultDir) throws Exception {
+    public String loadUploadTest(List<GaswUpload> uploads) throws Exception {
 
-        if (uploads.size() > 0 || regexs.size() > 0) {
+        if (!uploads.isEmpty()) {
 
-            Upload upload = uploads.size() > 0
-                    ? uploads.get(0)
-                    : new Upload(URI.create(defaultDir + "regexp-do-not-name-a-file-such-as-this-one"));
-
+            GaswUpload upload = uploads.get(0);
             VelocityUtil velocity = new VelocityUtil("vm/script/execution/uploadTest.vm");
 
             velocity.put("cacheDir", GaswConstants.CACHE_DIR);
@@ -159,13 +150,11 @@ public class ExecutionGenerator {
      * @return A string containing the code
      * @throws Exception
      */
-    protected String loadApplicationEnvironment(Release release) throws Exception {
+    public String loadApplicationEnvironment(Map<String, String> envVariables) throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/execution/variables.vm");
 
-        velocity.put("configurations", release.getConfigurations());
-        velocity.put("infrastructures", release.getInfrastructures());
-        velocity.put("variableType", EnvVariable.Category.SYSTEM.name());
+        velocity.put("variables", envVariables);
 
         return velocity.merge().toString();
     }
@@ -174,21 +163,17 @@ public class ExecutionGenerator {
      * Generates the code to download all the inputs.
      *
      * @param serviceCall
-     * @param release
      * @param downloads The list of URIs to be downloaded
      * @return A string containing the code
      * @throws Exception
      */
-    protected String loadInputs(String serviceCall, Release release,
-            List<URI> downloads) throws Exception {
+    public String loadInputs(String serviceCall, List<URI> downloads) throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/execution/inputs.vm");
 
         velocity.put("minorStatusEnabled", conf.isMinorStatusEnabled());
         velocity.put("serviceCall", serviceCall);
-        velocity.put("infrastructures", release.getInfrastructures());
         velocity.put("downloads", downloads);
-        velocity.put("attachment", release.getAttachement());
 
         return velocity.merge().toString();
     }
@@ -201,13 +186,14 @@ public class ExecutionGenerator {
      * @return
      * @throws Exception
      */
-    protected String loadApplicationExecution(String serviceCall,
-            List<String> parameters) throws Exception {
+    public String loadApplicationExecution(String serviceCall,
+            String executableName, List<String> parameters) throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/execution/execution.vm");
 
         velocity.put("minorStatusEnabled", conf.isMinorStatusEnabled());
         velocity.put("serviceCall", serviceCall);
+        velocity.put("executableName", executableName);
         velocity.put("params", parameters);
 
         return velocity.merge().toString();
@@ -218,28 +204,18 @@ public class ExecutionGenerator {
      *
      * @param serviceCall
      * @param Uploads the list of URIs to be uploaded
-     * @param regexs list of regular expressions to match with results
-     * @param defaultDir default directory to store files matched against regexp
      * @return A string containing the code
      * @throws Exception
      */
-    protected String loadResultsUpload(String serviceCall, List<Upload> uploads,
-            List<String> regexs, String defaultDir) throws Exception {
-
-        String dir = defaultDir;
-        if (dir.startsWith("lfn://")) {
-            dir = dir.replaceFirst("lfn://[^/]+", "");
-        }
+    public String loadResultsUpload(String serviceCall, List<GaswUpload> uploads) 
+            throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/execution/result.vm");
 
         velocity.put("minorStatusEnabled", conf.isMinorStatusEnabled());
         velocity.put("serviceCall", serviceCall);
         velocity.put("uploads", uploads);
-        velocity.put("regexs", regexs);
-        velocity.put("defaultDir", defaultDir);
-        velocity.put("dir", dir);
-
+        
         return velocity.merge().toString();
     }
 
@@ -249,7 +225,7 @@ public class ExecutionGenerator {
      * @return A string containing the footer
      * @throws Exception
      */
-    protected String loadFooter(String serviceCall) throws Exception {
+    public String loadFooter(String serviceCall) throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/execution/footer.vm");
 

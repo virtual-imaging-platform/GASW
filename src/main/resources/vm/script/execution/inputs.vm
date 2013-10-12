@@ -1,8 +1,7 @@
 ## inputs.vm
 
 ## Variables
-## $minorStatusEnabled, $serviceCall, $infrastructures, $downloads
-## $attachment
+## $minorStatusEnabled, $serviceCall, $downloads
 
 startLog inputs_download
 
@@ -11,32 +10,6 @@ $serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 3
 #end
 
 touch ../DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
-
-#foreach( $infrastructure in $infrastructures )
-if [[ "$GASW_EXEC_ENV" == "$infrastructure.Type" ]]
-then
-#foreach( $execution in $infrastructure.Executions )
-    if [[ "$GASW_JOB_ENV" == "$execution.Type" ]]
-    then
-        downloadURI $execution.BoundArtifact
-        export GASW_EXEC_URL="$execution.BoundArtifact.Path"
-#set( $fileName = '${GASW_EXEC_URL##*/}' )
-        fName=${fileName}
-        export GASW_EXEC_BUNDLE="$fName"
-        export GASW_EXEC_COMMAND="$execution.Target"
-    fi
-#end
-#if( $infrastructure.SharedArtifact )
-    downloadURI $infrastructure.SharedArtifact
-#end
-fi
-#end
-
-__MOTEUR_IN=$GASW_EXEC_URL
-
-#if( $attachment )
-downloadURI $attachment
-#end
 
 #foreach( $download in $downloads )
 downloadURI $download

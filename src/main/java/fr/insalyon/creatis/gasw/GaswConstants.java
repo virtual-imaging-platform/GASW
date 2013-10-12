@@ -4,8 +4,6 @@
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
- * This software is a grid-enabled data-driven workflow manager and editor.
- *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
@@ -59,6 +57,7 @@ public class GaswConstants {
     public static final String LAB_PLUGIN_EXECUTOR = "plugin.executor";
     public static final String LAB_PLUGIN_LISTENER = "plugin.listener";
     public static final String LAB_VO_DEFAULT_SE = "vo.default.se";
+    public static final String LAB_VO_LFC_HOST = "vo.lfc.host";
     public static final String LAB_VO_NAME = "vo.name";
     public static final String LAB_VO_USE_CLOSE_SE = "vo.use.close.se";
     // timeouts used in lcg-c*
@@ -81,8 +80,4 @@ public class GaswConstants {
     public static final String ERR_APP_EXT = ".app" + ERR_EXT;
     // Environment Variables
     public static final String ENV_EXECUTOR = "executor";
-    // Data Type
-    public enum DataType {
-        Input, Output
-    };
 }

@@ -1,37 +1,12 @@
 ## variables.vm
 
 ## Variables
-## $configurations, $infrastructures, $variableType
+## $variables
 
 startLog application_environment
 
-#foreach( $variable in $configurations )
-#if( $variable.Category == $variableType )
-    export $variable.Name="$variable.Value"
+#foreach( $variable in $variables )
+    export $variable.key="$variable.value"
 #end
-#end
-
-#foreach( $infrastructure in $infrastructures )
-if [[ "$GASW_EXEC_ENV" == "$infrastructure.Type" ]]
-then
-    info "Exporting variables to $infrastructure.Type"
-#foreach( $variable in $infrastucture.SharedEnvironment )
-#if( $variable.Category == $variableType )
-    export $variable.Name="$variable.Value"
-#end
-#end
-#foreach( $execution in $infrastructure.Executions )
-    if [[ "$GASW_JOB_ENV" == "$execution.Type" ]]
-    then
-        info "Exporting variables to $execution.Type"
-#foreach( $variable in $execution.BoundEnvironment )
-#if( $variable.Category == $variableType )
-        export $variable.Name="$variable.Value"
-#end
-#end
-    fi
-#end
-fi
-#end    
 
 stopLog application_environment

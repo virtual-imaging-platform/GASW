@@ -1,7 +1,7 @@
 ## result.vm
 
 ## Variables
-## $minorStatusEnabled, $serviceCall, $uploads, $regexs, $defaultDir, $dir
+## $minorStatusEnabled, $serviceCall, $uploads
 
 startLog results_upload
 
@@ -23,29 +23,5 @@ upload $URI.Path "`tr -dc "[:alpha:]" < /dev/urandom | head -c 32`" $upload.Numb
 #end
 
 __MOTEUR_OUT="$uploadsList"
-
-#foreach( $regexp in $regexs )
-#set( $D = '#' )
-#set( $regexCommand = "$(find . -name '*' -newer BEFORE_EXECUTION_REFERENCE_FILE -print | grep -v -e '^\\.$' | sed 's#.${D}${D}' | grep -P '$regexp')" )
-files=$regexCommand
-if [ $? -ne 0 ]
-then
-    error "Exiting with return value 3"
-    exit 3
-fi
-
-for f in ${files}
-do
-    startLog file_upload lfn="$dir${f}"
-    uploadFile $dir${f} ${PWD}/${f} 1
-    stopLog file_upload
-    if [ "x$__MOTEUR_OUT" == "x" ]
-    then
-        __MOTEUR_OUT="$defaultDir${f}"
-    else
-        __MOTEUR_OUT="${__MOTEUR_OUT};$defaultDir${f}"
-    fi
-done
-#end
 
 stopLog results_upload

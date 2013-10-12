@@ -4,8 +4,6 @@
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
- * This software is a grid-enabled data-driven workflow manager and editor.
- *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
@@ -38,10 +36,7 @@ import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
-import fr.insalyon.creatis.gasw.release.Execution;
-import fr.insalyon.creatis.gasw.release.Infrastructure;
 import fr.insalyon.creatis.gasw.script.ScriptGenerator;
-import grool.proxy.Proxy;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -58,40 +53,29 @@ public abstract class GaswSubmit {
     protected GaswInput gaswInput;
     protected String scriptName;
     protected String jdlName;
-    protected Proxy userProxy;
     protected GaswMinorStatusServiceGenerator minorStatusServiceGenerator;
 
     /**
-     * Generates the script and job files for the requested release accordingly
-     * to the Grid type defined in the configuration file.
      *
      * @param gaswInput
-     * @param userProxy
      * @param minorStatusServiceGenerator
      * @throws GaswException
      */
-    public GaswSubmit(GaswInput gaswInput, Proxy userProxy,
-            GaswMinorStatusServiceGenerator minorStatusServiceGenerator) throws GaswException {
+    public GaswSubmit(GaswInput gaswInput, GaswMinorStatusServiceGenerator minorStatusServiceGenerator)
+            throws GaswException {
 
         this.gaswInput = gaswInput;
-        this.userProxy = userProxy;
         this.minorStatusServiceGenerator = minorStatusServiceGenerator;
 
         if (GaswConfiguration.getInstance().isFailOverEnabled()) {
             FailOver.getInstance().addData(gaswInput.getDownloads());
-
-            // Release artifacts
-            for (Infrastructure i : gaswInput.getRelease().getInfrastructures()) {
-                for (Execution e : i.getExecutions()) {
-                    FailOver.getInstance().addData(e.getBoundArtifact());
-                }
-            }
         }
     }
 
     /**
      * Submits a job to a grid or local execution.
-     * 
+     *
+     * @return Job ID
      * @throws GaswException
      */
     public abstract String submit() throws GaswException;
@@ -105,15 +89,9 @@ public abstract class GaswSubmit {
     protected String generateScript() throws GaswException {
 
         String script = ScriptGenerator.getInstance().generateScript(
-                gaswInput.getRelease(),
-                gaswInput.getDownloads(),
-                gaswInput.getUploads(),
-                gaswInput.getRegexs(),
-                gaswInput.getDefaultDirectory(),
-                gaswInput.getParameters(),
-                minorStatusServiceGenerator);
+                gaswInput, minorStatusServiceGenerator);
 
-        return publishScript(gaswInput.getRelease().getSymbolicName(), script);
+        return publishScript(gaswInput.getExecutableName(), script);
     }
 
     /**
@@ -164,22 +142,6 @@ public abstract class GaswSubmit {
             logger.error(ex);
             return null;
         }
-    }
-
-    /**
-     *
-     * @param name
-     * @param nanoTime
-     * @param extension
-     * @param directory
-     * @return
-     */
-    public Proxy getUserProxy() {
-        return userProxy;
-    }
-
-    public void setUserProxy(Proxy userProxy) {
-        this.userProxy = userProxy;
     }
 
     /**

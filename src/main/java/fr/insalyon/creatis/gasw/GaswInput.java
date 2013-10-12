@@ -1,12 +1,10 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
- * This software is a grid-enabled data-driven workflow manager and editor.
- *
- * This software is governed by the CeCILL  license under French law and
+ * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
@@ -34,95 +32,40 @@
  */
 package fr.insalyon.creatis.gasw;
 
-import fr.insalyon.creatis.gasw.release.Release;
-import fr.insalyon.creatis.gasw.release.Upload;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class GaswInput {
 
-    private String executorName;
-    private Release release;
+    private String executableName;
     private List<String> parameters;
     private List<URI> downloads;
-    private List<Upload> uploads;
-    private List<String> regexs;
-    private String defaultDir;
+    private List<GaswUpload> uploads;
+    private Map<String, String> gaswVariables;
+    private Map<String, String> envVariables;
 
     /**
      *
-     * @param release
-     */
-    public GaswInput(String executorName, Release release) {
-        this(executorName, release, new ArrayList<String>(), new ArrayList<URI>(),
-                new ArrayList<Upload>());
-    }
-
-    /**
-     * @param release
+     * @param executableName Name of the executable file.
      * @param parameters List of parameters associated with the command.
      * @param downloads List of input files to be downloaded in the worker node.
      * @param uploads List of output files to be uploaded to a Storage Element.
      */
-    public GaswInput(Release release, List<String> parameters, List<URI> downloads,
-            List<Upload> uploads) {
-        this(null, release, parameters, downloads, uploads, new ArrayList<String>(), null);
-    }
+    public GaswInput(String executableName, List<String> parameters,
+            List<URI> downloads, List<GaswUpload> uploads,
+            Map<String, String> gaswVariables, Map<String, String> envVariables) {
 
-    /**
-     * @param executorName
-     * @param release
-     * @param parameters List of parameters associated with the command.
-     * @param downloads List of input files to be downloaded in the worker node.
-     * @param uploads List of output files to be uploaded to a Storage Element.
-     */
-    public GaswInput(String executorName, Release release, List<String> parameters, List<URI> downloads,
-            List<Upload> uploads) {
-        this(executorName, release, parameters, downloads, uploads, new ArrayList<String>(), null);
-    }
-
-    /**
-     *
-     * @param release
-     * @param parameters List of parameters associated with the command.
-     * @param downloads List of input files to be downloaded in the worker node.
-     * @param uploads List of output files to be uploaded to a Storage Element.
-     * @param regexs list of regular expressions to match against outputs.
-     * @param defaultDir default directory where to store files matching the
-     * regular expressions.
-     */
-    public GaswInput(Release release, List<String> parameters, List<URI> downloads,
-            List<Upload> uploads, List<String> regexs, String defaultDir) {
-        
-        this(null, release, parameters, downloads, uploads, regexs, defaultDir);
-    }
-    
-    /**
-     *
-     * @param executorName
-     * @param release
-     * @param parameters List of parameters associated with the command.
-     * @param downloads List of input files to be downloaded in the worker node.
-     * @param uploads List of output files to be uploaded to a Storage Element.
-     * @param regexs list of regular expressions to match against outputs.
-     * @param defaultDir default directory where to store files matching the
-     * regular expressions.
-     */
-    public GaswInput(String executorName, Release release, List<String> parameters, List<URI> downloads,
-            List<Upload> uploads, List<String> regexs, String defaultDir) {
-
-        this.executorName = executorName;
-        this.release = release;
+        this.executableName = executableName;
         this.parameters = parameters;
         this.downloads = downloads;
         this.uploads = uploads;
-        this.regexs = regexs;
-        this.defaultDir = defaultDir;
+        this.gaswVariables = gaswVariables;
+        this.envVariables = envVariables;
     }
 
     /**
@@ -148,17 +91,28 @@ public class GaswInput {
      *
      * @param upload URI
      */
-    public void addUpload(Upload upload) {
+    public void addUpload(GaswUpload upload) {
         this.uploads.add(upload);
     }
 
     /**
-     * Adds an
+     * Adds a GASW variable to the request.
      *
-     * @param regex
+     * @param key
+     * @param value
      */
-    public void addRegex(String regex) {
-        this.regexs.add(regex);
+    public void addGaswVariable(String key, String value) {
+        gaswVariables.put(key, value);
+    }
+
+    /**
+     * Adds an environment variable to be set on job execution.
+     *
+     * @param key
+     * @param value
+     */
+    public void addEnvVariable(String key, String value) {
+        envVariables.put(key, value);
     }
 
     public List<URI> getDownloads() {
@@ -169,23 +123,19 @@ public class GaswInput {
         return parameters;
     }
 
-    public List<String> getRegexs() {
-        return regexs;
-    }
-
-    public String getDefaultDirectory() {
-        return defaultDir;
-    }
-
-    public Release getRelease() {
-        return release;
-    }
-
-    public List<Upload> getUploads() {
+    public List<GaswUpload> getUploads() {
         return uploads;
     }
 
-    public String getExecutorName() {
-        return executorName;
+    public String getExecutableName() {
+        return executableName;
+    }
+
+    public String getGaswVariable(String key) {
+        return gaswVariables.get(key);
+    }
+
+    public Map<String, String> getEnvVariables() {
+        return envVariables;
     }
 }

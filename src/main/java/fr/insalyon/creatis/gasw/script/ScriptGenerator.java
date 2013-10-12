@@ -4,8 +4,6 @@
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
  *
- * This software is a grid-enabled data-driven workflow manager and editor.
- *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
@@ -36,11 +34,8 @@ package fr.insalyon.creatis.gasw.script;
 
 import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswException;
+import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.execution.GaswMinorStatusServiceGenerator;
-import fr.insalyon.creatis.gasw.release.Release;
-import fr.insalyon.creatis.gasw.release.Upload;
-import java.net.URI;
-import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
@@ -82,9 +77,8 @@ public class ScriptGenerator {
      * @param minorStatusService
      * @return A string containing the bash script source
      */
-    public String generateScript(Release release, List<URI> downloads,
-            List<Upload> uploads, List<String> regexs, String defaultDir,
-            List<String> parameters, GaswMinorStatusServiceGenerator minorStatusService) {
+    public String generateScript(GaswInput gaswInput, 
+            GaswMinorStatusServiceGenerator minorStatusService) {
 
         StringBuilder sb = new StringBuilder();
 
@@ -108,11 +102,11 @@ public class ScriptGenerator {
             sb.append(execution.loadHeader(minorStatusService.getServiceCall()));
             sb.append(execution.loadHostConfiguration());
             sb.append(execution.loadBackgroundScript(minorStatusService.getServiceCall()));
-            sb.append(execution.loadUploadTest(uploads, regexs, defaultDir));
-            sb.append(execution.loadInputs(minorStatusService.getServiceCall(), release, downloads));
-            sb.append(execution.loadApplicationEnvironment(release));
-            sb.append(execution.loadApplicationExecution(minorStatusService.getServiceCall(), parameters));
-            sb.append(execution.loadResultsUpload(minorStatusService.getServiceCall(), uploads, regexs, defaultDir));
+            sb.append(execution.loadUploadTest(gaswInput.getUploads()));
+            sb.append(execution.loadInputs(minorStatusService.getServiceCall(), gaswInput.getDownloads()));
+            sb.append(execution.loadApplicationEnvironment(gaswInput.getEnvVariables()));
+            sb.append(execution.loadApplicationExecution(minorStatusService.getServiceCall(), gaswInput.getExecutableName(), gaswInput.getParameters()));
+            sb.append(execution.loadResultsUpload(minorStatusService.getServiceCall(), gaswInput.getUploads()));
             sb.append(execution.loadFooter(minorStatusService.getServiceCall()));
 
         } catch (Exception ex) {

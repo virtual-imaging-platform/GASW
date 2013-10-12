@@ -1,10 +1,8 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
- *
- * This software is a grid-enabled data-driven workflow manager and editor.
  *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
@@ -39,20 +37,13 @@ import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.execution.ExecutorFactory;
 import fr.insalyon.creatis.gasw.execution.FailOver;
 import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
-import grool.access.GridUserCredentials;
-import grool.proxy.Proxy;
-import grool.proxy.ProxyConfiguration;
-import grool.proxy.myproxy.GlobusMyproxy;
-import grool.server.MyproxyServer;
-import grool.server.VOMSServer;
-import java.io.File;
 import java.util.List;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class Gasw {
 
@@ -80,7 +71,6 @@ public class Gasw {
                     Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
             logger.info("Initializing GASW.");
             GaswConfiguration.getInstance().loadHibernate();
-            ProxyConfiguration.initConfiguration();
 
             notification = GaswNotification.getInstance();
 
@@ -88,14 +78,14 @@ public class Gasw {
             throw new GaswException(ex);
         }
     }
-    
+
     /**
      * Sets the client which will receive notifications.
-     * 
-     * @param client 
+     *
+     * @param client
      */
     public synchronized void setNotificationClient(Object client) {
-        
+
         notification.setClient(client);
     }
 
@@ -107,34 +97,8 @@ public class Gasw {
      */
     public synchronized String submit(GaswInput gaswInput) throws GaswException {
 
-        return submit(gaswInput, null, null, null);
-    }
-
-    /**
-     *
-     * @param gaswInput
-     * @param credentials
-     * @param myproxyServer
-     * @param vomsServer
-     * @return
-     * @throws GaswException
-     */
-    public synchronized String submit(GaswInput gaswInput, GridUserCredentials credentials,
-            MyproxyServer myproxyServer, VOMSServer vomsServer) throws GaswException {
-
         ExecutorPlugin executor = ExecutorFactory.getExecutor(gaswInput);
-
-        Proxy userProxy = null;
-        if (credentials != null) {
-            userProxy = new GlobusMyproxy(credentials, myproxyServer, vomsServer);
-        } else {
-            String proxyPath = System.getenv("X509_USER_PROXY");
-            if (proxyPath != null && !proxyPath.isEmpty()) {
-                userProxy = new GlobusMyproxy(myproxyServer, vomsServer, new File(proxyPath));
-            }
-        }
-
-        executor.load(gaswInput, userProxy);
+        executor.load(gaswInput);
         return executor.submit();
     }
 
@@ -160,17 +124,17 @@ public class Gasw {
      * @throws GaswException
      */
     public synchronized void terminate() throws GaswException {
-        
+
         try {
             DAOFactory.getDAOFactory().close();
             notification.terminate();
-            
+
             if (GaswConfiguration.getInstance().isFailOverEnabled()) {
                 FailOver.getInstance().terminate();
             }
-            
+
             GaswConfiguration.getInstance().terminate();
-            
+
         } catch (DAOException ex) {
             throw new GaswException(ex);
         }

@@ -1,13 +1,14 @@
 ## execution.vm
 
 ## Variables
-## $minorStatusEnabled, $serviceCall, $params
+## $minorStatusEnabled, $serviceCall, $executableName, $params
 
 #if( $minorStatusEnabled && $serviceCall )
 $serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 4
 #end
 
-tar -zxf $GASW_EXEC_BUNDLE
+#set ( $tarFile = "${executableName}.tar.gz" )
+tar -zxf $tarFile
 
 chmod 755 *
 
@@ -24,7 +25,7 @@ sleep 1
 
 export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}
 
-COMMAND_LINE="./$GASW_EXEC_COMMAND $parameters"
+COMMAND_LINE="./$executableName $parameters"
 
 info "Executing $COMMAND_LINE..."
 
@@ -45,4 +46,4 @@ stopLog application_execution
 info "Execution time was `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}`s"
 
 __MOTEUR_ARGS="$parameters"
-__MOTEUR_EXE="$GASW_EXEC_COMMAND"
+__MOTEUR_EXE="$executableName"

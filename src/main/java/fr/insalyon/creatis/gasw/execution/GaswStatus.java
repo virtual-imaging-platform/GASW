@@ -1,10 +1,8 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
- *
- * This software is a grid-enabled data-driven workflow manager and editor.
  *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
@@ -36,7 +34,7 @@ package fr.insalyon.creatis.gasw.execution;
 
 /**
  *
- * @author Rafael Silva, William Romero
+ * @author Rafael Ferreira da Silva, William Romero
  */
 public enum GaswStatus {
 
@@ -45,6 +43,7 @@ public enum GaswStatus {
     COMPLETED,
     CREATED,
     ERROR,
+    ERROR_HELD,
     KILL,
     KILL_REPLICA,
     NOT_SUBMITTED,
@@ -53,6 +52,9 @@ public enum GaswStatus {
     RESCHEDULE,
     RUNNING,
     STALLED,
+    STALLED_HELD,
     SUCCESSFULLY_SUBMITTED,
-    UNDEFINED
+    UNDEFINED,
+    UNHOLD_ERROR,
+    UNHOLD_STALLED
 }

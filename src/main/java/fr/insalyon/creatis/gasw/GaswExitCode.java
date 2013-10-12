@@ -1,10 +1,8 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
- *
- * This software is a grid-enabled data-driven workflow manager and editor.
  *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
@@ -36,7 +34,7 @@ package fr.insalyon.creatis.gasw;
 
 /**
  *
- * @author Tram Truong Huu
+ * @author Tram Truong Huu, Rafael Ferreira da Silva
  */
 public enum GaswExitCode {
 

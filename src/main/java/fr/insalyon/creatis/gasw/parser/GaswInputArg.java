@@ -30,53 +30,16 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.bean;
-
-import javax.persistence.*;
+package fr.insalyon.creatis.gasw.parser;
 
 /**
  *
  * @author Rafael Ferreira da Silva
  */
-@Entity
-@NamedQueries({
-    @NamedQuery(name = "Data.findByPath", query = "FROM Data d WHERE d.dataPath = :path")
-})
-@Table(name = "Data")
-public class Data {
+public class GaswInputArg extends GaswArgument {
 
-    public enum Type {
+    public GaswInputArg(String name, String option, boolean implicit) {
 
-        Input, Output
-    };
-    private String dataPath;
-    private Type dataType;
-
-    public Data() {
-    }
-
-    public Data(String dataPath, Type dataType) {
-        this.dataPath = dataPath;
-        this.dataType = dataType;
-    }
-
-    @Id
-    @Column(name = "data_path")
-    public String getDataPath() {
-        return dataPath;
-    }
-
-    public void setDataPath(String dataPath) {
-        this.dataPath = dataPath;
-    }
-
-    @Column(name = "data_type")
-    @Enumerated(value = EnumType.STRING)
-    public Type getDataType() {
-        return dataType;
-    }
-
-    public void setDataType(Type dataType) {
-        this.dataType = dataType;
+        super(name, option, Hookup.Input, Type.String, implicit);
     }
 }

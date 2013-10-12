@@ -1,10 +1,8 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
- *
- * This software is a grid-enabled data-driven workflow manager and editor.
  *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
@@ -32,73 +30,45 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.gasw.release;
-
-import java.net.URI;
-import static org.junit.Assert.assertEquals;
-import org.junit.*;
+package fr.insalyon.creatis.gasw.parser;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
-public class UploadTest {
+public class GaswOutputArg extends GaswArgument {
 
-    private Upload upload;
-    private URI uri;
-    private int numberOfReplicas;
-    
-    public UploadTest() {
-        
-        uri = URI.create("lfn://lfc-biomed.in2p3.fr:5010/grid/biomed/test");
-        numberOfReplicas = 5;
-        upload = new Upload(uri, numberOfReplicas);
+    private int replicas;
+    private boolean template;
+    private String content;
+
+    public GaswOutputArg(String name, String option, boolean implicit) {
+
+        super(name, option, Hookup.Output, Type.URI, implicit);
+        this.replicas = 1;
     }
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {
+    public int getReplicas() {
+        return replicas;
     }
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {
+    public void setReplicas(int replicas) {
+        this.replicas = replicas;
     }
 
-    @Before
-    public void setUp() {
+    public boolean isTemplate() {
+        return template;
     }
 
-    @After
-    public void tearDown() {
+    public void setTemplate(boolean template) {
+        this.template = template;
     }
 
-    /**
-     * Test of getNumberOfReplicas method, of class Upload.
-     */
-    @Test
-    public void testGetNumberOfReplicas() {
-        
-        assertEquals(numberOfReplicas, upload.getNumberOfReplicas());
+    public String getContent() {
+        return content;
     }
 
-    /**
-     * Test of getURI method, of class Upload.
-     */
-    @Test
-    public void testGetURI() {
-        
-        assertEquals(uri, upload.getURI());
-    }
-
-    /**
-     * Test of setURI method, of class Upload.
-     */
-    @Test
-    public void testSetURI() {
-        
-        assertEquals(uri, upload.getURI());
-        
-        URI newURI = URI.create("file:///home/test/test");
-        upload.setURI(newURI);
-        assertEquals(newURI, upload.getURI());
+    public void setContent(String content) {
+        this.content = content;
     }
 }

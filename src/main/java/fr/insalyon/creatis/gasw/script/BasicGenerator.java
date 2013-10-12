@@ -1,10 +1,8 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
- *
- * This software is a grid-enabled data-driven workflow manager and editor.
  *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
@@ -39,7 +37,7 @@ import fr.insalyon.creatis.gasw.util.VelocityUtil;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class BasicGenerator {
 
@@ -60,7 +58,7 @@ public class BasicGenerator {
      * @return
      * @throws Exception 
      */
-    protected String loadLogFunctions() throws Exception {
+    public String loadLogFunctions() throws Exception {
         
         VelocityUtil velocity = new VelocityUtil("vm/script/basic/logFunctions.vm");
         return velocity.merge().toString();
@@ -71,7 +69,7 @@ public class BasicGenerator {
      * @return
      * @throws Exception 
      */
-    protected String loadCleanupFunction() throws Exception {
+    public String loadCleanupFunction() throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/basic/cleanupFunction.vm");
 

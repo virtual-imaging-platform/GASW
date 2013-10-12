@@ -126,7 +126,7 @@ public class JobData implements JobDAO {
 
     @Override
     public List<Job> getActiveJobs() throws DAOException {
-        
+
         try {
             Session session = sessionFactory.openSession();
             session.beginTransaction();
@@ -151,7 +151,7 @@ public class JobData implements JobDAO {
 
     @Override
     public List<Job> getJobs(GaswStatus status) throws DAOException {
-        
+
         try {
             Session session = sessionFactory.openSession();
             session.beginTransaction();
@@ -170,7 +170,7 @@ public class JobData implements JobDAO {
 
     @Override
     public long getNumberOfCompletedJobsByInvocationID(int invocationID) throws DAOException {
-        
+
         try {
             Session session = sessionFactory.openSession();
             session.beginTransaction();
@@ -191,7 +191,7 @@ public class JobData implements JobDAO {
 
     @Override
     public List<Job> getActiveJobsByInvocationID(int invocationID) throws DAOException {
-        
+
         try {
             Session session = sessionFactory.openSession();
             session.beginTransaction();
@@ -216,8 +216,30 @@ public class JobData implements JobDAO {
     }
 
     @Override
+    public List<Job> getFailedJobsByInvocationID(int invocationID) throws DAOException {
+
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            List<Job> list = (List<Job>) session.getNamedQuery("Job.findFailedByInvocationID")
+                    .setInteger("invocationID", invocationID)
+                    .setString("error", GaswStatus.ERROR.name())
+                    .setString("stalled", GaswStatus.STALLED.name())
+                    .list();
+            session.getTransaction().commit();
+            session.close();
+
+            return list;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
+
+    @Override
     public List<Job> getRunningByCommand(String command) throws DAOException {
-        
+
         try {
             Session session = sessionFactory.openSession();
             session.beginTransaction();
@@ -230,9 +252,9 @@ public class JobData implements JobDAO {
                     .list();
             session.getTransaction().commit();
             session.close();
-            
+
             return list;
-            
+
         } catch (HibernateException ex) {
             logger.error(ex);
             throw new DAOException(ex);
@@ -241,7 +263,7 @@ public class JobData implements JobDAO {
 
     @Override
     public List<Job> getByParameters(String parameters) throws DAOException {
-        
+
         try {
             Session session = sessionFactory.openSession();
             session.beginTransaction();
@@ -250,9 +272,9 @@ public class JobData implements JobDAO {
                     .list();
             session.getTransaction().commit();
             session.close();
-            
+
             return list;
-            
+
         } catch (HibernateException ex) {
             logger.error(ex);
             throw new DAOException(ex);

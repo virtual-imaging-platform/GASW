@@ -32,77 +32,37 @@
  */
 package fr.insalyon.creatis.gasw;
 
-import java.io.File;
 import java.net.URI;
-import java.util.List;
 
 /**
  *
- * @author Rafael Ferreira da Silva, Tram Truong Huu
+ * @author Rafael Ferreira da Silva
  */
-public class GaswOutput {
+public class GaswUpload {
 
-    private String jobID;
-    private GaswExitCode exitCode;
-    private String exitMessage;
-    private List<URI> uploadedResults;
-    private File appStdOut;
-    private File appStdErr;
-    private File stdOut;
-    private File stdErr;
+    private URI uri;
+    private int numberOfReplicas;
 
-    /**
-     * Creates an output object.
-     *
-     * @param jobID Job identification
-     * @param exitCode Exit code
-     * @param appStdOut Application standard output file
-     * @param appStdErr Application standard error file
-     * @param stdOut Job standard output file
-     * @param stdErr Job standard error file
-     */
-    public GaswOutput(String jobID, GaswExitCode exitCode, String exitMessage,
-            List<URI> uploadedResults, File appStdOut, File appStdErr, File stdOut, File stdErr) {
-
-        this.jobID = jobID;
-        this.exitCode = exitCode;
-        this.exitMessage = exitMessage;
-        this.uploadedResults = uploadedResults;
-        this.appStdOut = appStdOut;
-        this.appStdErr = appStdErr;
-        this.stdOut = stdOut;
-        this.stdErr = stdErr;
+    public GaswUpload(URI uri) {
+        
+        this(uri, 1);
     }
 
-    public String getJobID() {
-        return jobID;
+    public GaswUpload(URI uri, int numberOfReplicas) {
+
+        this.uri = uri;
+        this.numberOfReplicas = numberOfReplicas;
     }
 
-    public GaswExitCode getExitCode() {
-        return exitCode;
+    public int getNumberOfReplicas() {
+        return numberOfReplicas;
     }
 
-    public String getExitMessage() {
-        return exitMessage;
+    public URI getURI() {
+        return uri;
     }
 
-    public List<URI> getUploadedResults() {
-        return uploadedResults;
-    }
-
-    public File getAppStdErr() {
-        return appStdErr;
-    }
-
-    public File getAppStdOut() {
-        return appStdOut;
-    }
-
-    public File getStdErr() {
-        return stdErr;
-    }
-
-    public File getStdOut() {
-        return stdOut;
+    public void setURI(URI uri) {
+        this.uri = uri;
     }
 }

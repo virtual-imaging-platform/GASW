@@ -1,10 +1,8 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
- *
- * This software is a grid-enabled data-driven workflow manager and editor.
  *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
@@ -41,7 +39,7 @@ import fr.insalyon.creatis.gasw.util.VelocityUtil;
 
 /**
  *
- * @author Rafael Silva, Tristan Glatard
+ * @author Rafael Ferreira da Silva, Tristan Glatard
  */
 public class DataManagementGenerator {
 
@@ -65,7 +63,7 @@ public class DataManagementGenerator {
      * @return
      * @throws Exception 
      */
-    protected String loadCheckCacheDownloadAndCacheLFNFunction() throws Exception {
+    public String loadCheckCacheDownloadAndCacheLFNFunction() throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/checkCacheDownloadAndCacheLFNFunction.vm");
         
@@ -80,7 +78,7 @@ public class DataManagementGenerator {
      * @return
      * @throws Exception 
      */
-    protected String loadDownloadFunctions() throws Exception {
+    public String loadDownloadFunctions() throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/downloadFunctions.vm");
         
@@ -103,7 +101,7 @@ public class DataManagementGenerator {
      * @return A string containing the code
      * @throws Exception
      */
-    protected String loadAddToCacheFunction() throws Exception {
+    public String loadAddToCacheFunction() throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/addToCacheFunction.vm");
         
@@ -118,7 +116,7 @@ public class DataManagementGenerator {
      * @return
      * @throws Exception 
      */
-    protected String loadAddToFailOverFunction() throws Exception {
+    public String loadAddToFailOverFunction() throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/addToFailOverFunction.vm");
         
@@ -142,7 +140,7 @@ public class DataManagementGenerator {
      * @return A string containing the code
      * @throws Exception
      */
-    protected String loadUploadFunctions() throws Exception {
+    public String loadUploadFunctions() throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/uploadFunctions.vm");
         
@@ -163,7 +161,7 @@ public class DataManagementGenerator {
      * @return a string containing the code
      * @throws Exception
      */
-    protected String loadDeleteFunctions() throws Exception {
+    public String loadDeleteFunctions() throws Exception {
 
         VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/deleteFunctions.vm");
         return velocity.merge().toString();        
