@@ -30,6 +30,15 @@ function downloadLFN {
         if [ $? = 0 ]
         then
             info "lcg-cp worked fine"
+       	    lcg_source=`cat lcg-log | awk -F"://" '/Trying SURL srm/ {print $2}' | awk -F"/" '{print $1}'|awk -F":" '{print $1}'`;
+            lcg_destination=`hostname`;
+            lcg_time=`cat lcg-log | awk '/Transfer took/ {print $3$4}'`;
+            info "DownloadCommand=lcg-cp Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time";
+	    if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
+	    then
+		info "Missing lcg_log info, printing the whole file"
+		cat lcg-log
+	    fi
             return 0
         else
             error "It failed, falling back on regular lcg-cp"
@@ -46,6 +55,16 @@ function downloadLFN {
     if [ $? = 0 ]
     then
        info "lcg-cp worked fine"
+       lcg_source=`cat lcg-log | awk -F"://" '/Trying SURL srm/ {print $2}' | awk -F"/" '{print $1}'|awk -F":" '{print $1}'`;
+       lcg_destination=`hostname`;
+       lcg_time=`cat lcg-log | awk '/Transfer took/ {print $3$4}'`;
+       info "DownloadCommand=lcg-cp Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time";
+       if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
+       then
+ 	 info "Missing lcg_log info, printing the whole file"
+         cat lcg-log
+       fi
+
     else
 #if( $failOverEnabled )
         local FILENAME=`lcg-lr lfn:${LFN} | grep $failOverHost`

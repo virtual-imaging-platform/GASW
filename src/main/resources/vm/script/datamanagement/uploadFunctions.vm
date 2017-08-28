@@ -100,15 +100,40 @@ function uploadFile {
             then
                 lfc-rename ${LFN} ${LFN}-garbage-${HOSTNAME}-${PWD}
             fi
+	    flag="cr"
             lfc-mkdir -p `dirname ${LFN}`
             lcg-cr -v ${OPTS} -d ${DEST} -l lfn:${LFN} file:${FILE} &> lcg-log
         else
+	    flag="rep"
             lcg-rep -v ${OPTS} -d ${DEST} lfn:${LFN} &> lcg-log
         fi
         if [ $? = 0 ]
         then
             info "lcg-cr/rep of ${LFN} to SE ${DEST} worked fine"
             done=`expr ${done} + 1`
+	            if [ $flag = "cr" ]
+            then
+                lcg_source=`hostname`
+                lcg_destination=$DEST
+                lcg_time=`cat lcg-log | awk '/Transfer took/ {print $3$4}'`
+                info "UploadCommand=lcg-cr Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time"
+		if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
+                then
+        	        info "Missing lcg_log info, printing the whole file"
+                	cat lcg-log
+                fi
+
+            else
+                lcg_source=`cat lcg-log | awk -F"://" '/Trying SURL srm/ {print $2}' | awk -F"/" '{print $1}'|awk -F":" '{print $1}'`
+                lcg_destination=$DEST
+                lcg_time=`cat lcg-log | awk '/Transfer took/ {print $3$4}'`
+                info "UploadCommand=lcg-rep Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time"
+		if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
+                then
+        	        info "Missing lcg_log info, printing the whole file"
+                	cat lcg-log
+                fi
+	    fi
         else
             error "`cat lcg-log`"
             warning "lcg-cr/rep of ${LFN} to SE ${DEST} failed" 
