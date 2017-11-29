@@ -25,12 +25,17 @@ sleep 1
 
 export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}
 
-COMMAND_LINE="./$executableName $parameters"
+## The command_line variable is an array to allow spaces in string inputs
+COMMAND_LINE=(./$executableName $parameters)
 
 info "Executing $COMMAND_LINE..."
 
 startLog application_execution
-$COMMAND_LINE
+
+#[[
+"${COMMAND_LINE[@]}"
+]]#
+
 if [ $? -ne 0 ]
 then
     error "Exiting with return value 6"
