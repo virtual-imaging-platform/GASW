@@ -172,7 +172,7 @@ public class GaswParser extends DefaultHandler {
         } else if (localName.equals("access")) {
 
             String type = getAttributeValue(attributes, "type", "No access type defined.");
-            if (inputArg != null && type.equals("LFN")) {
+            if (inputArg != null && (type.equals("LFN") || type.equals("URI"))) {
                 inputArg.setType(GaswArgument.Type.URI);
             }
 
