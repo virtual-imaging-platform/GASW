@@ -1,5 +1,5 @@
-    
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.insalyon.creatis</groupId>
@@ -7,7 +7,11 @@
     <packaging>jar</packaging>
     <version>3.0</version>
     <name>GASW</name>
-    
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <licenses>
         <license>
             <name>CeCILL-B, Version 1.0</name>
@@ -15,12 +19,12 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    
+
     <organization>
         <name>CREATIS</name>
         <url>http://www.creatis.insa-lyon.fr/</url>
     </organization>
-    
+
     <build>
         <plugins>
             <plugin>
@@ -61,33 +65,33 @@
             </plugin>
         </plugins>
     </build>
-    
+
     <dependencies>
-        
+
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
         </dependency>
-        
+
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
             <version>1.9</version>
         </dependency>
-        
+
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
             <version>2.6</version>
         </dependency>
-        
+
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
             <version>1.8.3</version>
         </dependency>
-        
+
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -99,42 +103,42 @@
             <artifactId>jspf.core</artifactId>
             <version>1.0.2</version>
         </dependency>
-        
+
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
             <version>4.1.2</version>
         </dependency>
-    
+
         <dependency>
             <groupId>org.apache.velocity</groupId>
             <artifactId>velocity</artifactId>
             <version>1.7</version>
         </dependency>
-        
+
         <dependency>
             <groupId>org.apache.velocity</groupId>
             <artifactId>velocity-tools</artifactId>
             <version>2.0</version>
         </dependency>
-                    
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.10</version>
             <scope>test</scope>
         </dependency>
-        
+
     </dependencies>
-    
+
     <scm>
         <connection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/svn/vip/GASW/trunk</connection>
         <developerConnection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/svn/vip/GASW/trunk</developerConnection>
         <url>svn+ssh://svn.creatis.insa-lyon.fr/svn/vip/GASW/trunk</url>
     </scm>
-    
+
     <repositories>
-        
+
         <repository>
             <id>i3s-releases</id>
             <name>Modalis releases repository [modalis]</name>
@@ -148,21 +152,21 @@
         </repository>
 
     </repositories>
-    
+
     <distributionManagement>
-        
+
         <repository>
             <id>creatis-releases</id>
             <name>Creatis Insa Lyon repository [creatis]</name>
             <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
         </repository>
-        
+
         <snapshotRepository>
             <id>creatis-snapshots</id>
             <name>Creatis Insa Lyon repository [snapshots]</name>
             <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
         </snapshotRepository>
-        
+
     </distributionManagement>
-    
+
 </project>
