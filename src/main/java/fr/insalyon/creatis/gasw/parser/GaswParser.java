@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -61,6 +62,8 @@ import org.xml.sax.helpers.XMLReaderFactory;
 public class GaswParser extends DefaultHandler {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private static final Pattern uriPattern = Pattern.compile("^\\w+://");
+
     private XMLReader reader;
     private boolean parsing;
     private boolean parsingSandbox;
@@ -301,10 +304,14 @@ public class GaswParser extends DefaultHandler {
             if (argument.getHookup() == GaswArgument.Hookup.Input) {
                 String value = inputsMap.get(argument.getName());
                 if (argument.getType() == GaswArgument.Type.URI) {
-                    URI valueURI = new URI(lfcHost + value);
+                    // If the value already is a URI, use it as is.  If not, it
+                    // is a lfn and the lfc host prefix is added.
+                    URI valueURI = new URI(
+                        uriPattern.matcher(value).find()
+                        ? value
+                        : lfcHost + value);
                     param.append(new File(valueURI.getPath()).getName());
                     downloads.add(valueURI);
-                    
                 } else {
                     param.append(value);
                 }
@@ -312,7 +319,12 @@ public class GaswParser extends DefaultHandler {
             } else {
                 GaswOutputArg output = (GaswOutputArg) argument;
                 String value = parseTemplate(output.getContent(), inputsMap);
-                URI valueURI = new URI(lfcHost + value);
+                // If the value already is a URI, use it as is.  If not, it is a
+                // lfn and the lfc host prefix is added.
+                URI valueURI = new URI(
+                    uriPattern.matcher(value).find()
+                    ? value
+                    : lfcHost + value);
                 uploads.add(new GaswUpload(valueURI, output.getReplicas()));
                 param.append(new File(valueURI.getPath()).getName());
             }
