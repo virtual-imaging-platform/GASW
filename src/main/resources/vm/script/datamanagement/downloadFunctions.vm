@@ -1,7 +1,7 @@
 ## downloadFunctions.vm
 
 ## Variables
-## $timeout, $minAvgDownloadThroughput, $bdiiTimeout, $srmTimeout, $failOverEnabled 
+## $timeout, $minAvgDownloadThroughput, $bdiiTimeout, $srmTimeout, $failOverEnabled
 ## $failOverHost, $failOverPort, $failOverHome
 
 function downloadLFN {
@@ -18,7 +18,7 @@ function downloadLFN {
     if [ "$sendReceiveTimeout" = "" ] || [  $sendReceiveTimeout -le 900 ]; then echo "sendReceiveTimeout empty or too small, setting it to 900s"; sendReceiveTimeout=900; else echo "sendReceiveTimeout is $sendReceiveTimeout"; fi;
     info "Removing file ${LOCAL} in case it is already here"
     \rm -f ${LOCAL}
-    
+
     info "Checking if the file is on local SE ${VO_BIOMED_DEFAULT_SE}"
     local closeSURL=`lcg-lr lfn:${LFN} | grep ${VO_BIOMED_DEFAULT_SE}`
     if [ "${closeSURL}" != "" ]
@@ -30,15 +30,15 @@ function downloadLFN {
         if [ $? = 0 ]
         then
             info "lcg-cp worked fine"
-       	    lcg_source=`cat lcg-log | awk -F"://" '/Trying SURL srm/ {print $2}' | awk -F"/" '{print $1}'|awk -F":" '{print $1}'`;
+            lcg_source=`cat lcg-log | awk -F"://" '/Trying SURL srm/ {print $2}' | awk -F"/" '{print $1}'|awk -F":" '{print $1}'`;
             lcg_destination=`hostname`;
             lcg_time=`cat lcg-log | awk '/Transfer took/ {print $3$4}'`;
             info "DownloadCommand=lcg-cp Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time";
-	    if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
-	    then
-		info "Missing lcg_log info, printing the whole file"
-		cat lcg-log
-	    fi
+            if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
+            then
+                info "Missing lcg_log info, printing the whole file"
+                cat lcg-log
+            fi
             return 0
         else
             error "It failed, falling back on regular lcg-cp"
@@ -61,7 +61,7 @@ function downloadLFN {
        info "DownloadCommand=lcg-cp Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time";
        if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
        then
- 	 info "Missing lcg_log info, printing the whole file"
+         info "Missing lcg_log info, printing the whole file"
          cat lcg-log
        fi
 
@@ -85,9 +85,29 @@ function downloadLFN {
         return 1
 #end
     fi
-    \rm lcg-log 
+    \rm lcg-log
 }
 export -f downloadLFN
+
+#
+# URI are of the form:
+# girder:///control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69
+#
+function downloadGirderFile {
+    local URI=$1
+
+    # The regexpes are written so that case is ignored and the
+    # arguments can be in any order.
+    local fileName=`echo $URI | sed -r 's#^girder:///(.*)\?.*$#\1#i'`
+    local apiUrl=`echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i'`
+    local fileId=`echo $URI | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i'`
+    local token=`echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i'`
+
+    COMMLINE="girder-client --api-url ${apiUrl} -token ${token} download --parent-type file ${fileId} ${fileName}"
+    echo "downloadGirderFile, command line is ${COMMLINE}"
+    ${COMMLINE}
+}
+export -f downloadGirderFile
 
 function downloadURI {
 
@@ -114,6 +134,12 @@ function downloadURI {
     then
         curl --insecure -O ${URI}
         validateDownload "Cannot download HTTP file"
+    fi
+
+    if [[ ${URI_LOWER} == girder://* ]]
+    then
+        downloadGirderFile ${URI}
+        validateDownload "Cannot download Girder file"
     fi
 }
 
