@@ -62,7 +62,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 public class GaswParser extends DefaultHandler {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
-    private static final Pattern uriPattern = Pattern.compile("^\\w+://");
+    static final Pattern uriPattern = Pattern.compile("^\\w+:/(//)?[^/]");
 
     private XMLReader reader;
     private boolean parsing;

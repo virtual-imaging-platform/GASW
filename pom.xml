@@ -32,8 +32,15 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                    <!--
+                        The 2 lines below can be removed when the
+                        target 1.7 is no more used.  The tests use
+                        junit 5, which needs java 8.
+                    -->
+                    <testSource>1.8</testSource>
+                    <testTarget>1.8</testTarget>
                 </configuration>
             </plugin>
             <plugin>
@@ -62,6 +69,23 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <version>2.21.0</version>
+              <dependencies>
+                <dependency>
+                  <groupId>org.junit.platform</groupId>
+                  <artifactId>junit-platform-surefire-provider</artifactId>
+                  <version>1.2.0</version>
+                </dependency>
+                <dependency>
+                  <groupId>org.junit.jupiter</groupId>
+                  <artifactId>junit-jupiter-engine</artifactId>
+                  <version>5.2.0</version>
+                </dependency>
+              </dependencies>
             </plugin>
         </plugins>
     </build>
@@ -123,10 +147,10 @@
         </dependency>
 
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.10</version>
-            <scope>test</scope>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter-engine</artifactId>
+          <version>5.2.0</version>
+          <scope>test</scope>
         </dependency>
 
     </dependencies>
