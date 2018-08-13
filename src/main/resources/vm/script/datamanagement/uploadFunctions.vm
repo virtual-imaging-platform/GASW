@@ -164,16 +164,24 @@ function uploadLfnFile {
     fi
 }
 
+#
+# URI are of the form:
+# girder:///control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69
+#
+# The code is quite the same as the downloadGirderFile function.  Any
+# changes should be done the same in both functions.
+#
 function uploadGirderFile {
     local URI=$1
-    local fileName=$2
-    local proto="girder"
-    local url=`echo $URI | awk -F 'girder://' '{print $2}'`
-    local token=`echo $url | awk -F '@' '{print $1}'`
-    local host=`echo $url | awk -F '@' '{print $2}' | cut -d? -f1`
-    local folderId=`echo $url | awk -F 'folderId=' '{print $2}' | cut -d? -f1`
-    local hostProto=`echo $url | awk -F 'hostProto=' '{print $2}' | cut -d? -f1`
-    COMMLINE="girder-client --api-url ${hostProto}://${host} -token ${token} upload --parent-type folder ${fileId} ${fileName}"
+
+    # The regexpes are written so that case is ignored and the
+    # arguments can be in any order.
+    local fileName=`echo $URI | sed -r 's#^girder:///(.*)\?.*$#\1#i'`
+    local apiUrl=`echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i'`
+    local fileId=`echo $URI | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i'`
+    local token=`echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i'`
+
+    COMMLINE="girder-client --api-url ${apiUrl} -token ${token} upload --parent-type folder ${fileId} ${fileName}"
     echo "uploadGirderFile, command line is ${COMMLINE}"
     ${COMMLINE}
 }

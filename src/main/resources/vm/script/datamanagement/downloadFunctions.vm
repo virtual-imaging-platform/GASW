@@ -93,6 +93,10 @@ export -f downloadLFN
 # URI are of the form:
 # girder:///control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69
 #
+#
+# The code is quite the same as the uploadGirderFile function.  Any
+# changes should be done the same in both functions.
+#
 function downloadGirderFile {
     local URI=$1
 
