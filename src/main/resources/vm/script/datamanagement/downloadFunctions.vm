@@ -90,7 +90,8 @@ function downloadLFN {
 export -f downloadLFN
 
 #
-# URI are of the form:
+# URI are of the form of the following example.  A single "/", instead
+# of 3, after "girder:" is also allowed.
 # girder:///control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69
 #
 #
@@ -102,7 +103,7 @@ function downloadGirderFile {
 
     # The regexpes are written so that case is ignored and the
     # arguments can be in any order.
-    local fileName=`echo $URI | sed -r 's#^girder:///(.*)\?.*$#\1#i'`
+    local fileName=`echo $URI | sed -r 's#^girder:/(//)?([^/].*)\?.*$#\2#i'`
     local apiUrl=`echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i'`
     local fileId=`echo $URI | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i'`
     local token=`echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i'`
