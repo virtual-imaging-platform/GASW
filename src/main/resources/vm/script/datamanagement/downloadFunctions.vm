@@ -141,7 +141,7 @@ function downloadURI {
         validateDownload "Cannot download HTTP file"
     fi
 
-    if [[ ${URI_LOWER} == girder://* ]]
+    if [[ ${URI_LOWER} == girder:/* ]]
     then
         downloadGirderFile ${URI}
         validateDownload "Cannot download Girder file"
