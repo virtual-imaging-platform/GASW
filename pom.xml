@@ -32,15 +32,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                    <!--
-                        The 2 lines below can be removed when the
-                        target 1.7 is no more used.  The tests use
-                        junit 5, which needs java 8.
-                    -->
-                    <testSource>1.8</testSource>
-                    <testTarget>1.8</testTarget>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>
