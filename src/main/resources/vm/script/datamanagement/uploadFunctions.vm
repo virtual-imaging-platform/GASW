@@ -178,11 +178,11 @@ function uploadGirderFile {
     # The regexpes are written so that case is ignored and the
     # arguments can be in any order.
     local fileName=`echo $URI | sed -r 's#^girder:/(//)?([^/].*)\?.*$#\2#i'`
-    local apiUrl=`echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i'`
-    local fileId=`echo $URI | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i'`
-    local token=`echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i'`
+    local apiUrl=`echo $URI | sed -r 's/^.*[;?&]apiurl=([^&]*)(&.*)?$/\1/i'`
+    local fileId=`echo $URI | sed -r 's/^.*[;?&]fileid=([^&]*)(&.*)?$/\1/i'`
+    local token=`echo $URI | sed -r 's/^.*[;?&]token=([^&]*)(&.*)?$/\1/i'`
 
-    COMMLINE="girder-client --api-url ${apiUrl} -token ${token} upload --parent-type folder ${fileId} ${fileName}"
+    COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${fileId} ${fileName}"
     echo "uploadGirderFile, command line is ${COMMLINE}"
     ${COMMLINE}
 }
