@@ -12,7 +12,7 @@ $serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 5
 #set( $uploadsList = "" )
 #set( $count = 0 )
 #foreach( $upload in $uploads )
-    #set( $URI = $upload.URI )
+    #set( $URI = "$upload.URI" )
     #if( $count > 0 )
         #set( $uploadsList = "$uploadsList;$URI" )
     #else
