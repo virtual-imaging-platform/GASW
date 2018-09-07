@@ -44,8 +44,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
@@ -204,52 +206,11 @@ public class GaswParser extends DefaultHandler {
                 value = value.replaceAll("\\$rep-[0-9]*", "");
             }
 
-            StringBuilder template = new StringBuilder();
-
-            try {
-                char[] param = value.toCharArray();
-                for (int j = 0; j < param.length; j++) {
-                    if (param[j] == '$') {
-                        if (param[j + 1] == 'd') {
-                            j += 4;
-                            String num = "" + param[j++];
-                            while (j < param.length && Character.isDigit(param[j])) {
-                                num += param[j++];
-                            }
-                            String paramRef = inputsList.get(new Integer(num) - 1);
-                            template.append("[$][");
-                            template.append(paramRef);
-                            template.append("]");
-                        } else {
-                            j += 3;
-                            String num = "" + param[j++];
-                            while (j < param.length && Character.isDigit(param[j])) {
-                                num += param[j++];
-                            }
-                            String paramRef = inputsList.get(new Integer(num) - 1);
-                            template.append("[%][");
-                            template.append(paramRef);
-                            template.append("]");
-                        }
-                    }
-                    if (j < param.length && param[j] == '$') {
-                        j--;
-                    } else {
-                        if (j < param.length) {
-                            template.append(param[j]);
-                        }
-                    }
-                }
-                outputArg.setContent(template.toString());
-
-            } catch (ArrayIndexOutOfBoundsException ex) {
-                throw new SAXException("The index used in the output template does not exist.");
-            }
+            outputArg.setTemplateParts(templateParts(value, inputsList));
 
         } else if (localName.equals("sandbox")) {
             parsingSandbox = true;
         }
-
     }
 
     @Override
@@ -318,7 +279,8 @@ public class GaswParser extends DefaultHandler {
 
             } else {
                 GaswOutputArg output = (GaswOutputArg) argument;
-                String value = parseTemplate(output.getContent(), inputsMap);
+                String value = parseOutputTemplate(
+                    output.getTemplateParts(), inputsMap);
                 // If the value already is a URI, use it as is.  If not, it is a
                 // lfn and the lfc host prefix is added.
                 URI valueURI = new URI(
@@ -338,37 +300,115 @@ public class GaswParser extends DefaultHandler {
                 gaswVariables, envVariables);
     }
 
-    private String parseTemplate(String template, Map<String, String> inputsMap) {
+    static List<GaswOutputTemplatePart> templateParts(
+        String value, List<String> inputsList) throws SAXException {
 
+        LinkedList<GaswOutputTemplatePart> list = new LinkedList<>();
+
+        Pattern p = Pattern.compile("\\$(prefix|dir|na|options)(\\d+)");
+        Matcher m = p.matcher(value);
+        int start = 0;
+        while (m.find()) {
+            if (m.start() > start) {
+                list.addLast(new GaswOutputTemplatePart(
+                                 GaswOutputTemplateType.STRING,
+                                 value.substring(start, m.start())));
+            }
+            GaswOutputTemplateType type = null;
+            int n = Integer.parseInt(m.group(2));
+            switch (m.group(1)) {
+            case "prefix":
+                type = GaswOutputTemplateType.PREFIX;
+                break;
+            case "dir":
+                type = GaswOutputTemplateType.DIR;
+                break;
+            case "na":
+                type = GaswOutputTemplateType.NAME;
+                break;
+            case "options":
+                type = GaswOutputTemplateType.OPTIONS;
+                break;
+            default:
+                throw new IllegalArgumentException(
+                    "Unhandled type: " + m.group(1));
+            }
+            try {
+                list.addLast(
+                    new GaswOutputTemplatePart(type, inputsList.get(n - 1)));
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                throw new SAXException(
+                    "The index used in the output template does not exist.");
+            }
+
+            start = m.end();
+        }
+        if (value.length() > start) {
+            list.addLast(new GaswOutputTemplatePart(
+                             GaswOutputTemplateType.STRING,
+                             value.substring(start)));
+        }
+
+        return list;
+    }
+
+    static String parseOutputTemplate(
+        List<GaswOutputTemplatePart> output,
+        Map<String, String> inputsMap) {
 
         StringBuilder content = new StringBuilder();
 
-        char[] t = template.toCharArray();
-        for (int i = 0; i < t.length; i++) {
-            if (t[i] == '[') {
-                boolean getDir = false;
-                if (t[i + 1] == '$') {
-                    getDir = true;
+        for (GaswOutputTemplatePart part : output) {
+            try {
+                switch(part.getType()) {
+                case STRING:
+                    content.append(part.getValue());
+                    break;
+                case PREFIX:
+                {
+                    URI u = new URI(inputsMap.get(part.getValue()));
+                    String scheme = u.getScheme();
+                    if (scheme != null) {
+                        content.append(scheme).append(":");
+                    }
+                    String authority = u.getAuthority();
+                    if (authority != null) {
+                        content.append("//").append(authority);
+                    }
                 }
-                i += 4;
-                StringBuilder inputName = new StringBuilder();
-                while (t[i] != ']') {
-                    inputName.append(t[i++]);
-                }
-                try {
-                    URI u = new URI(inputsMap.get(inputName.toString()));
+                break;
+                case DIR:
+                {
+                    URI u = new URI(inputsMap.get(part.getValue()));
                     File f = new File(u.getPath());
-
-                    content.append(getDir ? f.getParent() : f.getName());
-
-                } catch (URISyntaxException ex) {
-                    content.append(inputsMap.get(inputName.toString()));
+                    content.append(f.getParent());
                 }
-
-            } else {
-                content.append(t[i]);
+                break;
+                case NAME:
+                {
+                    URI u = new URI(inputsMap.get(part.getValue()));
+                    File f = new File(u.getPath());
+                    content.append(f.getName());
+                }
+                break;
+                case OPTIONS:
+                {
+                    URI u = new URI(inputsMap.get(part.getValue()));
+                    String query = u.getQuery();
+                    if (query != null) {
+                        content.append('?').append(query);
+                    }
+                }
+                break;
+                default:
+                    throw new IllegalArgumentException(
+                        "Unhandled type: " + part.getType());
+                }
+            } catch (URISyntaxException ex) {
+                content.append(inputsMap.get(part.getValue()));
             }
         }
+
         return content.toString();
     }
 }
