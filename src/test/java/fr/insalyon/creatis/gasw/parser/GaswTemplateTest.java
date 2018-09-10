@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.regex.Pattern;
+import org.xml.sax.SAXException;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ class GaswTemplateTest {
 
     @Test
     @DisplayName("simple template extraction")
-    public void simpleTemplate() {
+    public void simpleTemplate() throws SAXException {
         // Given
         String template = "$dir1/$na1/$na2.tar.gz";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -42,7 +43,7 @@ class GaswTemplateTest {
 
     @Test
     @DisplayName("full template extraction")
-    public void fullTemplate() {
+    public void fullTemplate() throws SAXException {
         // Given
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -57,7 +58,7 @@ class GaswTemplateTest {
 
     @Test
     @DisplayName("simple template to string")
-    public void simpleTemplateToString() {
+    public void simpleTemplateToString() throws SAXException {
         // Given
         String template = "$dir1/$na1/$na2.tar.gz";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -76,7 +77,7 @@ class GaswTemplateTest {
 
     @Test
     @DisplayName("full template to string")
-    public void fullTemplateToString() {
+    public void fullTemplateToString() throws SAXException {
         // Given
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -95,7 +96,7 @@ class GaswTemplateTest {
 
     @Test
     @DisplayName("full template, no host, to string")
-    public void fullTemplateNoPrefixOptionsToString() {
+    public void fullTemplateNoPrefixOptionsToString() throws SAXException {
         // Given
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -114,7 +115,7 @@ class GaswTemplateTest {
 
     @Test
     @DisplayName("full template, no host, to string")
-    public void fullTemplateNoHostToString() {
+    public void fullTemplateNoHostToString() throws SAXException {
         // Given
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -133,7 +134,7 @@ class GaswTemplateTest {
 
     @Test
     @DisplayName("full template, no scheme, to string")
-    public void fullTemplateNoSchemeToString() {
+    public void fullTemplateNoSchemeToString() throws SAXException {
         // Given
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
