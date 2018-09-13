@@ -202,7 +202,7 @@ function upload {
         uploadGirderFile ${URI}
     else
         # Extract the path part from the uri.
-        local LFN=`echo ${URI} | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%'`
+        local LFN=`echo "${URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%'`
 #set( $fileName = '${LFN##*/}' )
         local NAME=${fileName}
 
