@@ -381,7 +381,10 @@ public class GaswParser extends DefaultHandler {
                 {
                     URI u = new URI(inputsMap.get(part.getValue()));
                     File f = new File(u.getPath());
-                    content.append(f.getParent());
+                    String dir = f.getParent();
+                    if (!dir.equals("/")) {
+                        content.append(dir);
+                    }
                 }
                 break;
                 case NAME:

@@ -150,4 +150,22 @@ class GaswTemplateTest {
         // Then
         assertEquals("//host/a/b/c/f.tar.gz?opt=val", output);
     }
+
+    @Test
+    @DisplayName("full template, empty path")
+    public void fullTemplateEmptyPath() throws SAXException {
+        // Given
+        String template = "$prefix1$dir1/$na1/output.txt$options1";
+        List<String> inputs = Arrays.asList("input1");
+        List<GaswOutputTemplatePart> templateParts =
+            GaswParser.templateParts(template, inputs);
+        Map<String, String> inputsMap = new HashMap<>();
+        inputsMap.put("input1", "girder:/Private?apiurl=http://brain");
+
+        // When
+        String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
+
+        // Then
+        assertEquals("girder:/Private/output.txt?apiurl=http://brain", output);
+    }
 }

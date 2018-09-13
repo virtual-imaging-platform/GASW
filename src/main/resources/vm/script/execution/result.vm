@@ -19,7 +19,7 @@ $serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 5
         #set( $uploadsList = $URI )
     #end
 
-upload $URI "`tr -dc "[:alpha:]" < /dev/urandom | head -c 32`" $upload.NumberOfReplicas false
+upload "$URI" "`tr -dc "[:alpha:]" < /dev/urandom | head -c 32`" $upload.NumberOfReplicas false
 #end
 
 __MOTEUR_OUT="$uploadsList"
