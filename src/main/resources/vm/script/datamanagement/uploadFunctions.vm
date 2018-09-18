@@ -199,9 +199,12 @@ function upload {
     ## The pattern must NOT be put between quotation marks.
     if [[ ${URI} == girder:/* ]]
     then
-        uploadGirderFile ${URI}
+        if [ "${TEST}" != "true" ]
+        then
+            uploadGirderFile ${URI}
+        fi
     else
-        # Extract the path part from the uri.
+        ## Extract the path part from the uri.
         local LFN=`echo "${URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%'`
 #set( $fileName = '${LFN##*/}' )
         local NAME=${fileName}

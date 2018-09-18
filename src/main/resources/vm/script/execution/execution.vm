@@ -20,7 +20,7 @@ sleep 1
 
 #set( $parameters = "" )
 #foreach( $param in $params )
-    #set( $parameters = "$parameters \"$param\"" )
+    #set( $parameters = "$parameters $param" )
 #end
 
 export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}

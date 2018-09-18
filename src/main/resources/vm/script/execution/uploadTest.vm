@@ -1,7 +1,7 @@
 ## uploadTest.vm
 
 ## Variables
-## $cacheDir, $path, $nrep
+## $cacheDir, $uri, $nrep
 
 startLog upload_test
 
@@ -10,8 +10,8 @@ mkdir -p $cacheDir
 test -f $cacheDir/uploadChecked
 if [ $? != 0 ]
 then
-    upload $path "" $nrep true
-    delete $path true
+    upload "$uri" "" $nrep true
+    delete "$uri" true
     touch $cacheDir/uploadChecked
 else
     info "Skipping upload test (it has already been done by a previous job)"

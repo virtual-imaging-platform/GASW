@@ -5,39 +5,48 @@
 
 function deleteFile {
 
-    lcg-del -a $1 
-    if [ $? != 0 ] 
-    then 
-        guid=$(lcg-lg $1) 
-        surls=$(lcg-lr $1)  
-        for surl in $surls  
-        do 
-            lcg-uf -v $guid $surl 
-        done 
+    lcg-del -a $1
+    if [ $? != 0 ]
+    then
+        guid=$(lcg-lg $1)
+        surls=$(lcg-lr $1)
+        for surl in $surls
+        do
+            lcg-uf -v $guid $surl
+        done
     fi
 }
 
 function delete {
 
-    local LFN=$1
+    local URI=$1
     local TEST=$2
 
-    startLog file_delete lfn="${LFN}"
+    startLog file_delete uri="${URI}"
 
-    if [ "${TEST}" = true ] 
+    ## The pattern must NOT be put between quotation marks.
+    if [[ ${URI} == girder:/* ]]
     then
-        LFN=${LFN}-uploadTest;
-    fi
+        info "delete not supported for girder"
+    else
+        ## Extract the path part from the uri.
+        local LFN=`echo "${URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%'`
 
-    info "Deleting file ${LFN}..."
-    deleteFile lfn:${LFN}
+        if [ "${TEST}" = true ]
+        then
+            LFN=${LFN}-uploadTest;
+        fi
 
-    #if ( $failOverEnabled )
-    if [ $? != 0 ]
-    then
-        lcg-del --nobdii --defaultsetype srmv2 ${DM_DEST}
+        info "Deleting file ${LFN}..."
+        deleteFile lfn:${LFN}
+
+        #if ( $failOverEnabled )
+        if [ $? != 0 ]
+        then
+            lcg-del --nobdii --defaultsetype srmv2 ${DM_DEST}
+        fi
+        #end
     fi
-    #end
 
     stopLog file_delete
 }

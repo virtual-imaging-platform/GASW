@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -274,7 +275,8 @@ public class GaswParser extends DefaultHandler {
                     param.append(new File(valueURI.getPath()).getName());
                     downloads.add(valueURI);
                 } else {
-                    param.append(value);
+                    // Need to escape special characters to avoid bash errors.
+                    param.append(escapeSpecialBashCharacters(value));
                 }
 
             } else {
@@ -298,6 +300,18 @@ public class GaswParser extends DefaultHandler {
 
         return new GaswInput(executableName, parameters, downloads, uploads,
                 gaswVariables, envVariables);
+    }
+
+    static String escapeSpecialBashCharacters(String stringToEscape) {
+        // The \ char must be in the first place, so that the \ included by
+        // following replacements are not touched.
+        // For the list of characters, see:
+        // https://stackoverflow.com/questions/19177076/list-of-characters-which-needs-to-be-escaped-in-a-linux-shell-command/19177228#19177228
+        String[] specialChars =
+            {"\\", "|", "&", ";", "<", ">", "(", ")",
+             "$", "`", "\"", "'", " ", "\t", "\n"};
+        return Arrays.stream(specialChars)
+            .reduce(stringToEscape, (string, s) -> string.replace(s, "\\" + s));
     }
 
     static List<GaswOutputTemplatePart> templateParts(

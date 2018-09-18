@@ -135,7 +135,7 @@ public class ExecutionGenerator {
             VelocityUtil velocity = new VelocityUtil("vm/script/execution/uploadTest.vm");
 
             velocity.put("cacheDir", GaswConstants.CACHE_DIR);
-            velocity.put("path", upload.getURI().getPath());
+            velocity.put("uri", upload.getURI().toString());
             velocity.put("nrep", upload.getNumberOfReplicas());
 
             return velocity.merge().toString();
