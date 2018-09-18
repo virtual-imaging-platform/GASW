@@ -31,6 +31,7 @@ package fr.insalyon.creatis.gasw.parser;
 enum GaswOutputTemplateType {
     STRING,
     PREFIX,
+    DIR_AND_NAME,
     DIR,
     NAME,
     OPTIONS

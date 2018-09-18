@@ -24,7 +24,7 @@ class GaswTemplateTest {
 
     @Test
     @DisplayName("simple template extraction")
-    public void simpleTemplate() throws SAXException {
+    public void simpleTemplateExtraction() throws SAXException {
         // Given
         String template = "$dir1/$na1/$na2.tar.gz";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -34,16 +34,17 @@ class GaswTemplateTest {
             GaswParser.templateParts(template, inputs);
 
         // Then
-        assertEquals(6, result.size());
-        assertEquals(GaswOutputTemplateType.DIR, result.get(0).getType());
+        assertEquals(4, result.size());
+        assertEquals(GaswOutputTemplateType.DIR_AND_NAME,
+                     result.get(0).getType());
         assertEquals("input1", result.get(0).getValue());
         assertEquals(GaswOutputTemplateType.STRING, result.get(1).getType());
-        assertEquals(".tar.gz", result.get(5).getValue());
+        assertEquals(".tar.gz", result.get(3).getValue());
     }
 
     @Test
     @DisplayName("full template extraction")
-    public void fullTemplate() throws SAXException {
+    public void fullTemplateExtraction() throws SAXException {
         // Given
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -53,12 +54,12 @@ class GaswTemplateTest {
             GaswParser.templateParts(template, inputs);
 
         // Then
-        assertEquals(8, result.size());
+        assertEquals(6, result.size());
     }
 
     @Test
-    @DisplayName("simple template to string")
-    public void simpleTemplateToString() throws SAXException {
+    @DisplayName("simple template")
+    public void simpleTemplate() throws SAXException {
         // Given
         String template = "$dir1/$na1/$na2.tar.gz";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -76,8 +77,8 @@ class GaswTemplateTest {
     }
 
     @Test
-    @DisplayName("full template to string")
-    public void fullTemplateToString() throws SAXException {
+    @DisplayName("full template")
+    public void fullTemplate() throws SAXException {
         // Given
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -95,8 +96,8 @@ class GaswTemplateTest {
     }
 
     @Test
-    @DisplayName("full template, no host, to string")
-    public void fullTemplateNoPrefixOptionsToString() throws SAXException {
+    @DisplayName("full template, no host")
+    public void fullTemplateNoPrefixOptions() throws SAXException {
         // Given
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -114,8 +115,8 @@ class GaswTemplateTest {
     }
 
     @Test
-    @DisplayName("full template, no host, to string")
-    public void fullTemplateNoHostToString() throws SAXException {
+    @DisplayName("full template, no host")
+    public void fullTemplateNoHost() throws SAXException {
         // Given
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -133,8 +134,8 @@ class GaswTemplateTest {
     }
 
     @Test
-    @DisplayName("full template, no scheme, to string")
-    public void fullTemplateNoSchemeToString() throws SAXException {
+    @DisplayName("full template, no scheme")
+    public void fullTemplateNoScheme() throws SAXException {
         // Given
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
@@ -152,7 +153,7 @@ class GaswTemplateTest {
     }
 
     @Test
-    @DisplayName("full template, empty path")
+    @DisplayName("full template, empty path, with name")
     public void fullTemplateEmptyPath() throws SAXException {
         // Given
         String template = "$prefix1$dir1/$na1/output.txt$options1";
@@ -167,5 +168,24 @@ class GaswTemplateTest {
 
         // Then
         assertEquals("girder:/Private/output.txt?apiurl=http://brain", output);
+    }
+
+    @Test
+    @DisplayName("full template, no host, no path")
+    public void fullTemplateNoHostNoPath() throws SAXException {
+        // Given
+        String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
+        List<String> inputs = Arrays.asList("input1", "input2");
+        List<GaswOutputTemplatePart> templateParts =
+            GaswParser.templateParts(template, inputs);
+        Map<String, String> inputsMap = new HashMap<>();
+        inputsMap.put("input1", "girder:/?opt=val");
+        inputsMap.put("input2", "/d/e/f");
+
+        // When
+        String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
+
+        // Then
+        assertEquals("girder:/f.tar.gz?opt=val", output);
     }
 }

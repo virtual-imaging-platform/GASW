@@ -303,8 +303,31 @@ public class GaswParser extends DefaultHandler {
     static List<GaswOutputTemplatePart> templateParts(
         String value, List<String> inputsList) throws SAXException {
 
-        LinkedList<GaswOutputTemplatePart> list = new LinkedList<>();
+        // $dirX/$naX is treated as a special case, because if $na1 is an empty
+        // string, the / should not be inserted.
+        Pattern p = Pattern.compile("\\$dir(\\d+)/\\$na\\1");
+        Matcher m = p.matcher(value);
+        List<GaswOutputTemplatePart> list;
+        if (m.find()) {
+            list =
+                templateSimpleParts(value.substring(0, m.start()), inputsList);
+            int n = Integer.parseInt(m.group(1));
+            list.add(new GaswOutputTemplatePart(
+                         GaswOutputTemplateType.DIR_AND_NAME,
+                         inputsList.get(n - 1)));
+            list.addAll(templateParts(
+                            value.substring(m.end()),
+                            inputsList));
+        } else {
+            list = templateSimpleParts(value, inputsList);
+        }
+        return list;
+    }
 
+    static List<GaswOutputTemplatePart> templateSimpleParts(
+        String value, List<String> inputsList) throws SAXException {
+
+        LinkedList<GaswOutputTemplatePart> list = new LinkedList<>();
         Pattern p = Pattern.compile("\\$(prefix|dir|na|options)(\\d+)");
         Matcher m = p.matcher(value);
         int start = 0;
@@ -377,21 +400,20 @@ public class GaswParser extends DefaultHandler {
                     }
                 }
                 break;
+                case DIR_AND_NAME:
+                {
+                    addDir(inputsMap.get(part.getValue()), content);
+                    addName("/", inputsMap.get(part.getValue()), content);
+                }
+                break;
                 case DIR:
                 {
-                    URI u = new URI(inputsMap.get(part.getValue()));
-                    File f = new File(u.getPath());
-                    String dir = f.getParent();
-                    if (!dir.equals("/")) {
-                        content.append(dir);
-                    }
+                    addDir(inputsMap.get(part.getValue()), content);
                 }
                 break;
                 case NAME:
                 {
-                    URI u = new URI(inputsMap.get(part.getValue()));
-                    File f = new File(u.getPath());
-                    content.append(f.getName());
+                    addName("", inputsMap.get(part.getValue()), content);
                 }
                 break;
                 case OPTIONS:
@@ -413,5 +435,27 @@ public class GaswParser extends DefaultHandler {
         }
 
         return content.toString();
+    }
+
+    private static void addDir(String s, StringBuilder content)
+        throws URISyntaxException {
+
+        URI u = new URI(s);
+        File f = new File(u.getPath());
+        String dir = f.getParent();
+        if (dir != null && !dir.equals("/")) {
+            content.append(dir);
+        }
+    }
+
+    private static void addName(
+        String separator, String s, StringBuilder content)
+        throws URISyntaxException {
+
+        URI u = new URI(s);
+        File f = new File(u.getPath());
+        if (f.getName().length() > 0) {
+            content.append(separator).append(f.getName());
+        }
     }
 }
