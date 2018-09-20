@@ -35,6 +35,7 @@ package fr.insalyon.creatis.gasw;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
 /**
@@ -109,5 +110,11 @@ public class GaswUtil {
         process.getInputStream().close();
         process.getErrorStream().close();
         process = null;
+    }
+
+    private static final Pattern uriPattern =
+        Pattern.compile("^\\w+:/{1,3}[^/]");
+    public static boolean isUri(String s) {
+        return uriPattern.matcher(s).find();
     }
 }

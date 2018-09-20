@@ -37,6 +37,7 @@ import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUpload;
+import fr.insalyon.creatis.gasw.GaswUtil;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -65,7 +66,6 @@ import org.xml.sax.helpers.XMLReaderFactory;
 public class GaswParser extends DefaultHandler {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
-    static final Pattern uriPattern = Pattern.compile("^\\w+:/(//)?[^/]");
 
     private XMLReader reader;
     private boolean parsing;
@@ -269,9 +269,7 @@ public class GaswParser extends DefaultHandler {
                     // If the value already is a URI, use it as is.  If not, it
                     // is a lfn and the lfc host prefix is added.
                     URI valueURI = new URI(
-                        uriPattern.matcher(value).find()
-                        ? value
-                        : lfcHost + value);
+                        GaswUtil.isUri(value) ? value : lfcHost + value);
                     param.append(new File(valueURI.getPath()).getName());
                     downloads.add(valueURI);
                 } else {
@@ -286,9 +284,7 @@ public class GaswParser extends DefaultHandler {
                 // If the value already is a URI, use it as is.  If not, it is a
                 // lfn and the lfc host prefix is added.
                 URI valueURI = new URI(
-                    uriPattern.matcher(value).find()
-                    ? value
-                    : lfcHost + value);
+                    GaswUtil.isUri(value) ? value : lfcHost + value);
                 uploads.add(new GaswUpload(valueURI, output.getReplicas()));
                 param.append(new File(valueURI.getPath()).getName());
             }

@@ -9,9 +9,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("GaswParser URI handling tests")
 class GaswParserTest {
@@ -58,18 +56,6 @@ class GaswParserTest {
 
         assertThrows(NullPointerException.class,
                      () -> new File(valueURI.getPath()).getName());
-    }
-
-    @Test
-    @DisplayName("Pattern to detect URI")
-    public void patternDetectingUri() {
-        Pattern uriPattern = GaswParser.uriPattern;
-
-        assertTrue(uriPattern.matcher("girder:///control_3DT1.nii").find());
-        assertTrue(uriPattern.matcher("girder:/control_3DT1.nii").find());
-
-        assertFalse(uriPattern.matcher("girder://control_3DT1.nii").find());
-        assertFalse(uriPattern.matcher("girder:control_3DT1.nii").find());
     }
 
     @Test

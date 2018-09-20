@@ -287,9 +287,14 @@ public abstract class GaswOutputParser extends Thread {
                     } else if (line.startsWith("<file_upload") && isResultUpload) {
                         String uploadedFile = line.substring(
                                 line.indexOf("=") + 1, line.length() - 1);
-                        URI uri = lfcHost.isEmpty()
-                                ? URI.create("file://" + uploadedFile)
-                                : URI.create("lfn://" + lfcHost + uploadedFile);
+                        URI uri;
+                        if (GaswUtil.isUri(uploadedFile)) {
+                            uri = new URI(uploadedFile);
+                        } else {
+                            uri = lfcHost.isEmpty()
+                                ? new URI("file://" + uploadedFile)
+                                : new URI("lfn://" + lfcHost + uploadedFile);
+                        }
                         uploadedResults.add(uri);
                         dataList.add(new Data(uri.toString(), Data.Type.Output));
                     }
