@@ -14,7 +14,7 @@ function nSEs {
 }
 
 function getAndRemoveSE {
-          
+
     local index=$1
     local i=0
     local NSE=""
@@ -49,8 +49,8 @@ function chooseRandomSE {
     fi
 }
 
-function renameFile {
-    
+function renameLfnFile {
+
     local FROM=$1
     local TO=$2
 
@@ -68,7 +68,7 @@ function renameFile {
     fi
 }
 
-function uploadFile {
+function uploadLfnFile {
 
     local LFN=$1
     local FILE=$2
@@ -100,27 +100,27 @@ function uploadFile {
             then
                 lfc-rename ${LFN} ${LFN}-garbage-${HOSTNAME}-${PWD}
             fi
-	    flag="cr"
+            flag="cr"
             lfc-mkdir -p `dirname ${LFN}`
             lcg-cr -v ${OPTS} -d ${DEST} -l lfn:${LFN} file:${FILE} &> lcg-log
         else
-	    flag="rep"
+            flag="rep"
             lcg-rep -v ${OPTS} -d ${DEST} lfn:${LFN} &> lcg-log
         fi
         if [ $? = 0 ]
         then
             info "lcg-cr/rep of ${LFN} to SE ${DEST} worked fine"
             done=`expr ${done} + 1`
-	            if [ $flag = "cr" ]
+                    if [ $flag = "cr" ]
             then
                 lcg_source=`hostname`
                 lcg_destination=$DEST
                 lcg_time=`cat lcg-log | awk '/Transfer took/ {print $3$4}'`
                 info "UploadCommand=lcg-cr Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time"
-		if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
+                if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
                 then
-        	        info "Missing lcg_log info, printing the whole file"
-                	cat lcg-log
+                        info "Missing lcg_log info, printing the whole file"
+                        cat lcg-log
                 fi
 
             else
@@ -128,15 +128,15 @@ function uploadFile {
                 lcg_destination=$DEST
                 lcg_time=`cat lcg-log | awk '/Transfer took/ {print $3$4}'`
                 info "UploadCommand=lcg-rep Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time"
-		if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
+                if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
                 then
-        	        info "Missing lcg_log info, printing the whole file"
-                	cat lcg-log
+                        info "Missing lcg_log info, printing the whole file"
+                        cat lcg-log
                 fi
-	    fi
+            fi
         else
             error "`cat lcg-log`"
-            warning "lcg-cr/rep of ${LFN} to SE ${DEST} failed" 
+            warning "lcg-cr/rep of ${LFN} to SE ${DEST} failed"
         fi
         \rm lcg-log
         chooseRandomSE
@@ -164,30 +164,64 @@ function uploadFile {
     fi
 }
 
+#
+# URI are of the form of the following example.  A single "/", instead
+# of 3, after "girder:" is also allowed.
+# girder:///control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69
+#
+# The code is quite the same as the downloadGirderFile function.  Any
+# changes should be done the same in both functions.
+#
+function uploadGirderFile {
+    local URI=$1
+
+    # The regexpes are written so that case is ignored and the
+    # arguments can be in any order.
+    local fileName=`echo $URI | sed -r 's#^girder:/(//)?(.*/)?([^/].*)\?.*$#\3#i'`
+    local apiUrl=`echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i'`
+    local fileId=`echo $URI | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i'`
+    local token=`echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i'`
+
+    COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${fileId} ./${fileName}"
+    echo "uploadGirderFile, command line is ${COMMLINE}"
+    ${COMMLINE}
+}
+
 function upload {
 
-    local LFN=$1
+    local URI=$1
     local ID=$2
     local NREP=$3
     local TEST=$4
+
+    startLog file_upload uri="${URI}"
+
+    ## The pattern must NOT be put between quotation marks.
+    if [[ ${URI} == girder:/* ]]
+    then
+        if [ "${TEST}" != "true" ]
+        then
+            uploadGirderFile ${URI}
+        fi
+    else
+        ## Extract the path part from the uri.
+        local LFN=`echo "${URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%'`
 #set( $fileName = '${LFN##*/}' )
-    local NAME=${fileName}
+        local NAME=${fileName}
 
-    if [ "${TEST}" = "true" ]
-    then
-        LFN=${LFN}-uploadTest
-        echo "test result" > ${NAME}
+        if [ "${TEST}" = "true" ]
+        then
+            LFN=${LFN}-uploadTest
+            echo "test result" > ${NAME}
+        fi
+
+        uploadLfnFile ${LFN}${ID} ${PWD}/${NAME} ${NREP}
+        renameLfnFile ${LFN}${ID} ${LFN}
+
+        if [ "${TEST}" = "true" ]
+        then
+            \rm -f ${NAME}
+        fi
     fi
-
-    startLog file_upload lfn="${LFN}"
-
-    uploadFile ${LFN}${ID} ${PWD}/${NAME} ${NREP}
-    renameFile ${LFN}${ID} ${LFN}
-
-    if [ "${TEST}" = "true" ]
-    then
-        \rm -f ${NAME}
-    fi
-
     stopLog file_upload
 }

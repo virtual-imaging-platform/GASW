@@ -1,9 +1,5 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Ferreira da Silva
- * rafael.silva@creatis.insa-lyon.fr
- * http://www.rafaelsilva.com
- *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
  * modify and/ or redistribute the software under the terms of the CeCILL
@@ -32,54 +28,11 @@
  */
 package fr.insalyon.creatis.gasw.parser;
 
-import java.util.List;
-
-/**
- *
- * @author Rafael Ferreira da Silva
- */
-public class GaswOutputArg extends GaswArgument {
-
-    private int replicas;
-    private boolean template;
-    private String content;
-    private List<GaswOutputTemplatePart> templateParts = null;
-
-    public GaswOutputArg(String name, String option, boolean implicit) {
-
-        super(name, option, Hookup.Output, Type.URI, implicit);
-        this.replicas = 1;
-    }
-
-    public int getReplicas() {
-        return replicas;
-    }
-
-    public void setReplicas(int replicas) {
-        this.replicas = replicas;
-    }
-
-    public boolean isTemplate() {
-        return template;
-    }
-
-    public void setTemplate(boolean template) {
-        this.template = template;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public List<GaswOutputTemplatePart> getTemplateParts() {
-        return templateParts;
-    }
-
-    public void setTemplateParts(List<GaswOutputTemplatePart> templateParts) {
-        this.templateParts = templateParts;
-    }
+enum GaswOutputTemplateType {
+    STRING,
+    PREFIX,
+    DIR_AND_NAME,
+    DIR,
+    NAME,
+    OPTIONS
 }

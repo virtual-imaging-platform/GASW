@@ -37,15 +37,20 @@ import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUpload;
+import fr.insalyon.creatis.gasw.GaswUtil;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -61,6 +66,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
 public class GaswParser extends DefaultHandler {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+
     private XMLReader reader;
     private boolean parsing;
     private boolean parsingSandbox;
@@ -172,7 +178,7 @@ public class GaswParser extends DefaultHandler {
         } else if (localName.equals("access")) {
 
             String type = getAttributeValue(attributes, "type", "No access type defined.");
-            if (inputArg != null && type.equals("LFN")) {
+            if (inputArg != null && (type.equals("LFN") || type.equals("URI"))) {
                 inputArg.setType(GaswArgument.Type.URI);
             }
 
@@ -201,52 +207,11 @@ public class GaswParser extends DefaultHandler {
                 value = value.replaceAll("\\$rep-[0-9]*", "");
             }
 
-            StringBuilder template = new StringBuilder();
-
-            try {
-                char[] param = value.toCharArray();
-                for (int j = 0; j < param.length; j++) {
-                    if (param[j] == '$') {
-                        if (param[j + 1] == 'd') {
-                            j += 4;
-                            String num = "" + param[j++];
-                            while (j < param.length && Character.isDigit(param[j])) {
-                                num += param[j++];
-                            }
-                            String paramRef = inputsList.get(new Integer(num) - 1);
-                            template.append("[$][");
-                            template.append(paramRef);
-                            template.append("]");
-                        } else {
-                            j += 3;
-                            String num = "" + param[j++];
-                            while (j < param.length && Character.isDigit(param[j])) {
-                                num += param[j++];
-                            }
-                            String paramRef = inputsList.get(new Integer(num) - 1);
-                            template.append("[%][");
-                            template.append(paramRef);
-                            template.append("]");
-                        }
-                    }
-                    if (j < param.length && param[j] == '$') {
-                        j--;
-                    } else {
-                        if (j < param.length) {
-                            template.append(param[j]);
-                        }
-                    }
-                }
-                outputArg.setContent(template.toString());
-
-            } catch (ArrayIndexOutOfBoundsException ex) {
-                throw new SAXException("The index used in the output template does not exist.");
-            }
+            outputArg.setTemplateParts(templateParts(value, inputsList));
 
         } else if (localName.equals("sandbox")) {
             parsingSandbox = true;
         }
-
     }
 
     @Override
@@ -301,18 +266,25 @@ public class GaswParser extends DefaultHandler {
             if (argument.getHookup() == GaswArgument.Hookup.Input) {
                 String value = inputsMap.get(argument.getName());
                 if (argument.getType() == GaswArgument.Type.URI) {
-                    URI valueURI = new URI(lfcHost + value);
+                    // If the value already is a URI, use it as is.  If not, it
+                    // is a lfn and the lfc host prefix is added.
+                    URI valueURI = new URI(
+                        GaswUtil.isUri(value) ? value : lfcHost + value);
                     param.append(new File(valueURI.getPath()).getName());
                     downloads.add(valueURI);
-                    
                 } else {
-                    param.append(value);
+                    // Need to escape special characters to avoid bash errors.
+                    param.append(escapeSpecialBashCharacters(value));
                 }
 
             } else {
                 GaswOutputArg output = (GaswOutputArg) argument;
-                String value = parseTemplate(output.getContent(), inputsMap);
-                URI valueURI = new URI(lfcHost + value);
+                String value = parseOutputTemplate(
+                    output.getTemplateParts(), inputsMap);
+                // If the value already is a URI, use it as is.  If not, it is a
+                // lfn and the lfc host prefix is added.
+                URI valueURI = new URI(
+                    GaswUtil.isUri(value) ? value : lfcHost + value);
                 uploads.add(new GaswUpload(valueURI, output.getReplicas()));
                 param.append(new File(valueURI.getPath()).getName());
             }
@@ -326,37 +298,174 @@ public class GaswParser extends DefaultHandler {
                 gaswVariables, envVariables);
     }
 
-    private String parseTemplate(String template, Map<String, String> inputsMap) {
+    static String escapeSpecialBashCharacters(String stringToEscape) {
+        // The \ char must be in the first place, so that the \ included by
+        // following replacements are not touched.
+        // For the list of characters, see:
+        // https://stackoverflow.com/questions/19177076/list-of-characters-which-needs-to-be-escaped-in-a-linux-shell-command/19177228#19177228
+        String[] specialChars =
+            {"\\", "|", "&", ";", "<", ">", "(", ")",
+             "$", "`", "\"", "'", " ", "\t", "\n"};
+        return Arrays.stream(specialChars)
+            .reduce(stringToEscape, (string, s) -> string.replace(s, "\\" + s));
+    }
 
+    static List<GaswOutputTemplatePart> templateParts(
+        String value, List<String> inputsList) throws SAXException {
+
+        // $dirX/$naX is treated as a special case, because if $na1 is an empty
+        // string, the / should not be inserted.
+        Pattern p = Pattern.compile("\\$dir(\\d+)/\\$na\\1");
+        Matcher m = p.matcher(value);
+        List<GaswOutputTemplatePart> list;
+        if (m.find()) {
+            list =
+                templateSimpleParts(value.substring(0, m.start()), inputsList);
+            int n = Integer.parseInt(m.group(1));
+            list.add(new GaswOutputTemplatePart(
+                         GaswOutputTemplateType.DIR_AND_NAME,
+                         inputsList.get(n - 1)));
+            list.addAll(templateParts(
+                            value.substring(m.end()),
+                            inputsList));
+        } else {
+            list = templateSimpleParts(value, inputsList);
+        }
+        return list;
+    }
+
+    static List<GaswOutputTemplatePart> templateSimpleParts(
+        String value, List<String> inputsList) throws SAXException {
+
+        LinkedList<GaswOutputTemplatePart> list = new LinkedList<>();
+        Pattern p = Pattern.compile("\\$(prefix|dir|na|options)(\\d+)");
+        Matcher m = p.matcher(value);
+        int start = 0;
+        while (m.find()) {
+            if (m.start() > start) {
+                list.addLast(new GaswOutputTemplatePart(
+                                 GaswOutputTemplateType.STRING,
+                                 value.substring(start, m.start())));
+            }
+            GaswOutputTemplateType type = null;
+            int n = Integer.parseInt(m.group(2));
+            switch (m.group(1)) {
+            case "prefix":
+                type = GaswOutputTemplateType.PREFIX;
+                break;
+            case "dir":
+                type = GaswOutputTemplateType.DIR;
+                break;
+            case "na":
+                type = GaswOutputTemplateType.NAME;
+                break;
+            case "options":
+                type = GaswOutputTemplateType.OPTIONS;
+                break;
+            default:
+                throw new IllegalArgumentException(
+                    "Unhandled type: " + m.group(1));
+            }
+            try {
+                list.addLast(
+                    new GaswOutputTemplatePart(type, inputsList.get(n - 1)));
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                throw new SAXException(
+                    "The index used in the output template does not exist.");
+            }
+
+            start = m.end();
+        }
+        if (value.length() > start) {
+            list.addLast(new GaswOutputTemplatePart(
+                             GaswOutputTemplateType.STRING,
+                             value.substring(start)));
+        }
+
+        return list;
+    }
+
+    static String parseOutputTemplate(
+        List<GaswOutputTemplatePart> output,
+        Map<String, String> inputsMap) {
 
         StringBuilder content = new StringBuilder();
 
-        char[] t = template.toCharArray();
-        for (int i = 0; i < t.length; i++) {
-            if (t[i] == '[') {
-                boolean getDir = false;
-                if (t[i + 1] == '$') {
-                    getDir = true;
+        for (GaswOutputTemplatePart part : output) {
+            try {
+                switch(part.getType()) {
+                case STRING:
+                    content.append(part.getValue());
+                    break;
+                case PREFIX:
+                {
+                    URI u = new URI(inputsMap.get(part.getValue()));
+                    String scheme = u.getScheme();
+                    if (scheme != null) {
+                        content.append(scheme).append(":");
+                    }
+                    String authority = u.getAuthority();
+                    if (authority != null) {
+                        content.append("//").append(authority);
+                    }
                 }
-                i += 4;
-                StringBuilder inputName = new StringBuilder();
-                while (t[i] != ']') {
-                    inputName.append(t[i++]);
+                break;
+                case DIR_AND_NAME:
+                {
+                    addDir(inputsMap.get(part.getValue()), content);
+                    addName("/", inputsMap.get(part.getValue()), content);
                 }
-                try {
-                    URI u = new URI(inputsMap.get(inputName.toString()));
-                    File f = new File(u.getPath());
-
-                    content.append(getDir ? f.getParent() : f.getName());
-
-                } catch (URISyntaxException ex) {
-                    content.append(inputsMap.get(inputName.toString()));
+                break;
+                case DIR:
+                {
+                    addDir(inputsMap.get(part.getValue()), content);
                 }
-
-            } else {
-                content.append(t[i]);
+                break;
+                case NAME:
+                {
+                    addName("", inputsMap.get(part.getValue()), content);
+                }
+                break;
+                case OPTIONS:
+                {
+                    URI u = new URI(inputsMap.get(part.getValue()));
+                    String query = u.getQuery();
+                    if (query != null) {
+                        content.append('?').append(query);
+                    }
+                }
+                break;
+                default:
+                    throw new IllegalArgumentException(
+                        "Unhandled type: " + part.getType());
+                }
+            } catch (URISyntaxException ex) {
+                content.append(inputsMap.get(part.getValue()));
             }
         }
+
         return content.toString();
+    }
+
+    private static void addDir(String s, StringBuilder content)
+        throws URISyntaxException {
+
+        URI u = new URI(s);
+        File f = new File(u.getPath());
+        String dir = f.getParent();
+        if (dir != null && !dir.equals("/")) {
+            content.append(dir);
+        }
+    }
+
+    private static void addName(
+        String separator, String s, StringBuilder content)
+        throws URISyntaxException {
+
+        URI u = new URI(s);
+        File f = new File(u.getPath());
+        if (f.getName().length() > 0) {
+            content.append(separator).append(f.getName());
+        }
     }
 }
