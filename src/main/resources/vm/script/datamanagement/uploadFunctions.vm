@@ -182,6 +182,11 @@ function uploadGirderFile {
     local fileId=`echo $URI | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i'`
     local token=`echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i'`
 
+    if [ ! `which girder-client` ]
+    then
+        pip install --user girder-client
+    fi
+
     COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${fileId} ./${fileName}"
     echo "uploadGirderFile, command line is ${COMMLINE}"
     ${COMMLINE}
