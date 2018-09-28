@@ -203,6 +203,23 @@ function upload {
         then
             uploadGirderFile ${URI}
         fi
+    elif [[ ${URI} == file://* ]]
+    then
+        local FILENAME=`echo $URI | sed 's#file://##g'`
+        local NAME=`basename ${FILENAME}`
+
+        if [ "${TEST}" = "true" ]
+        then
+            FILENAME=${FILENAME}-uploadTest
+            echo "test result" > ${NAME}
+        fi
+
+        \cp $NAME $FILENAME
+
+        if [ "${TEST}" = "true" ]
+        then
+            \rm -f ${NAME}
+        fi
     else
         ## Extract the path part from the uri.
         local LFN=`echo "${URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%'`

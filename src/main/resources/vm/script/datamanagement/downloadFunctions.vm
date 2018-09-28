@@ -130,9 +130,9 @@ function downloadURI {
 
     if [[ ${URI_LOWER} == file://* ]]
     then
-        URI=`echo $URI | sed 's/file:\/\///g'`
-        cp $URI .
-        validateDownload "Cannot copy file"
+        local FILENAME=`echo $URI | sed 's#file://##g'`
+        ln -s $FILENAME .
+        validateDownload "Cannot create symbolic link to file"
     fi
 
     if [[ ${URI_LOWER} == http://* ]]

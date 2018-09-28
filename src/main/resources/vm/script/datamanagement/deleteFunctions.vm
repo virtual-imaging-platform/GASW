@@ -28,6 +28,17 @@ function delete {
     if [[ ${URI} == girder:/* ]]
     then
         info "delete not supported for girder"
+    elif [[ ${URI} == file://* ]]
+    then
+        local FILENAME=`echo $URI | sed 's#file://##g'`
+
+        if [ "${TEST}" = true ]
+        then
+            FILENAME=${FILENAME}-uploadTest
+        fi
+
+        info "Removing file ${FILENAME}..."
+        \rm -f $FILENAME
     else
         ## Extract the path part from the uri.
         local LFN=`echo "${URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%'`
