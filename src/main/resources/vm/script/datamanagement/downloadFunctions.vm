@@ -111,6 +111,12 @@ function downloadGirderFile {
     if [ ! `which girder-client` ]
     then
         pip install --user girder-client
+        if [ $? != 0 ]
+        then
+            error "girder-client not in PATH, and an error occured while trying to install it."
+            error "Exiting with return value 1"
+            exit 1
+        fi
     fi
 
     COMMLINE="girder-client --api-url ${apiUrl} --token ${token} download --parent-type file ${fileId} ./${fileName}"
@@ -136,8 +142,20 @@ function downloadURI {
     if [[ ${URI_LOWER} == file://* ]]
     then
         local FILENAME=`echo $URI | sed 's#file://##g'`
+        if [ ! -r $FILENAME ]
+        then
+            error "Input file does not have read permission: $FILENAME"
+            error "Exiting with return value 1"
+            exit 1
+        fi
+        if [ -w $FILENAME ]
+        then
+            error "Input file has write permission, but should not: $FILENAME"
+            error "Exiting with return value 1"
+            exit 1
+        fi
         ln -s $FILENAME .
-        validateDownload "Cannot create symbolic link to file"
+        validateDownload "Cannot create symbolic link to input file: $FILENAME"
     fi
 
     if [[ ${URI_LOWER} == http://* ]]

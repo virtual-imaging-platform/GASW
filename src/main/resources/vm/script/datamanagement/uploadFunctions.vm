@@ -185,11 +185,23 @@ function uploadGirderFile {
     if [ ! `which girder-client` ]
     then
         pip install --user girder-client
+        if [ $? != 0 ]
+        then
+            error "girder-client not in PATH, and an error occured while trying to install it."
+            error "Exiting with return value 1"
+            exit 1
+        fi
     fi
 
     COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${fileId} ./${fileName}"
     echo "uploadGirderFile, command line is ${COMMLINE}"
     ${COMMLINE}
+    if [ $? != 0 ]
+    then
+        error "Error while uploading girder file"
+        error "Exiting with return value 1"
+        exit 1
+    fi
 }
 
 function upload {
@@ -213,13 +225,26 @@ function upload {
         local FILENAME=`echo $URI | sed 's#file://##g'`
         local NAME=`basename ${FILENAME}`
 
+        if [ -e $FILENAME ]
+        then
+            error "Result file already exists: $FILENAME"
+            error "Exiting with return value 1"
+            exit 1
+        fi
+
         if [ "${TEST}" = "true" ]
         then
             FILENAME=${FILENAME}-uploadTest
             echo "test result" > ${NAME}
         fi
 
-        \cp $NAME $FILENAME
+        \mv $NAME $FILENAME
+        if [ $? != 0 ]
+        then
+            error "Error while moving result local file."
+            error "Exiting with return value 1"
+            exit 1
+        fi
 
         if [ "${TEST}" = "true" ]
         then
