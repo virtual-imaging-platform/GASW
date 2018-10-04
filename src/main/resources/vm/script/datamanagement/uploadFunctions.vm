@@ -244,11 +244,6 @@ function upload {
             error "Exiting with return value 1"
             exit 1
         fi
-
-        if [ "${TEST}" = "true" ]
-        then
-            \rm -f ${NAME}
-        fi
     else
         ## Extract the path part from the uri.
         local LFN=`echo "${URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%'`
