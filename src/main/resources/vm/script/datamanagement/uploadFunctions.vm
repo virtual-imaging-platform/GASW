@@ -234,7 +234,6 @@ function upload {
 
         if [ "${TEST}" = "true" ]
         then
-            FILENAME=${FILENAME}-uploadTest
             echo "test result" > ${NAME}
         fi
 

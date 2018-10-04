@@ -32,12 +32,7 @@ function delete {
     then
         local FILENAME=`echo $URI | sed 's#file://##g'`
 
-        if [ "${TEST}" = true ]
-        then
-            FILENAME=${FILENAME}-uploadTest
-        fi
-
-        info "Removing file ${FILENAME}..."
+        info "Removing local file ${FILENAME}..."
         \rm -f $FILENAME
     else
         ## Extract the path part from the uri.
