@@ -182,9 +182,26 @@ function uploadGirderFile {
     local fileId=`echo $URI | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i'`
     local token=`echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i'`
 
+    if [ ! `which girder-client` ]
+    then
+        pip install --user girder-client
+        if [ $? != 0 ]
+        then
+            error "girder-client not in PATH, and an error occured while trying to install it."
+            error "Exiting with return value 1"
+            exit 1
+        fi
+    fi
+
     COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${fileId} ./${fileName}"
     echo "uploadGirderFile, command line is ${COMMLINE}"
     ${COMMLINE}
+    if [ $? != 0 ]
+    then
+        error "Error while uploading girder file"
+        error "Exiting with return value 1"
+        exit 1
+    fi
 }
 
 function upload {
@@ -202,6 +219,30 @@ function upload {
         if [ "${TEST}" != "true" ]
         then
             uploadGirderFile ${URI}
+        fi
+    elif [[ ${URI} == file://* ]]
+    then
+        local FILENAME=`echo $URI | sed 's#file://##g'`
+        local NAME=`basename ${FILENAME}`
+
+        if [ -e $FILENAME ]
+        then
+            error "Result file already exists: $FILENAME"
+            error "Exiting with return value 1"
+            exit 1
+        fi
+
+        if [ "${TEST}" = "true" ]
+        then
+            echo "test result" > ${NAME}
+        fi
+
+        \mv $NAME $FILENAME
+        if [ $? != 0 ]
+        then
+            error "Error while moving result local file."
+            error "Exiting with return value 1"
+            exit 1
         fi
     else
         ## Extract the path part from the uri.
