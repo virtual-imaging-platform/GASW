@@ -30,8 +30,7 @@ function delete {
         info "delete not supported for girder"
     elif [[ ${URI} == file://* ]]
     then
-        ## use the "#[[don't parse me!]]#" velocity syntax to allow ##
-        local FILENAME=`echo $URI | #[[ sed 's#file://##g'` ]]#
+        local FILENAME=`echo $URI | sed 's%file://%%g'`
 
         info "Removing local file ${FILENAME}..."
         \rm -f $FILENAME
