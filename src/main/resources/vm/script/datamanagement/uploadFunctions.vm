@@ -222,8 +222,7 @@ function upload {
         fi
     elif [[ ${URI} == file://* ]]
     then
-        ## use the "#[[don't parse me!]]#" velocity syntax to allow ##
-        local FILENAME=`echo $URI | #[[ sed 's#file://##g'`]]#
+        local FILENAME=`echo $URI | sed 's%file://*%/%'`
         local NAME=`basename ${FILENAME}`
 
         if [ -e $FILENAME ]
