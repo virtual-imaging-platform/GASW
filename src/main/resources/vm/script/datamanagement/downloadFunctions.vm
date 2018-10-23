@@ -141,8 +141,7 @@ function downloadURI {
 
     if [[ ${URI_LOWER} == file://* ]]
     then
-        ## use the "#[[don't parse me!]]#" velocity syntax to allow ##
-        local FILENAME=`echo $URI | #[[ sed 's#file://##g'` ]]#
+        local FILENAME=`echo $URI | sed 's%file://*%/%'`
         if [ ! -r $FILENAME ]
         then
             error "Input file does not have read permission: $FILENAME"

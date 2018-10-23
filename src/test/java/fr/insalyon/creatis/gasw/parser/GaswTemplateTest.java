@@ -188,4 +188,42 @@ class GaswTemplateTest {
         // Then
         assertEquals("girder:/f.tar.gz?opt=val", output);
     }
+
+    @Test
+    @DisplayName("full template, file uri one slash")
+    public void fullTemplateFileUriOneSlash() throws SAXException {
+        // Given
+        String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
+        List<String> inputs = Arrays.asList("input1", "input2");
+        List<GaswOutputTemplatePart> templateParts =
+            GaswParser.templateParts(template, inputs);
+        Map<String, String> inputsMap = new HashMap<>();
+        inputsMap.put("input1", "file:/a/b/c");
+        inputsMap.put("input2", "/d/e/f.txt");
+
+        // When
+        String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
+
+        // Then
+        assertEquals("file:/a/b/c/f.txt.tar.gz", output);
+    }
+
+    @Test
+    @DisplayName("full template, file uri three slashes")
+    public void fullTemplateFileUriThreeSlashes() throws SAXException {
+        // Given
+        String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
+        List<String> inputs = Arrays.asList("input1", "input2");
+        List<GaswOutputTemplatePart> templateParts =
+            GaswParser.templateParts(template, inputs);
+        Map<String, String> inputsMap = new HashMap<>();
+        inputsMap.put("input1", "file:///a/b/c");
+        inputsMap.put("input2", "/d/e/f.txt");
+
+        // When
+        String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
+
+        // Then
+        assertEquals("file:/a/b/c/f.txt.tar.gz", output);
+    }
 }
