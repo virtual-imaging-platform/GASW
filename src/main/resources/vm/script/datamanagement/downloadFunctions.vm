@@ -139,7 +139,7 @@ function downloadURI {
         validateDownload "Cannot download LFN file"
     fi
 
-    if [[ ${URI_LOWER} == file://* ]]
+    if [[ ${URI_LOWER} == file:/* ]]
     then
         local FILENAME=`echo $URI | sed 's%file://*%/%'`
         if [ ! -r $FILENAME ]

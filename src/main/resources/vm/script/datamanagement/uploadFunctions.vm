@@ -220,7 +220,7 @@ function upload {
         then
             uploadGirderFile ${URI}
         fi
-    elif [[ ${URI} == file://* ]]
+    elif [[ ${URI} == file:/* ]]
     then
         local FILENAME=`echo $URI | sed 's%file://*%/%'`
         local NAME=`basename ${FILENAME}`
