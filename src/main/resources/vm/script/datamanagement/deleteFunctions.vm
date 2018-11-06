@@ -28,7 +28,7 @@ function delete {
     if [[ ${URI} == girder:/* ]]
     then
         info "delete not supported for girder"
-    elif [[ ${URI} == file://* ]]
+    elif [[ ${URI} == file:/* ]]
     then
         local FILENAME=`echo $URI | sed 's%file://*%/%'`
 
