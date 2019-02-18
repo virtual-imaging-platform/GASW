@@ -11,7 +11,7 @@ function downloadLFN {
     local LOCAL=${PWD}/`basename ${LFN}`
 
     info "getting file size and computing sendReceiveTimeout"
-    local size=$(dls -l ${LFN} | awk -F' ' '{print $5}')
+    local size=$(dirac-dms-lfn-metadata ${LFN} | grep Size | sed -r 's/.* ([0-9]+)L,/\1/')
     local sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
     if [ "$sendReceiveTimeout" = "" ] || [  $sendReceiveTimeout -le 900 ]
     then
