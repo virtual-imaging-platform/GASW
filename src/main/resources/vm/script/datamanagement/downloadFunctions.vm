@@ -8,6 +8,14 @@
 function downloadLFN {
 
     local LFN=$1
+
+    # Sanitize LFN:
+    # - "lfn:" at the beginning is optional for dirac-dms-* commands,
+    #    but does not work as expected with comdirac commands like
+    #    dmkdir.
+    # - "//" are not accepted, neither by dirac-dms-*, nor by dmkdir.
+    LFN=$(echo ${LFN} | sed -r -e 's/^lfn://' -e 's#//#/#g')
+
     local LOCAL=${PWD}/`basename ${LFN}`
 
     info "getting file size and computing sendReceiveTimeout"
