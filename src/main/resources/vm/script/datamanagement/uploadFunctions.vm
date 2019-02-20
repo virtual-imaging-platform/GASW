@@ -115,10 +115,10 @@ function uploadLfnFile {
             info "Copy/Replication of ${LFN} to SE ${DEST} worked fine"
             done=`expr ${done} + 1`
         else
-            error "`cat lcg-log`"
+            error "`cat dirac.log`"
             warning "Copy/Replication of ${LFN} to SE ${DEST} failed"
         fi
-        \rm lcg-log
+        \rm dirac.log
         chooseRandomSE
         DEST=${RESULT}
     done
