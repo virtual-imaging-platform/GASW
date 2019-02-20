@@ -85,8 +85,8 @@ function uploadLfnFile {
     LFN=$(echo ${LFN} | sed -r -e 's/^lfn://' -e 's#//#/#g')
 
     info "getting file size and computing sendReceiveTimeout"
-    size=`ls -l ${FILE} | awk -F' ' '{print $5}'`
-    sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
+    local size=`ls -l ${FILE} | awk -F' ' '{print $5}'`
+    local sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
     if [ "$sendReceiveTimeout" = "" ] || [  $sendReceiveTimeout -le 900 ]
     then
         info "sendReceiveTimeout empty or too small, setting it to 900s"
@@ -106,7 +106,7 @@ function uploadLfnFile {
         chooseRandomSE
         DEST=${RESULT}
     fi
-    done=0
+    local done=0
     while [ $nrep -gt $done ] && [ "${DEST}" != "" ]
     do
         if [ "${done}" = "0" ]
