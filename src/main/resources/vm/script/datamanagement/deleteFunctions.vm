@@ -1,21 +1,7 @@
 ## deleteFunctions.vm
 
-## Variables
+## Unused variables:
 ## $failOverEnabled
-
-function deleteFile {
-
-    lcg-del -a $1
-    if [ $? != 0 ]
-    then
-        guid=$(lcg-lg $1)
-        surls=$(lcg-lr $1)
-        for surl in $surls
-        do
-            lcg-uf -v $guid $surl
-        done
-    fi
-}
 
 function delete {
 
@@ -40,18 +26,11 @@ function delete {
 
         if [ "${TEST}" = true ]
         then
-            LFN=${LFN}-uploadTest;
+            LFN=${LFN}-uploadTest
         fi
 
         info "Deleting file ${LFN}..."
-        deleteFile lfn:${LFN}
-
-        #if ( $failOverEnabled )
-        if [ $? != 0 ]
-        then
-            lcg-del --nobdii --defaultsetype srmv2 ${DM_DEST}
-        fi
-        #end
+        dirac-dms-remove-files ${LFN}
     fi
 
     stopLog file_delete
