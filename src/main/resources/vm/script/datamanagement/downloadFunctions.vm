@@ -16,8 +16,6 @@ function downloadLFN {
     # - "//" are not accepted, neither by dirac-dms-*, nor by dmkdir.
     LFN=$(echo ${LFN} | sed -r -e 's/^lfn://' -e 's#//#/#g')
 
-    local LOCAL=${PWD}/`basename ${LFN}`
-
     info "getting file size and computing sendReceiveTimeout"
     local size=$(dirac-dms-lfn-metadata ${LFN} | grep Size | sed -r 's/.* ([0-9]+)L,/\1/')
     local sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
@@ -29,12 +27,13 @@ function downloadLFN {
         info "sendReceiveTimeout is $sendReceiveTimeout"
     fi
 
+    local LOCAL=${PWD}/`basename ${LFN}`
     info "Removing file ${LOCAL} in case it is already here"
     \rm -f ${LOCAL}
 
     local totalTimeout=$((${timeout} + ${srmTimeout} + ${sendReceiveTimeout}))
 
-    local LINE="dirac-dms-get-file -o /Resources/StorageElements/GFAL_TIMEOUT=${totalTimeout} ${LFN} ${LOCAL}"
+    local LINE="dirac-dms-get-file -o /Resources/StorageElements/GFAL_TIMEOUT=${totalTimeout} ${LFN}"
     info ${LINE}
     ${LINE} &> get-file.log
     if [ $? = 0 ]
