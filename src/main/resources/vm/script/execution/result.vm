@@ -19,7 +19,9 @@ $serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 5
         #set( $uploadsList = $URI )
     #end
 
-upload "$URI" "`tr -dc "[:alpha:]" < /dev/urandom | head -c 32`" $upload.NumberOfReplicas false
+# Redirecting tr errors to /dev/null to avoid sometimes a normal
+# broken pipe error.
+upload "$URI" "`tr -dc "[:alpha:]" < /dev/urandom 2>/dev/null | head -c 32`" $upload.NumberOfReplicas false
 #end
 
 __MOTEUR_OUT="$uploadsList"
