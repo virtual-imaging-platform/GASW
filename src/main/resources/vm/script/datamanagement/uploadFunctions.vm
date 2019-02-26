@@ -92,8 +92,7 @@ function uploadLfnFile {
     do
         if [ "${done}" = "0" ]
         then
-            dirac-dms-clean-directory ${OPTS} ${LFN} &>/dev/null
-            dmkdir `dirname ${LFN}`
+            dirac-dms-remove-files ${OPTS} ${LFN} &>/dev/null
             local command="dirac-dms-add-file"
             (time dirac-dms-add-file ${OPTS} ${LFN} ${FILE} ${DEST}) &> dirac.log
         else
