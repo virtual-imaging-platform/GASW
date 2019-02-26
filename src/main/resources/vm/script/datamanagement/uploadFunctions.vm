@@ -93,18 +93,21 @@ function uploadLfnFile {
         if [ "${done}" = "0" ]
         then
             dirac-dms-remove-files ${OPTS} ${LFN} &>/dev/null
-            local command="dirac-dms-add-file"
             (time dirac-dms-add-file ${OPTS} ${LFN} ${FILE} ${DEST}) &> dirac.log
+            local command="dirac-dms-add-file"
+            local source=$(hostname)
         else
+            (time dirac-dms-replicate-lfn -d ${OPTS} ${LFN} ${DEST}) &> dirac.log
             local command="dirac-dms-replicate-lfn"
-            (time dirac-dms-replicate-lfn ${OPTS} ${LFN} ${DEST}) &> dirac.log
+            # Extract the name of the source SE from the logs.
+            local source=$(grep "operation 'getFileSize'" dirac.log | tail -1 | sed -r 's/^.* StorageElement (.*) is .*$/\1/')
         fi
         if [ $? = 0 ]
         then
             info "Copy/Replication of ${LFN} to SE ${DEST} worked fine."
             done=`expr ${done} + 1`
             local duration=$(grep -P '^real\t' dirac.log | sed -r 's/real\t//')
-            info "UploadCommand=${command} Source=${LFN} Destination=${DEST} Size=${size} Time=${duration}"
+            info "UploadCommand=${command} Source=${source} Destination=${DEST} Size=${size} Time=${duration}"
             if [ -z "${duration}" ]
             then
                 info "Missing duration info, printing the whole log file."
