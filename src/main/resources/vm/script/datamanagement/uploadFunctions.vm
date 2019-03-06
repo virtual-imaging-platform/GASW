@@ -92,17 +92,20 @@ function uploadLfnFile {
     do
         if [ "${done}" = "0" ]
         then
-            dirac-dms-remove-files ${OPTS} ${LFN} &>/dev/null
-            (time dirac-dms-add-file ${OPTS} ${LFN} ${FILE} ${DEST}) &> dirac.log
             local command="dirac-dms-add-file"
             local source=$(hostname)
+            dirac-dms-remove-files ${OPTS} ${LFN} &>/dev/null
+            (time dirac-dms-add-file ${OPTS} ${LFN} ${FILE} ${DEST}) &> dirac.log
+            local error_code=$?
         else
-            (time dirac-dms-replicate-lfn -d ${OPTS} ${LFN} ${DEST}) &> dirac.log
             local command="dirac-dms-replicate-lfn"
+            (time dirac-dms-replicate-lfn -d ${OPTS} ${LFN} ${DEST}) &> dirac.log
+            local error_code=$?
+
             # Extract the name of the source SE from the logs.
             local source=$(grep "operation 'getFileSize'" dirac.log | tail -1 | sed -r 's/^.* StorageElement (.*) is .*$/\1/')
         fi
-        if [ $? = 0 ]
+        if [ ${error_code} = 0 ]
         then
             info "Copy/Replication of ${LFN} to SE ${DEST} worked fine."
             done=`expr ${done} + 1`
