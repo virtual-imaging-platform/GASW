@@ -21,8 +21,9 @@ function delete {
         info "Removing local file ${FILENAME}..."
         \rm -f $FILENAME
     else
-        ## Extract the path part from the uri.
-        local LFN=`echo "${URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%'`
+        ## Extract the path part from the uri, and sanitize it.
+        ## "//" are not accepted by dirac commands.
+        local LFN=`echo "${URI}" | sed -r -e 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%' -e 's#//#/#g'`
 
         if [ "${TEST}" = true ]
         then
