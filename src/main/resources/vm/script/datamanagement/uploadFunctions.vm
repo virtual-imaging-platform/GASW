@@ -1,7 +1,9 @@
 ## uploadFunctions.vm
 
-## Variables
-## $timeout, $minAvgDownloadThroughput, $bdiiTimeout, $srmTimeout, $failOverEnabled
+## Variables used:
+## $timeout, $minAvgDownloadThroughput, $bdiiTimeout, $srmTimeout
+## Variables received, but no more used:
+## $failOverEnabled
 
 function nSEs {
 
@@ -49,25 +51,6 @@ function chooseRandomSE {
     fi
 }
 
-function renameLfnFile {
-
-    local FROM=$1
-    local TO=$2
-
-    info "Renaming ${FROM} to ${TO}"
-    lfc-ls ${TO}
-    if [ $? != 0 ]
-    then
-        lfc-rename ${FROM} ${TO}
-        if [ $? != 0 ]
-        then
-            exit 2
-        fi
-    else
-        deleteFile lfn:${FROM}
-    fi
-}
-
 function uploadLfnFile {
 
     local LFN=$1
@@ -75,12 +58,27 @@ function uploadLfnFile {
     local nrep=$3
     local SELIST=${SE}
 
-    info "getting file size and computing sendReceiveTimeout"
-    size=`ls -l ${FILE} | awk -F' ' '{print $5}'`
-    sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
-    if [ "$sendReceiveTimeout" = "" ] || [  $sendReceiveTimeout -le 900 ]; then echo "sendReceiveTimeout empty or too small, setting it to 900s"; sendReceiveTimeout=900; else echo "sendReceiveTimeout is $sendReceiveTimeout"; fi;
+    # Sanitize LFN:
+    # - "lfn:" at the beginning is optional for dirac-dms-* commands,
+    #    but does not work as expected with comdirac commands like
+    #    dmkdir.
+    # - "//" are not accepted, neither by dirac-dms-*, nor by dmkdir.
+    LFN=$(echo ${LFN} | sed -r -e 's/^lfn://' -e 's#//#/#g')
 
-    local OPTS="--connect-timeout $timeout --sendreceive-timeout $sendReceiveTimeout --bdii-timeout $bdiiTimeout --srm-timeout $srmTimeout"
+    info "getting file size and computing sendReceiveTimeout"
+    local size=`ls -l ${FILE} | awk -F' ' '{print $5}'`
+    local sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
+    if [ "$sendReceiveTimeout" = "" ] || [  $sendReceiveTimeout -le 900 ]
+    then
+        info "sendReceiveTimeout empty or too small, setting it to 900s"
+        sendReceiveTimeout=900
+    else
+        info "sendReceiveTimeout is $sendReceiveTimeout"
+    fi
+
+    local totalTimeout=$((${timeout} + ${srmTimeout} + ${sendReceiveTimeout}))
+
+    local OPTS="-o /Resources/StorageElements/GFAL_TIMEOUT=${totalTimeout}"
     local DEST=""
     if [ "${USE_CLOSE_SE}" = "true" ] && [ "${VO_BIOMED_DEFAULT_SE}" != "" ]
     then
@@ -89,76 +87,48 @@ function uploadLfnFile {
         chooseRandomSE
         DEST=${RESULT}
     fi
-    done=0
+    local done=0
     while [ $nrep -gt $done ] && [ "${DEST}" != "" ]
     do
         if [ "${done}" = "0" ]
         then
-            lcg-del -v -a ${OPTS} lfn:${LFN} &>/dev/null
-            lfc-ls ${LFN}
-            if [ $? = 0 ]
-            then
-                lfc-rename ${LFN} ${LFN}-garbage-${HOSTNAME}-${PWD}
-            fi
-            flag="cr"
-            lfc-mkdir -p `dirname ${LFN}`
-            lcg-cr -v ${OPTS} -d ${DEST} -l lfn:${LFN} file:${FILE} &> lcg-log
+            local command="dirac-dms-add-file"
+            local source=$(hostname)
+            dirac-dms-remove-files ${OPTS} ${LFN} &>/dev/null
+            (time -p dirac-dms-add-file ${OPTS} ${LFN} ${FILE} ${DEST}) &> dirac.log
+            local error_code=$?
         else
-            flag="rep"
-            lcg-rep -v ${OPTS} -d ${DEST} lfn:${LFN} &> lcg-log
-        fi
-        if [ $? = 0 ]
-        then
-            info "lcg-cr/rep of ${LFN} to SE ${DEST} worked fine"
-            done=`expr ${done} + 1`
-                    if [ $flag = "cr" ]
-            then
-                lcg_source=`hostname`
-                lcg_destination=$DEST
-                lcg_time=`cat lcg-log | awk '/Transfer took/ {print $3$4}'`
-                info "UploadCommand=lcg-cr Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time"
-                if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
-                then
-                        info "Missing lcg_log info, printing the whole file"
-                        cat lcg-log
-                fi
+            local command="dirac-dms-replicate-lfn"
+            (time -p dirac-dms-replicate-lfn -d ${OPTS} ${LFN} ${DEST}) &> dirac.log
+            local error_code=$?
 
-            else
-                lcg_source=`cat lcg-log | awk -F"://" '/Trying SURL srm/ {print $2}' | awk -F"/" '{print $1}'|awk -F":" '{print $1}'`
-                lcg_destination=$DEST
-                lcg_time=`cat lcg-log | awk '/Transfer took/ {print $3$4}'`
-                info "UploadCommand=lcg-rep Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time"
-                if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
-                then
-                        info "Missing lcg_log info, printing the whole file"
-                        cat lcg-log
-                fi
+            # Extract the name of the source SE from the logs.
+            local source=$(grep "operation 'getFileSize'" dirac.log | tail -1 | sed -r 's/^.* StorageElement (.*) is .*$/\1/')
+        fi
+        if [ ${error_code} = 0 ]
+        then
+            info "Copy/Replication of ${LFN} to SE ${DEST} worked fine."
+            done=`expr ${done} + 1`
+            local duration=$(grep -P '^real[ \t]' dirac.log | sed -r 's/real[ \t]//')
+            info "UploadCommand=${command} Source=${source} Destination=${DEST} Size=${size} Time=${duration}"
+            if [ -z "${duration}" ]
+            then
+                info "Missing duration info, printing the whole log file."
+                cat dirac.log
             fi
         else
-            error "`cat lcg-log`"
-            warning "lcg-cr/rep of ${LFN} to SE ${DEST} failed"
+            error "`cat dirac.log`"
+            warning "Copy/Replication of ${LFN} to SE ${DEST} failed"
         fi
-        \rm lcg-log
+        \rm dirac.log
         chooseRandomSE
         DEST=${RESULT}
     done
     if [ "${done}" = "0" ]
     then
-#if( $failOverEnabled )
-        addToFailOver ${LFN} ${FILE}
-        if [ $? = 0 ]
-        then
-            addToCache ${LFN} ${FILE}
-        else
-            error "Cannot lcg-cr file ${FILE} to lfn ${LFN}"
-            error "Exiting with return value 2"
-            exit 2
-        fi
-#else
-        error "Cannot lcg-cr file ${FILE} to lfn ${LFN}"
+        error "Cannot copy file ${FILE} to lfn ${LFN}"
         error "Exiting with return value 2"
         exit 2
-#end
     else
         addToCache ${LFN} ${FILE}
     fi
@@ -256,8 +226,7 @@ function upload {
             echo "test result" > ${NAME}
         fi
 
-        uploadLfnFile ${LFN}${ID} ${PWD}/${NAME} ${NREP}
-        renameLfnFile ${LFN}${ID} ${LFN}
+        uploadLfnFile ${LFN} ${PWD}/${NAME} ${NREP}
 
         if [ "${TEST}" = "true" ]
         then

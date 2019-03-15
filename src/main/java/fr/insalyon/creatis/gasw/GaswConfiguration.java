@@ -153,7 +153,7 @@ public class GaswConfiguration {
             defaultCPUTime = config.getInt(GaswConstants.LAB_DEFAULT_CPUTIME, 1800);
 
             voName = config.getString(GaswConstants.LAB_VO_NAME, "biomed");
-            voDefaultSE = config.getString(GaswConstants.LAB_VO_DEFAULT_SE, "ccsrm02.in2p3.fr");
+            voDefaultSE = config.getString(GaswConstants.LAB_VO_DEFAULT_SE, "SBG-disk");
             voUseCloseSE = config.getString(GaswConstants.LAB_VO_USE_CLOSE_SE, "\"true\"");
             voLFCHost = config.getString(GaswConstants.LAB_VO_LFC_HOST, "lfc-biomed.in2p3.fr");
 

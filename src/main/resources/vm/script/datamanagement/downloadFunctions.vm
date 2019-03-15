@@ -1,91 +1,57 @@
 ## downloadFunctions.vm
 
-## Variables
-## $timeout, $minAvgDownloadThroughput, $bdiiTimeout, $srmTimeout, $failOverEnabled
-## $failOverHost, $failOverPort, $failOverHome
+## Variables used:
+## $timeout, $minAvgDownloadThroughput, $bdiiTimeout, $srmTimeout
+## Variables received, but no more used:
+## $failOverEnabled, $failOverHost, $failOverPort, $failOverHome
 
 function downloadLFN {
 
     local LFN=$1
-    local LOCAL=${PWD}/`basename ${LFN}`
 
-    #hacking LFN for N4U
-    LFN=`echo $LFN | sed s/\\\/grid\\\/vo\\\.neugrid\\\.eu\\\/home\\\/vip/\\\/grid\\\/biomed\\\/creatis\\\/vip/g`
+    # Sanitize LFN:
+    # - "lfn:" at the beginning is optional for dirac-dms-* commands,
+    #    but does not work as expected with comdirac commands like
+    #    dmkdir.
+    # - "//" are not accepted, neither by dirac-dms-*, nor by dmkdir.
+    LFN=$(echo ${LFN} | sed -r -e 's/^lfn://' -e 's#//#/#g')
 
     info "getting file size and computing sendReceiveTimeout"
-    size=`lfc-ls -l ${LFN} | awk -F' ' '{print $5}'`
-    sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
-    if [ "$sendReceiveTimeout" = "" ] || [  $sendReceiveTimeout -le 900 ]; then echo "sendReceiveTimeout empty or too small, setting it to 900s"; sendReceiveTimeout=900; else echo "sendReceiveTimeout is $sendReceiveTimeout"; fi;
+    local size=$(dirac-dms-lfn-metadata ${LFN} | grep Size | sed -r 's/.* ([0-9]+)L,/\1/')
+    local sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
+    if [ "$sendReceiveTimeout" = "" ] || [  $sendReceiveTimeout -le 900 ]
+    then
+        info "sendReceiveTimeout empty or too small, setting it to 900s"
+        sendReceiveTimeout=900
+    else
+        info "sendReceiveTimeout is $sendReceiveTimeout"
+    fi
+
+    local LOCAL=${PWD}/`basename ${LFN}`
     info "Removing file ${LOCAL} in case it is already here"
     \rm -f ${LOCAL}
 
-    info "Checking if the file is on local SE ${VO_BIOMED_DEFAULT_SE}"
-    local closeSURL=`lcg-lr lfn:${LFN} | grep ${VO_BIOMED_DEFAULT_SE}`
-    if [ "${closeSURL}" != "" ]
-    then
-        info "It is. Trying to download the file from there"
-        LINE="lcg-cp -v --connect-timeout $timeout --sendreceive-timeout $sendReceiveTimeout --bdii-timeout $bdiiTimeout --srm-timeout $srmTimeout ${closeSURL} file:${LOCAL}"
-        info ${LINE}
-        ${LINE} &> lcg-log
-        if [ $? = 0 ]
-        then
-            info "lcg-cp worked fine"
-            lcg_source=`cat lcg-log | awk -F"://" '/Trying SURL srm/ {print $2}' | awk -F"/" '{print $1}'|awk -F":" '{print $1}'`;
-            lcg_destination=`hostname`;
-            lcg_time=`cat lcg-log | awk '/Transfer took/ {print $3$4}'`;
-            info "DownloadCommand=lcg-cp Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time";
-            if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
-            then
-                info "Missing lcg_log info, printing the whole file"
-                cat lcg-log
-            fi
-            return 0
-        else
-            error "It failed, falling back on regular lcg-cp"
-        fi
-    else
-        info "It's not, falling back on regular lcg-cp"
-    fi
+    local totalTimeout=$((${timeout} + ${srmTimeout} + ${sendReceiveTimeout}))
 
-
-    info "Downloading file ${LFN}..."
-    LINE="lcg-cp -v --connect-timeout $timeout --sendreceive-timeout $sendReceiveTimeout --bdii-timeout $bdiiTimeout --srm-timeout $srmTimeout lfn:${LFN} file:${LOCAL}"
+    local LINE="time -p dirac-dms-get-file -d -o /Resources/StorageElements/GFAL_TIMEOUT=${totalTimeout} ${LFN}"
     info ${LINE}
-    ${LINE} &> lcg-log
+    (${LINE}) &> get-file.log
+
     if [ $? = 0 ]
     then
-       info "lcg-cp worked fine"
-       lcg_source=`cat lcg-log | awk -F"://" '/Trying SURL srm/ {print $2}' | awk -F"/" '{print $1}'|awk -F":" '{print $1}'`;
-       lcg_destination=`hostname`;
-       lcg_time=`cat lcg-log | awk '/Transfer took/ {print $3$4}'`;
-       info "DownloadCommand=lcg-cp Source=$lcg_source Destination=$lcg_destination Size=$size Time=$lcg_time";
-       if [ "${lcg_source}x" = "x" ] || [ "${lcg_destination}x" = "x" ] || [ "${lcg_time}x" = "x" ]
-       then
-         info "Missing lcg_log info, printing the whole file"
-         cat lcg-log
-       fi
-
+        info "dirac-dms-get-file worked fine"
+        local source=$(grep "generating url" get-file.log | tail -1 | sed -r 's/^.* (.*)\.$/\1/')
+        local duration=$(grep -P '^real[ \t]' get-file.log | sed -r 's/real[ \t]//')
+        info "DownloadCommand=dirac-dms-get-file Source=${source} Destination=$(hostname) Size=${size} Time=${duration}"
+        RET_VAL=0
     else
-#if( $failOverEnabled )
-        local FILENAME=`lcg-lr lfn:${LFN} | grep $failOverHost`
-        #set( $generated = '${FILENAME#*generated}' )
-        local PFILE=${generated}
-        lcg-cp --nobdii --defaultsetype srmv2 -v srm://$failOverHost:$failOverPort/srm/managerv2?SFN=$failOverHome${PFILE} file:`pwd`/`basename ${LFN}`
-        if [ $? = 0 ]
-        then
-            info "lcg-cp from Fail Over server worked fine"
-        else
-            error "lcg-cp failed"
-            error "`cat lcg-log`"
-            return 1
-        fi
-#else
-        error "lcg-cp failed"
-        error "`cat lcg-log`"
-        return 1
-#end
+        error "dirac-dms-get-file failed"
+        error "`cat get-file.log`"
+        RET_VAL=1
     fi
-    \rm lcg-log
+
+    \rm get-file.log
+    return ${RES_VAL}
 }
 export -f downloadLFN
 
