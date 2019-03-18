@@ -79,14 +79,8 @@ function uploadLfnFile {
     local totalTimeout=$((${timeout} + ${srmTimeout} + ${sendReceiveTimeout}))
 
     local OPTS="-o /Resources/StorageElements/GFAL_TIMEOUT=${totalTimeout}"
-    local DEST=""
-    if [ "${USE_CLOSE_SE}" = "true" ] && [ "${VO_BIOMED_DEFAULT_SE}" != "" ]
-    then
-        DEST=${VO_BIOMED_DEFAULT_SE}
-    else
-        chooseRandomSE
-        DEST=${RESULT}
-    fi
+    chooseRandomSE
+    local DEST=${RESULT}
     local done=0
     while [ $nrep -gt $done ] && [ "${DEST}" != "" ]
     do
