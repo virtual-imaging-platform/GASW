@@ -51,7 +51,7 @@ function downloadLFN {
     fi
 
     \rm get-file.log
-    return ${RES_VAL}
+    return ${RET_VAL}
 }
 export -f downloadLFN
 
