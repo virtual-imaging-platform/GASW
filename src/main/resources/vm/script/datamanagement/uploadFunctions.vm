@@ -67,7 +67,7 @@ function uploadLfnFile {
 
     info "getting file size and computing sendReceiveTimeout"
     local size=`ls -l ${FILE} | awk -F' ' '{print $5}'`
-    local sendReceiveTimeout=`echo $[${size}/${minAvgDownloadThroughput}/1024]`
+    local sendReceiveTimeout=`echo $[${size:-0}/${minAvgDownloadThroughput}/1024]`
     if [ "$sendReceiveTimeout" = "" ] || [  $sendReceiveTimeout -le 900 ]
     then
         info "sendReceiveTimeout empty or too small, setting it to 900s"
