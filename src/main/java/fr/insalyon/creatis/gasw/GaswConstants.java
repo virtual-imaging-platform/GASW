@@ -57,7 +57,6 @@ public class GaswConstants {
     public static final String LAB_PLUGIN_EXECUTOR = "plugin.executor";
     public static final String LAB_PLUGIN_LISTENER = "plugin.listener";
     public static final String LAB_VO_DEFAULT_SE = "vo.default.se";
-    public static final String LAB_VO_LFC_HOST = "vo.lfc.host";
     public static final String LAB_VO_NAME = "vo.name";
     public static final String LAB_VO_USE_CLOSE_SE = "vo.use.close.se";
     // timeouts used in lcg-c*

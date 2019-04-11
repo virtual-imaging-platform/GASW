@@ -32,7 +32,6 @@
  */
 package fr.insalyon.creatis.gasw.parser;
 
-import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
@@ -70,7 +69,6 @@ public class GaswParser extends DefaultHandler {
     private XMLReader reader;
     private boolean parsing;
     private boolean parsingSandbox;
-    private String lfcHost;
     private String executableName;
     private List<URI> downloads;
     private Map<String, String> gaswVariables;
@@ -80,11 +78,12 @@ public class GaswParser extends DefaultHandler {
     private GaswOutputArg outputArg;
     private List<String> inputsList;
 
+    private static final String LFN_PREFIX = "lfn://";
+
     public GaswParser() throws GaswException {
 
         this.parsing = false;
         this.parsingSandbox = false;
-        this.lfcHost = "lfn://" + GaswConfiguration.getInstance().getVoLFCHost() + "/";
         this.downloads = new ArrayList<URI>();
         this.gaswVariables = new HashMap<String, String>();
         this.envVariables = new HashMap<String, String>();
@@ -129,9 +128,9 @@ public class GaswParser extends DefaultHandler {
             try {
                 String value = getAttributeValue(attributes, "value", "No value defined.");
                 if (value.contains("lfn:/")) {
-                    value = lfcHost + new URI(value + ".tar.gz").getPath();
+                    value = LFN_PREFIX + new URI(value + ".tar.gz").getPath();
                 } else {
-                    value = lfcHost + value + ".tar.gz";
+                    value = LFN_PREFIX + value + ".tar.gz";
                 }
                 downloads.add(new URI(value));
 
@@ -267,9 +266,9 @@ public class GaswParser extends DefaultHandler {
                 String value = inputsMap.get(argument.getName());
                 if (argument.getType() == GaswArgument.Type.URI) {
                     // If the value already is a URI, use it as is.  If not, it
-                    // is a lfn and the lfc host prefix is added.
+                    // is a lfn and the prefix is added.
                     URI valueURI = new URI(
-                        GaswUtil.isUri(value) ? value : lfcHost + value);
+                        GaswUtil.isUri(value) ? value : LFN_PREFIX + value);
                     param.append(new File(valueURI.getPath()).getName());
                     downloads.add(valueURI);
                 } else {
@@ -282,9 +281,9 @@ public class GaswParser extends DefaultHandler {
                 String value = parseOutputTemplate(
                     output.getTemplateParts(), inputsMap);
                 // If the value already is a URI, use it as is.  If not, it is a
-                // lfn and the lfc host prefix is added.
+                // lfn and the prefix is added.
                 URI valueURI = new URI(
-                    GaswUtil.isUri(value) ? value : lfcHost + value);
+                    GaswUtil.isUri(value) ? value : LFN_PREFIX + value);
                 uploads.add(new GaswUpload(valueURI, output.getReplicas()));
                 param.append(new File(valueURI.getPath()).getName());
             }

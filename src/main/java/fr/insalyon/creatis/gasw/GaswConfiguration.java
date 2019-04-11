@@ -86,7 +86,6 @@ public class GaswConfiguration {
     private String voName;
     private String voDefaultSE;
     private String voUseCloseSE;
-    private String voLFCHost;
     // Failover Server
     private boolean failOverEnabled;
     private String failOverHost;
@@ -155,7 +154,6 @@ public class GaswConfiguration {
             voName = config.getString(GaswConstants.LAB_VO_NAME, "biomed");
             voDefaultSE = config.getString(GaswConstants.LAB_VO_DEFAULT_SE, "SBG-disk");
             voUseCloseSE = config.getString(GaswConstants.LAB_VO_USE_CLOSE_SE, "\"true\"");
-            voLFCHost = config.getString(GaswConstants.LAB_VO_LFC_HOST, "lfc-biomed.in2p3.fr");
 
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
             failOverHost = config.getString(GaswConstants.LAB_FAILOVER_HOST, "localhost");
@@ -184,7 +182,6 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_VO_NAME, voName);
             config.setProperty(GaswConstants.LAB_VO_DEFAULT_SE, voDefaultSE);
             config.setProperty(GaswConstants.LAB_VO_USE_CLOSE_SE, voUseCloseSE);
-            config.setProperty(GaswConstants.LAB_VO_LFC_HOST, voLFCHost);
 
             config.setProperty(GaswConstants.LAB_FAILOVER_ENABLED, failOverEnabled);
             config.setProperty(GaswConstants.LAB_FAILOVER_HOST, failOverHost);
@@ -392,10 +389,6 @@ public class GaswConfiguration {
 
     public String getVoUseCloseSE() {
         return voUseCloseSE;
-    }
-
-    public String getVoLFCHost() {
-        return voLFCHost;
     }
 
     public boolean isFailOverEnabled() {
