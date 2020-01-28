@@ -2,7 +2,7 @@
 
 ## Variables
 ## $minorStatusEnabled, $serviceCall, $defaultEnvironment, $voDefaultSE, 
-## $voUseCloseSE, $simulationID
+## $voUseCloseSE, $simulationID, $boshCVMFSPath
 
 startLog header
 
@@ -20,6 +20,7 @@ export $ENV
 __MOTEUR_ENV=$defaultEnvironment
 export SE=$voDefaultSE
 USE_CLOSE_SE=$voUseCloseSE
+export BOSH_CVMFS_PATH=$boshCVMFSPath
 
 export MOTEUR_WORKFLOWID="$simulationID"
 
