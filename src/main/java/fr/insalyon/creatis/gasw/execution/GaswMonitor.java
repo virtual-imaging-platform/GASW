@@ -171,15 +171,8 @@ public abstract class GaswMonitor extends Thread {
      * @throws GaswException
      * @throws DAOException
      */
-    protected boolean isReplica(Job job) throws GaswException, DAOException {
-
-        if (jobDAO.getNumberOfCompletedJobsByInvocationID(job.getInvocationID()) > 0) {
-            job.setStatus(GaswStatus.CANCELLED_REPLICA);
-            job.setEnd(new Date());
-            updateStatus(job);
-            return true;
-        }
-        return false;
+    protected boolean isReplica(Job job) throws DAOException {
+        return jobDAO.getNumberOfCompletedJobsByInvocationID(job.getInvocationID()) > 0;
     }
 
     /**
