@@ -84,12 +84,10 @@ public abstract class GaswOutputParser extends Thread {
             this.dataList = new ArrayList<Data>();
             this.uploadedResults = null;
 
-        } catch (IOException ex) {
+        } catch (IOException | DAOException ex) {
             closeBuffers();
-            logger.error(ex);
-        } catch (DAOException ex) {
-            closeBuffers();
-            logger.error(ex);
+            logger.error("[GASW Parser] Error creating std out/err " +
+                    "files and buffers for " + jobID, ex);
         }
     }
 
@@ -103,7 +101,7 @@ public abstract class GaswOutputParser extends Thread {
                 appStdErrWriter.close();
             }
         } catch (IOException ex) {
-            logger.error(ex);
+            logger.error("[GASW Parser] Error closing buffers", ex);
         }
     }
 
@@ -137,16 +135,16 @@ public abstract class GaswOutputParser extends Thread {
                         DAOFactory.getDAOFactory().getJobDAO().update(job);
                     }
                     return;
-                } catch (DAOException ex) {
-                    // do nothing
-                } catch (GaswException ex) {
-                    // do nothing
                 }
+            } catch (DAOException | GaswException ex) {
+                logger.error("[GASW Parser] Error finalising job " +
+                        job.getId(), ex);
             }
             GaswNotification.getInstance().addFinishedJob(gaswOutput);
 
         } catch (GaswException ex) {
-            logger.error(ex);
+            logger.error("[GASW Parser] Error processing output for" +
+                    " job " + job.getId(), ex);
         }
     }
 
@@ -302,8 +300,8 @@ public abstract class GaswOutputParser extends Thread {
                     }
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
-                logger.error(ex);
+                logger.error("[GASW Parser] Error parsing stdout " +
+                        stdOut.getAbsolutePath(), ex);
             } finally {
                 scanner.close();
             }
@@ -326,12 +324,10 @@ public abstract class GaswOutputParser extends Thread {
             }
             factory.getJobDAO().update(job);
 
-        } catch (DAOException ex) {
+        } catch (DAOException | IOException ex) {
             closeBuffers();
-            // do nothing
-        } catch (IOException ex) {
-            closeBuffers();
-            logger.error(ex);
+            logger.error("[GASW Parser] Error parsing stdout " +
+                    stdOut.getAbsolutePath(), ex);
         }
         return exitCode;
     }
@@ -408,20 +404,17 @@ public abstract class GaswOutputParser extends Thread {
             appStdErrWriter.close();
             DAOFactory.getDAOFactory().getJobDAO().update(job);
 
-        } catch (DAOException ex) {
+        } catch (DAOException | IOException ex) {
             closeBuffers();
-            logger.error(ex);
+            logger.error("[GASW Parser] Error parsing stderr " +
+                    stdErr.getAbsolutePath(), ex);
 
-        } catch (IOException ex) {
-            closeBuffers();
-            logger.error(ex);
         }
         return exitCode;
     }
 
     /**
      *
-     * @param job
      * @param exitCode
      */
     protected void parseNonStdOut(int exitCode) {
@@ -447,13 +440,12 @@ public abstract class GaswOutputParser extends Thread {
 
         } catch (DAOException ex) {
             closeBuffers();
-            logger.error(ex);
+            logger.error("[GASW Parser] Error parsing NonStdOut", ex);
         }
     }
 
     /**
      *
-     * @param job
      * @return
      */
     private void parseCheckpoint() {
@@ -494,7 +486,7 @@ public abstract class GaswOutputParser extends Thread {
             }
         } catch (DAOException ex) {
             closeBuffers();
-            logger.error(ex);
+            logger.error("[GASW Parser] Error parsing checkpoints", ex);
         }
     }
 
