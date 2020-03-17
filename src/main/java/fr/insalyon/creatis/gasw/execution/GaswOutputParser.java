@@ -118,8 +118,14 @@ public abstract class GaswOutputParser extends Thread {
                     logger.warn(ex);
                 }
             }
-            if (gaswOutput.getExitCode() != GaswExitCode.SUCCESS) {
-                try {
+            // the job is marked as replicating, because it could be
+            // replicated in case of error
+            // remove this flag if it is not replicated after all
+            try {
+                if (gaswOutput.getExitCode() == GaswExitCode.SUCCESS) {
+                    job.setReplicating(false);
+                    DAOFactory.getDAOFactory().getJobDAO().update(job);
+                } else {
                     int retries = DAOFactory.getDAOFactory().getJobDAO().getFailedJobsByInvocationID(job.getInvocationID()).size() - 1;
                     if (retries < GaswConfiguration.getInstance().getDefaultRetryCount()) {
                         logger.warn("Job [" + job.getId() + "] finished as \"" + job.getStatus().name() + "\" (retried " + retries + " times).");
@@ -132,6 +138,7 @@ public abstract class GaswOutputParser extends Thread {
                         } else if (job.getStatus() == GaswStatus.STALLED) {
                             job.setStatus(GaswStatus.STALLED_HELD);
                         }
+                        job.setReplicating(false);
                         DAOFactory.getDAOFactory().getJobDAO().update(job);
                     }
                     return;
