@@ -112,6 +112,7 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
                     .setString("input", GaswMinorStatus.Inputs.name())
                     .setString("application", GaswMinorStatus.Application.name())
                     .setString("output", GaswMinorStatus.Outputs.name())
+                    .setString("finished", GaswMinorStatus.Finished.name())
                     .list();
             session.getTransaction().commit();
             session.close();

@@ -60,6 +60,7 @@ public class Job {
     private String id;
     private String simulationID;
     private GaswStatus status;
+    private boolean isReplicating;
     private int exitCode;
     private String exitMessage;
     private Date creation;
@@ -144,6 +145,7 @@ public class Job {
         this.executor = executor;
         this.data = data;
         this.invocationID = invocationID;
+        this.isReplicating = false;
     }
 
     @Id
@@ -254,6 +256,15 @@ public class Job {
 
     public void setStatus(GaswStatus status) {
         this.status = status;
+    }
+
+    @Column(name = "isReplicating")
+    public boolean isReplicating() {
+        return isReplicating;
+    }
+
+    public void setReplicating(boolean replicating) {
+        isReplicating = replicating;
     }
 
     @Temporal(TemporalType.TIMESTAMP)

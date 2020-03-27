@@ -222,14 +222,14 @@ public class GaswConfiguration {
 
         pm = PluginManagerFactory.createPluginManager(props);
 
-        pm.addPluginsFrom(new File(dbPluginURI).toURI());
+        pm.addPluginsFrom(getAndLogPluginUri(dbPluginURI, "db"));
 
         for (Object o : executorPluginsURI) {
-            pm.addPluginsFrom(new File((String) o).toURI());
+            pm.addPluginsFrom(getAndLogPluginUri((String) o, "executor"));
         }
 
         for (Object o : listenerPluginsURI) {
-            pm.addPluginsFrom(new File((String) o).toURI());
+            pm.addPluginsFrom(getAndLogPluginUri((String) o, "listener"));
         }
 
         PluginManagerUtil pmu = new PluginManagerUtil(pm);
@@ -237,6 +237,13 @@ public class GaswConfiguration {
         dbPlugin = pmu.getPlugin(DatabasePlugin.class);
         executorPlugins = (List<ExecutorPlugin>) pmu.getPlugins(ExecutorPlugin.class);
         listenerPlugins = (List<ListenerPlugin>) pmu.getPlugins(ListenerPlugin.class);
+    }
+
+    private URI getAndLogPluginUri(String pluginPath, String pluginType) {
+        URI pluginUri = new File(pluginPath).toURI();
+        logger.info("Loading " + pluginType + " plugin from " + pluginPath
+            + " (loaded URI : " + pluginUri + ")");
+        return pluginUri;
     }
 
     /**

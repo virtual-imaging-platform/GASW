@@ -40,6 +40,8 @@ import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.dao.NodeDAO;
 import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
+import org.apache.log4j.Logger;
+
 import java.util.Date;
 import java.util.List;
 
@@ -48,6 +50,8 @@ import java.util.List;
  * @author Rafael Ferreira da Silva
  */
 public abstract class GaswMonitor extends Thread {
+
+    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
 
     private volatile static int INVOCATION_ID = 1;
     protected JobDAO jobDAO;
@@ -155,7 +159,7 @@ public abstract class GaswMonitor extends Thread {
                 resume(job);
             }
         } catch (DAOException ex) {
-            // do nothing
+            logger.error("[Gasw Monitor] Error handling signaled jobs", ex);
         }
     }
 
@@ -167,15 +171,8 @@ public abstract class GaswMonitor extends Thread {
      * @throws GaswException
      * @throws DAOException
      */
-    protected boolean isReplica(Job job) throws GaswException, DAOException {
-
-        if (jobDAO.getNumberOfCompletedJobsByInvocationID(job.getInvocationID()) > 0) {
-            job.setStatus(GaswStatus.CANCELLED_REPLICA);
-            job.setEnd(new Date());
-            updateStatus(job);
-            return true;
-        }
-        return false;
+    protected boolean isReplica(Job job) throws DAOException {
+        return jobDAO.getNumberOfCompletedJobsByInvocationID(job.getInvocationID()) > 0;
     }
 
     /**
