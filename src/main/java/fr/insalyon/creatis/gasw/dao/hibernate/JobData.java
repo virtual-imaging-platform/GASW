@@ -225,6 +225,8 @@ public class JobData implements JobDAO {
                     .setInteger("invocationID", invocationID)
                     .setString("error", GaswStatus.ERROR.name())
                     .setString("stalled", GaswStatus.STALLED.name())
+                    .setString("error_held", GaswStatus.ERROR_HELD.name())
+                    .setString("stalled_held", GaswStatus.STALLED_HELD.name())
                     .list();
             session.getTransaction().commit();
             session.close();
@@ -280,4 +282,66 @@ public class JobData implements JobDAO {
             throw new DAOException(ex);
         }
     }
+
+    @Override
+    public long getNumberOfJobs() throws DAOException {
+
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            long nbJobs = (Long) session.getNamedQuery("Job.getNbJobs")
+                    .uniqueResult();
+            session.getTransaction().commit();
+            session.close();
+
+            return nbJobs;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
+
+    @Override
+    public long getNumberOfFailedJobs() throws DAOException {
+
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            long failedJobs = (Long) session.getNamedQuery("Job.getNbFailedJobs")
+                    .setString("error", GaswStatus.ERROR.name())
+                    .setString("stalled", GaswStatus.STALLED.name())
+                    .setString("error_held", GaswStatus.ERROR_HELD.name())
+                    .setString("stalled_held", GaswStatus.STALLED_HELD.name())
+                    .uniqueResult();
+            session.getTransaction().commit();
+            session.close();
+
+            return failedJobs;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
+    @Override
+    public long getNumberOfInvocations() throws DAOException {
+
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            long nbIvocations = (Long) session.getNamedQuery("Job.getNbInvocations")
+                    .uniqueResult();
+            session.getTransaction().commit();
+            session.close();
+
+            return nbIvocations;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
+
+
 }

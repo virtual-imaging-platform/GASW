@@ -63,4 +63,10 @@ public interface JobDAO {
     public List<Job> getRunningByCommand(String command) throws DAOException;
     
     public List<Job> getByParameters(String parameters) throws DAOException;
+
+    public long getNumberOfJobs() throws DAOException;
+
+    public long getNumberOfFailedJobs() throws DAOException;
+
+    public long getNumberOfInvocations() throws DAOException;
 }
