@@ -53,9 +53,10 @@ import org.hibernate.annotations.Index;
     @NamedQuery(name = "Job.getActive", query = "FROM Job j WHERE status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate OR status = :reschedule"),
     @NamedQuery(name = "Job.getCompletedJobsByInvocationID", query = "SELECT COUNT(j.id) FROM Job j WHERE j.invocationID = :invocationID AND status = :completed"),
     @NamedQuery(name = "Job.getRunningByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :running OR status = :kill OR status = :replicate OR status = :reschedule"),
-    @NamedQuery(name = "Job.getNbJobs", query = "SELECT COUNT(DISTINCT j.id) FROM Job j"),
-    @NamedQuery(name = "Job.getNbFailedJobs", query = "SELECT COUNT(DISTINCT j.id) FROM Job j WHERE status = :error OR status = :stalled OR status = :error_held OR status = :stalled_held"),
-    @NamedQuery(name = "Job.getNbInvocations", query = "SELECT COUNT(DISTINCT j.invocationID) FROM Job j")
+    @NamedQuery(name = "Job.getCompletedByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :completed"),
+    @NamedQuery(name = "Job.getFailedByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :error OR status = :stalled OR status = :error_held OR status = :stalled_held)"),
+    @NamedQuery(name = "Job.getJobsByCommand", query = "FROM Job j WHERE j.command = :command"),
+    @NamedQuery(name = "Job.getInvocationsByCommand", query = "SELECT (DISTINCT j.invocationID) FROM Job j WHERE j.command = :command")
             })
 @Table(name = "Jobs")
 public class Job {
