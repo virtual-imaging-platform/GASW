@@ -82,6 +82,7 @@ public class Job {
     private String executor;
     private List<Data> data;
     private int invocationID;
+    private String diracSite;
 
     public Job() {
     }
@@ -101,7 +102,7 @@ public class Job {
 
         this(id, simulationID, status, -1, "", null, null, null, null, null,
                 null, null, command, fileName, parameters, executor, 
-                new ArrayList<Data>(), -1);
+                new ArrayList<Data>(), -1,null);
     }
 
     /**
@@ -129,7 +130,7 @@ public class Job {
             String exitMessage, Date creation, Date queued, Date download,
             Date running, Date upload, Date end, Node node, String command,
             String fileName, String parameters, String executor, List<Data> data,
-            int invocationID) {
+            int invocationID, String diracSite) {
 
         this.id = id;
         this.simulationID = simulationID;
@@ -150,6 +151,7 @@ public class Job {
         this.data = data;
         this.invocationID = invocationID;
         this.isReplicating = false;
+        this.diracSite = diracSite;
     }
 
     @Id
@@ -230,6 +232,15 @@ public class Job {
 
     public void setNode(Node node) {
         this.node = node;
+    }
+
+    @Column(name = "dirac_site")
+    public String getDiracSite() {
+        return diracSite;
+    }
+
+    public void setDiracSite(String diracSite) {
+        this.diracSite = diracSite;
     }
 
     @Temporal(TemporalType.TIMESTAMP)
