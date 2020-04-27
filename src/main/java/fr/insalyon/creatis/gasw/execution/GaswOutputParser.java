@@ -122,7 +122,9 @@ public abstract class GaswOutputParser extends Thread {
             // replicated in case of error
             // remove this flag if it is not replicated after all
             try {
-                if (gaswOutput.getExitCode() == GaswExitCode.SUCCESS) {
+                if (gaswOutput.getExitCode() == GaswExitCode.SUCCESS ||
+                        gaswOutput.getExitCode() == GaswExitCode.EXECUTION_CANCELED) {
+                    // it is finished and wont be resubmitted
                     job.setReplicating(false);
                     DAOFactory.getDAOFactory().getJobDAO().update(job);
                 } else {
