@@ -115,7 +115,7 @@ public abstract class GaswOutputParser extends Thread {
                 try {
                     listener.jobFinished(gaswOutput);
                 } catch (Exception ex) {
-                    logger.warn(ex);
+                    logger.warn("Error ", ex);
                 }
             }
             // the job is marked as replicating, because it could be
