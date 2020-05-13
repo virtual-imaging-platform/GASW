@@ -49,11 +49,15 @@ import org.hibernate.annotations.Index;
     @NamedQuery(name = "Job.findByStatus", query = "FROM Job j WHERE j.status = :status"),
     @NamedQuery(name = "Job.findByParameters", query = "FROM Job j WHERE j.parameters = :parameters"),
     @NamedQuery(name = "Job.findActiveByInvocationID", query = "FROM Job j WHERE j.invocationID = :invocationID AND (status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate OR status = :reschedule)"),
-    @NamedQuery(name = "Job.findFailedByInvocationID", query = "FROM Job j WHERE j.invocationID = :invocationID AND (status = :error OR status = :stalled)"),
+    @NamedQuery(name = "Job.findFailedByInvocationID", query = "FROM Job j WHERE j.invocationID = :invocationID AND (status = :error OR status = :stalled OR status = :error_held OR status = :stalled_held)"),
     @NamedQuery(name = "Job.getActive", query = "FROM Job j WHERE status = :submitted OR status = :queued OR status = :running OR status = :kill OR status = :replicate OR status = :reschedule"),
     @NamedQuery(name = "Job.getCompletedJobsByInvocationID", query = "SELECT COUNT(j.id) FROM Job j WHERE j.invocationID = :invocationID AND status = :completed"),
-    @NamedQuery(name = "Job.getRunningByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :running OR status = :kill OR status = :replicate OR status = :reschedule)")
-})
+    @NamedQuery(name = "Job.getRunningByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :running OR status = :kill OR status = :replicate OR status = :reschedule)"),
+    @NamedQuery(name = "Job.getCompletedByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :completed)"),
+    @NamedQuery(name = "Job.getFailedByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :error OR status = :stalled OR status = :error_held OR status = :stalled_held)"),
+    @NamedQuery(name = "Job.getJobsByCommand", query = "FROM Job j WHERE j.command = :command"),
+    @NamedQuery(name = "Job.getInvocationsByCommand", query = "SELECT DISTINCT j.invocationID FROM Job j WHERE j.command = :command")
+            })
 @Table(name = "Jobs")
 public class Job {
 
@@ -78,6 +82,7 @@ public class Job {
     private String executor;
     private List<Data> data;
     private int invocationID;
+    private String diracSite;
 
     public Job() {
     }
@@ -97,7 +102,7 @@ public class Job {
 
         this(id, simulationID, status, -1, "", null, null, null, null, null,
                 null, null, command, fileName, parameters, executor, 
-                new ArrayList<Data>(), -1);
+                new ArrayList<Data>(), -1,null);
     }
 
     /**
@@ -120,12 +125,13 @@ public class Job {
      * @param executor
      * @param data
      * @param invocationID
+     * @param diracSite
      */
     public Job(String id, String simulationID, GaswStatus status, int exitCode,
             String exitMessage, Date creation, Date queued, Date download,
             Date running, Date upload, Date end, Node node, String command,
             String fileName, String parameters, String executor, List<Data> data,
-            int invocationID) {
+            int invocationID, String diracSite) {
 
         this.id = id;
         this.simulationID = simulationID;
@@ -146,6 +152,7 @@ public class Job {
         this.data = data;
         this.invocationID = invocationID;
         this.isReplicating = false;
+        this.diracSite = diracSite;
     }
 
     @Id
@@ -226,6 +233,15 @@ public class Job {
 
     public void setNode(Node node) {
         this.node = node;
+    }
+
+    @Column(name = "dirac_site")
+    public String getDiracSite() {
+        return diracSite;
+    }
+
+    public void setDiracSite(String diracSite) {
+        this.diracSite = diracSite;
     }
 
     @Temporal(TemporalType.TIMESTAMP)
