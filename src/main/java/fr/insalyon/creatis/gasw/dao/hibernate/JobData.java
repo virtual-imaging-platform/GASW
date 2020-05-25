@@ -225,6 +225,8 @@ public class JobData implements JobDAO {
                     .setInteger("invocationID", invocationID)
                     .setString("error", GaswStatus.ERROR.name())
                     .setString("stalled", GaswStatus.STALLED.name())
+                    .setString("error_held", GaswStatus.ERROR_HELD.name())
+                    .setString("stalled_held", GaswStatus.STALLED_HELD.name())
                     .list();
             session.getTransaction().commit();
             session.close();
@@ -262,6 +264,27 @@ public class JobData implements JobDAO {
     }
 
     @Override
+    public List<Job> getCompletedByCommand(String command) throws DAOException {
+
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            List<Job> list = (List<Job>) session.getNamedQuery("Job.getCompletedByCommand")
+                    .setString("command", command)
+                    .setString("completed", GaswStatus.COMPLETED.name())
+                    .list();
+            session.getTransaction().commit();
+            session.close();
+
+            return list;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
+
+    @Override
     public List<Job> getByParameters(String parameters) throws DAOException {
 
         try {
@@ -280,4 +303,70 @@ public class JobData implements JobDAO {
             throw new DAOException(ex);
         }
     }
+
+    @Override
+    public List<Job> getFailedByCommand(String command) throws DAOException {
+
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            List<Job> list = (List<Job>) session.getNamedQuery("Job.getFailedByCommand")
+                    .setString("command", command)
+                    .setString("error", GaswStatus.ERROR.name())
+                    .setString("stalled", GaswStatus.STALLED.name())
+                    .setString("error_held", GaswStatus.ERROR_HELD.name())
+                    .setString("stalled_held", GaswStatus.STALLED_HELD.name())
+                    .list();
+            session.getTransaction().commit();
+            session.close();
+
+            return list;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
+
+    @Override
+    public List<Job>  getJobsByCommand(String command) throws DAOException {
+
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            List<Job> list = (List<Job>) session.getNamedQuery("Job.getJobsByCommand")
+                    .setString("command", command)
+                    .list();
+            session.getTransaction().commit();
+            session.close();
+
+            return list;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
+
+    @Override
+    public List<Integer> getInvocationsByCommand(String command) throws DAOException {
+
+        try {
+            Session session = sessionFactory.openSession();
+            session.beginTransaction();
+            List<Integer> list = (List<Integer>) session.getNamedQuery("Job.getInvocationsByCommand")
+                    .setString("command", command)
+                    .list();
+            session.getTransaction().commit();
+            session.close();
+
+            return list;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
+
+
 }

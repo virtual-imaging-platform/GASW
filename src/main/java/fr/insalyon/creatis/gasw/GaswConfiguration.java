@@ -86,6 +86,8 @@ public class GaswConfiguration {
     private String voName;
     private String voDefaultSE;
     private String voUseCloseSE;
+    // Boutiques installation
+    private String boshCVMFSPath;
     // Failover Server
     private boolean failOverEnabled;
     private String failOverHost;
@@ -155,6 +157,8 @@ public class GaswConfiguration {
             voDefaultSE = config.getString(GaswConstants.LAB_VO_DEFAULT_SE, "SBG-disk");
             voUseCloseSE = config.getString(GaswConstants.LAB_VO_USE_CLOSE_SE, "\"true\"");
 
+            boshCVMFSPath = config.getString(GaswConstants.LAB_BOSH_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/virtualenv/bin\"");
+
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
             failOverHost = config.getString(GaswConstants.LAB_FAILOVER_HOST, "localhost");
             failOverPort = config.getInt(GaswConstants.LAB_FAILOVER_PORT, 8446);
@@ -182,6 +186,8 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_VO_NAME, voName);
             config.setProperty(GaswConstants.LAB_VO_DEFAULT_SE, voDefaultSE);
             config.setProperty(GaswConstants.LAB_VO_USE_CLOSE_SE, voUseCloseSE);
+            
+	    config.setProperty(GaswConstants.LAB_BOSH_CVMFS_PATH, boshCVMFSPath);
 
             config.setProperty(GaswConstants.LAB_FAILOVER_ENABLED, failOverEnabled);
             config.setProperty(GaswConstants.LAB_FAILOVER_HOST, failOverHost);
@@ -216,14 +222,14 @@ public class GaswConfiguration {
 
         pm = PluginManagerFactory.createPluginManager(props);
 
-        pm.addPluginsFrom(new File(dbPluginURI).toURI());
+        pm.addPluginsFrom(getAndLogPluginUri(dbPluginURI, "db"));
 
         for (Object o : executorPluginsURI) {
-            pm.addPluginsFrom(new File((String) o).toURI());
+            pm.addPluginsFrom(getAndLogPluginUri((String) o, "executor"));
         }
 
         for (Object o : listenerPluginsURI) {
-            pm.addPluginsFrom(new File((String) o).toURI());
+            pm.addPluginsFrom(getAndLogPluginUri((String) o, "listener"));
         }
 
         PluginManagerUtil pmu = new PluginManagerUtil(pm);
@@ -231,6 +237,13 @@ public class GaswConfiguration {
         dbPlugin = pmu.getPlugin(DatabasePlugin.class);
         executorPlugins = (List<ExecutorPlugin>) pmu.getPlugins(ExecutorPlugin.class);
         listenerPlugins = (List<ListenerPlugin>) pmu.getPlugins(ListenerPlugin.class);
+    }
+
+    private URI getAndLogPluginUri(String pluginPath, String pluginType) {
+        URI pluginUri = new File(pluginPath).toURI();
+        logger.info("Loading " + pluginType + " plugin from " + pluginPath
+            + " (loaded URI : " + pluginUri + ")");
+        return pluginUri;
     }
 
     /**
@@ -389,6 +402,10 @@ public class GaswConfiguration {
 
     public String getVoUseCloseSE() {
         return voUseCloseSE;
+    }
+
+    public String getBoshCVMFSPath() {
+        return boshCVMFSPath;
     }
 
     public boolean isFailOverEnabled() {
