@@ -65,6 +65,7 @@ public class Job {
     private String simulationID;
     private GaswStatus status;
     private boolean isReplicating;
+    private boolean isBeingKilled;
     private int exitCode;
     private String exitMessage;
     private Date creation;
@@ -152,6 +153,7 @@ public class Job {
         this.data = data;
         this.invocationID = invocationID;
         this.isReplicating = false;
+        this.isBeingKilled = false;
         this.diracSite = diracSite;
     }
 
@@ -281,6 +283,15 @@ public class Job {
 
     public void setReplicating(boolean replicating) {
         isReplicating = replicating;
+    }
+
+    @Column(name = "isBeingKilled")
+    public boolean isBeingKilled() {
+        return isBeingKilled;
+    }
+
+    public void setBeingKilled(boolean isBeingKilled) {
+        this.isBeingKilled = isBeingKilled;
     }
 
     @Temporal(TemporalType.TIMESTAMP)
