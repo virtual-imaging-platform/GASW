@@ -123,7 +123,7 @@ public abstract class GaswOutputParser extends Thread {
             // remove this flag if it is not replicated after all
             try {
                 // do not resubmit a job that was deliberately cancelled/killed
-                if (gaswOutput.getExitCode() == GaswExitCode.SUCCESS || gaswOutput.getExitCode() == GaswExitCode.EXECUTION_CANCELED) {
+                if (gaswOutput.getExitCode() == GaswExitCode.SUCCESS || gaswOutput.getExitCode() == GaswExitCode.EXECUTION_CANCELED || job.isBeingKilled()) {
                     job.setReplicating(false);
                     DAOFactory.getDAOFactory().getJobDAO().update(job);
                 } else {
@@ -131,7 +131,6 @@ public abstract class GaswOutputParser extends Thread {
                     if (retries < GaswConfiguration.getInstance().getDefaultRetryCount()) {
                         logger.warn("Job [" + job.getId() + "] finished as \"" + job.getStatus().name() + "\" (retried " + retries + " times).");
                         resubmit();
-
                     } else {
                         logger.warn("Job [" + job.getId() + "] finished as \"" + job.getStatus().name() + "\": holding job (max retries reached).");
                         if (job.getStatus() == GaswStatus.ERROR) {
