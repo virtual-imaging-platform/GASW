@@ -35,7 +35,10 @@
 package fr.insalyon.creatis.gasw;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -49,12 +52,14 @@ public class GaswNotification extends Thread {
     private Notification notification;
     private Object client;
     private volatile List<GaswOutput> finishedJobs;
+    private volatile   Map<String, GaswOutput> instanceErrorJobs;
     private volatile boolean gettingOutputs;
 
     public synchronized static GaswNotification getInstance() {
 
         if (instance == null) {
             instance = new GaswNotification();
+            instance.instanceErrorJobs =  new HashMap<>();
         }
         return instance;
     }
@@ -103,6 +108,28 @@ public class GaswNotification extends Thread {
         }
 
         return outputsList;
+    }
+
+
+    public synchronized void addErrorJob(GaswOutput errorJob) {
+        if (errorJob.getStdErr()!=null) {
+            String instanceId = errorJob.getJobID();
+            if (this.instanceErrorJobs.containsKey(instanceId)) {
+                this.instanceErrorJobs.replace(instanceId,errorJob);
+            } else {
+                this.instanceErrorJobs.put(instanceId,errorJob);
+            }
+        }
+    }
+
+    /**
+     * Gets the GaswOutput for the last job in error for instanceId
+     */
+    public GaswOutput getGaswOutputFromLastFailedJob(String instanceId) {
+        if (this.instanceErrorJobs.containsKey(instanceId)) {
+            return this.instanceErrorJobs.get(instanceId);
+        }
+        return null;
     }
 
     /**
