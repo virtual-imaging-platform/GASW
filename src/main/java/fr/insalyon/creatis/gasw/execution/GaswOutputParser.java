@@ -141,6 +141,7 @@ public abstract class GaswOutputParser extends Thread {
                         job.setReplicating(false);
                         DAOFactory.getDAOFactory().getJobDAO().update(job);
                     }
+                    GaswNotification.getInstance().addErrorJob(gaswOutput);
                     return;
                 }
             } catch (DAOException | GaswException ex) {
