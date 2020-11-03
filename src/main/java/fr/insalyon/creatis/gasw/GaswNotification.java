@@ -52,14 +52,13 @@ public class GaswNotification extends Thread {
     private Notification notification;
     private Object client;
     private volatile List<GaswOutput> finishedJobs;
-    private volatile   Map<String, GaswOutput> instanceErrorJobs;
+    private volatile Map<String, GaswOutput> instanceErrorJobs;
     private volatile boolean gettingOutputs;
 
     public synchronized static GaswNotification getInstance() {
 
         if (instance == null) {
             instance = new GaswNotification();
-            instance.instanceErrorJobs =  new HashMap<>();
         }
         return instance;
     }
@@ -68,6 +67,7 @@ public class GaswNotification extends Thread {
 
         this.finishedJobs = new ArrayList<GaswOutput>();
         this.gettingOutputs = false;
+        this.instanceErrorJobs =  new HashMap<>();
     }
 
     /**
