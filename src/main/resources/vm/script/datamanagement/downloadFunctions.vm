@@ -94,6 +94,82 @@ function downloadGirderFile {
 }
 export -f downloadGirderFile
 
+function refresh_token {
+    local offline_token=$1
+    local client_id=$2
+    local refresh_token_url=$3
+
+    
+    # the response format is "{"status":"status"}"
+    # this response format is made to handle error while getting the refreshed token in the same time
+    COMMAND(){ 
+        curl -w "{\"status\":\"%{http_code}\"}" -sb -o --request POST "${refresh_token_url}" --header "Content-Type: application/x-www-form-urlencoded" --data-urlencode "client_id=${client_id}" --data-urlencode "grant_type=refresh_token" --data-urlencode "refresh_token=${offline_token}" --cacert /var/www/prod/shanoir-ng-nginx.pem
+    }
+
+    refresh_response=$(COMMAND)
+    status_code=`echo $refresh_response | grep -o '"status":"[^"]*' | grep -o '[^"]*$'`
+    
+    if [[ "$status_code" -ne 200 ]]; then 
+       error_message=`echo $refresh_response | grep -o '"error_description":"[^"]*' | grep -o '[^"]*$'`
+       echo "error while refreshing the token with status : ${status_code} and message error : ${error_message}"
+       exit 1
+    fi
+
+    echo $refresh_response | grep -o '"access_token":"[^"]*' | grep -o '[^"]*$'
+}
+
+#
+# URI are of the form of the following example.  A single "/", instead
+# of 3, after "shanoir:" is also allowed.
+# shanoir:/download.dcm?apiurl=https://shanoir-ng-nginx/shanoir-ng/datasets/carmin-data/path&format=dcm&datasetId=1&token=sqdjuzadj....&refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lk....
+# 
+# This method depends on refresh_token in tokenUtils.vm to refresh the token when it needs
+#
+function downloadShanoirFile {
+    local URI=$1
+
+    local token=`echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i'`
+    local fileName=`echo $URI | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i'`
+    local apiUrl=`echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i'`
+    local refreshToken=`echo $URI | sed -r 's/^.*[?&]refreshToken=([^&]*)(&.*)?$/\1/i'`
+    local format=`echo $URI | sed -r 's/^.*[?&]format=([^&]*)(&.*)?$/\1/i'`
+    local datasetId=`echo $URI | sed -r 's/^.*[?&]datasetId=([^&]*)(&.*)?$/\1/i'`
+
+    local keycloak_client_id=`echo $URI | sed -r 's/^.*[?&]keycloak_client_id=([^&]*)(&.*)?$/\1/i'`
+    local refresh_token_url=`echo $URI | sed -r 's/^.*[?&]refresh_token_url=([^&]*)(&.*)?$/\1/i'`
+
+
+    # ${apiUrl}/datasets/carmin-data/path/${datasetId}?format=${format}
+
+    COMMAND(){ 
+        curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${datasetId}?format=${format}" --header "Authorization: Bearer ${token}" --cacert /var/www/prod/shanoir-ng-nginx.pem
+    }
+
+    status_code=$(COMMAND)
+    echo "downloadShanoirFIle, status code is : ${status_code}"
+    
+    if [[ "$status_code" -ne 200 ]]; then
+       echo "error while downloading the file with status : ${status_code}"
+       if [[ "$status_code" = 401 ]]; then
+            echo "The token is expired !"
+            echo "Refreshing the token..."
+            token=$(refresh_token ${refreshToken} ${keycloak_client_id} ${refresh_token_url})
+
+            status_code=$(COMMAND)
+            echo "downloadShanoirFIle, status code is : ${status_code}"
+            
+            if [[ "$status_code" -ne 200 ]]; then
+                echo "error while downloading the file with status : ${status_code}"
+                exit 1
+            fi
+       else
+            error "Exiting with return value 1"
+            exit 1 
+       fi
+
+    fi
+}
+
 function downloadURI {
 
     local URI=$1
@@ -127,6 +203,12 @@ function downloadURI {
         downloadGirderFile ${URI}
         validateDownload "Cannot download Girder file"
     fi
+
+    if [[ ${URI_LOWER} == shanoir:/* ]]
+    then
+        downloadShanoirFile ${URI}
+        validateDownload "Cannot download shanoir file"
+    fi
 }
 
 function validateDownload() {
@@ -138,3 +220,4 @@ function validateDownload() {
         exit 1
     fi
 }
+

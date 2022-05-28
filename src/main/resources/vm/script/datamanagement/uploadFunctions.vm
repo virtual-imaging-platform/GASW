@@ -131,6 +131,82 @@ function uploadLfnFile {
     fi
 }
 
+# refresh token func
+function refresh_token {
+    local offline_token=$1
+    local client_id=$2
+    local refresh_token_url=$3
+
+    
+    # the response format is "{"status":"status"}"
+    # this response format is made to handle error while getting the refreshed token in the same time
+    COMMAND(){ 
+        curl -w "{\"status\":\"%{http_code}\"}" -sb -o --request POST "${refresh_token_url}" --header "Content-Type: application/x-www-form-urlencoded" --data-urlencode "client_id=${client_id}" --data-urlencode "grant_type=refresh_token" --data-urlencode "refresh_token=${offline_token}" --cacert /var/www/prod/shanoir-ng-nginx.pem
+    }
+
+    refresh_response=$(COMMAND)
+    status_code=`echo $refresh_response | grep -o '"status":"[^"]*' | grep -o '[^"]*$'`
+    
+    if [[ "$status_code" -ne 200 ]]; then 
+       error_message=`echo $refresh_response | grep -o '"error_description":"[^"]*' | grep -o '[^"]*$'`
+       echo "error while refreshing the token with status : ${status_code} and message error : ${error_message}"
+       exit 1
+    fi
+
+    echo $refresh_response | grep -o '"access_token":"[^"]*' | grep -o '[^"]*$'
+}
+
+
+function uploadShanoirFile {
+    local URI=$1
+
+    local token=`echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i'`
+    local refreshToken=`echo $URI | sed -r 's/^.*[?&]refreshToken=([^&]*)(&.*)?$/\1/i'`
+    local fileName=`echo $URI | sed -r 's/^.*[?&]outName=([^&]*)(&.*)?$/\1/i'`
+    local format=`echo $URI | sed -r 's/^.*[?&]format=([^&]*)(&.*)?$/\1/i'`
+    local datasetId=`echo $URI | sed -r 's/^.*[?&]datasetId=([^&]*)(&.*)?$/\1/i'`
+    local upload_url=`echo $URI | sed -r 's/^.*[?&]upload_url=([^&]*)(&.*)?$/\1/i'`
+
+    local keycloak_client_id=`echo $URI | sed -r 's/^.*[?&]keycloak_client_id=([^&]*)(&.*)?$/\1/i'`
+    local refresh_token_url=`echo $URI | sed -r 's/^.*[?&]refresh_token_url=([^&]*)(&.*)?$/\1/i'`
+
+    local type=`echo $URI | sed -r 's/^.*[?&]type=([^&]*)(&.*)?$/\1/i'`
+    local md5=`echo $URI | sed -r 's/^.*[?&]md5=([^&]*)(&.*)?$/\1/i'`
+    
+    #${upload_url}/import/carmin-data/path/${fileName}
+
+
+    COMMAND(){ 
+        (echo -n '{"base64Content": "'; base64 ${fileName}; echo '", "type":"'; echo ${type}; echo '", "md5":"'; echo ${md5} ; echo '"}') | curl --write-out '%{http_code}' --request PUT "${upload_url}/${fileName}"  --header "Authorization: Bearer ${token}"  --header "Content-Type: application/carmin+json" --header 'Accept: application/json, text/plain, */*' -d @- --cacert /var/www/prod/shanoir-ng-nginx.pem
+    }
+
+
+    status_code=$(COMMAND)
+    echo "uploadShanoirFIle, status code is : ${status_code}"
+    
+    if [[ "$status_code" -ne 201 ]]; then
+       echo "error while uploading the file with status : ${status_code}"
+       if [[ "$status_code" = 401 ]]; then
+            echo "The token is expired !"
+            echo "Refreshing the token..."
+            token=$(refresh_token ${refreshToken} ${keycloak_client_id} ${refresh_token_url})
+
+            status_code=$(COMMAND)
+            echo "uploadShanoirFile, status code is : ${status_code}"
+            
+            if [[ "$status_code" -ne 201 ]]; then
+                echo "error while uploading the file with status 2 : ${status_code}"
+                exit 1
+            fi
+       else
+            error "Exiting with return value 1"
+            exit 1 
+       fi
+
+    fi
+}
+
+
 #
 # URI are of the form of the following example.  A single "/", instead
 # of 3, after "girder:" is also allowed.
@@ -181,7 +257,13 @@ function upload {
     startLog file_upload uri="${URI}"
 
     ## The pattern must NOT be put between quotation marks.
-    if [[ ${URI} == girder:/* ]]
+    if [[ ${URI} == shanoir:/* ]]
+    then
+        if [ "${TEST}" != "true" ]
+        then
+            uploadShanoirFile ${URI}
+        fi
+    elif [[ ${URI} == girder:/* ]]
     then
         if [ "${TEST}" != "true" ]
         then
