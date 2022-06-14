@@ -162,14 +162,11 @@ function uploadShanoirFile {
 
     local token=`echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i'`
     local refreshToken=`echo $URI | sed -r 's/^.*[?&]refreshToken=([^&]*)(&.*)?$/\1/i'`
-    local fileName=`echo $URI | sed -r 's/^.*[?&]outName=([^&]*)(&.*)?$/\1/i'`
-    local format=`echo $URI | sed -r 's/^.*[?&]format=([^&]*)(&.*)?$/\1/i'`
-    local datasetId=`echo $URI | sed -r 's/^.*[?&]datasetId=([^&]*)(&.*)?$/\1/i'`
     local upload_url=`echo $URI | sed -r 's/^.*[?&]upload_url=([^&]*)(&.*)?$/\1/i'`
-
+    local fileName=`echo $URI | sed -r 's#^shanoir:/(//)?(.*/(.+))\?.*$#\3#i'`
+    local filePath=`echo $URI | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i'`
     local keycloak_client_id=`echo $URI | sed -r 's/^.*[?&]keycloak_client_id=([^&]*)(&.*)?$/\1/i'`
     local refresh_token_url=`echo $URI | sed -r 's/^.*[?&]refresh_token_url=([^&]*)(&.*)?$/\1/i'`
-
     local type=`echo $URI | sed -r 's/^.*[?&]type=([^&]*)(&.*)?$/\1/i'`
     local md5=`echo $URI | sed -r 's/^.*[?&]md5=([^&]*)(&.*)?$/\1/i'`
     
