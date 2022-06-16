@@ -79,6 +79,7 @@ public class ExecutionGenerator {
         velocity.put("voDefaultSE", conf.getVoDefaultSE());
         velocity.put("voUseCloseSE", conf.getVoUseCloseSE());
         velocity.put("boshCVMFSPath", conf.getBoshCVMFSPath());
+        velocity.put("containersCVMFSPath", conf.getContainersCVMFSPath());
         velocity.put("simulationID", conf.getSimulationID());
 
         return velocity.merge().toString();
