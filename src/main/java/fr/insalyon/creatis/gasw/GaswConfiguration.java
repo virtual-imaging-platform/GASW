@@ -88,6 +88,7 @@ public class GaswConfiguration {
     private String voUseCloseSE;
     // Boutiques installation
     private String boshCVMFSPath;
+    private String containersCVMFSPath;
     // Failover Server
     private boolean failOverEnabled;
     private String failOverHost;
@@ -158,6 +159,7 @@ public class GaswConfiguration {
             voUseCloseSE = config.getString(GaswConstants.LAB_VO_USE_CLOSE_SE, "\"true\"");
 
             boshCVMFSPath = config.getString(GaswConstants.LAB_BOSH_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/virtualenv/bin\"");
+            containersCVMFSPath = config.getString(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/udocker/containers\"");
 
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
             failOverHost = config.getString(GaswConstants.LAB_FAILOVER_HOST, "localhost");
@@ -188,6 +190,7 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_VO_USE_CLOSE_SE, voUseCloseSE);
             
 	    config.setProperty(GaswConstants.LAB_BOSH_CVMFS_PATH, boshCVMFSPath);
+        config.setProperty(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, containersCVMFSPath);
 
             config.setProperty(GaswConstants.LAB_FAILOVER_ENABLED, failOverEnabled);
             config.setProperty(GaswConstants.LAB_FAILOVER_HOST, failOverHost);
@@ -406,6 +409,10 @@ public class GaswConfiguration {
 
     public String getBoshCVMFSPath() {
         return boshCVMFSPath;
+    }
+
+    public String getContainersCVMFSPath() {
+        return containersCVMFSPath;
     }
 
     public boolean isFailOverEnabled() {
