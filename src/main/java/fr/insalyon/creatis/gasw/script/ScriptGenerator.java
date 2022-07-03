@@ -87,6 +87,7 @@ public class ScriptGenerator {
             sb.append(basic.loadLogFunctions());
             sb.append(basic.loadCleanupFunction());
             sb.append(dataManagement.loadCheckCacheDownloadAndCacheLFNFunction());
+            sb.append(dataManagement.loadRefreshTokenFunctions());
             sb.append(dataManagement.loadDownloadFunctions());
             sb.append(dataManagement.loadAddToCacheFunction());
             sb.append(dataManagement.loadAddToFailOverFunction());

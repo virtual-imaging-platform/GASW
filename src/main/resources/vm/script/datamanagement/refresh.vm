@@ -1,0 +1,91 @@
+## refresh.vm
+
+
+shanoir_token_location="${PWD}/cache/SHANOIR_TOKEN.txt"
+shanoir_refresh_token_location="${PWD}/cache/SHANOIR_REFRESH_TOKEN.txt"
+refreshingJobStarted=false
+
+REFRESH_PID=""
+
+
+function refresh_token {
+    touch $shanoir_token_location
+    touch $shanoir_refresh_token_location
+    
+    local subshell_refresh_token=`cat $shanoir_refresh_token_location`
+
+    echo "refresh token process started !"
+    
+    local URI=$1
+    local keycloak_client_id=`echo $URI | sed -r 's/^.*[?&]keycloak_client_id=([^&]*)(&.*)?$/\1/i'`
+    local refresh_token_url=`echo $URI | sed -r 's/^.*[?&]refresh_token_url=([^&]*)(&.*)?$/\1/i'`
+
+    echo "====================================================="
+
+    if [[ !"$subshell_refresh_token" ]]; then
+        # initializing the refresh token
+        subshell_refresh_token=`echo $URI | sed -r 's/^.*[?&]refreshToken=([^&]*)(&.*)?$/\1/i'`
+        echo $subshell_refresh_token > $shanoir_refresh_token_location
+    fi    
+    
+
+    while :; do
+        # the response format is "{"status":"status"}"
+        # this response format is made to handle error while getting the refreshed token in the same time
+        COMMAND(){ 
+            curl -w "{\"status\":\"%{http_code}\"}" -sb -o --request POST "${refresh_token_url}" --header "Content-Type: application/x-www-form-urlencoded" --data-urlencode "client_id=${keycloak_client_id}" --data-urlencode "grant_type=refresh_token" --data-urlencode "refresh_token=${subshell_refresh_token}" --cacert /var/www/prod/shanoir-ng-nginx.pem
+        }
+
+        refresh_response=$(COMMAND)
+        status_code=`echo $refresh_response | grep -o '"status":"[^"]*' | grep -o '[^"]*$'`
+        
+        if [[ "$status_code" -ne 200 ]]; then 
+            error_message=`echo $refresh_response | grep -o '"error_description":"[^"]*' | grep -o '[^"]*$'`
+            echo "error while refreshing the token with status : ${status_code} and message error : ${error_message}"
+            exit 1
+        fi
+
+        # setting the new tokens
+        echo $refresh_response | grep -o '"access_token":"[^"]*' | grep -o '[^"]*$' > $shanoir_token_location
+        echo $refresh_response | grep -o '"refresh_token":"[^"]*' | grep -o '[^"]*$' > $shanoir_refresh_token_location
+
+        sleep 240
+    done 
+    
+}
+
+function stopRefreshingToken {
+    if [ "${REFRESH_PID}" != "" ]
+    then
+        info "Killing background refresh token process with id : ${REFRESH_PID}"
+        kill -9 ${REFRESH_PID}
+        REFRESH_PID=""
+        echo "refresh token process ended !"
+    fi
+}
+
+function wait_for_token {
+    local token=""
+    local attempts=0
+    while [[ "${attempts}" -ne 3 ]]; do
+        token=`cat $shanoir_token_location`
+        echo "inside attempt token : ${SHANOIR_TOKEN}"
+        if [[ "${token}" == "" ]]; then
+            echo "token is not refreshed yet, waitting for 3 seconds..."
+            echo "attempts : ${attempts}"
+            attempts=$((attempts + 1))
+            sleep 3
+        else
+            echo "token is refreshed !"
+            break
+        fi
+    done
+    echo "token after waiting : ${token}"
+    if [[ "${token}" == "" ]]; then 
+        echo "token refreshing is taking too long, abording the process"
+        stopRefreshingToken
+        exit 1
+    fi
+}
+
+trap "stopRefreshingToken" EXIT
