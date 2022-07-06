@@ -7,7 +7,9 @@ refreshingJobStarted=false
 
 REFRESH_PID=""
 
-
+#
+# this is a background process to refresh shanoir token
+#
 function refresh_token {
     touch $shanoir_token_location
     touch $shanoir_refresh_token_location
@@ -20,15 +22,12 @@ function refresh_token {
     local keycloak_client_id=`echo $URI | sed -r 's/^.*[?&]keycloak_client_id=([^&]*)(&.*)?$/\1/i'`
     local refresh_token_url=`echo $URI | sed -r 's/^.*[?&]refresh_token_url=([^&]*)(&.*)?$/\1/i'`
 
-    echo "====================================================="
-
     if [[ !"$subshell_refresh_token" ]]; then
         # initializing the refresh token
         subshell_refresh_token=`echo $URI | sed -r 's/^.*[?&]refreshToken=([^&]*)(&.*)?$/\1/i'`
         echo $subshell_refresh_token > $shanoir_refresh_token_location
     fi    
     
-
     while :; do
         # the response format is "{"status":"status"}"
         # this response format is made to handle error while getting the refreshed token in the same time
@@ -41,7 +40,7 @@ function refresh_token {
         
         if [[ "$status_code" -ne 200 ]]; then 
             error_message=`echo $refresh_response | grep -o '"error_description":"[^"]*' | grep -o '[^"]*$'`
-            echo "error while refreshing the token with status : ${status_code} and message error : ${error_message}"
+            error "error while refreshing the token with status : ${status_code} and message error : ${error_message}"
             exit 1
         fi
 
@@ -53,7 +52,9 @@ function refresh_token {
     done 
     
 }
-
+#
+# cleanup method : stop the refreshing process
+#
 function stopRefreshingToken {
     if [ "${REFRESH_PID}" != "" ]
     then
@@ -64,12 +65,16 @@ function stopRefreshingToken {
     fi
 }
 
+#
+# the refresh token may take some time, this method is for that purpose 
+# and it exit the program if it's timedout
+#
 function wait_for_token {
     local token=""
     local attempts=0
+
     while [[ "${attempts}" -ne 3 ]]; do
         token=`cat $shanoir_token_location`
-        echo "inside attempt token : ${SHANOIR_TOKEN}"
         if [[ "${token}" == "" ]]; then
             echo "token is not refreshed yet, waitting for 3 seconds..."
             echo "attempts : ${attempts}"
@@ -79,10 +84,11 @@ function wait_for_token {
             echo "token is refreshed !"
             break
         fi
-    done
-    echo "token after waiting : ${token}"
+    done    
+
+    ## check the token after the time out
     if [[ "${token}" == "" ]]; then 
-        echo "token refreshing is taking too long, abording the process"
+        error "token refreshing is taking too long, abording the process"
         stopRefreshingToken
         exit 1
     fi
