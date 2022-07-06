@@ -99,7 +99,7 @@ export -f downloadGirderFile
 # of 3, after "shanoir:" is also allowed.
 # shanoir:/download.dcm?apiurl=https://shanoir-ng-nginx/shanoir-ng/datasets/carmin-data/path&format=dcm&datasetId=1&token=sqdjuzadj....&refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lk....
 # 
-# This method depends on refresh_token in tokenUtils.vm to refresh the token when it needs
+# This method depends on refresh token process in to refresh the token when it needs
 #
 function downloadShanoirFile {
     local URI=$1
