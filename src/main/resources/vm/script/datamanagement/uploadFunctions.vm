@@ -130,10 +130,21 @@ function uploadLfnFile {
         addToCache ${LFN} ${FILE}
     fi
 }
+
+#
+# This method is used to upload results of an execution to an upload url.
+# URI are of the form of the following example.  A single "/", instead
+# of 3, after "shanoir:" is also allowed.
+# shanoir:/path/to/file/filename?upload_url=https://upload/url/&type=File&md5=None
+# 
+# This method depends on refresh token process to refresh the token when it needs
+#
 function uploadShanoirFile {
     local URI=$1
 
-    local token=`cat $shanoir_token_location`
+    wait_for_token
+
+    local token=`cat $SHANOIR_TOKEN_LOCATION`
 
     local upload_url=`echo $URI | sed -r 's/^.*[?&]upload_url=([^&]*)(&.*)?$/\1/i'`
     local fileName=`echo $URI | sed -r 's#^shanoir:/(//)?(.*/(.+))\?.*$#\3#i'`
@@ -144,7 +155,7 @@ function uploadShanoirFile {
     
 
     COMMAND(){ 
-        (echo -n '{"base64Content": "'; base64 ${fileName}; echo '", "type":"'; echo ${type}; echo '", "md5":"'; echo ${md5} ; echo '"}') | curl --write-out '%{http_code}' --request PUT "${upload_url}/${filePath}"  --header "Authorization: Bearer ${token}"  --header "Content-Type: application/carmin+json" --header 'Accept: application/json, text/plain, */*' -d @- --cacert /var/www/prod/shanoir-ng-nginx.pem
+        (echo -n '{"base64Content": "'; base64 ${fileName}; echo '", "type":"'; echo ${type}; echo '", "md5":"'; echo ${md5} ; echo '"}') | curl --write-out '%{http_code}' --request PUT "${upload_url}/${filePath}"  --header "Authorization: Bearer ${token}"  --header "Content-Type: application/carmin+json" --header 'Accept: application/json, text/plain, */*' -d @-
     }
 
 
@@ -213,6 +224,12 @@ function upload {
     then
         if [ "${TEST}" != "true" ]
         then
+            if [[ "$REFRESHING_JOB_STARTED" == false ]]; then
+                #set( $D = '$' )
+                refresh_token ${URI} & 
+                REFRESH_PID=${D}!  
+                REFRESHING_JOB_STARTED=true
+            fi
             uploadShanoirFile ${URI}
         fi
     elif [[ ${URI} == girder:/* ]]
