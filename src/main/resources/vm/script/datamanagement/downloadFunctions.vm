@@ -94,6 +94,41 @@ function downloadGirderFile {
 }
 export -f downloadGirderFile
 
+#
+# URI are of the form of the following example.  A single "/", instead
+# of 3, after "shanoir:" is also allowed.
+# shanoir:/download.dcm?apiurl=https://shanoir-ng-nginx/shanoir-ng/datasets/carmin-data/path&format=dcm&datasetId=1
+# 
+# This method depends on refresh token process to refresh the token when it needs
+#
+function downloadShanoirFile {
+    local URI=$1
+    
+    wait_for_token
+
+    local token=`cat $SHANOIR_TOKEN_LOCATION`
+
+    echo "token inside download : ${token}"
+
+    local fileName=`echo $URI | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i'`
+    local apiUrl=`echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i'`
+    local format=`echo $URI | sed -r 's/^.*[?&]format=([^&]*)(&.*)?$/\1/i'`
+    local datasetId=`echo $URI | sed -r 's/^.*[?&]datasetId=([^&]*)(&.*)?$/\1/i'`
+
+    COMMAND(){ 
+        curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${datasetId}?format=${format}" --header "Authorization: Bearer ${token}"
+    }
+
+    status_code=$(COMMAND)
+    echo "downloadShanoirFIle, status code is : ${status_code}"
+    
+    if [[ "$status_code" -ne 200 ]]; then
+       error "error while downloading the file with status : ${status_code}"
+       stopRefreshingToken
+       exit 1
+    fi
+}
+
 function downloadURI {
 
     local URI=$1
@@ -127,6 +162,18 @@ function downloadURI {
         downloadGirderFile ${URI}
         validateDownload "Cannot download Girder file"
     fi
+
+    if [[ ${URI_LOWER} == shanoir:/* ]]
+    then
+        if [[ "$REFRESHING_JOB_STARTED" == false ]]; then
+           #set( $D = '$' )
+           refresh_token ${URI} & 
+           REFRESH_PID=${D}!  
+           REFRESHING_JOB_STARTED=true
+        fi
+        downloadShanoirFile ${URI}
+        validateDownload "Cannot download shanoir file"
+    fi
 }
 
 function validateDownload() {
@@ -138,3 +185,4 @@ function validateDownload() {
         exit 1
     fi
 }
+

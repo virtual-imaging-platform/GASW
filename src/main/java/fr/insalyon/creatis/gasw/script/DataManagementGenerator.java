@@ -73,6 +73,11 @@ public class DataManagementGenerator {
         return velocity.merge().toString();
     }
 
+    public String loadRefreshTokenFunctions() throws Exception {
+        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/refresh.vm");
+        return velocity.merge().toString();
+    }
+
     /**
      * 
      * @return
