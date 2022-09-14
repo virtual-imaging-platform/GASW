@@ -61,6 +61,7 @@ public class GaswConstants {
     public static final String LAB_VO_USE_CLOSE_SE = "vo.use.close.se";
     public static final String LAB_BOSH_CVMFS_PATH = "bosh.cvmfs.path";
     public static final String LAB_CONTAINERS_CVMFS_PATH = "containers.cvmfs.path";
+    public static final String LAB_UDOCKER_TAG = "udocker.tag";
     // timeouts used in lcg-c*
     //public static final int SEND_RECEIVE_TIMEOUT = 900;
     public static final String LAB_MIN_AVG_DOWNLOAD_THROUGHPUT = "min.avg.download.throughput";
