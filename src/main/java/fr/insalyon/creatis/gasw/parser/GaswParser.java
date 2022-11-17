@@ -79,6 +79,7 @@ public class GaswParser extends DefaultHandler {
     private List<String> inputsList;
 
     private static final String LFN_PREFIX = "lfn://";
+    private static final String FILE_PREFIX = "file:/";
 
     public GaswParser() throws GaswException {
 
@@ -129,7 +130,9 @@ public class GaswParser extends DefaultHandler {
                 String value = getAttributeValue(attributes, "value", "No value defined.");
                 if (value.contains("lfn:/")) {
                     value = LFN_PREFIX + new URI(value + ".tar.gz").getPath();
-                } else {
+                }else if(value.contains("file:/")){
+                    value = FILE_PREFIX + new URI(value + ".tar.gz").getPath();
+                }else {
                     value = LFN_PREFIX + value + ".tar.gz";
                 }
                 downloads.add(new URI(value));
