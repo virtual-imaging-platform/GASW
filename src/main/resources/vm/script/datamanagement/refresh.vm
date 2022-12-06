@@ -19,7 +19,6 @@ function refresh_token {
     touch $SHANOIR_REFRESH_TOKEN_LOCATION
     
     local subshell_refresh_token=`cat $SHANOIR_REFRESH_TOKEN_LOCATION`
-    local process_error=false
 
     echo "refresh token process started !"
     
@@ -50,7 +49,6 @@ function refresh_token {
         if [[ "$status_code" -ne 200 ]]; then 
             error_message=`echo $refresh_response | grep -o '"error_description":"[^"]*' | grep -o '[^"]*$'`
             error "error while refreshing the token with status : ${status_code} and message error : ${error_message}"
-            process_error=true
             exit 1
         fi
 
@@ -61,12 +59,6 @@ function refresh_token {
         sleep 240
     done 
 
-    ## check if the refreshing process loop is stopped
-    if [[ "$process_error" == true ]]; then
-        error "token refreshing process encountered an error !"
-        stopRefreshingToken
-        exit 1
-    fi
 }
 #
 # cleanup method : stop the refreshing process
