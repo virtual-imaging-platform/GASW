@@ -33,6 +33,10 @@ function refresh_token {
     fi    
     
     while :; do
+
+        # get the new refresh token
+        subshell_refresh_token=`cat $SHANOIR_REFRESH_TOKEN_LOCATION`
+
         # the response format is "{"status":"status"}"
         # this response format is made to handle error while getting the refreshed token in the same time
         COMMAND(){ 
@@ -54,7 +58,7 @@ function refresh_token {
 
         sleep 240
     done 
-    
+
 }
 #
 # cleanup method : stop the refreshing process
