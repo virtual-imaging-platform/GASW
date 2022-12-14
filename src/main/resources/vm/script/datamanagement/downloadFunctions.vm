@@ -94,6 +94,50 @@ function downloadGirderFile {
 }
 export -f downloadGirderFile
 
+
+#This function identifies the gfal path and extracts the basename of the directory to be mounted, and creates a directory with the exact name on $PWD of the node.
+#This directory gets mounted with the corresponding directory on the SE.
+
+function mountGfal {
+    local URI=$1
+
+    # The regexpes are written so that case is ignored and the
+    # arguments can be in any order.
+    local fileName=`echo $URI | sed -r 's#^srm:/(//)?([^/].*)\?.*$#\2#i'`         
+    local fileName=`echo $URI | sed -r 's#^gfal:/(//)?([^/].*)\?.*$#\2#i'`
+    local fileName=$(echo $URI | sed "s/gfal:\//srm:\/\/marsedpm.in2p3.fr:8446\/dpm\/in2p3.fr\/home\/biomed\/user\/c\/creatis\/vip\/data\/users\//")     #support gfal directories without mentioning full path at input/output pathsubmission (testing)
+    local gfal_basename=$PWD/$(basename ${fileName})
+    COMMLINE1="mkdir -p $gfal_basename"
+    COMMLINE2="gfalFS -s $PWD/$(basename ${fileName}) ${fileName}"
+    ${COMMLINE1}
+    ${COMMLINE2}
+}
+
+export -f mountGfal
+
+
+
+#This function un-mounts all the gfal mounted directories by searching them with 'findmnt' and filtering them with FSTYPE 'fuse.gfalFS'
+#This function gets called in the cleanup function, either after the execution of the job, failure of the job or interruptions of the job
+
+function unmountGfal {
+        trap -- '' SIGINT SIGTERM 
+        #in case of an (or multiple) inturruption while the 'unmountgfal' function being executed, while loop is executed until 'check_unmount' converges to 1(true) before exiting the script
+        local i=1
+        local check_unmount=$(test -z $(for file in *; do findmnt -t fuse.gfalFS -lo Target -n -T $file; done) && echo 1 || echo 0)
+        while [ "$check_unmount" = 0 ]
+        do
+                for file in $PWD/* ;do findmnt -t fuse.gfalFS -lo Target -n -T $file && gfalFS_umount $file; done
+                sleep 2
+                check_unmount=$(test -z $(for file in *; do findmnt -t fuse.gfalFS -lo Target -n -T $file; done) && echo 1 || echo 0)
+        done
+        echo $check_unmount
+}
+
+export -f unmountGfal
+
+
+
 function downloadURI {
 
     local URI=$1
@@ -126,6 +170,18 @@ function downloadURI {
     then
         downloadGirderFile ${URI}
         validateDownload "Cannot download Girder file"
+    fi
+
+    if [[ ${URI_LOWER} == gfal:/* ]] 
+    then
+        mountGfal ${URI}
+        validateDownload "Cannot download gfal file"
+    fi
+
+    if [[ ${URI_LOWER} == srm:/* ]] 
+    then
+        mountGfal ${URI}
+        validateDownload "Cannot download gfal file"
     fi
 }
 
