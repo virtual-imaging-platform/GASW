@@ -111,18 +111,18 @@ function mountGfal {
     COMMLINE2="gfalFS -s $PWD/$(basename ${fileName}) ${fileName}"
     ${COMMLINE1}
     ${COMMLINE2}
+    local check_mount=$(test -z $(for file in *; do findmnt -t fuse.gfalFS -lo Target -n -T $file; done) && echo 1 || echo 0)
+    echo $check_mount
 }
 
 export -f mountGfal
-
 
 
 #This function un-mounts all the gfal mounted directories by searching them with 'findmnt' and filtering them with FSTYPE 'fuse.gfalFS'
 #This function gets called in the cleanup function, either after the execution of the job, failure of the job or interruptions of the job
 
 function unmountGfal {
-        trap -- '' SIGINT SIGTERM 
-        #in case of an (or multiple) inturruption while the 'unmountgfal' function being executed, while loop is executed until 'check_unmount' converges to 1(true) before exiting the script
+        START=$SECONDS
         local i=1
         local check_unmount=$(test -z $(for file in *; do findmnt -t fuse.gfalFS -lo Target -n -T $file; done) && echo 1 || echo 0)
         while [ "$check_unmount" = 0 ]
@@ -130,6 +130,11 @@ function unmountGfal {
                 for file in $PWD/* ;do findmnt -t fuse.gfalFS -lo Target -n -T $file && gfalFS_umount $file; done
                 sleep 2
                 check_unmount=$(test -z $(for file in *; do findmnt -t fuse.gfalFS -lo Target -n -T $file; done) && echo 1 || echo 0)
+                if [[ $SECONDS-$START -gt 600 ]] #while loops breaks in automatically after 10 mins
+                then
+                    #echo "timeout"
+                    break
+                fi
         done
         echo $check_unmount
 }
