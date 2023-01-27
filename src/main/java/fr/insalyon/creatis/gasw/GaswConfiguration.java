@@ -88,6 +88,8 @@ public class GaswConfiguration {
     private String voUseCloseSE;
     // Boutiques installation
     private String boshCVMFSPath;
+    private String containersCVMFSPath;
+    private String udockerTag;
     // Failover Server
     private boolean failOverEnabled;
     private String failOverHost;
@@ -158,6 +160,9 @@ public class GaswConfiguration {
             voUseCloseSE = config.getString(GaswConstants.LAB_VO_USE_CLOSE_SE, "\"true\"");
 
             boshCVMFSPath = config.getString(GaswConstants.LAB_BOSH_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/virtualenv/bin\"");
+            containersCVMFSPath = config.getString(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/udocker/containers\"");
+            udockerTag = config.getString(GaswConstants.LAB_UDOCKER_TAG, "\"v1.3.1\"");
+
 
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
             failOverHost = config.getString(GaswConstants.LAB_FAILOVER_HOST, "localhost");
@@ -187,7 +192,9 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_VO_DEFAULT_SE, voDefaultSE);
             config.setProperty(GaswConstants.LAB_VO_USE_CLOSE_SE, voUseCloseSE);
             
-	    config.setProperty(GaswConstants.LAB_BOSH_CVMFS_PATH, boshCVMFSPath);
+	        config.setProperty(GaswConstants.LAB_BOSH_CVMFS_PATH, boshCVMFSPath);
+            config.setProperty(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, containersCVMFSPath);
+            config.setProperty(GaswConstants.LAB_UDOCKER_TAG, udockerTag);
 
             config.setProperty(GaswConstants.LAB_FAILOVER_ENABLED, failOverEnabled);
             config.setProperty(GaswConstants.LAB_FAILOVER_HOST, failOverHost);
@@ -406,6 +413,14 @@ public class GaswConfiguration {
 
     public String getBoshCVMFSPath() {
         return boshCVMFSPath;
+    }
+
+    public String getContainersCVMFSPath() {
+        return containersCVMFSPath;
+    }
+
+    public String getUdockerTag() {
+        return udockerTag;
     }
 
     public boolean isFailOverEnabled() {
