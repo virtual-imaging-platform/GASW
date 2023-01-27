@@ -4,7 +4,10 @@
 ## $cacheDir, $cacheFile
 
 function cleanup {
-    unmountGfal          #unmount all gfal munted directories
+    if [[ $mountGfal -eq 1 ]]    #flag checks if directories are mounted with gfal
+    then
+        unmountGfal    #unmounts all gfal mounted directories
+    fi         
     startLog cleanup
     info "=== ls -a ==="
     ls -a
@@ -31,18 +34,9 @@ function cleanup {
 
 
 #exit function for any interruptions
-function exitfn () { 
-    cleanup 
-    #in case of second (or multiple) inturruptions while the 'exitfn' function being executed, 'cleanup' function is executed until 'unmountGfal' function converges to 1(true)
-    trap -- '' SIGINT SIGTERM #interruption is disabled 
-    while [[ $unmountGfal -eq 1 ]]   
-    do
-        echo $unmountGfal
-        sleep 2
-        cleanup
-    done
-    echo ABORT
-    exit                  #   then exit script.
+function exitfn () {  
+    trap -- '' SIGINT SIGTERM          #interruption is trapped
+    cleanup                            #executes cleanup function
 }
 
 trap "exitfn" INT
