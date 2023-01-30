@@ -97,6 +97,7 @@ export -f downloadGirderFile
 
 #This function identifies the gfal path and extracts the basename of the directory to be mounted, and creates a directory with the exact name on $PWD of the node.
 #This directory gets mounted with the corresponding directory on the SE.
+#Only directories must be mounted using gfal (in case of mounting of a file, there will be an empty mount and it risks the failure of the application) - e.g-$SRM_HOST/home/biomed/user/....  
 
 function mountGfal {
     local URI=$1
@@ -105,7 +106,6 @@ function mountGfal {
     # arguments can be in any order.
     local fileName=`echo $URI | sed -r 's#^srm:/(//)?([^/].*)\?.*$#\2#i'`         
     local fileName=`echo $URI | sed -r 's#^gfal:/(//)?([^/].*)\?.*$#\2#i'`
-    local fileName=$(echo $URI | sed "s/gfal:\//srm:\/\/marsedpm.in2p3.fr:8446\/dpm\/in2p3.fr\/home\/biomed\/user\/c\/creatis\/vip\/data\/users\//")     #support gfal directories without mentioning full path at input/output pathsubmission (testing)
     local gfal_basename=$PWD/$(basename ${fileName})
     COMMLINE1="mkdir -p $gfal_basename"
     COMMLINE2="gfalFS -s $PWD/$(basename ${fileName}) ${fileName}"
