@@ -135,8 +135,6 @@ public abstract class GaswMonitor extends Thread {
             }
             // Kill job replicas
             for (Job job : jobDAO.getJobs(GaswStatus.KILL_REPLICA)) {
-                job.setStatus(GaswStatus.CANCELLED_REPLICA);
-                jobDAO.update(job);
                 kill(job);
             }
             // Kill jobs
