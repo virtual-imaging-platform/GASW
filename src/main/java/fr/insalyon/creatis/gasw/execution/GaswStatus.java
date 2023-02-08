@@ -40,6 +40,8 @@ public enum GaswStatus {
 
     CANCELLED,
     CANCELLED_REPLICA,
+    DELETED,
+    DELETED_REPLICA,
     COMPLETED,
     CREATED,
     ERROR,
