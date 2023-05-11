@@ -181,6 +181,9 @@ public abstract class GaswOutputParser extends Thread {
             if (job.getQueued() == null) {
                 job.setQueued(job.getCreation());
             }
+            if (job.getDownload() == null) {
+                job.setDownload(job.getQueued());
+            }
 
             Node node = new Node();
             NodeID nodeID = new NodeID();
@@ -500,7 +503,6 @@ public abstract class GaswOutputParser extends Thread {
 
     /**
      *
-     * @param job Job object
      * @param extension File extension
      * @param dir Output directory
      * @param content File content
