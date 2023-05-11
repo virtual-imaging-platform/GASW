@@ -38,6 +38,7 @@ import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.GaswUpload;
 import fr.insalyon.creatis.gasw.GaswUtil;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
@@ -45,9 +46,11 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
@@ -97,6 +100,14 @@ public class GaswParser extends DefaultHandler {
         try {
             File descriptor = new File(descriptorFileName);
             logger.info("Parsing GASW descriptor: " + descriptor.getAbsolutePath());
+            FileInputStream inFile = new FileInputStream(descriptor);
+            int fileLength = (int) descriptor.length();
+
+            byte Bytes[] = new byte[fileLength];
+            String file1 = new String(Bytes);
+            logger.info("File content is:\n" + file1);
+            //close file
+            inFile.close();
             reader = XMLReaderFactory.createXMLReader();
             reader.setContentHandler(this);
             reader.parse(new InputSource(new FileReader(descriptor)));
@@ -112,7 +123,7 @@ public class GaswParser extends DefaultHandler {
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-
+    	logger.info("startElement: " + uri+" : "+localName+" : "+qName+" : "+attributes.toString());
         if (localName.equals("description")) {
             if (parsing) {
                 throw new SAXException("Nested <description> tags.");
@@ -202,6 +213,15 @@ public class GaswParser extends DefaultHandler {
                 throw new SAXException("<template> tags are just allowed inside <output> tags.");
             }
             String value = getAttributeValue(attributes, "value", "No template value defined.");
+            String stripExtns = getAttributeStripExtension(attributes, "strip-extension");
+            Set<String> stripExtensions=new HashSet<>();
+            if(stripExtns!=null) {
+            	String[] stripExtnArr=stripExtns.replaceAll("[", "").replaceAll("]", "").split(",");
+                for(String str : stripExtnArr) {
+                	stripExtensions.add(str.trim());
+                }
+            }
+            
             outputArg.setTemplate(true);
 
             if (value.contains("$rep-")) {
@@ -209,8 +229,8 @@ public class GaswParser extends DefaultHandler {
                 value = value.replaceAll("\\$rep-[0-9]*", "");
             }
 
-            outputArg.setTemplateParts(templateParts(value, inputsList));
-
+            outputArg.setTemplateParts(templateParts(value, inputsList, stripExtensions));
+            logger.info("outputArg.getTemplateParts : "+outputArg.getTemplateParts());
         } else if (localName.equals("sandbox")) {
             parsingSandbox = true;
         }
@@ -236,6 +256,15 @@ public class GaswParser extends DefaultHandler {
         String attributeValue = attributes.getValue(valueName);
         if (attributeValue == null || attributeValue.length() == 0) {
             throw new SAXException(errorMessage);
+        }
+        return attributeValue;
+    }
+    
+    private String getAttributeStripExtension(Attributes attributes, String valueName) {
+
+        String attributeValue = attributes.getValue(valueName);
+        if (attributeValue == null || attributeValue.length() == 0) {
+            return null;
         }
         return attributeValue;
     }
@@ -313,7 +342,7 @@ public class GaswParser extends DefaultHandler {
     }
 
     static List<GaswOutputTemplatePart> templateParts(
-        String value, List<String> inputsList) throws SAXException {
+        String value, List<String> inputsList,Set<String> stripExtensions) throws SAXException {
 
         // $dirX/$naX is treated as a special case, because if $na1 is an empty
         // string, the / should not be inserted.
@@ -322,22 +351,22 @@ public class GaswParser extends DefaultHandler {
         List<GaswOutputTemplatePart> list;
         if (m.find()) {
             list =
-                templateSimpleParts(value.substring(0, m.start()), inputsList);
+                templateSimpleParts(value.substring(0, m.start()), inputsList, stripExtensions);
             int n = Integer.parseInt(m.group(1));
             list.add(new GaswOutputTemplatePart(
                          GaswOutputTemplateType.DIR_AND_NAME,
-                         inputsList.get(n - 1)));
+                         inputsList.get(n - 1),stripExtensions));
             list.addAll(templateParts(
                             value.substring(m.end()),
-                            inputsList));
+                            inputsList,stripExtensions));
         } else {
-            list = templateSimpleParts(value, inputsList);
+            list = templateSimpleParts(value, inputsList, stripExtensions);
         }
         return list;
     }
 
     static List<GaswOutputTemplatePart> templateSimpleParts(
-        String value, List<String> inputsList) throws SAXException {
+        String value, List<String> inputsList, Set<String> stripExtensions) throws SAXException {
 
         LinkedList<GaswOutputTemplatePart> list = new LinkedList<>();
         Pattern p = Pattern.compile("\\$(prefix|dir|na|options)(\\d+)");
@@ -347,7 +376,7 @@ public class GaswParser extends DefaultHandler {
             if (m.start() > start) {
                 list.addLast(new GaswOutputTemplatePart(
                                  GaswOutputTemplateType.STRING,
-                                 value.substring(start, m.start())));
+                                 value.substring(start, m.start()),stripExtensions));
             }
             GaswOutputTemplateType type = null;
             int n = Integer.parseInt(m.group(2));
@@ -370,7 +399,7 @@ public class GaswParser extends DefaultHandler {
             }
             try {
                 list.addLast(
-                    new GaswOutputTemplatePart(type, inputsList.get(n - 1)));
+                    new GaswOutputTemplatePart(type, inputsList.get(n - 1),stripExtensions));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 throw new SAXException(
                     "The index used in the output template does not exist.");
@@ -381,7 +410,7 @@ public class GaswParser extends DefaultHandler {
         if (value.length() > start) {
             list.addLast(new GaswOutputTemplatePart(
                              GaswOutputTemplateType.STRING,
-                             value.substring(start)));
+                             value.substring(start),stripExtensions));
         }
 
         return list;
@@ -425,7 +454,15 @@ public class GaswParser extends DefaultHandler {
                 break;
                 case NAME:
                 {
-                    addName("", inputsMap.get(part.getValue()), content);
+                	String fileName=inputsMap.get(part.getValue());
+                	if(part.getStripExtensions()!=null) {
+                		for(String extn: part.getStripExtensions()) {
+                    		if(fileName.endsWith(extn)) {
+                    			fileName=fileName.replace(extn, "");
+                    		}
+                    	}
+                	}
+                    addName("", fileName, content);
                 }
                 break;
                 case OPTIONS:
