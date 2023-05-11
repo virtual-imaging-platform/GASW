@@ -97,22 +97,29 @@ export -f downloadGirderFile
 
 #This function identifies the gfal path and extracts the basename of the directory to be mounted, and creates a directory with the exact name on $PWD of the node.
 #This directory gets mounted with the corresponding directory on the SE.
-#Only directories must be mounted using gfal (in case of mounting of a file, there will be an empty mount and it risks the failure of the application) - e.g-$SRM_HOST/home/biomed/user/....  
 
+
+check_mount='$(test -z $(for file in *; do findmnt -t fuse.gfalFS -lo Target -n -T $(realpath ${file}); done) && echo 1 || echo 0)'
+isGfalmountExec=1
 function mountGfal {
     local URI=$1
 
     # The regexpes are written so that case is ignored and the
     # arguments can be in any order.
-    local fileName=`echo $URI | sed -r 's#^srm:/(//)?([^/].*)\?.*$#\2#i'`         
-    local fileName=`echo $URI | sed -r 's#^gfal:/(//)?([^/].*)\?.*$#\2#i'`
-    local gfal_basename=$PWD/$(basename ${fileName})
-    COMMLINE1="mkdir -p $gfal_basename"
-    COMMLINE2="gfalFS -s $PWD/$(basename ${fileName}) ${fileName}"
-    ${COMMLINE1}
-    ${COMMLINE2}
-    local check_mount=$(test -z $(for file in *; do findmnt -t fuse.gfalFS -lo Target -n -T $file; done) && echo 1 || echo 0)
-    echo $check_mount
+    local fileName=`echo $URI | sed -r 's#^srm:/(//)?([^/].*)\?.*$#\2#i'`
+    local gfal_basename=$(basename ${fileName})
+    local job_id=${gfal_basename}_$(basename $PWD)
+
+    CREATE_DIR_COMMAND="mkdir -p $gfal_basename"
+    SYM_LINK_COMMAND="ln -s $PWD/$gfal_basename /tmp/$job_id"
+    GFAL_COMMAND="gfalFS -s /tmp/$job_id ${fileName}"
+
+    ${CREATE_DIR_COMMAND}
+    ${SYM_LINK_COMMAND}
+    ${GFAL_COMMAND}
+    #let nfs-kernel-server export the directory and write logs
+    sleep 10                
+    eval echo $check_mount
 }
 
 export -f mountGfal
@@ -123,25 +130,56 @@ export -f mountGfal
 
 function unmountGfal {
         START=$SECONDS
-        local i=1
-        local check_unmount=$(test -z $(for file in *; do findmnt -t fuse.gfalFS -lo Target -n -T $file; done) && echo 1 || echo 0)
-        while [ "$check_unmount" = 0 ]
+        while [ $(eval echo $check_mount) = 0 ]
         do
-                for file in $PWD/* ;do findmnt -t fuse.gfalFS -lo Target -n -T $file && gfalFS_umount $file; done
+                for file in $PWD/* ;do findmnt -t fuse.gfalFS -lo Target -n -T $(realpath ${file}) && gfalFS_umount $(realpath ${file}); done
                 sleep 2
-                check_unmount=$(test -z $(for file in *; do findmnt -t fuse.gfalFS -lo Target -n -T $file; done) && echo 1 || echo 0)
                 if [[ $SECONDS-$START -gt 600 ]] #while loops breaks in automatically after 10 mins
                 then
                     #echo "timeout"
                     break
                 fi
         done
-        echo $check_unmount
+        eval echo $check_mount
 }
 
 export -f unmountGfal
 
 
+#
+# URI are of the form of the following example.  A single "/", instead
+# of 3, after "shanoir:" is also allowed.
+# shanoir:/download.dcm?apiurl=https://shanoir-ng-nginx/shanoir-ng/datasets/carmin-data/path&format=dcm&datasetId=1
+# 
+# This method depends on refresh token process to refresh the token when it needs
+#
+function downloadShanoirFile {
+    local URI=$1
+    
+    wait_for_token
+
+    local token=`cat $SHANOIR_TOKEN_LOCATION`
+
+    echo "token inside download : ${token}"
+
+    local fileName=`echo $URI | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i'`
+    local apiUrl=`echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i'`
+    local format=`echo $URI | sed -r 's/^.*[?&]format=([^&]*)(&.*)?$/\1/i'`
+    local datasetId=`echo $URI | sed -r 's/^.*[?&]datasetId=([^&]*)(&.*)?$/\1/i'`
+
+    COMMAND(){ 
+        curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${datasetId}?format=${format}" --header "Authorization: Bearer ${token}"
+    }
+
+    status_code=$(COMMAND)
+    echo "downloadShanoirFIle, status code is : ${status_code}"
+    
+    if [[ "$status_code" -ne 200 ]]; then
+       error "error while downloading the file with status : ${status_code}"
+       stopRefreshingToken
+       exit 1
+    fi
+}
 
 function downloadURI {
 
@@ -177,16 +215,26 @@ function downloadURI {
         validateDownload "Cannot download Girder file"
     fi
 
-    if [[ ${URI_LOWER} == gfal:/* ]] 
+    if [[ ${URI_LOWER} == shanoir:/* ]]
     then
-        mountGfal ${URI}
-        validateDownload "Cannot download gfal file"
+        if [[ "$REFRESHING_JOB_STARTED" == false ]]; then
+           #set( $D = '$' )
+           refresh_token ${URI} & 
+           REFRESH_PID=${D}!  
+           REFRESHING_JOB_STARTED=true
+        fi
+        downloadShanoirFile ${URI}
+        validateDownload "Cannot download shanoir file"
     fi
 
     if [[ ${URI_LOWER} == srm:/* ]] 
     then
-        mountGfal ${URI}
-        validateDownload "Cannot download gfal file"
+            if [[ $(mountGfal ${URI}) -eq 0 ]]
+                then
+                    isGfalmountExec=0
+                else
+                    echo "Cannot download gfal file"
+            fi
     fi
 }
 
