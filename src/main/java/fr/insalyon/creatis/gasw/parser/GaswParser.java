@@ -100,14 +100,7 @@ public class GaswParser extends DefaultHandler {
         try {
             File descriptor = new File(descriptorFileName);
             logger.info("Parsing GASW descriptor: " + descriptor.getAbsolutePath());
-            FileInputStream inFile = new FileInputStream(descriptor);
-            int fileLength = (int) descriptor.length();
 
-            byte Bytes[] = new byte[fileLength];
-            String file1 = new String(Bytes);
-            logger.info("File content is:\n" + file1);
-            //close file
-            inFile.close();
             reader = XMLReaderFactory.createXMLReader();
             reader.setContentHandler(this);
             reader.parse(new InputSource(new FileReader(descriptor)));
@@ -216,12 +209,12 @@ public class GaswParser extends DefaultHandler {
             String stripExtns = getAttributeStripExtension(attributes, "strip-extension");
             Set<String> stripExtensions=new HashSet<>();
             if(stripExtns!=null) {
-            	String[] stripExtnArr=stripExtns.replaceAll("[", "").replaceAll("]", "").split(",");
+                String[] stripExtnArr=stripExtns.replaceAll("\\[", "").replaceAll("\\]", "").split(",");
+           
                 for(String str : stripExtnArr) {
-                	stripExtensions.add(str.trim());
+                    stripExtensions.add(str.trim());
                 }
-            }
-            
+            }    
             outputArg.setTemplate(true);
 
             if (value.contains("$rep-")) {
@@ -259,7 +252,7 @@ public class GaswParser extends DefaultHandler {
         }
         return attributeValue;
     }
-    
+
     private String getAttributeStripExtension(Attributes attributes, String valueName) {
 
         String attributeValue = attributes.getValue(valueName);
@@ -362,6 +355,7 @@ public class GaswParser extends DefaultHandler {
         } else {
             list = templateSimpleParts(value, inputsList, stripExtensions);
         }
+        logger.info("list : "+list);
         return list;
     }
 
