@@ -100,7 +100,6 @@ public class GaswParser extends DefaultHandler {
         try {
             File descriptor = new File(descriptorFileName);
             logger.info("Parsing GASW descriptor: " + descriptor.getAbsolutePath());
-
             reader = XMLReaderFactory.createXMLReader();
             reader.setContentHandler(this);
             reader.parse(new InputSource(new FileReader(descriptor)));
@@ -116,7 +115,6 @@ public class GaswParser extends DefaultHandler {
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-    	logger.info("startElement: " + uri+" : "+localName+" : "+qName+" : "+attributes.toString());
         if (localName.equals("description")) {
             if (parsing) {
                 throw new SAXException("Nested <description> tags.");
@@ -206,11 +204,10 @@ public class GaswParser extends DefaultHandler {
                 throw new SAXException("<template> tags are just allowed inside <output> tags.");
             }
             String value = getAttributeValue(attributes, "value", "No template value defined.");
-            String stripExtns = getAttributeStripExtension(attributes, "strip-extension");
+            String stripExtns = attributes.getValue("strip-extensions");
             Set<String> stripExtensions=new HashSet<>();
             if(stripExtns!=null) {
                 String[] stripExtnArr=stripExtns.replaceAll("\\[", "").replaceAll("\\]", "").split(",");
-           
                 for(String str : stripExtnArr) {
                     stripExtensions.add(str.trim());
                 }
@@ -223,7 +220,6 @@ public class GaswParser extends DefaultHandler {
             }
 
             outputArg.setTemplateParts(templateParts(value, inputsList, stripExtensions));
-            logger.info("outputArg.getTemplateParts : "+outputArg.getTemplateParts());
         } else if (localName.equals("sandbox")) {
             parsingSandbox = true;
         }
@@ -249,15 +245,6 @@ public class GaswParser extends DefaultHandler {
         String attributeValue = attributes.getValue(valueName);
         if (attributeValue == null || attributeValue.length() == 0) {
             throw new SAXException(errorMessage);
-        }
-        return attributeValue;
-    }
-
-    private String getAttributeStripExtension(Attributes attributes, String valueName) {
-
-        String attributeValue = attributes.getValue(valueName);
-        if (attributeValue == null || attributeValue.length() == 0) {
-            return null;
         }
         return attributeValue;
     }
@@ -355,7 +342,6 @@ public class GaswParser extends DefaultHandler {
         } else {
             list = templateSimpleParts(value, inputsList, stripExtensions);
         }
-        logger.info("list : "+list);
         return list;
     }
 
@@ -452,7 +438,7 @@ public class GaswParser extends DefaultHandler {
                 	if(part.getStripExtensions()!=null) {
                 		for(String extn: part.getStripExtensions()) {
                     		if(fileName.endsWith(extn)) {
-                    			fileName=fileName.replace(extn, "");
+                                fileName=fileName.substring(0, fileName.indexOf("."));
                     		}
                     	}
                 	}
