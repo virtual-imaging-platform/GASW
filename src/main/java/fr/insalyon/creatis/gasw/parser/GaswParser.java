@@ -207,11 +207,11 @@ public class GaswParser extends DefaultHandler {
             String stripExtns = attributes.getValue("strip-extensions");
             Set<String> stripExtensions=new HashSet<>();
             if(stripExtns!=null) {
-                String[] stripExtnArr=stripExtns.replaceAll("\\[", "").replaceAll("\\]", "").split(",");
+                String[] stripExtnArr = stripExtns.split(",");
                 for(String str : stripExtnArr) {
                     stripExtensions.add(str.trim());
                 }
-            }    
+            }
             outputArg.setTemplate(true);
 
             if (value.contains("$rep-")) {
@@ -438,7 +438,7 @@ public class GaswParser extends DefaultHandler {
                 	if(part.getStripExtensions()!=null) {
                 		for(String extn: part.getStripExtensions()) {
                     		if(fileName.endsWith(extn)) {
-                                fileName=fileName.substring(0, fileName.indexOf("."));
+                                fileName=fileName.substring(0, fileName.length() - extn.length());;
                     		}
                     	}
                 	}
