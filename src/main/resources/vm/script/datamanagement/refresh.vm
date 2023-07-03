@@ -102,4 +102,4 @@ function wait_for_token {
     fi
 }
 
-trap "stopRefreshingToken" EXIT
+trap 'stopRefreshingToken | cleanup' EXIT INT 
