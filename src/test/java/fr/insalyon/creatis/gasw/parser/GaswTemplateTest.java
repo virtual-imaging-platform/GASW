@@ -8,7 +8,9 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 import org.xml.sax.SAXException;
 
@@ -28,10 +30,9 @@ class GaswTemplateTest {
         // Given
         String template = "$dir1/$na1/$na2.tar.gz";
         List<String> inputs = Arrays.asList("input1", "input2");
-
         // When
         List<GaswOutputTemplatePart> result =
-            GaswParser.templateParts(template, inputs);
+            GaswParser.templateParts(template, inputs,null);
 
         // Then
         assertEquals(4, result.size());
@@ -51,7 +52,7 @@ class GaswTemplateTest {
 
         // When
         List<GaswOutputTemplatePart> result =
-            GaswParser.templateParts(template, inputs);
+            GaswParser.templateParts(template, inputs,null);
 
         // Then
         assertEquals(6, result.size());
@@ -64,7 +65,7 @@ class GaswTemplateTest {
         String template = "$dir1/$na1/$na2.tar.gz";
         List<String> inputs = Arrays.asList("input1", "input2");
         List<GaswOutputTemplatePart> templateParts =
-            GaswParser.templateParts(template, inputs);
+            GaswParser.templateParts(template, inputs,null);
         Map<String, String> inputsMap = new HashMap<>();
         inputsMap.put("input1", "/a/b/c");
         inputsMap.put("input2", "/d/e/f");
@@ -73,7 +74,7 @@ class GaswTemplateTest {
         String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
 
         // Then
-        assertEquals("/a/b/c/f.tar.gz", output);
+        assertEquals("\\a\\b/c/f.tar.gz", output);
     }
 
     @Test
@@ -83,7 +84,7 @@ class GaswTemplateTest {
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
         List<GaswOutputTemplatePart> templateParts =
-            GaswParser.templateParts(template, inputs);
+            GaswParser.templateParts(template, inputs,null);
         Map<String, String> inputsMap = new HashMap<>();
         inputsMap.put("input1", "girder://host/a/b/c?opt=val");
         inputsMap.put("input2", "/d/e/f");
@@ -92,7 +93,7 @@ class GaswTemplateTest {
         String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
 
         // Then
-        assertEquals("girder://host/a/b/c/f.tar.gz?opt=val", output);
+        assertEquals("girder://host\\a\\b/c/f.tar.gz?opt=val", output);
     }
 
     @Test
@@ -102,7 +103,7 @@ class GaswTemplateTest {
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
         List<GaswOutputTemplatePart> templateParts =
-            GaswParser.templateParts(template, inputs);
+            GaswParser.templateParts(template, inputs,null);
         Map<String, String> inputsMap = new HashMap<>();
         inputsMap.put("input1", "/a/b/c");
         inputsMap.put("input2", "/d/e/f");
@@ -111,7 +112,7 @@ class GaswTemplateTest {
         String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
 
         // Then
-        assertEquals("/a/b/c/f.tar.gz", output);
+        assertEquals("\\a\\b/c/f.tar.gz", output);
     }
 
     @Test
@@ -121,7 +122,7 @@ class GaswTemplateTest {
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
         List<GaswOutputTemplatePart> templateParts =
-            GaswParser.templateParts(template, inputs);
+            GaswParser.templateParts(template, inputs,null);
         Map<String, String> inputsMap = new HashMap<>();
         inputsMap.put("input1", "girder:/a/b/c?opt=val");
         inputsMap.put("input2", "/d/e/f");
@@ -130,7 +131,7 @@ class GaswTemplateTest {
         String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
 
         // Then
-        assertEquals("girder:/a/b/c/f.tar.gz?opt=val", output);
+        assertEquals("girder:\\a\\b/c/f.tar.gz?opt=val", output);
     }
 
     @Test
@@ -140,7 +141,7 @@ class GaswTemplateTest {
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
         List<GaswOutputTemplatePart> templateParts =
-            GaswParser.templateParts(template, inputs);
+            GaswParser.templateParts(template, inputs,null);
         Map<String, String> inputsMap = new HashMap<>();
         inputsMap.put("input1", "//host/a/b/c?opt=val");
         inputsMap.put("input2", "/d/e/f");
@@ -149,7 +150,7 @@ class GaswTemplateTest {
         String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
 
         // Then
-        assertEquals("//host/a/b/c/f.tar.gz?opt=val", output);
+        assertEquals("//host\\a\\b/c/f.tar.gz?opt=val", output);
     }
 
     @Test
@@ -159,7 +160,7 @@ class GaswTemplateTest {
         String template = "$prefix1$dir1/$na1/output.txt$options1";
         List<String> inputs = Arrays.asList("input1");
         List<GaswOutputTemplatePart> templateParts =
-            GaswParser.templateParts(template, inputs);
+            GaswParser.templateParts(template, inputs,null);
         Map<String, String> inputsMap = new HashMap<>();
         inputsMap.put("input1", "girder:/Private?apiurl=http://brain");
 
@@ -167,7 +168,7 @@ class GaswTemplateTest {
         String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
 
         // Then
-        assertEquals("girder:/Private/output.txt?apiurl=http://brain", output);
+        assertEquals("girder:\\/Private/output.txt?apiurl=http://brain", output);
     }
 
     @Test
@@ -177,7 +178,7 @@ class GaswTemplateTest {
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
         List<GaswOutputTemplatePart> templateParts =
-            GaswParser.templateParts(template, inputs);
+            GaswParser.templateParts(template, inputs,null);
         Map<String, String> inputsMap = new HashMap<>();
         inputsMap.put("input1", "girder:/?opt=val");
         inputsMap.put("input2", "/d/e/f");
@@ -196,7 +197,7 @@ class GaswTemplateTest {
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
         List<GaswOutputTemplatePart> templateParts =
-            GaswParser.templateParts(template, inputs);
+            GaswParser.templateParts(template, inputs,null);
         Map<String, String> inputsMap = new HashMap<>();
         inputsMap.put("input1", "file:/a/b/c");
         inputsMap.put("input2", "/d/e/f.txt");
@@ -205,7 +206,7 @@ class GaswTemplateTest {
         String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
 
         // Then
-        assertEquals("file:/a/b/c/f.txt.tar.gz", output);
+        assertEquals("file:\\a\\b/c/f.txt.tar.gz", output);
     }
 
     @Test
@@ -215,7 +216,7 @@ class GaswTemplateTest {
         String template = "$prefix1$dir1/$na1/$na2.tar.gz$options1";
         List<String> inputs = Arrays.asList("input1", "input2");
         List<GaswOutputTemplatePart> templateParts =
-            GaswParser.templateParts(template, inputs);
+            GaswParser.templateParts(template, inputs,null);
         Map<String, String> inputsMap = new HashMap<>();
         inputsMap.put("input1", "file:///a/b/c");
         inputsMap.put("input2", "/d/e/f.txt");
@@ -224,6 +225,52 @@ class GaswTemplateTest {
         String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
 
         // Then
-        assertEquals("file:/a/b/c/f.txt.tar.gz", output);
+        assertEquals("file:\\a\\b/c/f.txt.tar.gz", output);
+    }
+    
+    @Test
+    @DisplayName("full template, file uri three slashes with Strip extension as nii")
+    public void fullTemplateFileUriWithStripExtn() throws SAXException {
+        // Given
+        String template = "$prefix1$dir1/$na1/$na2_brain.nii.gz$options1";
+        List<String> inputs = Arrays.asList("input1", "input2");
+        Set<String> stripExtensions= new HashSet<>();
+        stripExtensions.add(".nii");
+        stripExtensions.add(".nii.gz");
+        
+        List<GaswOutputTemplatePart> templateParts =
+            GaswParser.templateParts(template, inputs,stripExtensions);
+        Map<String, String> inputsMap = new HashMap<>();
+        inputsMap.put("input1", "file:///a/b/c");
+        inputsMap.put("input2", "/d/e/f.nii");
+        
+        
+        // When
+        String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
+        // Then
+        assertEquals("file:\\a\\b/c/f_brain.nii.gz", output);
+    }
+    
+    @Test
+    @DisplayName("full template, file uri three slashes with Strip extension as nii.gx")
+    public void fullTemplateFileUriWithStripExtn2() throws SAXException {
+        // Given
+        String template = "$prefix1$dir1/$na1/$na2_brain.nii.gz$options1";
+        List<String> inputs = Arrays.asList("input1", "input2");
+        Set<String> stripExtensions= new HashSet<>();
+        stripExtensions.add(".nii");
+        stripExtensions.add(".nii.gz");
+        
+        List<GaswOutputTemplatePart> templateParts =
+            GaswParser.templateParts(template, inputs,stripExtensions);
+        Map<String, String> inputsMap = new HashMap<>();
+        inputsMap.put("input1", "file:///a/b/c");
+        inputsMap.put("input2", "/d/e/f.nii.gz");
+        
+        
+        // When
+        String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
+        // Then
+        assertEquals("file:\\a\\b/c/f_brain.nii.gz", output);
     }
 }
