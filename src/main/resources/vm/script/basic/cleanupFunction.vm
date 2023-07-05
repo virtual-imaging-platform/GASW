@@ -31,6 +31,8 @@ function cleanup {
     info "END date:"
     date +%s
     stopLog cleanup
+    check_cleanup = true
 }
 
 export -f cleanup
+trap 'if [ "$check_cleanup" = true ]; then echo "cleanup was executed successfully"; else cleanup && echo "Executing cleanup"; fi' INT
