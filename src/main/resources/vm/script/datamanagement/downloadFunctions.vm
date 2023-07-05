@@ -136,7 +136,7 @@ function unmountGfal {
                 sleep 2
                 if [[ $SECONDS-$START -gt 600 ]] #while loops breaks in automatically after 10 mins
                 then
-                    #echo "WARNING -gfal directory couldn't be unmounted:timeout"
+                    echo "WARNING -gfal directory couldn't be unmounted:timeout"
                     break
                 fi
         done
