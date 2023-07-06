@@ -4,7 +4,11 @@
 ## $cacheDir, $cacheFile
 
 function cleanup {
-
+    if [[ $isGfalmountExec -eq 0 ]]    #flag checks if directories are mounted with gfal
+    then
+        unmountGfal    #unmounts all gfal mounted directories
+        unlink /tmp/*_$(basename $PWD)
+    fi         
     startLog cleanup
     info "=== ls -a ==="
     ls -a
@@ -27,4 +31,8 @@ function cleanup {
     info "END date:"
     date +%s
     stopLog cleanup
+    check_cleanup = true
 }
+
+export -f cleanup
+trap 'echo "trap activation" && stopRefreshingToken | if [ "$check_cleanup" = true ]; then echo "cleanup was executed successfully"; else echo "Executing cleanup" && cleanup; fi' INT EXIT
