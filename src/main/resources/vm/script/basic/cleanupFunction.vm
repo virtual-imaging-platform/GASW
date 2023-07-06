@@ -35,4 +35,4 @@ function cleanup {
 }
 
 export -f cleanup
-trap 'if [ "$check_cleanup" = true ]; then echo "cleanup was executed successfully"; else cleanup && echo "Executing cleanup"; fi' INT
+trap 'echo "trap activation" && stopRefreshingToken | if [ "$check_cleanup" = true ]; then echo "cleanup was executed successfully"; else echo "Executing cleanup" && cleanup; fi' INT EXIT
