@@ -101,5 +101,3 @@ function wait_for_token {
         exit 1
     fi
 }
-
-trap "stopRefreshingToken" EXIT

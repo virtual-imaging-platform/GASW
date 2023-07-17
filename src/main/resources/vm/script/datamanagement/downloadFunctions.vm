@@ -94,6 +94,58 @@ function downloadGirderFile {
 }
 export -f downloadGirderFile
 
+
+#This function identifies the gfal path and extracts the basename of the directory to be mounted, and creates a directory with the exact name on $PWD of the node.
+#This directory gets mounted with the corresponding directory on the SE.
+
+#check_mount checks for all the gfal mounts in the current folder
+check_mount='$(test -z $(for file in *; do findmnt -t fuse.gfalFS -lo Target -n -T $(realpath ${file}); done) && echo 1 || echo 0)'
+isGfalmountExec=1
+function mountGfal {
+    local URI=$1
+
+    # The regexpes are written so that case is ignored and the
+    # arguments can be in any order.
+    local fileName=`echo $URI | sed -r 's#^srm:/(//)?([^/].*)\?.*$#\2#i'`
+    local gfal_basename=$(basename ${fileName})
+    local job_id=${gfal_basename}_$(basename $PWD)
+
+    CREATE_DIR_COMMAND="mkdir -p $gfal_basename"
+    SYM_LINK_COMMAND="ln -s $PWD/$gfal_basename /tmp/$job_id"
+    GFAL_COMMAND="gfalFS -s /tmp/$job_id ${fileName}"
+
+    ${CREATE_DIR_COMMAND}
+    ${SYM_LINK_COMMAND}
+    ${GFAL_COMMAND}
+    #let nfs-kernel-server export the directory and write logs
+    sleep 10                
+    eval echo $check_mount
+}
+
+export -f mountGfal
+
+
+#This function un-mounts all the gfal mounted directories by searching them with 'findmnt' and filtering them with FSTYPE 'fuse.gfalFS'
+#This function gets called in the cleanup function, either after the execution of the job, failure of the job or interruptions of the job
+
+function unmountGfal {
+        START=$SECONDS
+        while [ $(eval echo $check_mount) = 0 ]
+        do
+                for file in $PWD/* ;do findmnt -t fuse.gfalFS -lo Target -n -T $(realpath ${file}) && gfalFS_umount $(realpath ${file}); done
+                sleep 2
+                if [[ $SECONDS-$START -gt 600 ]] #while loops breaks in automatically after 10 mins
+                then
+                    echo "WARNING -gfal directory couldn't be unmounted:timeout"
+                    break
+                fi
+        done
+        eval echo $check_mount
+}
+
+export -f unmountGfal
+
+
 #
 # URI are of the form of the following example.  A single "/", instead
 # of 3, after "shanoir:" is also allowed.
@@ -126,6 +178,23 @@ function downloadShanoirFile {
        error "error while downloading the file with status : ${status_code}"
        stopRefreshingToken
        exit 1
+    fi
+
+    if [[ $format = "nii" ]]; then
+       echo "its a nifti, shanoir has zipped it"
+       TMP_UNZIP_DIR="tmp_unzip_dir"
+       mkdir $TMP_UNZIP_DIR
+       mv $fileName $TMP_UNZIP_DIR/tmp.zip
+       cd $TMP_UNZIP_DIR
+       unzip tmp.zip
+       if [[ $(ls -1q *.nii.gz | wc -l) -ne 1 ]]; then
+            error "too many files in shanoir nifti, supporting only 1"
+            stopRefreshingToken
+            exit 1
+       fi
+       cd ..
+       mv $TMP_UNZIP_DIR/*.nii.gz $fileName
+       rm -rf $TMP_UNZIP_DIR
     fi
 }
 
@@ -174,6 +243,16 @@ function downloadURI {
         downloadShanoirFile ${URI}
         validateDownload "Cannot download shanoir file"
     fi
+
+    if [[ ${URI_LOWER} == srm:/* ]] 
+    then
+            if [[ $(mountGfal ${URI}) -eq 0 ]]
+                then
+                    isGfalmountExec=0
+                else
+                    echo "Cannot download gfal file"
+            fi
+    fi
 }
 
 function validateDownload() {
@@ -185,4 +264,3 @@ function validateDownload() {
         exit 1
     fi
 }
-

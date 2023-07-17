@@ -28,13 +28,17 @@
  */
 package fr.insalyon.creatis.gasw.parser;
 
+import java.util.Set;
+
 class GaswOutputTemplatePart {
     private GaswOutputTemplateType type;
     private String value;
+    private Set<String> stripExtensions;
 
-    public GaswOutputTemplatePart(GaswOutputTemplateType type, String value) {
+    public GaswOutputTemplatePart(GaswOutputTemplateType type, String value,Set<String> stripExtensions) {
         this.type = type;
         this.value = value;
+        this.stripExtensions=stripExtensions;
     }
 
     public GaswOutputTemplateType getType() {
@@ -44,4 +48,16 @@ class GaswOutputTemplatePart {
     public String getValue() {
         return value;
     }
+
+	public Set<String> getStripExtensions() {
+		return stripExtensions;
+	}
+
+	@Override
+	public String toString() {
+		return "GaswOutputTemplatePart [type=" + type + ", value=" + value + ", stripExtensions=" + stripExtensions
+				+ "]";
+	}
+    
+    
 }
