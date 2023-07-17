@@ -118,7 +118,7 @@ function mountGfal {
     ${SYM_LINK_COMMAND}
     ${GFAL_COMMAND}
     #let nfs-kernel-server export the directory and write logs
-    sleep 10                
+    sleep 30                
     eval echo $check_mount
 }
 
