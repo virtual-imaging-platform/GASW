@@ -73,13 +73,16 @@ public class GaswConstants {
     public static final String JDL_ROOT = "./jdl";
     public static final String OUT_ROOT = "./out";
     public static final String ERR_ROOT = "./err";
+    public static final String PROVENANCE_ROOT = "./provenance";
     public static final String CACHE_DIR = "${BASEDIR}/cache";
     public static final String CACHE_FILE = "cache.txt";
+    public static final String PROVENANCE_FILE = "provenance.json";
     // Extensions
     public static final String OUT_EXT = ".out";
     public static final String OUT_APP_EXT = ".app" + OUT_EXT;
     public static final String ERR_EXT = ".err";
     public static final String ERR_APP_EXT = ".app" + ERR_EXT;
+    public static final String PROVENANCE_EXT = ".provenance.json";
     // Environment Variables
     public static final String ENV_EXECUTOR = "executor";
 }

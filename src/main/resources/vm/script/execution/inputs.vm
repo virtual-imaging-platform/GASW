@@ -12,8 +12,11 @@ $serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 3
 touch ../DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
 
 #foreach( $download in $downloads )
+
+startLog file_download uri="${download}"
 downloadURI "$download"
 __MOTEUR_IN="${__MOTEUR_IN};$download"
+stopLog file_download
 #end
 
 chmod 755 *
