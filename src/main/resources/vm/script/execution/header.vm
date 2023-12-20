@@ -23,6 +23,7 @@ USE_CLOSE_SE=$voUseCloseSE
 export BOSH_CVMFS_PATH=$boshCVMFSPath
 export CONTAINERS_CVMFS_PATH=$containersCVMFSPath
 export UDOCKER_TAG=$udockerTag
+export BOUTIQUES_PROV_DIR=$boutiquesProvenanceDir
 
 export MOTEUR_WORKFLOWID="$simulationID"
 

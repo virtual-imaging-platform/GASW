@@ -62,6 +62,7 @@ public class GaswConstants {
     public static final String LAB_BOSH_CVMFS_PATH = "bosh.cvmfs.path";
     public static final String LAB_CONTAINERS_CVMFS_PATH = "containers.cvmfs.path";
     public static final String LAB_UDOCKER_TAG = "udocker.tag";
+    public static final String LAB_BOUTIQUES_PROV_DIR = "boutiques.provenance.dir";
     // timeouts used in lcg-c*
     //public static final int SEND_RECEIVE_TIMEOUT = 900;
     public static final String LAB_MIN_AVG_DOWNLOAD_THROUGHPUT = "min.avg.download.throughput";
@@ -73,13 +74,16 @@ public class GaswConstants {
     public static final String JDL_ROOT = "./jdl";
     public static final String OUT_ROOT = "./out";
     public static final String ERR_ROOT = "./err";
+    public static final String PROVENANCE_ROOT = "./provenance";
     public static final String CACHE_DIR = "${BASEDIR}/cache";
     public static final String CACHE_FILE = "cache.txt";
+    public static final String PROVENANCE_FILE = "provenance.json";
     // Extensions
     public static final String OUT_EXT = ".out";
     public static final String OUT_APP_EXT = ".app" + OUT_EXT;
     public static final String ERR_EXT = ".err";
     public static final String ERR_APP_EXT = ".app" + ERR_EXT;
+    public static final String PROVENANCE_EXT = ".provenance.json";
     // Environment Variables
     public static final String ENV_EXECUTOR = "executor";
 }
