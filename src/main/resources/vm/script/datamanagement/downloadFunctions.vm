@@ -171,13 +171,26 @@ function downloadShanoirFile {
         curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${datasetId}?format=${format}" --header "Authorization: Bearer ${token}"
     }
 
-    status_code=$(COMMAND)
-    echo "downloadShanoirFIle, status code is : ${status_code}"
-    
-    if [[ "$status_code" -ne 200 ]]; then
-       error "error while downloading the file with status : ${status_code}"
-       stopRefreshingToken
-       exit 1
+    local attempts=0
+
+    while [[ "${attempts}" -ne 3 ]]; do
+        status_code=$(COMMAND)
+        info "downloadShanoirFIle, status code is : ${status_code}"
+
+        if [[ "$status_code" -ne 200 ]]; then
+            error "error while downloading the file with status : ${status_code}"
+            attempts=$((attempts + 1))
+            info "${attempts} done. Waiting 3 seconds and maybe do another attempt"
+            sleep 3
+        else
+            break
+        fi
+    done
+
+    if [[ "${attempts}" -ge 3 ]]; then
+        error "3 failures at downloading, stop trying and stop the job"
+        stopRefreshingToken
+        exit 1
     fi
 
     if [[ $format = "nii" ]]; then
