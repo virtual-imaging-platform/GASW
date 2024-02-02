@@ -198,15 +198,16 @@ function downloadShanoirFile {
        TMP_UNZIP_DIR="tmp_unzip_dir"
        mkdir $TMP_UNZIP_DIR
        mv $fileName $TMP_UNZIP_DIR/tmp.zip
-       cd $TMP_UNZIP_DIR
-       unzip tmp.zip
-       if [[ $(ls -1q *.nii.gz *.nii | wc -l) -ne 1 ]]; then
-            error "too many files in shanoir nifti, supporting only 1"
+       unzip -d $TMP_UNZIP_DIR $TMP_UNZIP_DIR/tmp.zip
+       # there should be a unique .nii ou .nii.gz file somewhere
+       searchResult=$(find $TMP_UNZIP_DIR -name '*.nii.gz' -o -name '*.nii')
+       # doing this trick instead of using "wc -l" because it fails when there is no result
+       if [[ $(echo -n "$searchResult" | grep -c '^') -ne 1 ]]; then
+            error "too many or none nifti file (.nii or .nii.gz) in shanoir zip, supporting only 1"
             stopRefreshingToken
             exit 1
        fi
-       cd ..
-       mv $TMP_UNZIP_DIR/*.nii.gz $TMP_UNZIP_DIR/*.nii $fileName
+       mv "$searchResult" "$fileName"
        rm -rf $TMP_UNZIP_DIR
     fi
 }
