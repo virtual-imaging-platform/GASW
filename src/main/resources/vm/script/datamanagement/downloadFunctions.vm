@@ -171,13 +171,26 @@ function downloadShanoirFile {
         curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${datasetId}?format=${format}" --header "Authorization: Bearer ${token}"
     }
 
-    status_code=$(COMMAND)
-    echo "downloadShanoirFIle, status code is : ${status_code}"
-    
-    if [[ "$status_code" -ne 200 ]]; then
-       error "error while downloading the file with status : ${status_code}"
-       stopRefreshingToken
-       exit 1
+    local attempts=0
+
+    while [[ "${attempts}" -ne 3 ]]; do
+        status_code=$(COMMAND)
+        info "downloadShanoirFIle, status code is : ${status_code}"
+
+        if [[ "$status_code" -ne 200 ]]; then
+            error "error while downloading the file with status : ${status_code}"
+            attempts=$((attempts + 1))
+            info "${attempts} done. Waiting 3 seconds and maybe do another attempt"
+            sleep 3
+        else
+            break
+        fi
+    done
+
+    if [[ "${attempts}" -ge 3 ]]; then
+        error "3 failures at downloading, stop trying and stop the job"
+        stopRefreshingToken
+        exit 1
     fi
 
     if [[ $format = "nii" ]]; then
@@ -185,15 +198,16 @@ function downloadShanoirFile {
        TMP_UNZIP_DIR="tmp_unzip_dir"
        mkdir $TMP_UNZIP_DIR
        mv $fileName $TMP_UNZIP_DIR/tmp.zip
-       cd $TMP_UNZIP_DIR
-       unzip tmp.zip
-       if [[ $(ls -1q *.nii.gz | wc -l) -ne 1 ]]; then
-            error "too many files in shanoir nifti, supporting only 1"
+       unzip -d $TMP_UNZIP_DIR $TMP_UNZIP_DIR/tmp.zip
+       # there should be a unique .nii ou .nii.gz file somewhere
+       searchResult=$(find $TMP_UNZIP_DIR -name '*.nii.gz' -o -name '*.nii')
+       # doing this trick instead of using "wc -l" because it fails when there is no result
+       if [[ $(echo -n "$searchResult" | grep -c '^') -ne 1 ]]; then
+            error "too many or none nifti file (.nii or .nii.gz) in shanoir zip, supporting only 1"
             stopRefreshingToken
             exit 1
        fi
-       cd ..
-       mv $TMP_UNZIP_DIR/*.nii.gz $fileName
+       mv "$searchResult" "$fileName"
        rm -rf $TMP_UNZIP_DIR
     fi
 }
