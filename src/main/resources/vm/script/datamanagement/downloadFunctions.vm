@@ -149,8 +149,8 @@ export -f unmountGfal
 #
 # URI are of the form of the following example.  A single "/", instead
 # of 3, after "shanoir:" is also allowed.
-# shanoir:/download.dcm?apiurl=https://shanoir-ng-nginx/shanoir-ng/datasets/carmin-data/path&format=dcm&datasetId=1
-# 
+# shanoir:/download.dcm?apiurl=https://shanoir-ng-nginx/shanoir-ng/datasets/carmin-data/path&format=dcm&resourceId=1
+#
 # This method depends on refresh token process to refresh the token when it needs
 #
 function downloadShanoirFile {
@@ -165,10 +165,10 @@ function downloadShanoirFile {
     local fileName=`echo $URI | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i'`
     local apiUrl=`echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i'`
     local format=`echo $URI | sed -r 's/^.*[?&]format=([^&]*)(&.*)?$/\1/i'`
-    local datasetId=`echo $URI | sed -r 's/^.*[?&]datasetId=([^&]*)(&.*)?$/\1/i'`
+    local resourceId=`echo $URI | sed -r 's/^.*[?&]resourceId=([^&]*)(&.*)?$/\1/i'`
 
-    COMMAND(){ 
-        curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${datasetId}?format=${format}" --header "Authorization: Bearer ${token}"
+    COMMAND(){
+        curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${resourceId}?format=${format}" --header "Authorization: Bearer ${token}"
     }
 
     local attempts=0
