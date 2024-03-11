@@ -322,14 +322,16 @@ public class GaswParser extends DefaultHandler {
     }
 
     static List<GaswOutputTemplatePart> templateParts(
-        String value, List<String> inputsList,Set<String> stripExtensions) throws SAXException {
+        String value, List<String> inputsList, Set<String> stripExtensions) throws SAXException {
 
         // $dirX/$naX is treated as a special case, because if $na1 is an empty
         // string, the / should not be inserted.
-        Pattern p = Pattern.compile("\\$dir(\\d+)/\\$na\\1");
+        Pattern p = Pattern.compile("\\$dir(\\d+)/\\$na\\1"); // the "\\1" at the end references the first group
         Matcher m = p.matcher(value);
         List<GaswOutputTemplatePart> list;
         if (m.find()) {
+            // everything before the dirX/naX is treated normally, the dirX/naX is added as DIR_AND_NAME,
+            // and then it looks again for dirX/naX recursively
             list =
                 templateSimpleParts(value.substring(0, m.start()), inputsList, stripExtensions);
             int n = Integer.parseInt(m.group(1));
@@ -356,7 +358,7 @@ public class GaswParser extends DefaultHandler {
             if (m.start() > start) {
                 list.addLast(new GaswOutputTemplatePart(
                                  GaswOutputTemplateType.STRING,
-                                 value.substring(start, m.start()),stripExtensions));
+                                 value.substring(start, m.start()), stripExtensions));
             }
             GaswOutputTemplateType type = null;
             int n = Integer.parseInt(m.group(2));
@@ -379,7 +381,7 @@ public class GaswParser extends DefaultHandler {
             }
             try {
                 list.addLast(
-                    new GaswOutputTemplatePart(type, inputsList.get(n - 1),stripExtensions));
+                    new GaswOutputTemplatePart(type, inputsList.get(n - 1), stripExtensions));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 throw new SAXException(
                     "The index used in the output template does not exist.");
@@ -434,15 +436,15 @@ public class GaswParser extends DefaultHandler {
                 break;
                 case NAME:
                 {
-                	String fileName=inputsMap.get(part.getValue());
-                	if(part.getStripExtensions()!=null) {
-                		for(String extn: part.getStripExtensions()) {
-                    		if(fileName.endsWith(extn)) {
-                                fileName=fileName.substring(0, fileName.length() - extn.length());;
+                	String inputValue = inputsMap.get(part.getValue());
+                	if (part.getStripExtensions()!=null) {
+                		for (String extn : part.getStripExtensions()) {
+                    		if (inputValue.endsWith(extn)) {
+                                inputValue=inputValue.substring(0, inputValue.length() - extn.length());;
                     		}
                     	}
                 	}
-                    addName("", fileName, content);
+                    addName("", inputValue, content);
                 }
                 break;
                 case OPTIONS:

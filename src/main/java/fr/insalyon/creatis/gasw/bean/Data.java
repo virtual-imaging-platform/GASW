@@ -61,7 +61,7 @@ public class Data {
     }
 
     @Id
-    @Column(name = "data_path")
+    @Column(name = "data_path", length=9000)
     public String getDataPath() {
         return dataPath;
     }

@@ -35,7 +35,7 @@ class GaswOutputTemplatePart {
     private String value;
     private Set<String> stripExtensions;
 
-    public GaswOutputTemplatePart(GaswOutputTemplateType type, String value,Set<String> stripExtensions) {
+    public GaswOutputTemplatePart(GaswOutputTemplateType type, String value, Set<String> stripExtensions) {
         this.type = type;
         this.value = value;
         this.stripExtensions=stripExtensions;

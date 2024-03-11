@@ -50,5 +50,13 @@ stopLog application_execution
 
 info "Execution time was `expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}`s"
 
+PROVENANCE_DEST="$BASEDIR/$DIRNAME.sh.provenance.json"
+info "copying provenance file to $PROVENANCE_DEST"
+if [ -f provenance.json ]; then
+  cp provenance.json "$PROVENANCE_DEST"
+else
+  warning "provenance.json not found"
+fi
+
 __MOTEUR_ARGS="$parameters"
 __MOTEUR_EXE="$executableName"

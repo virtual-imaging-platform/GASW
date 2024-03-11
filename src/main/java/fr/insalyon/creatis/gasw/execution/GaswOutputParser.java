@@ -281,9 +281,10 @@ public abstract class GaswOutputParser extends Thread {
                     } else if (line.startsWith("</inputs_download>")) {
                         isInputDownload = false;
 
-                    } else if (line.contains("Downloading file") && isInputDownload) {
-                        String downloadedFile = line.split(" ")[12].replace("...", "");
+                    } else if (line.startsWith("<file_download") && isInputDownload) {
+                        String downloadedFile = line.substring(line.indexOf("=") + 1, line.length() - 1);
                         dataList.add(new Data(downloadedFile, Data.Type.Input));
+                        logger.info("[GASW Parser] Adding input " + downloadedFile + " for job " + job.getId());
 
                     } else if (line.startsWith("<results_upload>")) {
                         isResultUpload = true;
@@ -296,8 +297,7 @@ public abstract class GaswOutputParser extends Thread {
                         lfcHost = line.substring(line.indexOf("=") + 1);
 
                     } else if (line.startsWith("<file_upload") && isResultUpload) {
-                        String uploadedFile = line.substring(
-                                line.indexOf("=") + 1, line.length() - 1);
+                        String uploadedFile = line.substring(line.indexOf("=") + 1, line.length() - 1);
                         URI uri;
                         if (GaswUtil.isUri(uploadedFile)) {
                             uri = new URI(uploadedFile);
@@ -308,6 +308,7 @@ public abstract class GaswOutputParser extends Thread {
                         }
                         uploadedResults.add(uri);
                         dataList.add(new Data(uri.toString(), Data.Type.Output));
+                        logger.info("[GASW Parser] Adding output " + uri + " for job " + job.getId());
                     }
                 }
             } catch (Exception ex) {
@@ -535,19 +536,41 @@ public abstract class GaswOutputParser extends Thread {
         return null;
     }
 
+    protected File moveAppFile(File source, String extension, String dir) {
+        File dest = getAppStdFile(extension, dir);
+        if (source.exists()) {
+            source.renameTo(dest);
+        } else {
+            logger.warn("Missing output file : " + source);
+        }
+        return dest;
+    }
+
+    protected File moveProvenanceFile(String sourceDir) {
+        String provenanceFileName = getAppStdFileName(GaswConstants.PROVENANCE_EXT);
+        return moveAppFile(
+                new File(sourceDir, provenanceFileName),
+                GaswConstants.PROVENANCE_EXT,
+                GaswConstants.PROVENANCE_ROOT);
+    }
+
     /**
      *
      * @param extension
      * @param dir
      * @return
      */
-    private File getAppStdFile(String extension, String dir) {
+    protected File getAppStdFile(String extension, String dir) {
 
         File stdDir = new File(dir);
         if (!stdDir.exists()) {
             stdDir.mkdirs();
         }
-        return new File(dir + "/" + job.getFileName() + ".sh" + extension);
+        return new File(dir + "/" + getAppStdFileName(extension));
+    }
+
+    protected String getAppStdFileName(String extension) {
+        return job.getFileName() + ".sh" + extension;
     }
 
     protected String getInputsDownloadErr() {
