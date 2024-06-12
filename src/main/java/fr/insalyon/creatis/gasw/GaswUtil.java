@@ -36,6 +36,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.regex.Pattern;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -85,7 +86,7 @@ public class GaswUtil {
             builder.redirectErrorStream(true);
         }
 
-        builder.environment().put("X509_USER_PROXY", System.getenv("X509_USER_PROXY"));
+        //builder.environment().put("X509_USER_PROXY", System.getenv("X509_USER_PROXY"));
         return builder.start();
     }
 

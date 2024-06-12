@@ -32,13 +32,8 @@
  */
 package fr.insalyon.creatis.gasw.parser;
 
-import fr.insalyon.creatis.gasw.GaswConstants;
-import fr.insalyon.creatis.gasw.GaswException;
-import fr.insalyon.creatis.gasw.GaswInput;
-import fr.insalyon.creatis.gasw.GaswUpload;
-import fr.insalyon.creatis.gasw.GaswUtil;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
@@ -53,13 +48,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.log4j.Logger;
+import org.json.simple.parser.ParseException;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
+
+import fr.insalyon.creatis.gasw.GaswConstants;
+import fr.insalyon.creatis.gasw.GaswException;
+import fr.insalyon.creatis.gasw.GaswInput;
+import fr.insalyon.creatis.gasw.GaswUpload;
+import fr.insalyon.creatis.gasw.GaswUtil;
 
 /**
  *
@@ -308,8 +311,7 @@ public class GaswParser extends DefaultHandler {
         return new GaswInput(executableName, parameters, downloads, uploads,
                 gaswVariables, envVariables);
     }
-
-    static String escapeSpecialBashCharacters(String stringToEscape) {
+        static String escapeSpecialBashCharacters(String stringToEscape) {
         // The \ char must be in the first place, so that the \ included by
         // following replacements are not touched.
         // For the list of characters, see:
@@ -322,16 +324,14 @@ public class GaswParser extends DefaultHandler {
     }
 
     static List<GaswOutputTemplatePart> templateParts(
-        String value, List<String> inputsList, Set<String> stripExtensions) throws SAXException {
+        String value, List<String> inputsList,Set<String> stripExtensions) throws SAXException {
 
         // $dirX/$naX is treated as a special case, because if $na1 is an empty
         // string, the / should not be inserted.
-        Pattern p = Pattern.compile("\\$dir(\\d+)/\\$na\\1"); // the "\\1" at the end references the first group
+        Pattern p = Pattern.compile("\\$dir(\\d+)/\\$na\\1");
         Matcher m = p.matcher(value);
         List<GaswOutputTemplatePart> list;
         if (m.find()) {
-            // everything before the dirX/naX is treated normally, the dirX/naX is added as DIR_AND_NAME,
-            // and then it looks again for dirX/naX recursively
             list =
                 templateSimpleParts(value.substring(0, m.start()), inputsList, stripExtensions);
             int n = Integer.parseInt(m.group(1));
@@ -358,7 +358,7 @@ public class GaswParser extends DefaultHandler {
             if (m.start() > start) {
                 list.addLast(new GaswOutputTemplatePart(
                                  GaswOutputTemplateType.STRING,
-                                 value.substring(start, m.start()), stripExtensions));
+                                 value.substring(start, m.start()),stripExtensions));
             }
             GaswOutputTemplateType type = null;
             int n = Integer.parseInt(m.group(2));
@@ -381,7 +381,7 @@ public class GaswParser extends DefaultHandler {
             }
             try {
                 list.addLast(
-                    new GaswOutputTemplatePart(type, inputsList.get(n - 1), stripExtensions));
+                    new GaswOutputTemplatePart(type, inputsList.get(n - 1),stripExtensions));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 throw new SAXException(
                     "The index used in the output template does not exist.");
@@ -436,15 +436,15 @@ public class GaswParser extends DefaultHandler {
                 break;
                 case NAME:
                 {
-                	String inputValue = inputsMap.get(part.getValue());
-                	if (part.getStripExtensions()!=null) {
-                		for (String extn : part.getStripExtensions()) {
-                    		if (inputValue.endsWith(extn)) {
-                                inputValue=inputValue.substring(0, inputValue.length() - extn.length());;
+                	String fileName=inputsMap.get(part.getValue());
+                	if(part.getStripExtensions()!=null) {
+                		for(String extn: part.getStripExtensions()) {
+                    		if(fileName.endsWith(extn)) {
+                                fileName=fileName.substring(0, fileName.length() - extn.length());;
                     		}
                     	}
                 	}
-                    addName("", inputValue, content);
+                    addName("", fileName, content);
                 }
                 break;
                 case OPTIONS:
@@ -488,5 +488,88 @@ public class GaswParser extends DefaultHandler {
         if (f.getName().length() > 0) {
             content.append(separator).append(f.getName());
         }
+    }
+
+    public GaswInput getGaswInput(String applicationName, Map<String, String> inputsMap, String boutiquesFilePath, String executableName,HashMap<Integer, String> inputid , HashMap<Integer, String> outputid, String invocationString, 
+    Map<String, String> resultDirectory, String jobId, String sourceFilePath, List<URI> DownloadFiles, String outputDirName)
+            throws URISyntaxException, FileNotFoundException, IOException, GaswException, ParseException, SAXException {
+        getArgument(executableName, inputid, outputid);
+        List<String> parameters = new ArrayList<String>();
+        List<GaswUpload> uploads = new ArrayList<GaswUpload>();
+        
+        for (GaswArgument argument : arguments) {
+            StringBuilder param = new StringBuilder();
+            if (argument.getOption() != null) {
+                param.append(argument.getOption());
+                param.append(" ");
+            }
+            if (argument.getHookup() == GaswArgument.Hookup.Input) {
+                String value = inputsMap.get(argument.getName());
+                if (argument.getType() == GaswArgument.Type.URI) {
+                    // If the value already is a URI, use it as is.  If not, it
+                    // is a lfn and the prefix is added.
+                    URI valueURI = new URI(
+                        GaswUtil.isUri(value) ? value : LFN_PREFIX + value);
+                    param.append(new File(valueURI.getPath()).getName());
+                    downloads.add(valueURI);
+                } else {
+                    // Need to escape special characters to avoid bash errors.
+                    param.append(escapeSpecialBashCharacters(value));
+                }
+
+            } else {
+                //System.out.println(ANSI_BLUE + "inside Else " +ANSI_RESET);
+                GaswOutputArg output = (GaswOutputArg) argument;
+                String value = parseOutputTemplate(
+                    output.getTemplateParts(), inputsMap);
+                // If the value already is a URI, use it as is.  If not, it is a
+                // lfn and the prefix is added.
+                //System.out.println(ANSI_GREEN + "value: " + value +ANSI_RESET);
+                URI valueURI = new URI(
+                    GaswUtil.isUri(value) ? value : LFN_PREFIX + value);
+                //System.out.println(ANSI_BLUE + "valueURI: " +valueURI +ANSI_RESET);
+                uploads.add(new GaswUpload(valueURI, output.getReplicas()));
+                //System.out.println(ANSI_GREEN + "uploads: " + uploads.getURI() +ANSI_RESET);
+                param.append(new File(valueURI.getPath()).getName());
+            }
+
+            if (!argument.isImplicit()) {
+                parameters.add(param.toString());
+            }           
+        }
+        //System.out.println(ANSI_BLUE + "downloads: " + downloads.get(0) +ANSI_RESET);
+        //This is a workaround and a temporary implementation
+        URI uri = downloads.get(0);
+        String uriString = uri.toString();
+        uriString = uriString.replace(".sh.tar.gz", ".json");
+        downloads.set(0, URI.create(uriString));
+        //temporary
+        return new GaswInput(applicationName, executableName, parameters, downloads, uploads,
+                gaswVariables, envVariables, invocationString, jobId, sourceFilePath, DownloadFiles, outputDirName);
+    }
+
+    public String getArgument(String executableName,HashMap<Integer, String> inputid , HashMap<Integer, String> outputid) throws FileNotFoundException, IOException, GaswException, ParseException, URISyntaxException, SAXException {
+        String download = "lfn:/" + System.getProperty("user.dir") + "/"+ executableName; 
+
+        downloads.add(new URI(download.replace("]", "").replace("[", "")));
+        inputArg = new GaswInputArg("results-directory", null, false);
+        arguments.add(inputArg);
+        inputsList.add("results-directory");
+
+        for (int i = 0; i < inputid.size(); i++) {
+            inputArg = new GaswInputArg(inputid.get(i), "--"+inputid.get(i),false);
+            arguments.add(inputArg);
+            inputsList.add(inputid.get(i));
+        }
+
+        for (int i = 0; i < outputid.size(); i++) {
+            outputArg = new GaswOutputArg(outputid.get(i), "--"+outputid.get(i),false);
+            outputArg.setTemplateParts(templateParts("$prefix1$dir1/$na1", Arrays.asList("results-directory", "inname"), (Set<String>) null));
+            outputArg.setTemplate(true);
+            outputArg.setReplicas(GaswConstants.numberOfReplicas);
+            arguments.add(outputArg);
+            inputsList.add(outputid.get(i));
+        }
+        return executableName;
     }
 }

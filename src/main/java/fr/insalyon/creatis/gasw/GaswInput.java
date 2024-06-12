@@ -48,13 +48,27 @@ public class GaswInput {
     private List<GaswUpload> uploads;
     private Map<String, String> gaswVariables;
     private Map<String, String> envVariables;
-
+    private String invocationString;
+    private String jobId;
+    private String applicationName;
+    private static String sourceFilePath;
+    private List<URI> downloadFiles;
+    private String outputDirName;
+    private Boolean moteurlite = false;
     /**
      *
      * @param executableName Name of the executable file.
      * @param parameters List of parameters associated with the command.
      * @param downloads List of input files to be downloaded in the worker node.
      * @param uploads List of output files to be uploaded to a Storage Element.
+     * @param gaswVariables Map of GASW variables.
+     * @param envVariables Map of environment variables.
+     * @param invocationString String representation of the invocation
+     * @param jobId
+     * @param sourceFilePath
+     * @param applicationName
+     * @param outputDirName
+     * @param downloadFiles
      */
     public GaswInput(String executableName, List<String> parameters,
             List<URI> downloads, List<GaswUpload> uploads,
@@ -67,6 +81,28 @@ public class GaswInput {
         this.gaswVariables = gaswVariables;
         this.envVariables = envVariables;
     }
+
+    public GaswInput(String applicationName, String executableName2, List<String> parameters2, List<URI> downloads2,
+            List<GaswUpload> uploads2, Map<String, String> gaswVariables2, Map<String, String> envVariables2,
+            String invocationString, String jobId, String sourceFilePath, List<URI> downloadFiles,
+            String outputDirName) {
+        
+        this.executableName = executableName2;
+        this.parameters = parameters2;
+        this.downloads = downloads2;
+        this.uploads = uploads2;
+        this.gaswVariables = gaswVariables2;
+        this.envVariables = envVariables2;
+        this.invocationString = invocationString;
+        this.jobId = jobId;
+        this.sourceFilePath = sourceFilePath;
+        this.applicationName = applicationName;
+        this.downloadFiles = downloadFiles;
+        this.outputDirName = outputDirName;
+        this.moteurlite = true;
+    }
+
+ 
 
     /**
      * Adds a parameter to the list of parameters.
@@ -84,6 +120,10 @@ public class GaswInput {
      */
     public void addDownload(URI download) {
         this.downloads.add(download);
+    }
+
+    public void addDownloadFiles(URI downloadFile) {
+        this.downloadFiles.add(downloadFile);
     }
 
     /**
@@ -137,5 +177,33 @@ public class GaswInput {
 
     public Map<String, String> getEnvVariables() {
         return envVariables;
+    }
+
+    public String getInvocationString() {
+        return invocationString;
+    }
+
+    public String getJobId() {
+        return jobId;
+    }
+
+    public static String getSourceFilePath(){
+        return sourceFilePath;
+    }
+
+    public String getApplicationName(){
+        return applicationName;
+    }
+
+    public List<URI> getDownloadFiles(){
+        return downloadFiles;
+    }
+
+    public String getOutputDirName(){
+        return outputDirName;
+    }
+
+    public Boolean getMoteurliteStatus(){
+        return moteurlite;
     }
 }

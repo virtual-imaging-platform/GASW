@@ -32,16 +32,19 @@
  */
 package fr.insalyon.creatis.gasw.execution;
 
-import fr.insalyon.creatis.gasw.GaswConfiguration;
-import fr.insalyon.creatis.gasw.GaswConstants;
-import fr.insalyon.creatis.gasw.GaswException;
-import fr.insalyon.creatis.gasw.GaswInput;
-import fr.insalyon.creatis.gasw.script.ScriptGenerator;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+
 import org.apache.log4j.Logger;
+
+import fr.insalyon.creatis.gasw.GaswConfiguration;
+import fr.insalyon.creatis.gasw.GaswConstants;
+import fr.insalyon.creatis.gasw.GaswException;
+import fr.insalyon.creatis.gasw.GaswInput;
+import fr.insalyon.creatis.gasw.script.MoteurliteScriptGenerator;
+import fr.insalyon.creatis.gasw.script.ScriptGenerator;
 
 /**
  *
@@ -54,6 +57,7 @@ public abstract class GaswSubmit {
     protected String scriptName;
     protected String jdlName;
     protected GaswMinorStatusServiceGenerator minorStatusServiceGenerator;
+    protected boolean moteurliteStatus = false;
 
     /**
      *
@@ -70,6 +74,10 @@ public abstract class GaswSubmit {
         if (GaswConfiguration.getInstance().isFailOverEnabled()) {
             FailOver.getInstance().addData(gaswInput.getDownloads());
         }
+        System.out.println("moteurlite status: " + gaswInput.getMoteurliteStatus());
+        if (gaswInput.getMoteurliteStatus() != null && gaswInput.getMoteurliteStatus() == true) {
+            moteurliteStatus = true;
+        }
     }
 
     /**
@@ -85,12 +93,16 @@ public abstract class GaswSubmit {
      *
      * @return
      * @throws GaswException
+     * @throws IOException 
      */
-    protected String generateScript() throws GaswException {
+    protected String generateScript() throws GaswException, IOException {
 
         String script = ScriptGenerator.getInstance().generateScript(
                 gaswInput, minorStatusServiceGenerator);
-
+        
+        if (moteurliteStatus) {
+            script = MoteurliteScriptGenerator.getInstance().generateScript(gaswInput, minorStatusServiceGenerator);
+        }
         return publishScript(gaswInput.getExecutableName(), script);
     }
 
@@ -101,17 +113,26 @@ public abstract class GaswSubmit {
      * @return Name of the script file.
      */
     private String publishScript(String symbolicName, String script) {
+        String fileName = null;
 
         try {
             File scriptsDir = new File(GaswConstants.SCRIPT_ROOT);
             if (!scriptsDir.exists()) {
                 scriptsDir.mkdir();
             }
+            
+            if (moteurliteStatus) {
+                fileName = gaswInput.getJobId(); 
+                writeToFile(GaswConstants.SCRIPT_ROOT + "/" + fileName, script);
+                publishInvocation(fileName);
+            }
 
-            String fileName = symbolicName.replace(" ", "-");
+
+            else {
+            fileName = symbolicName.replace(" ", "-");
             fileName += "-" + System.nanoTime() + ".sh";
             writeToFile(GaswConstants.SCRIPT_ROOT + "/" + fileName, script);
-
+            }
             return fileName;
 
         } catch (IOException ex) {
@@ -158,4 +179,17 @@ public abstract class GaswSubmit {
         out.close();
         fstream.close();
     }
+
+    private void publishInvocation(String fileName) {
+        try {
+            File invoDir = new File(GaswConstants.INV_DIR);
+            if (!invoDir.exists()) {
+                invoDir.mkdir();
+            }
+            String invoFileName = fileName.substring(0, fileName.lastIndexOf(".")) + "-invocation.json";
+            writeToFile(invoDir.getAbsolutePath() + "/" + invoFileName, gaswInput.getInvocationString());
+        } catch (IOException ex) {
+            logger.error(ex);
+        }
+    } 
 }

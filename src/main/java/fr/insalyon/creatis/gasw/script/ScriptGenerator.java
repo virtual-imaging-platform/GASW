@@ -32,11 +32,14 @@
  */
 package fr.insalyon.creatis.gasw.script;
 
+import java.io.IOException;
+
+import org.apache.log4j.Logger;
+
 import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.execution.GaswMinorStatusServiceGenerator;
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -58,7 +61,7 @@ public class ScriptGenerator {
         return instance;
     }
 
-    private ScriptGenerator() throws GaswException {
+    protected ScriptGenerator() throws GaswException {
 
         basic = BasicGenerator.getInstance();
         dataManagement = DataManagementGenerator.getInstance();
@@ -76,9 +79,11 @@ public class ScriptGenerator {
      * @param parameters
      * @param minorStatusService
      * @return A string containing the bash script source
+     * @throws GaswException 
+     * @throws IOException 
      */
     public String generateScript(GaswInput gaswInput, 
-            GaswMinorStatusServiceGenerator minorStatusService) {
+            GaswMinorStatusServiceGenerator minorStatusService) throws IOException, GaswException {
 
         StringBuilder sb = new StringBuilder();
 
