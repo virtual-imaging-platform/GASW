@@ -544,7 +544,7 @@ public class GaswParser extends DefaultHandler {
         URI uri = downloads.get(0);
         String uriString = uri.toString();
         uriString = uriString.replace(".sh.tar.gz", ".json");
-        //downloads.set(0, URI.create(uriString));
+        downloads.set(0, URI.create(uriString));
         //temporary
         return new GaswInput(applicationName, executableName, parameters, downloads, uploads,
                 gaswVariables, envVariables, invocationString, jobId, sourceFilePath, DownloadFiles, outputDirName);
