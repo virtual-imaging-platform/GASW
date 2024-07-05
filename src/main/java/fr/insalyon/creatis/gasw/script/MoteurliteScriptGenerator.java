@@ -35,7 +35,10 @@
 package fr.insalyon.creatis.gasw.script;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
 import org.apache.log4j.Logger;
 
@@ -71,7 +74,7 @@ public class MoteurliteScriptGenerator {
     public String generateScript(GaswInput gaswInput, 
     GaswMinorStatusServiceGenerator minorStatusService) throws IOException, GaswException {
         generateRuntimeConfiguration(gaswInput, minorStatusService);
-        return GaswInput.getSourceFilePath();
+        return readScriptFromFile();
     }
 
     // Additional methods for runtime configuration
@@ -101,5 +104,13 @@ public class MoteurliteScriptGenerator {
         }
         JsonConfigurationFile.appendGaswConstants(gaswConstantsObj, gaswInput.getJobId());
         JsonConfigurationFile.appendGaswConfigurations(gaswInput.getJobId());
+    }
+
+    private String readScriptFromFile() throws IOException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        try (InputStream inputStream = classLoader.getResourceAsStream("script.sh");
+            Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8.name())) {
+        return scanner.useDelimiter("\\A").next();
+        }
     }
 }

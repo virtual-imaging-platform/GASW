@@ -498,7 +498,7 @@ public class GaswParser extends DefaultHandler {
     }
 
     public GaswInput getGaswInput(String applicationName, Map<String, String> inputsMap, String executableName,HashMap<Integer, String> inputid , HashMap<Integer, String> outputid, String invocationString, 
-    Map<String, String> resultDirectory, String jobId, String sourceFilePath, List<URI> DownloadFiles)
+    Map<String, String> resultDirectory, String jobId, List<URI> DownloadFiles)
             throws URISyntaxException, FileNotFoundException, IOException, GaswException, ParseException, SAXException {
 
         getArgument(executableName, inputid, outputid);
@@ -554,7 +554,7 @@ public class GaswParser extends DefaultHandler {
         //temporary
         */
         return new GaswInput(applicationName, executableName, parameters, downloads, uploads,
-                gaswVariables, envVariables, invocationString, jobId, sourceFilePath, DownloadFiles);
+                gaswVariables, envVariables, invocationString, jobId, DownloadFiles);
     }
 
     public String getArgument(String executableName, HashMap<Integer, String> inputid, HashMap<Integer, String> outputid) throws FileNotFoundException, IOException, GaswException, ParseException, URISyntaxException, SAXException {
