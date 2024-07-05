@@ -57,7 +57,6 @@ public abstract class GaswSubmit {
     protected String scriptName;
     protected String jdlName;
     protected GaswMinorStatusServiceGenerator minorStatusServiceGenerator;
-    protected boolean moteurliteStatus = false;
 
     /**
      *
@@ -74,10 +73,7 @@ public abstract class GaswSubmit {
         if (GaswConfiguration.getInstance().isFailOverEnabled()) {
             FailOver.getInstance().addData(gaswInput.getDownloads());
         }
-        System.out.println("moteurlite status: " + gaswInput.getMoteurliteStatus());
-        if (gaswInput.getMoteurliteStatus() != null && gaswInput.getMoteurliteStatus() == true) {
-            moteurliteStatus = true;
-        }
+        logger.info("moteurlite status: " + gaswInput.getMoteurliteStatus());
     }
 
     /**
@@ -100,7 +96,7 @@ public abstract class GaswSubmit {
         String script = ScriptGenerator.getInstance().generateScript(
                 gaswInput, minorStatusServiceGenerator);
         
-        if (moteurliteStatus) {
+        if (gaswInput.getMoteurliteStatus()) {
             script = MoteurliteScriptGenerator.getInstance().generateScript(gaswInput, minorStatusServiceGenerator);
         }
         return publishScript(gaswInput.getExecutableName(), script);
@@ -120,18 +116,15 @@ public abstract class GaswSubmit {
             if (!scriptsDir.exists()) {
                 scriptsDir.mkdir();
             }
-            
-            if (moteurliteStatus) {
+
+            if (gaswInput.getMoteurliteStatus()) {
                 fileName = gaswInput.getJobId(); 
                 writeToFile(GaswConstants.SCRIPT_ROOT + "/" + fileName, script);
                 publishInvocation(fileName);
-            }
-
-
-            else {
-            fileName = symbolicName.replace(" ", "-");
-            fileName += "-" + System.nanoTime() + ".sh";
-            writeToFile(GaswConstants.SCRIPT_ROOT + "/" + fileName, script);
+            } else {
+                fileName = symbolicName.replace(" ", "-");
+                fileName += "-" + System.nanoTime() + ".sh";
+                writeToFile(GaswConstants.SCRIPT_ROOT + "/" + fileName, script);
             }
             return fileName;
 

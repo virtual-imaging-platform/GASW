@@ -84,6 +84,9 @@ public class GaswParser extends DefaultHandler {
     private GaswOutputArg outputArg;
     private List<String> inputsList;
 
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_RESET = "\u001B[0m";
+
     private static final String LFN_PREFIX = "lfn://";
     private static final String FILE_PREFIX = "file:/";
 
@@ -181,6 +184,7 @@ public class GaswParser extends DefaultHandler {
             inputArg = new GaswInputArg(name, option, implicit);
             arguments.add(inputArg);
             inputsList.add(name);
+            System.out.println(ANSI_RED + "inputArg.getName() " +inputArg.getName());
 
         } else if (localName.equals("access")) {
 
@@ -311,7 +315,8 @@ public class GaswParser extends DefaultHandler {
         return new GaswInput(executableName, parameters, downloads, uploads,
                 gaswVariables, envVariables);
     }
-        static String escapeSpecialBashCharacters(String stringToEscape) {
+
+    static String escapeSpecialBashCharacters(String stringToEscape) {
         // The \ char must be in the first place, so that the \ included by
         // following replacements are not touched.
         // For the list of characters, see:
@@ -328,10 +333,12 @@ public class GaswParser extends DefaultHandler {
 
         // $dirX/$naX is treated as a special case, because if $na1 is an empty
         // string, the / should not be inserted.
-        Pattern p = Pattern.compile("\\$dir(\\d+)/\\$na\\1");
+        Pattern p = Pattern.compile("\\$dir(\\d+)/\\$na\\1");  // the "\\1" at the end references the first group
         Matcher m = p.matcher(value);
         List<GaswOutputTemplatePart> list;
         if (m.find()) {
+            // everything before the dirX/naX is treated normally, the dirX/naX is added as DIR_AND_NAME,
+            // and then it looks again for dirX/naX recursively 
             list =
                 templateSimpleParts(value.substring(0, m.start()), inputsList, stripExtensions);
             int n = Integer.parseInt(m.group(1));
@@ -436,15 +443,15 @@ public class GaswParser extends DefaultHandler {
                 break;
                 case NAME:
                 {
-                	String fileName=inputsMap.get(part.getValue());
-                	if(part.getStripExtensions()!=null) {
-                		for(String extn: part.getStripExtensions()) {
-                    		if(fileName.endsWith(extn)) {
-                                fileName=fileName.substring(0, fileName.length() - extn.length());;
+                	String inputValue = inputsMap.get(part.getValue());
+                	if (part.getStripExtensions()!=null) {
+                		for (String extn: part.getStripExtensions()) {
+                    		if (inputValue.endsWith(extn)) {
+                                inputValue=inputValue.substring(0, inputValue.length() - extn.length());;
                     		}
                     	}
                 	}
-                    addName("", fileName, content);
+                    addName("", inputValue, content);
                 }
                 break;
                 case OPTIONS:
@@ -490,14 +497,14 @@ public class GaswParser extends DefaultHandler {
         }
     }
 
-    public GaswInput getGaswInput(String applicationName, Map<String, String> inputsMap, String boutiquesFilePath, String executableName,HashMap<Integer, String> inputid , HashMap<Integer, String> outputid, String invocationString, 
+    public GaswInput getGaswInput(String applicationName, Map<String, String> inputsMap, String executableName,HashMap<Integer, String> inputid , HashMap<Integer, String> outputid, String invocationString, 
     Map<String, String> resultDirectory, String jobId, String sourceFilePath, List<URI> DownloadFiles, String outputDirName)
             throws URISyntaxException, FileNotFoundException, IOException, GaswException, ParseException, SAXException {
+
         getArgument(executableName, inputid, outputid);
-        List<String> parameters = new ArrayList<String>();
-        List<GaswUpload> uploads = new ArrayList<GaswUpload>();
-        logger.info("inputsMapZZZZZZZZZZZZZZZZZ: " + inputsMap);
-        
+        List<String> parameters = new ArrayList<>();
+        List<GaswUpload> uploads = new ArrayList<>();
+
         for (GaswArgument argument : arguments) {
             StringBuilder param = new StringBuilder();
             if (argument.getOption() != null) {
@@ -512,7 +519,6 @@ public class GaswParser extends DefaultHandler {
                     URI valueURI = new URI(
                         GaswUtil.isUri(value) ? value : LFN_PREFIX + value);
                     param.append(new File(valueURI.getPath()).getName());
-                    logger.info("ZZZZZZZZ" + valueURI);
                     downloads.add(valueURI);
                 } else {
                     // Need to escape special characters to avoid bash errors.
@@ -539,39 +545,51 @@ public class GaswParser extends DefaultHandler {
                 parameters.add(param.toString());
             }           
         }
-        //System.out.println(ANSI_BLUE + "downloads: " + downloads.get(0) +ANSI_RESET);
+        /* 
         //This is a workaround and a temporary implementation
         URI uri = downloads.get(0);
         String uriString = uri.toString();
         uriString = uriString.replace(".sh.tar.gz", ".json");
         downloads.set(0, URI.create(uriString));
         //temporary
+        */
         return new GaswInput(applicationName, executableName, parameters, downloads, uploads,
                 gaswVariables, envVariables, invocationString, jobId, sourceFilePath, DownloadFiles, outputDirName);
     }
 
-    public String getArgument(String executableName,HashMap<Integer, String> inputid , HashMap<Integer, String> outputid) throws FileNotFoundException, IOException, GaswException, ParseException, URISyntaxException, SAXException {
-        String download = "lfn:/" + System.getProperty("user.dir") + "/"+ executableName; 
-
-        //downloads.add(new URI(download.replace("]", "").replace("[", "")));
+    public String getArgument(String executableName, HashMap<Integer, String> inputid, HashMap<Integer, String> outputid) throws FileNotFoundException, IOException, GaswException, ParseException, URISyntaxException, SAXException {
+        String download = "lfn:/" + System.getProperty("user.dir") + "/" + executableName;
+    
+        downloads.add(new URI(download.replace("]", "").replace("[", "")));
         inputArg = new GaswInputArg("results-directory", null, false);
         arguments.add(inputArg);
         inputsList.add("results-directory");
-
+        System.out.println(ANSI_RED + "inputArg: " + inputArg + ANSI_RESET);
+    
         for (int i = 0; i < inputid.size(); i++) {
-            inputArg = new GaswInputArg(inputid.get(i), "--"+inputid.get(i),false);
+            inputArg = new GaswInputArg(inputid.get(i), "--" + inputid.get(i), false);
             arguments.add(inputArg);
             inputsList.add(inputid.get(i));
+            System.out.println(ANSI_RED + "inputArg.getName() " + inputArg.getName());
         }
-
+    
         for (int i = 0; i < outputid.size(); i++) {
-            outputArg = new GaswOutputArg(outputid.get(i), "--"+outputid.get(i),false);
-            outputArg.setTemplateParts(templateParts("$prefix1$dir1/$na1", Arrays.asList("results-directory", "inname"), (Set<String>) null));
+            outputArg = new GaswOutputArg(outputid.get(i), "--" + outputid.get(i), false);
+            String templateValue = "$prefix1$dir1/$na1";
+
+            Set<String> stripExtensions = new HashSet<>();
             outputArg.setTemplate(true);
+    
+            if (templateValue.contains("$rep-")) {
+                outputArg.setReplicas(new Integer(templateValue.substring(templateValue.lastIndexOf("-") + 1)));
+                templateValue = templateValue.replaceAll("\\$rep-[0-9]*", "");
+            }
+    
+            outputArg.setTemplateParts(templateParts(templateValue, inputsList, stripExtensions));
             outputArg.setReplicas(GaswConstants.numberOfReplicas);
             arguments.add(outputArg);
             inputsList.add(outputid.get(i));
         }
         return executableName;
-    }
+    }    
 }
