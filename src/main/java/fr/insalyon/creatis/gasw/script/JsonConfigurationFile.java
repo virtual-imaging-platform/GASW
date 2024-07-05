@@ -54,7 +54,7 @@ public class JsonConfigurationFile {
     }
 
     public static void appendJobConfiguration(String serviceCall, List<URI> downloads, String executableName,
-    String invocationString, Map<String, String> envVariables, List<String> parameters, List<GaswUpload> uploads, String jobId, String applicationName, List<URI> DownloadFiles, String outputDirName) throws IOException, GaswException {
+    String invocationString, Map<String, String> envVariables, List<String> parameters, List<GaswUpload> uploads, String jobId, String applicationName, List<URI> DownloadFiles) throws IOException, GaswException {
     Gson gson = new GsonBuilder().setPrettyPrinting().create();
     JsonObject jsonObject = new JsonObject();       
 
@@ -87,7 +87,6 @@ public class JsonConfigurationFile {
         jsonObject.addProperty("parameters", parameters.toString());
         jsonObject.addProperty("uploads", uploadUris.toString());
         jsonObject.addProperty("downloadFiles", DownloadFiles.toString());
-        jsonObject.addProperty("outputDirName", outputDirName);
 
         JsonObject masterJsonObject = new JsonObject();
         masterJsonObject.add("jobConfiguration", jsonObject);

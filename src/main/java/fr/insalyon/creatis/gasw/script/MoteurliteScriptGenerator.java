@@ -83,7 +83,7 @@ public class MoteurliteScriptGenerator {
 
     private void generateJobConfiguration(GaswInput gaswInput, GaswMinorStatusServiceGenerator minorStatusService) throws IOException, GaswException {
         JsonConfigurationFile.appendJobConfiguration(minorStatusService.getServiceCall(), gaswInput.getDownloads(), gaswInput.getExecutableName(), gaswInput.getInvocationString(), 
-        gaswInput.getEnvVariables(), gaswInput.getParameters(), gaswInput.getUploads(), gaswInput.getJobId(), gaswInput.getApplicationName(), gaswInput.getDownloadFiles(), gaswInput.getOutputDirName());
+        gaswInput.getEnvVariables(), gaswInput.getParameters(), gaswInput.getUploads(), gaswInput.getJobId(), gaswInput.getApplicationName(), gaswInput.getDownloadFiles());
     }
 
     private void generateGaswConfiguration(GaswInput gaswInput) throws IOException, GaswException {

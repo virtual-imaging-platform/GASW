@@ -53,7 +53,6 @@ public class GaswInput {
     private String applicationName;
     private static String sourceFilePath;
     private List<URI> downloadFiles;
-    private String outputDirName;
     private Boolean moteurlite = false;
     /**
      *
@@ -67,7 +66,6 @@ public class GaswInput {
      * @param jobId
      * @param sourceFilePath
      * @param applicationName
-     * @param outputDirName
      * @param downloadFiles
      */
     public GaswInput(String executableName, List<String> parameters,
@@ -84,8 +82,7 @@ public class GaswInput {
 
     public GaswInput(String applicationName, String executableName2, List<String> parameters2, List<URI> downloads2,
             List<GaswUpload> uploads2, Map<String, String> gaswVariables2, Map<String, String> envVariables2,
-            String invocationString, String jobId, String sourceFilePath, List<URI> downloadFiles,
-            String outputDirName) {
+            String invocationString, String jobId, String sourceFilePath, List<URI> downloadFiles) {
         
         this.executableName = executableName2;
         this.parameters = parameters2;
@@ -98,7 +95,6 @@ public class GaswInput {
         this.sourceFilePath = sourceFilePath;
         this.applicationName = applicationName;
         this.downloadFiles = downloadFiles;
-        this.outputDirName = outputDirName;
         this.moteurlite = true;
     }
 
@@ -197,10 +193,6 @@ public class GaswInput {
 
     public List<URI> getDownloadFiles(){
         return downloadFiles;
-    }
-
-    public String getOutputDirName(){
-        return outputDirName;
     }
 
     public Boolean getMoteurliteStatus(){

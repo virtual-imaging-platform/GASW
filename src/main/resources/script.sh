@@ -13,7 +13,6 @@ envVariables=$(grep -Po '"envVariables": *\K"[^"]*"' "$configurationJson" | sed 
 parameters=$(grep -Po '"parameters": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
 uploads=$(grep -Po '"uploads": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
 downloadFiles=$(grep -Po '"downloadFiles": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-outputDirName=$(grep -Po '"outputDirName": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
 
 LAB_DEFAULT_BACKGROUD_SCRIPT=$(grep -Po '"LAB_DEFAULT_BACKGROUD_SCRIPT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
 LAB_DEFAULT_CPUTIME=$(grep -Po '"LAB_DEFAULT_CPUTIME": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
@@ -99,7 +98,6 @@ echo "envVariables: $envVariables"
 echo "parameters: $parameters"
 echo "uploads: $uploads"
 echo "downloadFiles: $downloadFiles"
-echo "outputDirName: $outputDirName"
 echo "LAB_DEFAULT_BACKGROUD_SCRIPT: $LAB_DEFAULT_BACKGROUD_SCRIPT"
 
 # Now you have all variables assigned from the JSON file
