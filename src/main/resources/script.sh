@@ -539,12 +539,10 @@ function downloadURI {
     local URI=$1
     local URI_LOWER=`echo $1 | awk '{print tolower($0)}'`
 
-    echo ZZZZZZZZZZZZZZZZZZZ URI $URI
 
     if [[ ${URI_LOWER} == lfn* ]] || [[ $URI_LOWER == /* ]]
     then
                         LFN=`echo "${URI}" | sed -r -e 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%' -e 's#//#/#g'`
-        echo ZZZZZZZZZZZZZZZZZZZZZZZZZZZZ $LFN
         checkCacheDownloadAndCacheLFN $LFN
         validateDownload "Cannot download LFN file"
     fi
