@@ -168,7 +168,7 @@ function downloadShanoirFile {
     local resourceId=`echo $URI | sed -r 's/^.*[?&]resourceId=([^&]*)(&.*)?$/\1/i'`
 
     COMMAND(){
-        curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${resourceId}?format=${format}" --header "Authorization: Bearer ${token}"
+        curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${resourceId}?format=${format}&converter=8" --header "Authorization: Bearer ${token}"
     }
 
     local attempts=0
@@ -193,6 +193,7 @@ function downloadShanoirFile {
         exit 1
     fi
 
+    # if [[ $format = "compressed-nifti" ]]; then
     if [[ $format = "nii" ]]; then
        echo "its a nifti, shanoir has zipped it"
        TMP_UNZIP_DIR="tmp_unzip_dir"
