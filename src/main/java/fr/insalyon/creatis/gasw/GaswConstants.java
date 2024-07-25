@@ -88,7 +88,6 @@ public class GaswConstants {
     // Environment Variables
     public static final String ENV_EXECUTOR = "executor";
     // moteur-lite constants
-    public static final int numberOfReplicas = 1;
-    public static final String INV_DIR = "./inv";
+    public static final String INVOCATION_DIR = "./inv";
     public static final String CONFIG_DIR = "./config";
 }

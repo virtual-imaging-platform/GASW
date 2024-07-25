@@ -52,20 +52,17 @@ public class GaswInput {
     private String jobId;
     private String applicationName;
     private List<URI> downloadFiles;
-    private Boolean moteurlite = false;
+    private Boolean moteurLiteEnabled = false;
+
     /**
-     *
      * @param executableName Name of the executable file.
-     * @param parameters List of parameters associated with the command.
-     * @param downloads List of input files to be downloaded in the worker node.
-     * @param uploads List of output files to be uploaded to a Storage Element.
-     * @param gaswVariables Map of GASW variables.
-     * @param envVariables Map of environment variables.
-     * @param invocationString String representation of the invocation
-     * @param jobId
-     * @param applicationName
-     * @param downloadFiles
+     * @param parameters     List of parameters associated with the command.
+     * @param downloads      List of input files to be downloaded in the worker node.
+     * @param uploads        List of output files to be uploaded to a Storage Element.
+     * @param gaswVariables  Map of GASW variables.
+     * @param envVariables   Map of environment variables.
      */
+
     public GaswInput(String executableName, List<String> parameters,
             List<URI> downloads, List<GaswUpload> uploads,
             Map<String, String> gaswVariables, Map<String, String> envVariables) {
@@ -77,6 +74,19 @@ public class GaswInput {
         this.gaswVariables = gaswVariables;
         this.envVariables = envVariables;
     }
+
+    /**
+     * @param executableName Name of the executable file.
+     * @param parameters List of parameters associated with the command.
+     * @param downloads List of input files to be downloaded in the worker node.
+     * @param uploads List of output files to be uploaded to a Storage Element.
+     * @param gaswVariables Map of GASW variables.
+     * @param envVariables Map of environment variables.
+     * @param invocationString String representation of the invocation
+     * @param jobId
+     * @param applicationName
+     * @param downloadFiles
+     */
 
     public GaswInput(String applicationName, String executableName2, List<String> parameters2, List<URI> downloads2,
             List<GaswUpload> uploads2, Map<String, String> gaswVariables2, Map<String, String> envVariables2,
@@ -92,10 +102,8 @@ public class GaswInput {
         this.jobId = jobId;
         this.applicationName = applicationName;
         this.downloadFiles = downloadFiles;
-        this.moteurlite = true;
+        this.moteurLiteEnabled = true;
     }
-
- 
 
     /**
      * Adds a parameter to the list of parameters.
@@ -188,7 +196,7 @@ public class GaswInput {
         return downloadFiles;
     }
 
-    public Boolean getMoteurliteStatus(){
-        return moteurlite;
+    public Boolean isMoteurLiteEnabled(){
+        return moteurLiteEnabled;
     }
 }
