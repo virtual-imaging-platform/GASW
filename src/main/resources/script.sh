@@ -1,105 +1,15 @@
 # Extract filename without extension
 filename=$(basename "${0%.sh}")
 # Path to the configuration JSON file
-configurationJson="config/$filename-configuration.json"
-jsonFileName=$(grep -Po '"jsonFileName": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-applicationName=$(grep -Po '"applicationName": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-jobId=$(grep -Po '"jobId": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-invocationJson=$(grep -Po '"invocationJson": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-serviceCall=$(grep -Po '"serviceCall": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-downloads=$(grep -Po '"downloads": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-invocationString=$(grep -Po '"invocationString": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-envVariables=$(grep -Po '"envVariables": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-parameters=$(grep -Po '"parameters": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-uploads=$(grep -Po '"uploads": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-downloadFiles=$(grep -Po '"downloadFiles": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
+configurationFile="config/$filename-configuration.sh"
 
-LAB_DEFAULT_BACKGROUD_SCRIPT=$(grep -Po '"LAB_DEFAULT_BACKGROUD_SCRIPT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_DEFAULT_CPUTIME=$(grep -Po '"LAB_DEFAULT_CPUTIME": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_DEFAULT_ENVIRONMENT=$(grep -Po '"LAB_DEFAULT_ENVIRONMENT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_DEFAULT_EXECUTOR=$(grep -Po '"LAB_DEFAULT_EXECUTOR": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_DEFAULT_REQUIREMENTS=$(grep -Po '"LAB_DEFAULT_REQUIREMENTS": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_DEFAULT_RETRY_COUNT=$(grep -Po '"LAB_DEFAULT_RETRY_COUNT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_DEFAULT_SLEEPTIME=$(grep -Po '"LAB_DEFAULT_SLEEPTIME": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_DEFAULT_TIMEOUT=$(grep -Po '"LAB_DEFAULT_TIMEOUT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_FAILOVER_ENABLED=$(grep -Po '"LAB_FAILOVER_ENABLED": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_FAILOVER_HOME=$(grep -Po '"LAB_FAILOVER_HOME": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_FAILOVER_HOST=$(grep -Po '"LAB_FAILOVER_HOST": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_FAILOVER_PORT=$(grep -Po '"LAB_FAILOVER_PORT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_FAILOVER_RETRY=$(grep -Po '"LAB_FAILOVER_RETRY": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_MINORSTATUS_ENABLED=$(grep -Po '"LAB_MINORSTATUS_ENABLED": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_PLUGIN_DB=$(grep -Po '"LAB_PLUGIN_DB": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_PLUGIN_EXECUTOR=$(grep -Po '"LAB_PLUGIN_EXECUTOR": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_PLUGIN_LISTENER=$(grep -Po '"LAB_PLUGIN_LISTENER": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_VO_DEFAULT_SE=$(grep -Po '"LAB_VO_DEFAULT_SE": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_VO_NAME=$(grep -Po '"LAB_VO_NAME": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_VO_USE_CLOSE_SE=$(grep -Po '"LAB_VO_USE_CLOSE_SE": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_BOSH_CVMFS_PATH=$(grep -Po '"LAB_BOSH_CVMFS_PATH": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_CONTAINERS_CVMFS_PATH=$(grep -Po '"LAB_CONTAINERS_CVMFS_PATH": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_UDOCKER_TAG=$(grep -Po '"LAB_UDOCKER_TAG": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_MIN_AVG_DOWNLOAD_THROUGHPUT=$(grep -Po '"LAB_MIN_AVG_DOWNLOAD_THROUGHPUT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-CONNECT_TIMEOUT=$(grep -Po '"CONNECT_TIMEOUT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-BDII_TIMEOUT=$(grep -Po '"BDII_TIMEOUT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-SRM_TIMEOUT=$(grep -Po '"SRM_TIMEOUT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-SCRIPT_ROOT=$(grep -Po '"SCRIPT_ROOT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-JDL_ROOT=$(grep -Po '"JDL_ROOT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-OUT_ROOT=$(grep -Po '"OUT_ROOT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-ERR_ROOT=$(grep -Po '"ERR_ROOT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-CACHE_DIR=$(grep -Po '"CACHE_DIR": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-CACHE_FILE=$(grep -Po '"CACHE_FILE": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-INV_DIR=$(grep -Po '"INV_DIR": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-CONFIG_DIR=$(grep -Po '"CONFIG_DIR": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-OUT_EXT=$(grep -Po '"OUT_EXT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-ERR_EXT=$(grep -Po '"ERR_EXT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-ERR_APP_EXT=$(grep -Po '"ERR_APP_EXT": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-ENV_EXECUTOR=$(grep -Po '"ENV_EXECUTOR": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-numberOfReplicas=$(grep -Po '"numberOfReplicas": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-LAB_BOUTIQUES_PROV_DIR=$(grep -Po '"LAB_BOUTIQUES_PROV_DIR": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-APPTAINER_PATH=$(grep -Po '"APPTAINER_PATH": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-
-defaultSleeptime=$(grep -Po '"defaultSleeptime": *\K[^,]*' "$configurationJson")
-simulationID=$(grep -Po '"simulationID": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-workflowID=$(grep -Po '"workflowID": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-executionPath=$(grep -Po '"executionPath": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-defaultBackgroundScript=$(grep -Po '"defaultBackgroundScript": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-defaultCPUTime=$(grep -Po '"defaultCPUTime": *\K[^,]*' "$configurationJson")
-defaultEnvironment=$(grep -Po '"defaultEnvironment": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-defaultExecutor=$(grep -Po '"defaultExecutor": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-voDefaultSE=$(jq -r '.gaswConfiguration.voDefaultSE' "$configurationJson" | tr -d '"')
-voUseCloseSE=$(grep -Po '"voUseCloseSE": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-boshCVMFSPath=$(grep -Po '"boshCVMFSPath": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-containersCVMFSPath=$(grep -Po '"containersCVMFSPath": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-udockerTag=$(grep -Po '"udockerTag": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-failOverEnabled=$(grep -Po '"failOverEnabled": *\K[^,]*' "$configurationJson")
-failOverHost=$(grep -Po '"failOverHost": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-failOverPort=$(grep -Po '"failOverPort": *\K[^,]*' "$configurationJson")
-failOverHome=$(grep -Po '"failOverHome": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-minorStatusEnabled=$(grep -Po '"minorStatusEnabled": *\K[^,]*' "$configurationJson")
-minAvgDownloadThroughput=$(grep -Po '"minAvgDownloadThroughput": *\K[^,]*' "$configurationJson")
-defaultRetryCount=$(grep -Po '"defaultRetryCount": *\K[^,]*' "$configurationJson")
-executorPlugins=$(grep -Po '"executorPlugins": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-listenerPlugins=$(grep -Po '"listenerPlugins": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-sessionFactory=$(grep -Po '"sessionFactory": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-failOverMaxRetry=$(grep -Po '"failOverMaxRetry": *\K[^,]*' "$configurationJson")
-config=$(grep -Po '"config": *\K"[^"]*"' "$configurationJson" | sed 's/"//g')
-boutiquesProvenanceDir=$(jq -r '.gaswConfiguration.boutiquesProvenanceDir' "$configurationJson" | sed 's/\\"//g' | sed 's/^"//;s/"$//')
-
-
-echo $HOME
-echo "boutiquesProvenanceDir: $boutiquesProvenanceDir"
-echo "jsonFileName: $jsonFileName"
-echo "applicationName: $applicationName"
-echo "jobId: $jobId"
-echo "invocationJson: $invocationJson"
-echo "serviceCall: $serviceCall"
-echo "downloads: $downloads"
-echo "invocationString: $invocationString"
-echo "envVariables: $envVariables"
-echo "parameters: $parameters"
-echo "uploads: $uploads"
-echo "downloadFiles: $downloadFiles"
-echo "LAB_DEFAULT_BACKGROUD_SCRIPT: $LAB_DEFAULT_BACKGROUD_SCRIPT"
-
+# Source the configuration file
+if [ -f "$configurationFile" ]; then
+    source "$configurationFile"
+else
+    echo "Configuration file $configurationFile not found!"
+    exit 1
+fi
 # Now you have all variables assigned from the JSON file
 # You can use them as needed in your script
 
@@ -129,6 +39,31 @@ function stopLog {
   echo "</${logName}>" >&2
 }
 
+function download_udocker {
+  #installation of udocker
+  info "cloning udocker ${UDOCKER_TAG} "
+  git clone --depth=1 --branch ${UDOCKER_TAG} https://github.com/indigo-dc/udocker.git
+  (cd udocker/udocker; ln -s maincmd.py udocker)
+  export PATH=`pwd`/udocker/udocker:$PATH
+  
+  #creating a temporary directory for udocker containers
+  mkdir -p containers
+  export UDOCKER_CONTAINERS=$PWD/containers
+  
+  #find pre-deployed containers on CVMFS, and create a symlink to the udocker containers directory
+  ## use a global velocity escape to avoid velocity escaping issue
+  for d in ${CONTAINERS_CVMFS_PATH}/*/ ;
+     do mkdir containers/$(basename "${d%/}") && ln -s "${d%/}"/* containers/$(basename "${d%/}")/
+  done
+  cat >docker <<'EOF'
+        #!/bin/bash
+        MYARGS=$*
+        echo "executing ./udocker/udocker/udocker $MYARGS"
+        ./udocker/udocker/udocker $MYARGS
+EOF
+  chmod a+x docker
+  export PATH=$PWD:$PATH
+}
 
 function cleanup {
     if [[ $isGfalmountExec -eq 0 ]]    #flag checks if directories are mounted with gfal
@@ -175,8 +110,7 @@ function checkCacheDownloadAndCacheLFN {
     local LFN=$1
     local download="true"
 
-    echo "ZZZZZZZZZZZZZZZZZZZ $LFN ZZZZZZZZZ $BASEDIR"
-    local LOCALPATH=$(awk -v L=${LFN} '$1==L {print $2}' ${BASEDIR}/cache/cache.txt)
+    local LOCALPATH=$(awk -v L=${LFN} '$1==L {print $2}' $cacheDir/$cacheFile)
     if [ -n "${LOCALPATH}" ]; then
         info "There is an entry in the cache: test if the local file still here"
         local TIMESTAMP_LOCAL=""
@@ -187,7 +121,7 @@ function checkCacheDownloadAndCacheLFN {
             local YEAR=$(date +%Y)
             local YEARBEFORE=$(expr ${YEAR} - 1)
             local currentDate=$(date +%s)
-            local TIMESTAMP_CACHE=$(awk -v L=${LFN} '$1==L {print $3}' ${BASEDIR}/cache/cache.txt)
+            local TIMESTAMP_CACHE=$(awk -v L=${LFN} '$1==L {print $3}' $cacheDir/$cacheFile)
             local LOCALMONTH=$(ls -la ${LOCALPATH} | awk -F' ' '{print $6}')
             local MONTHTIME=$(date -d "${LOCALMONTH} 1 00:00" +%s)
             date_local=$(ls -la ${LOCALPATH} | awk -F' ' '{print $6, $7, $8}')
@@ -342,6 +276,13 @@ function wait_for_token {
             break
         fi
     done
+
+    # Check the token after the timeout
+    if [[ -z "${token}" ]]; then
+        echo "Token refreshing is taking too long. Aborting the process."
+        stopRefreshingToken
+        exit 1
+    fi
 }
 
 
@@ -359,7 +300,7 @@ function downloadLFN {
 
     info "getting file size and computing sendReceiveTimeout"
     local size=$(dirac-dms-lfn-metadata ${LFN} | grep Size | sed -r 's/.* ([0-9]+)L,/\1/')
-            local sendReceiveTimeout=`echo $[${size:-0}/150/1024]`
+    local sendReceiveTimeout=`echo ${D}[${D}{size:-0}/${minAvgDownloadThroughput}/1024]`
     if [ "$sendReceiveTimeout" = "" ] || [ $sendReceiveTimeout -le 900 ]
     then
         info "sendReceiveTimeout empty or too small, setting it to 900s"
@@ -372,7 +313,7 @@ function downloadLFN {
     info "Removing file ${LOCAL} in case it is already here"
     \rm -f ${LOCAL}
 
-    local totalTimeout=$((10 + 30 + ${sendReceiveTimeout}))
+    local totalTimeout=$((${timeout} + ${srmTimeout} + ${sendReceiveTimeout}))
 
     local LINE="time -p dirac-dms-get-file -d -o /Resources/StorageElements/GFAL_TIMEOUT=${totalTimeout} ${LFN}"
     info ${LINE}
@@ -443,6 +384,8 @@ isGfalmountExec=1
 function mountGfal {
     local URI=$1
 
+    # The regexpes are written so that case is ignored and the
+    # arguments can be in any order.
     local fileName=$(echo $URI | sed -r 's#^srm:/(//)?([^/].*)\?.*$#\2#i')
     local gfal_basename=$(basename ${fileName})
     local job_id=${gfal_basename}_$(basename $PWD)
@@ -495,26 +438,39 @@ function downloadShanoirFile {
     
     wait_for_token
 
-    local token=$(cat $SHANOIR_TOKEN_LOCATION)
+    local token=`cat $SHANOIR_TOKEN_LOCATION`
 
     echo "token inside download : ${token}"
 
-    local fileName=$(echo $URI | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i')
-    local apiUrl=$(echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i')
-    local format=$(echo $URI | sed -r 's/^.*[?&]format=([^&]*)(&.*)?$/\1/i')
-    local datasetId=$(echo $URI | sed -r 's/^.*[?&]datasetId=([^&]*)(&.*)?$/\1/i')
+    local fileName=`echo $URI | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i'`
+    local apiUrl=`echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i'`
+    local format=`echo $URI | sed -r 's/^.*[?&]format=([^&]*)(&.*)?$/\1/i'`
+    local resourceId=`echo $URI | sed -r 's/^.*[?&]resourceId=([^&]*)(&.*)?$/\1/i'`
 
     COMMAND(){
-        curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${datasetId}?format=${format}" --header "Authorization: Bearer ${token}"
+        curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${resourceId}?format=${format}" --header "Authorization: Bearer ${token}"
     }
 
-    status_code=$(COMMAND)
-    echo "downloadShanoirFIle, status code is : ${status_code}"
-    
-    if [[ "$status_code" -ne 200 ]]; then
-       echo "error while downloading the file with status : ${status_code}"
-       stopRefreshingToken
-       exit 1
+    local attempts=0
+
+    while [[ "${attempts}" -ne 3 ]]; do
+        status_code=$(COMMAND)
+        info "downloadShanoirFIle, status code is : ${status_code}"
+
+        if [[ "$status_code" -ne 200 ]]; then
+            error "error while downloading the file with status : ${status_code}"
+            attempts=$((attempts + 1))
+            info "${attempts} done. Waiting 3 seconds and maybe do another attempt"
+            sleep 3
+        else
+            break
+        fi
+    done
+
+    if [[ "${attempts}" -ge 3 ]]; then
+        error "3 failures at downloading, stop trying and stop the job"
+        stopRefreshingToken
+        exit 1
     fi
 
     if [[ $format = "nii" ]]; then
@@ -522,18 +478,20 @@ function downloadShanoirFile {
        TMP_UNZIP_DIR="tmp_unzip_dir"
        mkdir $TMP_UNZIP_DIR
        mv $fileName $TMP_UNZIP_DIR/tmp.zip
-       cd $TMP_UNZIP_DIR
-       unzip tmp.zip
-       if [[ $(ls -1q *.nii.gz | wc -l) -ne 1 ]]; then
-            echo "too many files in shanoir nifti, supporting only 1"
+       unzip -d $TMP_UNZIP_DIR $TMP_UNZIP_DIR/tmp.zip
+       # there should be a unique .nii ou .nii.gz file somewhere
+       searchResult=$(find $TMP_UNZIP_DIR -name '*.nii.gz' -o -name '*.nii')
+       # doing this trick instead of using "wc -l" because it fails when there is no result
+       if [[ $(echo -n "$searchResult" | grep -c '^') -ne 1 ]]; then
+            error "too many or none nifti file (.nii or .nii.gz) in shanoir zip, supporting only 1"
             stopRefreshingToken
             exit 1
        fi
-       cd ..
-       mv $TMP_UNZIP_DIR/*.nii.gz $fileName
+       mv "$searchResult" "$fileName"
        rm -rf $TMP_UNZIP_DIR
     fi
 }
+
 function downloadURI {
 
     local URI=$1
@@ -542,7 +500,10 @@ function downloadURI {
 
     if [[ ${URI_LOWER} == lfn* ]] || [[ $URI_LOWER == /* ]]
     then
-                        LFN=`echo "${URI}" | sed -r -e 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%' -e 's#//#/#g'`
+        ## Extract the path part from the uri, and remove // if
+        ## present in path.
+        LFN=`echo "${URI}" | sed -r -e 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%' -e 's#//#/#g'`
+
         checkCacheDownloadAndCacheLFN $LFN
         validateDownload "Cannot download LFN file"
     fi
@@ -569,9 +530,9 @@ function downloadURI {
     if [[ ${URI_LOWER} == shanoir:/* ]]
     then
         if [[ "$REFRESHING_JOB_STARTED" == false ]]; then
-                      refresh_token ${URI} & 
-           REFRESH_PID=$!  
-           REFRESHING_JOB_STARTED=true
+            refresh_token ${URI} & 
+            REFRESH_PID=$!  
+            REFRESHING_JOB_STARTED=true
         fi
         downloadShanoirFile ${URI}
         validateDownload "Cannot download shanoir file"
@@ -628,43 +589,6 @@ function addToCache {
 export -f addToCache
 
 
-function addToFailOver {
-    local LFN="$1"
-    local FILE="$2"
-    local REMOTEFILE=$(lcg-lr "lfn:${LFN}" | grep "$failOverHost")
-    generated=${REMOTEFILE#*generated}
-    local RPFILE="${generated}"
-
-    lcg-del --nobdii --defaultsetype srmv2 -v "srm://$failOverHost:$failOverPort/srm/managerv2?SFN=$failOverHome${RPFILE}" &>/dev/null
-    lfc-ls "${LFN}"
-    if [ $? = 0 ]; then
-        lfc-rename "${LFN}" "${LFN}-garbage-$(date +"%Y-%m-%d-%H-%M-%S")"
-    fi
-    lfc-mkdir -p "$(dirname "${LFN}")"
-    local FILENAME=$(echo "$RANDOM$RANDOM" | md5sum | awk '{print $1}')
-    local FOLDERNAME=$(date +"%Y-%m-%d")
-    local OPTS="--nobdii --defaultsetype srmv2"
-    DM_DEST="srm://$failOverHost:$failOverPort/srm/managerv2?SFN=$failOverHome/${FOLDERNAME}/file-${FILENAME}"
-    GUID=$(lcg-cr ${OPTS} -d "${DM_DEST}" "file:${FILE}")
-    if [ $? = 0 ]; then
-        lcg-aa "${GUID}" "lfn:${LFN}"
-        if [ $? = 0 ]; then
-            info "Data successfully copied to Fail Over."
-        else
-            error "Unable to create LFN alias ${LFN} to ${GUID}"
-            return 1
-        fi
-    else
-        error "Unable to copy data to Fail Over."
-        return 1
-    fi
-}
-
-export -f addToFailOver
-
-
-#!/bin/bash
-
 nSEs() {
     local i=0
     for n in ${SELIST}; do
@@ -710,13 +634,16 @@ uploadLfnFile() {
     local nrep=$3
     local SELIST=${SE}
 
-    
-
+    # Sanitize LFN:
+    # - "lfn:" at the beginning is optional for dirac-dms-* commands,
+    #    but does not work as expected with comdirac commands like
+    #    dmkdir.
+    # - "//" are not accepted, neither by dirac-dms-*, nor by dmkdir.
     LFN=$(echo ${LFN} | sed -r -e 's/^lfn://' -e 's#//#/#g')
 
     info "getting file size and computing sendReceiveTimeout"
     local size=$(ls -l ${FILE} | awk -F' ' '{print $5}')
-    local sendReceiveTimeout=$((size / minAvgDownloadThroughput / 1024))
+    local sendReceiveTimeout=$(((${size:-0} / minAvgDownloadThroughput / 1024)))
     if [ -z "$sendReceiveTimeout" ] || [ "$sendReceiveTimeout" -le 900 ]; then
         info "sendReceiveTimeout empty or too small, setting it to 900s"
         sendReceiveTimeout=900
@@ -770,6 +697,15 @@ uploadLfnFile() {
     fi
 }
 
+#
+# This method is used to upload results of an execution to an upload url.
+# URI are of the form of the following example.  A single "/", instead
+# of 3, after "shanoir:" is also allowed.
+# shanoir:/path/to/file/filename?upload_url=https://upload/url/&type=File&md5=None
+# 
+# This method depends on refresh token process to refresh the token when it needs
+#
+
 uploadShanoirFile() {
     local URI=$1
 
@@ -797,6 +733,15 @@ uploadShanoirFile() {
         exit 1
     fi
 }
+
+#
+# URI are of the form of the following example.  A single "/", instead
+# of 3, after "girder:" is also allowed.
+# girder:///control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69
+#
+# The code is quite the same as the downloadGirderFile function.  Any
+# changes should be done the same in both functions.
+#
 
 uploadGirderFile() {
     local URI=$1
@@ -826,72 +771,64 @@ uploadGirderFile() {
 }
 
 function upload {
-
     local URI=$1
     local ID=$2
     local NREP=$3
     local TEST=$4
 
     startLog file_upload uri="${URI}"
-
-        if [[ ${URI} == shanoir:/* ]]
-    then
-        if [ "${TEST}" != "true" ]
-        then
-            if [[ "$REFRESHING_JOB_STARTED" == false ]]; then
-                                refresh_token ${URI} & 
+    
+    # The pattern must NOT be put between quotation marks.
+    if [[ ${URI} == shanoir:/* ]]; then
+        if [ "${TEST}" != "true" ]; then
+            if [ "$REFRESHING_JOB_STARTED" == false ]; then
+                refresh_token ${URI} &
                 REFRESH_PID=$!  
                 REFRESHING_JOB_STARTED=true
             fi
             uploadShanoirFile ${URI}
         fi
-    elif [[ ${URI} == girder:/* ]]
-    then
-        if [ "${TEST}" != "true" ]
-        then
+    elif [[ ${URI} == girder:/* ]]; then
+        if [ "${TEST}" != "true" ]; then
             uploadGirderFile ${URI}
         fi
-    elif [[ ${URI} == file:/* ]]
-    then
-        local FILENAME=`echo $URI | sed 's%file://*%/%'`
-        local NAME=`basename ${FILENAME}`
+    elif [[ ${URI} == file:/* ]]; then
+        local FILENAME=$(echo $URI | sed 's%file://*%/%')
+        local NAME=$(basename ${FILENAME})
 
-        if [ -e $FILENAME ]
-        then
+        if [ -e $FILENAME ]; then
             error "Result file already exists: $FILENAME"
             error "Exiting with return value 1"
             exit 1
         fi
 
-        if [ "${TEST}" = "true" ]
-        then
+        if [ "${TEST}" = "true" ]; then
             echo "test result" > ${NAME}
         fi
 
-        \mv $NAME $FILENAME
-        if [ $? != 0 ]
-        then
+        mv $NAME $FILENAME
+        if [ $? != 0 ]; then
             error "Error while moving result local file."
             error "Exiting with return value 1"
             exit 1
         fi
     else
-                local LFN=`echo "${URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%'`
+        # Extract the path part from the uri.
+        local LFN=$(echo "${URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%')
         local NAME=${LFN##*/}
 
-        if [ "${TEST}" = "true" ]
-        then
+        if [ "${TEST}" = "true" ]; then
             LFN=${LFN}-uploadTest
             echo "test result" > ${NAME}
         fi
 
         uploadLfnFile ${LFN} ${PWD}/${NAME} ${NREP}
 
-        if [ "${TEST}" = "true" ]
-        then
-            \rm -f ${NAME}
+        if [ "${TEST}" = "true" ]; then
+            rm -f ${NAME}
         fi
     fi
+
     stopLog file_upload
 }
 
@@ -904,9 +841,9 @@ function delete {
     startLog file_delete uri="${URI}"
 
     ## The pattern must NOT be put between quotation marks.
-    if [[ ${URI} == girder:* ]]; then
+    if [[ ${URI} == girder:/* ]]; then
         info "delete not supported for girder"
-    elif [[ ${URI} == file:* ]]; then
+    elif [[ ${URI} == file:/* ]]; then
         local FILENAME=$(echo "$URI" | sed 's%file://*%/%')
 
         info "Removing local file ${FILENAME}..."
@@ -938,7 +875,7 @@ export GASW_JOB_ENV=NORMAL
 export GASW_EXEC_ENV=EGEE
 
 # Builds the custom environment
-BASEDIR=${PWD}
+export BASEDIR=${PWD}
 ENV=$defaultEnvironment
 export $ENV
 __MOTEUR_ENV=$defaultEnvironment
@@ -950,7 +887,6 @@ export UDOCKER_TAG=$udockerTag
 export BOUTIQUES_PROV_DIR=$boutiquesProvenanceDir
 
 export MOTEUR_WORKFLOWID="$simulationID"
-export MOTEUR_WORKFLOWID="$workflowID"
 
 # If the execution environment is a cluster, add the vlet binaries to the path
 if [[ "$GASW_EXEC_ENV" == "PBS" ]]; then
@@ -1076,9 +1012,7 @@ for download in "${download_array[@]}"; do
     # Remove leading and trailing whitespace
     download="$(echo -e "${download}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     # Process the URL using downloadURI function
-    jsonFile=$(basename ${download})
-    ln -s ../workflow.json ./${jsonFile}
-    #downloadURI "$download"
+    downloadURI "$download"
     # Print the processed URL
     echo "$download"
 done
@@ -1118,36 +1052,6 @@ done
 stopLog application_environment
 
 
-function download_udocker {
-  #installation of udocker
-  info "cloning udocker ${UDOCKER_TAG} "
-  git clone --depth=1 --branch ${UDOCKER_TAG} https://github.com/indigo-dc/udocker.git
-  (cd udocker/udocker; ln -s maincmd.py udocker)
-  export PATH=`pwd`/udocker/udocker:$PATH
-  
-  #creating a temporary directory for udocker containers
-  mkdir -p containers
-  export UDOCKER_CONTAINERS=$PWD/containers
-  
-  #find pre-deployed containers on CVMFS, and create a symlink to the udocker containers directory
-  ## use a global velocity escape to avoid velocity escaping issue
-  for d in ${CONTAINERS_CVMFS_PATH}/*/ ;
-     do mkdir containers/$(basename "${d%/}") && ln -s "${d%/}"/* containers/$(basename "${d%/}")/
-  done
-  cat >docker <<'EOF'
-        #!/bin/bash
-        MYARGS=$*
-        echo "executing ./udocker/udocker/udocker $MYARGS"
-        ./udocker/udocker/udocker $MYARGS
-EOF
-  chmod a+x docker
-  export PATH=$PWD:$PATH
-}
-
-if ! command -v docker
-then
-    download_udocker
-fi
 ####################################################################################################
 ####################################################################################################
 function checkBosh {
@@ -1187,36 +1091,13 @@ function checkBosh {
 }
 checkBosh $BOSH_CVMFS_PATH
 ####################################################################################################
-function boutiques_exec {
-echo "import sys; sys.setdefaultencoding(\"UTF8\")" > sitecustomize.py
-COMMAND_LINE="PYTHONPATH=".:$PYTHONPATH" $BOSHEXEC exec launch -x $jsonFileName ../inv/$invocationJson -v $PWD/../cache:$PWD/../cache"
-# Execute the command and store the output in a temporary file
-eval "$COMMAND_LINE" > temp_output.txt
-
-# Read the lines from the temporary file into the array
-readarray -t lines < temp_output.txt
-
-# Remove the temporary file
-rm temp_output.txt
-
-Boutiques_provenance_logs="[ INFO ] Data capture from execution saved to cache as"
-for line in "${lines[@]}"; do
-    echo "$line"
-    if [[ $line == "$Boutiques_provenance_logs"* ]];
-    then
-    Provenance_file=${line#*"$Boutiques_provenance_logs"}
-    fi
-done
-
-if [ $? != 0 ]
+# Clone udocker (A basic user tool to execute simple docker containers in batch or interactive systems without root privileges)
+if ! command -v docker
 then
-    error "VIP_test execution failed!"
-    exit 1
+    download_udocker
 fi
+####################################################################################################
 
-info "Execution of VIP_test completed."
-echo "Provenance file: $Provenance_file"
-}
 
 # Perform service call if minor status is enabled
 if [[ $minorStatusEnabled == true && $serviceCall ]]; then
@@ -1232,6 +1113,10 @@ echo "$params parameters"
 # Export current directory to LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}
 
+startLog application_execution
+echo "import sys; sys.setdefaultencoding(\"UTF8\")" > sitecustomize.py
+# Execute the command
+PYTHONPATH=".:$PYTHONPATH" $BOSHEXEC exec launch -x $jsonFileName ../inv/$invocationJson -v $PWD/../cache:$PWD/../cache
 
 # Check if execution was successful
 if [ $? -ne 0 ]; then
@@ -1251,10 +1136,11 @@ info "Execution time was $(expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD})s"
 
 __MOTEUR_ARGS="$params"
 __MOTEUR_EXE="$executableName"
+
 ####################################################################################################
 ####################################################################################################
 # Function to process provenance and extract output file names
-function provenance() {
+function parseProvenanceFile() {
     Provenance_file=$PWD/provenance_file.json
     keys_with_file_name=$(jq -r '."public-output"."output-files" | to_entries[] | "\(.key) \(.value."file-name")"' $Provenance_file)
     output_name=($(echo ${keys_with_file_name}))
@@ -1266,7 +1152,6 @@ function provenance() {
     done
 }
 
-boutiques_exec
 function copyProvenanceFile() {
   local dest=$1
   # $BOUTIQUES_PROV_DIR is defined by GASW from the settings file
@@ -1285,15 +1170,7 @@ function copyProvenanceFile() {
 }
 copyProvenanceFile "./provenance.json"
 
-provenance
-
-PROVENANCE_DEST="$BASEDIR/$DIRNAME.sh.provenance.json"
-echo "copying provenance file to $PROVENANCE_DEST"
-if [ -f provenance.json ]; then
-  cp provenance.json "$PROVENANCE_DEST"
-else
-  echo "warning: provenance.json not found"
-fi
+parseProvenanceFile
 
 
 startLog results_upload
@@ -1320,8 +1197,6 @@ do
     upload "$upload_path" "$(tr -dc '[:alpha:]' < /dev/urandom 2>/dev/null | head -c 32)" "$numberOfReplicas" false
 
 done
-
-
 
 __MOTEUR_OUT="$uploadsList"
 

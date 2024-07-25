@@ -18,10 +18,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.hibernate.SessionFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-
 import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
@@ -37,90 +33,73 @@ import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 
 public class JsonConfigurationFile {
 
-    public static Path createJsonConfiguration(String jobId) throws IOException {
+    public static Path createConfigurationFile(String jobId) throws IOException {
         // Specify the file path
         File confDir = new File(GaswConstants.CONFIG_DIR);
         if (!confDir.exists()) {
             confDir.mkdir();
         }
         jobId = jobId.endsWith(".sh") ? jobId.substring(0, jobId.length() - 3) : jobId;
-        Path jsonConfigurationFile = Paths.get(confDir + "/"+ jobId+"-configuration.json");
-       
+        Path configurationFile = Paths.get(confDir + "/" + jobId + "-configuration.sh");
+
         // Check if the file exists, create it if not
-        if (!Files.exists(jsonConfigurationFile)) {
-            Files.createFile(jsonConfigurationFile);
+        if (!Files.exists(configurationFile)) {
+            Files.createFile(configurationFile);
         }
-        return jsonConfigurationFile;
+        return configurationFile;
     }
 
     public static void appendJobConfiguration(String serviceCall, List<URI> downloads, String executableName,
-    String invocationString, Map<String, String> envVariables, List<String> parameters, List<GaswUpload> uploads, String jobId, String applicationName, List<URI> DownloadFiles) throws IOException, GaswException {
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    JsonObject jsonObject = new JsonObject();       
+                                              String invocationString, Map<String, String> envVariables, List<String> parameters, List<GaswUpload> uploads, String jobId, String applicationName, List<URI> downloadFiles) throws IOException, GaswException {
 
-    if (executableName != null) {
-        String jsonFileName = (executableName.contains(".")) ? executableName.substring(0, executableName.lastIndexOf(".")) + ".json" : "";
+        Path configurationFile = createConfigurationFile(jobId);
+
         List<URI> uploadUris = (uploads != null) ? uploads.stream().map(GaswUpload::getURI).collect(Collectors.toList()) : new ArrayList<>();
         String invocationJson = jobId.substring(0, jobId.lastIndexOf(".")) + "-invocation.json";
 
-        applicationName = (applicationName != null) ? applicationName : ""; 
+        applicationName = (applicationName != null) ? applicationName : "";
         parameters = (parameters != null) ? parameters : new ArrayList<>();
         envVariables = (envVariables != null) ? envVariables : new HashMap<>();
         serviceCall = (serviceCall != null) ? serviceCall : "";
         invocationString = (invocationString != null) ? invocationString : "";
-        jsonFileName = (jsonFileName != null) ? jsonFileName : "";
+        executableName = (executableName != null) ? executableName : "";
 
         Set<URI> uniqueDownloads = new HashSet<>(downloads);
         downloads = new ArrayList<>(uniqueDownloads);
-        
-        Set<URI> uniqueDownloadFiles = new HashSet<>(DownloadFiles);
-        DownloadFiles = new ArrayList<>(uniqueDownloadFiles);
-                    
-        jsonObject.addProperty("applicationName", applicationName);
-        jsonObject.addProperty("jsonFileName", jsonFileName);
-        jsonObject.addProperty("jobId", jobId);
-        jsonObject.addProperty("invocationJson", invocationJson);
-        jsonObject.addProperty("serviceCall", serviceCall);
-        jsonObject.addProperty("downloads", downloads.toString());
-        jsonObject.addProperty("invocationString", invocationString);
-        jsonObject.addProperty("envVariables", envVariables.toString());
-        jsonObject.addProperty("parameters", parameters.toString());
-        jsonObject.addProperty("uploads", uploadUris.toString());
-        jsonObject.addProperty("downloadFiles", DownloadFiles.toString());
 
-        JsonObject masterJsonObject = new JsonObject();
-        masterJsonObject.add("jobConfiguration", jsonObject);
+        Set<URI> uniqueDownloadFiles = new HashSet<>(downloadFiles);
+        downloadFiles = new ArrayList<>(uniqueDownloadFiles);
 
-        Path jsonConfigurationFile = createJsonConfiguration(jobId);
-        try (FileWriter fileWriter = new FileWriter(jsonConfigurationFile.toFile())) {
-            gson.toJson(masterJsonObject, fileWriter);
+        try (FileWriter fileWriter = new FileWriter(configurationFile.toFile(), true)) {
+            fileWriter.write("#!/bin/bash\n");
+            fileWriter.write("applicationName=\"" + applicationName + "\"\n");
+            fileWriter.write("jsonFileName=\"" + executableName + "\"\n");
+            fileWriter.write("jobId=\"" + jobId + "\"\n");
+            fileWriter.write("invocationJson=\"" + invocationJson + "\"\n");
+            fileWriter.write("serviceCall=\"" + serviceCall + "\"\n");
+            fileWriter.write("downloads=(" + String.join(" ", downloads.stream().map(URI::toString).collect(Collectors.toList())) + ")\n");
+            fileWriter.write("invocationString=\"" + invocationString + "\"\n");
+            fileWriter.write("envVariables=(" + envVariables.entrySet().stream().map(e -> "\"" + e.getKey() + "=" + e.getValue() + "\"").collect(Collectors.joining(" ")) + ")\n");
+            fileWriter.write("parameters=(" + String.join(" ", parameters) + ")\n");
+            fileWriter.write("uploads=(" + String.join(" ", uploadUris.stream().map(URI::toString).collect(Collectors.toList())) + ")\n");
+            fileWriter.write("downloadFiles=(" + String.join(" ", downloadFiles.stream().map(URI::toString).collect(Collectors.toList())) + ")\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-}
 
+    public static void appendGaswConstants(Map<String, String> gaswConstants, String jobId) throws IOException {
+        Path configurationFile = createConfigurationFile(jobId);
 
-    public static void appendGaswConstants(JsonObject gaswConstantsObj, String jobId) throws IOException {
-        Path jsonConfigurationFile = createJsonConfiguration(jobId);
-        String existingContent = Files.readString(jsonConfigurationFile);
-
-        // Parse existing JSON content
-        JsonObject existingJsonObject = new Gson().fromJson(existingContent, JsonObject.class);
-
-        // Add gaswConstantsObj to the existing JSON object
-        existingJsonObject.add("gaswConstants", gaswConstantsObj);
-
-        // Convert the JSON object back to a string with proper formatting
-        String updatedContent = new GsonBuilder().setPrettyPrinting().create().toJson(existingJsonObject);
-
-        // Write updated JSON content to file
-        try (FileWriter fileWriter = new FileWriter(jsonConfigurationFile.toFile())) {
-            fileWriter.write(updatedContent);
+        try (FileWriter fileWriter = new FileWriter(configurationFile.toFile(), true)) {
+            for (Map.Entry<String, String> entry : gaswConstants.entrySet()) {
+                fileWriter.write(entry.getKey() + "=\"" + entry.getValue() + "\"\n");
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-}
+    }
+
     public static void appendGaswConfigurations(String jobId) throws GaswException, IOException {
         GaswConfiguration gaswConfig = GaswConfiguration.getInstance();
         PropertiesConfiguration config = gaswConfig.getPropertiesConfiguration();
@@ -147,53 +126,36 @@ public class JsonConfigurationFile {
         boolean minorStatusEnabled = gaswConfig.isMinorStatusEnabled();
         int minAvgDownloadThroughput = gaswConfig.getMinAvgDownloadThroughput();
         int defaultRetryCount = gaswConfig.getDefaultRetryCount();
-        
 
-        Path jsonConfigurationFile = createJsonConfiguration(jobId);
-        String existingContent = Files.readString(jsonConfigurationFile);
+        Path configurationFile = createConfigurationFile(jobId);
 
-        // Parse existing JSON content
-        JsonObject jsonObject = new Gson().fromJson(existingContent, JsonObject.class);
-
-        // Create the gaswConfiguration object
-        JsonObject gaswConfiguration = new JsonObject();
-        gaswConfiguration.addProperty("defaultSleeptime", defaultSleeptime);
-        gaswConfiguration.addProperty("simulationID", simulationID);
-        gaswConfiguration.addProperty("executionPath", executionPath);
-        gaswConfiguration.addProperty("defaultBackgroundScript", defaultBackgroundScript);
-        gaswConfiguration.addProperty("defaultCPUTime", defaultCPUTime);
-        gaswConfiguration.addProperty("defaultEnvironment", defaultEnvironment);
-        gaswConfiguration.addProperty("defaultExecutor", defaultExecutor);
-        gaswConfiguration.addProperty("voDefaultSE", voDefaultSE);
-        gaswConfiguration.addProperty("voUseCloseSE", voUseCloseSE);
-        gaswConfiguration.addProperty("boshCVMFSPath", boshCVMFSPath);
-        gaswConfiguration.addProperty("containersCVMFSPath", containersCVMFSPath);
-        gaswConfiguration.addProperty("udockerTag", udockerTag);
-        gaswConfiguration.addProperty("failOverEnabled", failOverEnabled);
-        gaswConfiguration.addProperty("failOverHost", failOverHost);
-        gaswConfiguration.addProperty("failOverPort", failOverPort);
-        gaswConfiguration.addProperty("failOverHome", failOverHome);
-        gaswConfiguration.addProperty("minorStatusEnabled", minorStatusEnabled);
-        gaswConfiguration.addProperty("minAvgDownloadThroughput", minAvgDownloadThroughput);
-        gaswConfiguration.addProperty("defaultRetryCount", defaultRetryCount);
-        gaswConfiguration.addProperty("defaultExecutor", defaultExecutor);
-        gaswConfiguration.addProperty("executorPlugins", executorPlugins.toString());
-        gaswConfiguration.addProperty("listenerPlugins", listenerPlugins.toString());
-        gaswConfiguration.addProperty("sessionFactory", sessionFactory.toString());
-        gaswConfiguration.addProperty("failOverMaxRetry", failOverMaxRetry);
-        gaswConfiguration.addProperty("config", config.toString());
-
-        // Add gaswConfiguration to the master object
-        jsonObject.add("gaswConfiguration", gaswConfiguration);
-
-        String updatedContent = new GsonBuilder().setPrettyPrinting().create().toJson(jsonObject);
-
-        try (FileWriter fileWriter = new FileWriter(jsonConfigurationFile.toFile())) {
-            fileWriter.write(updatedContent);
+        try (FileWriter fileWriter = new FileWriter(configurationFile.toFile(), true)) {
+            fileWriter.write("defaultSleeptime=" + defaultSleeptime + "\n");
+            fileWriter.write("simulationID=\"" + simulationID + "\"\n");
+            fileWriter.write("executionPath=\"" + executionPath + "\"\n");
+            fileWriter.write("defaultBackgroundScript=\"" + defaultBackgroundScript + "\"\n");
+            fileWriter.write("defaultCPUTime=" + defaultCPUTime + "\n");
+            fileWriter.write("defaultEnvironment=\"" + defaultEnvironment + "\"\n");
+            fileWriter.write("defaultExecutor=\"" + defaultExecutor + "\"\n");
+            fileWriter.write("voDefaultSE=\"" + voDefaultSE + "\"\n");
+            fileWriter.write("voUseCloseSE=\"" + voUseCloseSE + "\"\n");
+            fileWriter.write("boshCVMFSPath=\"" + boshCVMFSPath + "\"\n");
+            fileWriter.write("containersCVMFSPath=\"" + containersCVMFSPath + "\"\n");
+            fileWriter.write("udockerTag=\"" + udockerTag + "\"\n");
+            fileWriter.write("failOverEnabled=" + failOverEnabled + "\n");
+            fileWriter.write("failOverHost=\"" + failOverHost + "\"\n");
+            fileWriter.write("failOverPort=" + failOverPort + "\n");
+            fileWriter.write("failOverHome=\"" + failOverHome + "\"\n");
+            fileWriter.write("minorStatusEnabled=" + minorStatusEnabled + "\n");
+            fileWriter.write("minAvgDownloadThroughput=" + minAvgDownloadThroughput + "\n");
+            fileWriter.write("defaultRetryCount=" + defaultRetryCount + "\n");
+            fileWriter.write("executorPlugins=(" + executorPlugins.stream().map(Object::toString).collect(Collectors.joining(" ")) + ")\n");
+            fileWriter.write("listenerPlugins=(" + listenerPlugins.stream().map(Object::toString).collect(Collectors.joining(" ")) + ")\n");
+            fileWriter.write("sessionFactory=\"" + sessionFactory.toString() + "\"\n");
+            fileWriter.write("failOverMaxRetry=" + failOverMaxRetry + "\n");
+            fileWriter.write("config=\"" + config.toString() + "\"\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
-    } 
+    }
 }
-
-
