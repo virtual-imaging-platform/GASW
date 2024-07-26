@@ -50,7 +50,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
-import org.json.simple.parser.ParseException;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -499,7 +498,7 @@ public class GaswParser extends DefaultHandler {
 
     public GaswInput getGaswInput(String applicationName, Map<String, String> inputsMap, String executableName,HashMap<Integer, String> inputid , HashMap<Integer, String> outputid, String invocationString, 
     Map<String, String> resultDirectory, String jobId, List<URI> DownloadFiles)
-            throws URISyntaxException, FileNotFoundException, IOException, GaswException, ParseException, SAXException {
+            throws URISyntaxException, FileNotFoundException, IOException, GaswException, SAXException {
 
         getArgument(executableName, inputid, outputid);
         List<String> parameters = new ArrayList<>();
@@ -549,7 +548,7 @@ public class GaswParser extends DefaultHandler {
                 gaswVariables, envVariables, invocationString, jobId, DownloadFiles);
     }
 
-    public String getArgument(String executableName, HashMap<Integer, String> inputid, HashMap<Integer, String> outputid) throws FileNotFoundException, IOException, GaswException, ParseException, URISyntaxException, SAXException {
+    public String getArgument(String executableName, HashMap<Integer, String> inputid, HashMap<Integer, String> outputid) throws FileNotFoundException, IOException, GaswException, URISyntaxException, SAXException {
         String download = "lfn:/" + System.getProperty("user.dir") + "/" + executableName;
     
         downloads.add(new URI(download.replace("]", "").replace("[", "")));
