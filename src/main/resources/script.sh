@@ -1,5 +1,16 @@
 # Extract filename without extension
 filename=$(basename "${0%.sh}")
+
+# Create the directories if they don't already exist
+mkdir -p inv
+mkdir -p config
+
+# Copy the files to their respective directories
+cp "${filename}-configuration.sh" config/
+cp "${filename}-invocation.json" inv/
+
+echo "Files copied successfully."
+
 # Path to the configuration JSON file
 configurationFile="config/$filename-configuration.sh"
 
@@ -10,8 +21,6 @@ else
     echo "Configuration file $configurationFile not found!"
     exit 1
 fi
-# Now you have all variables assigned from the JSON file
-# You can use them as needed in your script
 
 function info {
   local D=`date`
@@ -865,6 +874,61 @@ function delete {
 }
 
 
+####################################################################################################
+####################################################################################################
+function checkBosh {
+  local BOSH_CVMFS_PATH=$1
+  #by default, use CVMFS bosh
+  ${BOSH_CVMFS_PATH}/bosh create foo.sh
+  if [ $? != 0 ]
+  then
+    info "CVMFS bosh in ${BOSH_CVMFS_PATH} not working, checking for a local version"
+    bosh create foo.sh
+    if [ $? != 0 ]
+    then
+        info "bosh is not found in PATH or it is does not work fine, searching for another local version"
+        local HOMEBOSH=`find $HOME -name bosh`
+        if [ -z "$HOMEBOSH" ]
+        then
+            info "bosh not found, trying to install it"
+            pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org boutiques --prefix $PWD 
+            if [ $? != 0 ]
+            then
+                error "pip install boutiques failed"
+                exit 1
+            else
+                export BOSHEXEC="$PWD/bin/bosh"
+            fi
+        else
+            info "local bosh found in $HOMEBOSH"
+            export BOSHEXEC=$HOMEBOSH
+        fi
+    else # bosh is found in PATH and works fine
+        info "local bosh found in $PATH"
+        export BOSHEXEC="bosh"
+    fi
+  else # if bosh CVMFS works fine
+    export BOSHEXEC="${BOSH_CVMFS_PATH}/bosh"
+  fi
+}
+
+function copyProvenanceFile() {
+  local dest=$1
+  # $BOUTIQUES_PROV_DIR is defined by GASW from the settings file
+  if [ ! -d "$BOUTIQUES_PROV_DIR" ]; then
+    error "Boutiques cache dir $BOUTIQUES_PROV_DIR does not exist."
+    return 1
+  fi
+  local provenanceFile=$(ls -t "$BOUTIQUES_PROV_DIR" | grep -v "^descriptor_" | head -n 1)
+  if [[ -z "$provenanceFile" ]]; then
+    error "No provenance found in boutiques cache $BOUTIQUES_PROV_DIR"
+    return 2
+  fi
+  info "Found provenance file $BOUTIQUES_PROV_DIR/$provenanceFile"
+  info "Copying it to $dest"
+  cp $BOUTIQUES_PROV_DIR/$provenanceFile $dest
+}
+
 startLog header
 # Start log
 START=$(date +%s)
@@ -878,7 +942,6 @@ export GASW_EXEC_ENV=EGEE
 export BASEDIR=${PWD}
 ENV=$defaultEnvironment
 export $ENV
-__MOTEUR_ENV=$defaultEnvironment
 export SE=$voDefaultSE
 USE_CLOSE_SE=$voUseCloseSE
 export BOSH_CVMFS_PATH=$boshCVMFSPath
@@ -977,15 +1040,6 @@ stopLog background
 
 startLog inputs_download
 
-echo $invocationString
-Job_Id="$0"
-echo $Job_Id
-
-# Print a message indicating the JSON file has been created
-# This part needs to be handled in the code that processes the VTL template
-
-echo $invocationString
-invocationParameters='$invocationString'
 
 # Execute service call if minor status is enabled and service call is provided
 if [[ "$minorStatusEnabled" == true && -n "$serviceCall" ]]; then
@@ -1001,11 +1055,9 @@ touch ../DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
 downloads="${downloads#[}"
 downloads="${downloads%]}"
 downloads="${downloads// /}"
-downloadFiles="${downloadFiles#[}"
-downloadFiles="${downloadFiles%]}"
-downloadFiles="${downloadFiles// /}"
 
-IFS=',' read -ra download_array <<< "$downloads" && IFS=',' read -ra downloadFiles_array <<< "$downloadFiles"
+
+IFS=',' read -ra download_array <<< "$downloads"
 
 # Iterate over each URL in the 'downloads' array
 for download in "${download_array[@]}"; do
@@ -1017,15 +1069,6 @@ for download in "${download_array[@]}"; do
     echo "$download"
 done
 
-# Iterate over each URL in the 'downloadFiles' array
-for download in "${downloadFiles_array[@]}"; do
-    # Remove leading and trailing whitespace
-    download="$(echo -e "${download}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-    # Process the URL using downloadURI function
-    downloadURI "$download"
-    # Print the processed URL
-    echo "$download"
-done
 
 # Change permissions of all files in the directory
 chmod 755 *
@@ -1051,53 +1094,7 @@ done
 # Stop log for application environment
 stopLog application_environment
 
-
-####################################################################################################
-####################################################################################################
-function checkBosh {
-  local BOSH_CVMFS_PATH=$1
-  #by default, use CVMFS bosh
-  ${BOSH_CVMFS_PATH}/bosh create foo.sh
-  if [ $? != 0 ]
-  then
-    info "CVMFS bosh in ${BOSH_CVMFS_PATH} not working, checking for a local version"
-    bosh create foo.sh
-    if [ $? != 0 ]
-    then
-        info "bosh is not found in PATH or it is does not work fine, searching for another local version"
-        local HOMEBOSH=`find $HOME -name bosh`
-        if [ -z "$HOMEBOSH" ]
-        then
-            info "bosh not found, trying to install it"
-            pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org boutiques --prefix $PWD 
-            if [ $? != 0 ]
-            then
-                error "pip install boutiques failed"
-                exit 1
-            else
-                export BOSHEXEC="$PWD/bin/bosh"
-            fi
-        else
-            info "local bosh found in $HOMEBOSH"
-            export BOSHEXEC=$HOMEBOSH
-        fi
-    else # bosh is found in PATH and works fine
-        info "local bosh found in $PATH"
-        export BOSHEXEC="bosh"
-    fi
-  else # if bosh CVMFS works fine
-    export BOSHEXEC="${BOSH_CVMFS_PATH}/bosh"
-  fi
-}
-checkBosh $BOSH_CVMFS_PATH
-####################################################################################################
-# Clone udocker (A basic user tool to execute simple docker containers in batch or interactive systems without root privileges)
-if ! command -v docker
-then
-    download_udocker
-fi
-####################################################################################################
-
+startLog application_execution
 
 # Perform service call if minor status is enabled
 if [[ $minorStatusEnabled == true && $serviceCall ]]; then
@@ -1107,16 +1104,23 @@ fi
 # Add a delay to ensure file creation before proceeding
 echo "BEFORE_EXECUTION_REFERENCE" > BEFORE_EXECUTION_REFERENCE_FILE
 sleep 1
-echo "$params parameters"
 
+checkBosh $BOSH_CVMFS_PATH
+
+####################################################################################################
+# Clone udocker (A basic user tool to execute simple docker containers in batch or interactive systems without root privileges)
+if ! command -v docker
+then
+    download_udocker
+fi
+####################################################################################################
 
 # Export current directory to LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}
 
-startLog application_execution
 echo "import sys; sys.setdefaultencoding(\"UTF8\")" > sitecustomize.py
 # Execute the command
-PYTHONPATH=".:$PYTHONPATH" $BOSHEXEC exec launch -x $jsonFileName ../inv/$invocationJson -v $PWD/../cache:$PWD/../cache
+PYTHONPATH=".:$PYTHONPATH" $BOSHEXEC exec launch $jsonFileName ../inv/$invocationJson -v $PWD/../cache:$PWD/../cache
 
 # Check if execution was successful
 if [ $? -ne 0 ]; then
@@ -1134,44 +1138,10 @@ stopLog application_execution
 info "Execution time was $(expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD})s"
 
 
-__MOTEUR_ARGS="$params"
-__MOTEUR_EXE="$executableName"
-
 ####################################################################################################
-####################################################################################################
-# Function to process provenance and extract output file names
-function parseProvenanceFile() {
-    Provenance_file=$PWD/provenance_file.json
-    keys_with_file_name=$(jq -r '."public-output"."output-files" | to_entries[] | "\(.key) \(.value."file-name")"' $Provenance_file)
-    output_name=($(echo ${keys_with_file_name}))
-    for (( c=0; c<=$(wc -w <<< "$keys_with_file_name")-1; c++))
-    do
-        c=$(expr $c + 1)
-        echo ${output_name[$c]}
-        outputs_to_be_uploaded+=(${output_name[$c]})
-    done
-}
 
-function copyProvenanceFile() {
-  local dest=$1
-  # $BOUTIQUES_PROV_DIR is defined by GASW from the settings file
-  if [ ! -d "$BOUTIQUES_PROV_DIR" ]; then
-    error "Boutiques cache dir $BOUTIQUES_PROV_DIR does not exist."
-    return 1
-  fi
-  local provenanceFile=$(ls -t "$BOUTIQUES_PROV_DIR" | grep -v "^descriptor_" | head -n 1)
-  if [[ -z "$provenanceFile" ]]; then
-    error "No provenance found in boutiques cache $BOUTIQUES_PROV_DIR"
-    return 2
-  fi
-  info "Found provenance file $BOUTIQUES_PROV_DIR/$provenanceFile"
-  info "Copying it to $dest"
-  cp $BOUTIQUES_PROV_DIR/$provenanceFile $dest
-}
-copyProvenanceFile "./provenance.json"
-
-parseProvenanceFile
-
+provenanceFile="$BASEDIR/$DIRNAME.sh.provenance.json"
+copyProvenanceFile "$provenanceFile"
 
 startLog results_upload
 
@@ -1180,28 +1150,17 @@ if [[ $minorStatusEnabled == true && $serviceCall ]]; then
     $serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 5
 fi
 
-
-# Iterate through output files to upload
-function createOutputDir() {
-    uploads=${uploads}
-    input=$uploads
-    path=$(echo "$input" | sed -E 's/(lfn|file):\/\///')
-    dmkdir "$path"
-    echo "upload path: $path"
-}
-createOutputDir
-
-for output_to_be_uploaded in "${outputs_to_be_uploaded[@]}"
+keys_with_file_name=$(jq -r '."public-output"."output-files" | to_entries[] | "\(.key) \(.value."file-name")"' $provenanceFile)
+output_names=($(echo ${keys_with_file_name}))
+for (( c=0; c<=$(wc -w <<< "$keys_with_file_name")-1; c++))
 do
-    upload_path="${uploads}/${output_to_be_uploaded}"
+    c=$(expr $c + 1)
+    local output_name=${output_names[$c]}
+    upload_path="${uploadURI}/${output_name}"
     upload "$upload_path" "$(tr -dc '[:alpha:]' < /dev/urandom 2>/dev/null | head -c 32)" "$numberOfReplicas" false
-
 done
 
-__MOTEUR_OUT="$uploadsList"
-
 stopLog results_upload
-
 
 startLog footer
 # Perform service call if minor status is enabled
