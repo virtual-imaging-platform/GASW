@@ -1119,6 +1119,8 @@ fi
 export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}
 
 echo "import sys; sys.setdefaultencoding(\"UTF8\")" > sitecustomize.py
+
+$jsonFileName="../workflow.json"
 # Execute the command
 PYTHONPATH=".:$PYTHONPATH" $BOSHEXEC exec launch $jsonFileName ../inv/$invocationJson -v $PWD/../cache:$PWD/../cache
 
