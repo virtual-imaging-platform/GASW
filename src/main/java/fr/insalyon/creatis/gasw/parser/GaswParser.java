@@ -497,12 +497,12 @@ public class GaswParser extends DefaultHandler {
     }
 
     public GaswInput getGaswInput(String applicationName, Map<String, String> inputsMap, String executableName,HashMap<Integer, String> inputid , HashMap<Integer, String> outputid, String invocationString, 
-    Map<String, String> resultDirectory, String jobId, List<URI> DownloadFiles)
+    Map<String, String> resultDirectory, String jobId, List<URI> downloads)
             throws URISyntaxException, FileNotFoundException, IOException, GaswException, SAXException {
 
-        getArgument(executableName, inputid, outputid);
         List<String> parameters = new ArrayList<>();
         List<GaswUpload> uploads = new ArrayList<>();
+        this.downloads = downloads;
 
         for (GaswArgument argument : arguments) {
             StringBuilder param = new StringBuilder();
@@ -518,25 +518,19 @@ public class GaswParser extends DefaultHandler {
                     URI valueURI = new URI(
                         GaswUtil.isUri(value) ? value : LFN_PREFIX + value);
                     param.append(new File(valueURI.getPath()).getName());
-                    downloads.add(valueURI);
                 } else {
                     // Need to escape special characters to avoid bash errors.
                     param.append(escapeSpecialBashCharacters(value));
                 }
-
             } else {
-                //System.out.println(ANSI_BLUE + "inside Else " +ANSI_RESET);
                 GaswOutputArg output = (GaswOutputArg) argument;
                 String value = parseOutputTemplate(
                     output.getTemplateParts(), inputsMap);
                 // If the value already is a URI, use it as is.  If not, it is a
                 // lfn and the prefix is added.
-                //System.out.println(ANSI_GREEN + "value: " + value +ANSI_RESET);
                 URI valueURI = new URI(
                     GaswUtil.isUri(value) ? value : LFN_PREFIX + value);
-                //System.out.println(ANSI_BLUE + "valueURI: " +valueURI +ANSI_RESET);
                 uploads.add(new GaswUpload(valueURI, output.getReplicas()));
-                //System.out.println(ANSI_GREEN + "uploads: " + uploads.getURI() +ANSI_RESET);
                 param.append(new File(valueURI.getPath()).getName());
             }
 
@@ -544,43 +538,13 @@ public class GaswParser extends DefaultHandler {
                 parameters.add(param.toString());
             }           
         }
-        return new GaswInput(applicationName, executableName, parameters, downloads, uploads,
-                gaswVariables, envVariables, invocationString, jobId, DownloadFiles);
+        // Check if "results-directory" exists in inputsMap and add to uploads
+        if (inputsMap.containsKey("results-directory")) {
+        String resultsDirectory = inputsMap.get("results-directory");
+        URI resultsURI = new URI(GaswUtil.isUri(resultsDirectory) ? resultsDirectory : LFN_PREFIX + resultsDirectory);
+        uploads.add(new GaswUpload(resultsURI, GaswConstants.numberOfReplicas));
     }
-
-    public String getArgument(String executableName, HashMap<Integer, String> inputid, HashMap<Integer, String> outputid) throws FileNotFoundException, IOException, GaswException, URISyntaxException, SAXException {
-        String download = "lfn:/" + System.getProperty("user.dir") + "/" + executableName;
-    
-        downloads.add(new URI(download.replace("]", "").replace("[", "")));
-        inputArg = new GaswInputArg("results-directory", null, false);
-        arguments.add(inputArg);
-        inputsList.add("results-directory");
-        System.out.println(ANSI_RED + "inputArg: " + inputArg + ANSI_RESET);
-    
-        for (int i = 0; i < inputid.size(); i++) {
-            inputArg = new GaswInputArg(inputid.get(i), "--" + inputid.get(i), false);
-            arguments.add(inputArg);
-            inputsList.add(inputid.get(i));
-            System.out.println(ANSI_RED + "inputArg.getName() " + inputArg.getName());
-        }
-    
-        for (int i = 0; i < outputid.size(); i++) {
-            outputArg = new GaswOutputArg(outputid.get(i), "--" + outputid.get(i), false);
-            String templateValue = "$prefix1$dir1/$na1";
-
-            Set<String> stripExtensions = new HashSet<>();
-            outputArg.setTemplate(true);
-    
-            if (templateValue.contains("$rep-")) {
-                outputArg.setReplicas(new Integer(templateValue.substring(templateValue.lastIndexOf("-") + 1)));
-                templateValue = templateValue.replaceAll("\\$rep-[0-9]*", "");
-            }
-    
-            outputArg.setTemplateParts(templateParts(templateValue, inputsList, stripExtensions));
-            outputArg.setReplicas(GaswConstants.numberOfReplicas);
-            arguments.add(outputArg);
-            inputsList.add(outputid.get(i));
-        }
-        return executableName;
-    }    
+        return new GaswInput(applicationName, executableName, parameters, downloads, uploads,
+                gaswVariables, envVariables, invocationString, jobId);
+    }
 }
