@@ -1,15 +1,28 @@
+#!/bin/bash
+
 # Extract filename without extension
 filename=$(basename "${0%.sh}")
 
-# Create the directories if they don't already exist
-mkdir -p inv
-mkdir -p config
+# Check if directories already exist
+if [[ ! -d "config" || ! -d "inv" ]]; then
+    # Create the directories if they don't already exist
+    mkdir -p inv
+    mkdir -p config
 
-# Copy the files to their respective directories
-cp "${filename}-configuration.sh" config/
-cp "${filename}-invocation.json" inv/
+    # Copy the files to their respective directories after creation
+    if [[ ! -d "config" ]]; then
+        cp "${filename}-configuration.sh" config/
+        echo "Copied ${filename}-configuration.sh to config/"
+    fi
 
-echo "Files copied successfully."
+    if [[ ! -d "inv" ]]; then
+        cp "${filename}-invocation.json" inv/
+        echo "Copied ${filename}-invocation.json to inv/"
+    fi
+else
+    echo "Directories already exist. Skipping copy."
+fi
+
 
 # Path to the configuration JSON file
 configurationFile="config/$filename-configuration.sh"
@@ -309,7 +322,16 @@ function downloadLFN {
 
     info "getting file size and computing sendReceiveTimeout"
     local size=$(dirac-dms-lfn-metadata ${LFN} | grep Size | sed -r 's/.* ([0-9]+)L,/\1/')
-    local sendReceiveTimeout=`echo ${D}[${D}{size:-0}/${minAvgDownloadThroughput}/1024]`
+    #local sendReceiveTimeout=`echo ${D}[${D}{size:-0}/${minAvgDownloadThroughput}/1024]`
+    #############################
+        # Compute sendReceiveTimeout
+    if [ -z "$size" ]; then
+        size=0
+    fi
+
+    local sendReceiveTimeout=$((size / minAvgDownloadThroughput / 1024))
+    ############################
+    
     if [ "$sendReceiveTimeout" = "" ] || [ $sendReceiveTimeout -le 900 ]
     then
         info "sendReceiveTimeout empty or too small, setting it to 900s"
@@ -784,7 +806,6 @@ function upload {
     local ID=$2
     local NREP=$3
     local TEST=$4
-
     startLog file_upload uri="${URI}"
     
     # The pattern must NOT be put between quotation marks.
@@ -926,6 +947,7 @@ function copyProvenanceFile() {
   fi
   info "Found provenance file $BOUTIQUES_PROV_DIR/$provenanceFile"
   info "Copying it to $dest"
+  cp $BOUTIQUES_PROV_DIR/$provenanceFile $BASEDIR
   cp $BOUTIQUES_PROV_DIR/$provenanceFile $dest
 }
 
@@ -1050,12 +1072,10 @@ fi
 touch ../DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
 
 ###################################################################################
-
 # Remove square brackets and leading/trailing whitespace from downloads
 downloads="${downloads#[}"
 downloads="${downloads%]}"
 downloads="${downloads// /}"
-
 
 IFS=',' read -ra download_array <<< "$downloads"
 
@@ -1068,7 +1088,6 @@ for download in "${download_array[@]}"; do
     # Print the processed URL
     echo "$download"
 done
-
 
 # Change permissions of all files in the directory
 chmod 755 *
@@ -1118,11 +1137,8 @@ fi
 # Export current directory to LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}
 
-echo "import sys; sys.setdefaultencoding(\"UTF8\")" > sitecustomize.py
-
-$jsonFileName="../workflow.json"
 # Execute the command
-PYTHONPATH=".:$PYTHONPATH" $BOSHEXEC exec launch $jsonFileName ../inv/$invocationJson -v $PWD/../cache:$PWD/../cache
+PYTHONPATH=".:$PYTHONPATH" $BOSHEXEC exec launch ../$workflowFile ../inv/$invocationJson -v $PWD/../cache:$PWD/../cache
 
 # Check if execution was successful
 if [ $? -ne 0 ]; then
@@ -1143,6 +1159,7 @@ info "Execution time was $(expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD})s"
 ####################################################################################################
 
 provenanceFile="$BASEDIR/$DIRNAME.sh.provenance.json"
+echo $provenanceFile THIS IS FOR DEBUG and TESTs ONLY
 copyProvenanceFile "$provenanceFile"
 
 startLog results_upload
@@ -1152,15 +1169,50 @@ if [[ $minorStatusEnabled == true && $serviceCall ]]; then
     $serviceCall ${MOTEUR_WORKFLOWID} ${JOBID} 5
 fi
 
-keys_with_file_name=$(jq -r '."public-output"."output-files" | to_entries[] | "\(.key) \(.value."file-name")"' $provenanceFile)
-output_names=($(echo ${keys_with_file_name}))
-for (( c=0; c<=$(wc -w <<< "$keys_with_file_name")-1; c++))
-do
-    c=$(expr $c + 1)
-    local output_name=${output_names[$c]}
-    upload_path="${uploadURI}/${output_name}"
-    upload "$upload_path" "$(tr -dc '[:alpha:]' < /dev/urandom 2>/dev/null | head -c 32)" "$numberOfReplicas" false
-done
+
+# Extract the file names and store them in a bash array (first method is commented out since jq has imcomplete support in some linux distributions)
+file_names=($(jq -r '.["public-output"]["output-files"] | to_entries[] | .value["file-name"]' "$provenanceFile")) 
+#file_names=($(grep -o '"file-name": *"[^"]*"' "$provenanceFile" | awk -F': ' '{print $2}' | tr -d '"' | tr '\n' ' ')) //experimental
+
+# Remove square brackets from uploadURI (we assume UploadURI will always be a single string)
+uploadURI=$(echo "$uploadURI" | sed 's/^\[//; s/\]$//')
+
+echo $uploadURI
+
+#  Check if uploadURI starts with "file:/"
+if [[ "$uploadURI" == file:* ]]; then
+    # Get the actual file system path by removing 'file:' prefix
+    dir_path="${uploadURI#file:}"
+    echo $dir_path
+    # Create the directory if it doesn't exist
+    mkdir -p "$dir_path"
+    # Check if the directory was successfully created or exists
+    if [ -d "$dir_path" ]; then
+        echo "Directory '$dir_path' successfully created or already exists."
+    else
+        echo "Failed to create directory '$dir_path'."
+        exit 1 # Exit the script with an error status
+    fi
+fi
+
+# Check if the array is not empty and print the results
+if [ ${#file_names[@]} -eq 0 ]; then
+    echo "No file names found in the output-files section."
+else
+    echo "File names found:"
+    for file_name in "${file_names[@]}"; do
+        echo "$file_name"
+        
+        # Define the upload path
+        upload_path="${uploadURI}/${file_name}"
+        
+        # Generate a random string for the upload command
+        random_string=$(tr -dc '[:alpha:]' < /dev/urandom 2>/dev/null | head -c 32)
+        
+        # Execute the upload command
+        upload "$upload_path" "$random_string" "$numberOfReplicas" false
+    done
+fi
 
 stopLog results_upload
 
