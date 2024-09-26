@@ -88,20 +88,15 @@ public class GaswInput {
      * @param downloadFiles
      */
 
-    public GaswInput(String applicationName, String executableName2, List<String> parameters2, List<URI> downloads2,
-            List<GaswUpload> uploads2, Map<String, String> gaswVariables2, Map<String, String> envVariables2,
-            String invocationString, String jobId, List<URI> downloadFiles) {
+    public GaswInput(String applicationName, String executableName, List<URI> downloads,
+            List<GaswUpload> uploads, String invocationString, String jobId) {
         
-        this.executableName = executableName2;
-        this.parameters = parameters2;
-        this.downloads = downloads2;
-        this.uploads = uploads2;
-        this.gaswVariables = gaswVariables2;
-        this.envVariables = envVariables2;
+        this.executableName = executableName;
+        this.downloads = downloads;
+        this.uploads = uploads;
         this.invocationString = invocationString;
         this.jobId = jobId;
         this.applicationName = applicationName;
-        this.downloadFiles = downloadFiles;
         this.moteurLiteEnabled = true;
     }
 
