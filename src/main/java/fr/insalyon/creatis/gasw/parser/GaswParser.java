@@ -33,7 +33,6 @@
 package fr.insalyon.creatis.gasw.parser;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
@@ -494,57 +493,5 @@ public class GaswParser extends DefaultHandler {
         if (f.getName().length() > 0) {
             content.append(separator).append(f.getName());
         }
-    }
-
-    public GaswInput getGaswInput(String applicationName, Map<String, String> inputsMap, String executableName,HashMap<Integer, String> inputid , HashMap<Integer, String> outputid, String invocationString, 
-    Map<String, String> resultDirectory, String jobId, List<URI> downloads)
-            throws URISyntaxException, FileNotFoundException, IOException, GaswException, SAXException {
-
-        List<String> parameters = new ArrayList<>();
-        List<GaswUpload> uploads = new ArrayList<>();
-        this.downloads = downloads;
-
-        for (GaswArgument argument : arguments) {
-            StringBuilder param = new StringBuilder();
-            if (argument.getOption() != null) {
-                param.append(argument.getOption());
-                param.append(" ");
-            }
-            if (argument.getHookup() == GaswArgument.Hookup.Input) {
-                String value = inputsMap.get(argument.getName());
-                if (argument.getType() == GaswArgument.Type.URI) {
-                    // If the value already is a URI, use it as is.  If not, it
-                    // is a lfn and the prefix is added.
-                    URI valueURI = new URI(
-                        GaswUtil.isUri(value) ? value : LFN_PREFIX + value);
-                    param.append(new File(valueURI.getPath()).getName());
-                } else {
-                    // Need to escape special characters to avoid bash errors.
-                    param.append(escapeSpecialBashCharacters(value));
-                }
-            } else {
-                GaswOutputArg output = (GaswOutputArg) argument;
-                String value = parseOutputTemplate(
-                    output.getTemplateParts(), inputsMap);
-                // If the value already is a URI, use it as is.  If not, it is a
-                // lfn and the prefix is added.
-                URI valueURI = new URI(
-                    GaswUtil.isUri(value) ? value : LFN_PREFIX + value);
-                uploads.add(new GaswUpload(valueURI, output.getReplicas()));
-                param.append(new File(valueURI.getPath()).getName());
-            }
-
-            if (!argument.isImplicit()) {
-                parameters.add(param.toString());
-            }           
-        }
-        // Check if "results-directory" exists in inputsMap and add to uploads
-        if (inputsMap.containsKey("results-directory")) {
-        String resultsDirectory = inputsMap.get("results-directory");
-        URI resultsURI = new URI(GaswUtil.isUri(resultsDirectory) ? resultsDirectory : LFN_PREFIX + resultsDirectory);
-        uploads.add(new GaswUpload(resultsURI, GaswConstants.numberOfReplicas));
-    }
-        return new GaswInput(applicationName, executableName, parameters, downloads, uploads,
-                gaswVariables, envVariables, invocationString, jobId);
     }
 }
