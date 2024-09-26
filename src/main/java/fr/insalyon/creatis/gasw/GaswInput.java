@@ -46,6 +46,7 @@ public class GaswInput {
     private List<String> parameters;
     private List<URI> downloads;
     private List<GaswUpload> uploads;
+    private URI uploadURI;
     private Map<String, String> gaswVariables;
     private Map<String, String> envVariables;
     private String invocationString;
@@ -89,11 +90,11 @@ public class GaswInput {
      */
 
     public GaswInput(String applicationName, String executableName, List<URI> downloads,
-            List<GaswUpload> uploads, String invocationString, String jobId) {
+            URI uploadURI, String invocationString, String jobId) {
         
         this.executableName = executableName;
         this.downloads = downloads;
-        this.uploads = uploads;
+        this.uploadURI = uploadURI;
         this.invocationString = invocationString;
         this.jobId = jobId;
         this.applicationName = applicationName;
@@ -131,6 +132,10 @@ public class GaswInput {
         this.uploads.add(upload);
     }
 
+    public void setUploadURI(URI uploadURI) {
+        this.uploadURI = uploadURI;
+    }
+
     /**
      * Adds a GASW variable to the request.
      *
@@ -161,6 +166,10 @@ public class GaswInput {
 
     public List<GaswUpload> getUploads() {
         return uploads;
+    }
+
+    public URI getUploadURI() {
+        return uploadURI;
     }
 
     public String getExecutableName() {
