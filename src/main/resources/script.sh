@@ -36,15 +36,10 @@ if [[ ! -d "config" || ! -d "inv" ]]; then
     mkdir -p config
 
     # Copy the files to their respective directories after creation
-    if [[ ! -d "config" ]]; then
-        cp "${DIRNAME}-configuration.sh" config/
-        echo "Copied ${DIRNAME}-configuration.sh to config/"
-    fi
-
-    if [[ ! -d "inv" ]]; then
-        cp "${DIRNAME}-invocation.json" inv/
-        echo "Copied ${DIRNAME}-invocation.json to inv/"
-    fi
+    cp "${filename}-configuration.sh" config/
+    echo "Copied ${DIRNAME}-configuration.sh to config/"
+    cp "${filename}-invocation.json" inv/
+    echo "Copied ${filename}-configuration.sh to config/"
 else
     echo "Directories already exist. Skipping copy."
 fi
