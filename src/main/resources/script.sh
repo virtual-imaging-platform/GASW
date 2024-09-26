@@ -1,40 +1,5 @@
 #!/bin/bash
 
-# Extract filename without extension
-filename=$(basename "${0%.sh}")
-
-# Check if directories already exist
-if [[ ! -d "config" || ! -d "inv" ]]; then
-    # Create the directories if they don't already exist
-    mkdir -p inv
-    mkdir -p config
-
-    # Copy the files to their respective directories after creation
-    if [[ ! -d "config" ]]; then
-        cp "${filename}-configuration.sh" config/
-        echo "Copied ${filename}-configuration.sh to config/"
-    fi
-
-    if [[ ! -d "inv" ]]; then
-        cp "${filename}-invocation.json" inv/
-        echo "Copied ${filename}-invocation.json to inv/"
-    fi
-else
-    echo "Directories already exist. Skipping copy."
-fi
-
-
-# Path to the configuration JSON file
-configurationFile="config/$filename-configuration.sh"
-
-# Source the configuration file
-if [ -f "$configurationFile" ]; then
-    source "$configurationFile"
-else
-    echo "Configuration file $configurationFile not found!"
-    exit 1
-fi
-
 function info {
   local D=`date`
   echo [ INFO - $D ] $*
@@ -60,6 +25,42 @@ function stopLog {
   echo "</${logName}>" >&1
   echo "</${logName}>" >&2
 }
+
+# Extract filename without extension
+DIRNAME=$(basename "${0%.sh}")
+
+# Check if directories already exist (In case of LOCAL, the directories already exists. To replicate the LOCAL execution in DIRAC, we create the directories on the remote node)
+if [[ ! -d "config" || ! -d "inv" ]]; then
+    # Create the directories if they don't already exist
+    mkdir -p inv
+    mkdir -p config
+
+    # Copy the files to their respective directories after creation
+    if [[ ! -d "config" ]]; then
+        cp "${DIRNAME}-configuration.sh" config/
+        echo "Copied ${DIRNAME}-configuration.sh to config/"
+    fi
+
+    if [[ ! -d "inv" ]]; then
+        cp "${DIRNAME}-invocation.json" inv/
+        echo "Copied ${DIRNAME}-invocation.json to inv/"
+    fi
+else
+    echo "Directories already exist. Skipping copy."
+fi
+
+
+# Path to the configuration JSON file
+configurationFile="config/$DIRNAME-configuration.sh"
+
+# Source the configuration file
+if [ -f "$configurationFile" ]; then
+    source "$configurationFile"
+else
+    echo "Configuration file $configurationFile not found!"
+    exit 1
+fi
+
 
 function download_udocker {
   #installation of udocker
@@ -957,8 +958,6 @@ START=$(date +%s)
 echo "START date is ${START}"
 
 # Execution environment setup
-export GASW_JOB_ENV=NORMAL
-export GASW_EXEC_ENV=EGEE
 
 # Builds the custom environment
 export BASEDIR=${PWD}
@@ -973,15 +972,7 @@ export BOUTIQUES_PROV_DIR=$boutiquesProvenanceDir
 
 export MOTEUR_WORKFLOWID="$simulationID"
 
-# If the execution environment is a cluster, add the vlet binaries to the path
-if [[ "$GASW_EXEC_ENV" == "PBS" ]]; then
-    export PATH=${VLET_INSTALL}/bin:$PATH
-fi
-
-DIAG=/home/grid/session/$(basename ${PWD}).diag
-
 # Create execution directory
-DIRNAME=$(basename $0 .sh)
 mkdir ${DIRNAME}
 if [ $? -eq 0 ]; then
     echo "cd ${DIRNAME}"
@@ -1071,45 +1062,37 @@ fi
 # Create a file to disable watchdog CPU wallclock check
 touch ../DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
 
-###################################################################################
-# Remove square brackets and leading/trailing whitespace from downloads
-downloads="${downloads#[}"
-downloads="${downloads%]}"
-downloads="${downloads// /}"
-
-IFS=',' read -ra download_array <<< "$downloads"
-
 # Iterate over each URL in the 'downloads' array
 for download in "${download_array[@]}"; do
+for download in "${downloads[@]}"; do
     # Remove leading and trailing whitespace
     download="$(echo -e "${download}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     # Process the URL using downloadURI function
+    # Process the URL using downloadURI function
+    downloadURI "$download"
     downloadURI "$download"
     # Print the processed URL
+    # Print the processed URL
+    echo "$download"
     echo "$download"
 done
-
+done
+# Change permissions of all files in the directory
 # Change permissions of all files in the directory
 chmod 755 *
-
+chmod 755 *
+# Record the timestamp after downloads
 # Record the timestamp after downloads
 AFTERDOWNLOAD=$(date +%s)
-
+AFTERDOWNLOAD=$(date +%s)
 # Stop log for inputs download
+# Stop log for inputs download
+stopLog inputs_download
 stopLog inputs_download
 
 
+
 startLog application_environment
-echo "$variables"
-
-# Iterate through each variable in $variables and export them
-# Assuming $variables is a string containing key-value pairs separated by space
-for variable in $variables; do
-    key=$(echo "$variable" | cut -d'=' -f1)
-    value=$(echo "$variable" | cut -d'=' -f2)
-    export "$key"="$value"
-done
-
 # Stop log for application environment
 stopLog application_environment
 
@@ -1159,7 +1142,6 @@ info "Execution time was $(expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD})s"
 ####################################################################################################
 
 provenanceFile="$BASEDIR/$DIRNAME.sh.provenance.json"
-echo $provenanceFile THIS IS FOR DEBUG and TESTs ONLY
 copyProvenanceFile "$provenanceFile"
 
 startLog results_upload
@@ -1171,7 +1153,7 @@ fi
 
 
 # Extract the file names and store them in a bash array (first method is commented out since jq has imcomplete support in some linux distributions)
-file_names=($(jq -r '.["public-output"]["output-files"] | to_entries[] | .value["file-name"]' "$provenanceFile")) 
+file_names=($(sed -n '/"public-output": {/,/},/p' "$provenanceFile" | sed -n '/"output-files": {/,/},/p' | grep -oP '"file-name": *"\K[^"]+'))
 #file_names=($(grep -o '"file-name": *"[^"]*"' "$provenanceFile" | awk -F': ' '{print $2}' | tr -d '"' | tr '\n' ' ')) //experimental
 
 # Remove square brackets from uploadURI (we assume UploadURI will always be a single string)

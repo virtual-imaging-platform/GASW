@@ -51,6 +51,7 @@ public class GaswInput {
     private String invocationString;
     private String jobId;
     private String applicationName;
+    private List<URI> downloadFiles;
     private Boolean moteurLiteEnabled = false;
 
     /**
@@ -84,11 +85,12 @@ public class GaswInput {
      * @param invocationString String representation of the invocation
      * @param jobId
      * @param applicationName
+     * @param downloadFiles
      */
 
     public GaswInput(String applicationName, String executableName2, List<String> parameters2, List<URI> downloads2,
             List<GaswUpload> uploads2, Map<String, String> gaswVariables2, Map<String, String> envVariables2,
-            String invocationString, String jobId) {
+            String invocationString, String jobId, List<URI> downloadFiles) {
         
         this.executableName = executableName2;
         this.parameters = parameters2;
@@ -99,6 +101,7 @@ public class GaswInput {
         this.invocationString = invocationString;
         this.jobId = jobId;
         this.applicationName = applicationName;
+        this.downloadFiles = downloadFiles;
         this.moteurLiteEnabled = true;
     }
 
@@ -118,6 +121,10 @@ public class GaswInput {
      */
     public void addDownload(URI download) {
         this.downloads.add(download);
+    }
+
+    public void addDownloadFiles(URI downloadFile) {
+        this.downloadFiles.add(downloadFile);
     }
 
     /**
@@ -183,6 +190,10 @@ public class GaswInput {
 
     public String getApplicationName(){
         return applicationName;
+    }
+
+    public List<URI> getDownloadFiles(){
+        return downloadFiles;
     }
 
     public Boolean isMoteurLiteEnabled(){
