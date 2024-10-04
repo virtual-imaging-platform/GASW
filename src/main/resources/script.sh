@@ -1031,7 +1031,7 @@ for download in "${downloads[@]}"; do
     download="$(echo -e "${download}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     # Process the URL using downloadURI function
     downloadURI "$download"
-    done
+done
 
 # Change permissions of all files in the directory
 chmod 755 *
