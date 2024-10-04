@@ -54,7 +54,6 @@ public class GaswInput {
     private String invocationString;
     private String jobId;
     private String applicationName;
-    private List<URI> downloadFiles;
     private Boolean moteurLiteEnabled = false;
 
     /**
@@ -78,18 +77,14 @@ public class GaswInput {
         this.envVariables = envVariables;
     }
 
-    /**
-     * @param executableName Name of the executable file.
-     * @param parameters List of parameters associated with the command.
-     * @param downloads List of input files to be downloaded in the worker node.
-     * @param uploads List of output files to be uploaded to a Storage Element.
-     * @param gaswVariables Map of GASW variables.
-     * @param envVariables Map of environment variables.
-     * @param invocationString String representation of the invocation
-     * @param jobId Job ID
-     * @param applicationName Name of the application
-     * @param downloadFiles List of input files to be downloaded in the worker node.
-     */
+ /**
+ * @param applicationName Name of the application.
+ * @param executableName Name of the executable file.
+ * @param downloads List of input files to be downloaded in the worker node.
+ * @param uploadURI URI for the output file upload destination.
+ * @param invocationString String representation of the invocation.
+ * @param jobId Job ID.
+ */
 
     public GaswInput(String applicationName, String executableName, List<URI> downloads,
             URI uploadURI, String invocationString, String jobId) {
@@ -104,8 +99,6 @@ public class GaswInput {
         this.parameters = new ArrayList<>();
         this.gaswVariables = new HashMap<>();
         this.envVariables = new HashMap<>();
-
-
     }
 
     /**
@@ -124,10 +117,6 @@ public class GaswInput {
      */
     public void addDownload(URI download) {
         this.downloads.add(download);
-    }
-
-    public void addDownloadFiles(URI downloadFile) {
-        this.downloadFiles.add(downloadFile);
     }
 
     /**
@@ -201,10 +190,6 @@ public class GaswInput {
 
     public String getApplicationName(){
         return applicationName;
-    }
-
-    public List<URI> getDownloadFiles(){
-        return downloadFiles;
     }
 
     public Boolean isMoteurLiteEnabled(){

@@ -164,13 +164,6 @@ public abstract class GaswSubmit {
             scriptsDir.mkdir();
         }
     }
-
-    /**
-     *
-     * @param symbolicName Symbolic name of the execution.
-     * @param script Generated script to be saved in a file.
-     * @return Name of the script file.
-     */
     protected String publishJdl(String scriptName, String jdl) {
 
         try {

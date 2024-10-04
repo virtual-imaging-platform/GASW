@@ -53,7 +53,7 @@ configurationFile="config/$configurationFilename"
 if [ -f "$configurationFile" ]; then
     source "$configurationFile"
 else
-    echo "Configuration file $configurationFile not found!"
+    error "Configuration file $configurationFile not found!"
     exit 1
 fi
 
@@ -1031,9 +1031,7 @@ for download in "${downloads[@]}"; do
     download="$(echo -e "${download}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     # Process the URL using downloadURI function
     downloadURI "$download"
-    # Print the processed URL
-    echo "$download"
-done
+    done
 
 # Change permissions of all files in the directory
 chmod 755 *
@@ -1098,13 +1096,12 @@ file_names=($(sed -n '/"public-output": {/,/"exit-code":/p' "$provenanceFile" | 
 # Remove square brackets from uploadURI (we assume UploadURI will always be a single string)
 uploadURI=$(echo "$uploadURI" | sed 's/^\[//; s/\]$//')
 
-echo $uploadURI
+info "uploadURI : $uploadURI"
 
 #  Check if uploadURI starts with "file:/"
 if [[ "$uploadURI" == file:* ]]; then
     # Get the actual file system path by removing 'file:' prefix
     dir_path="${uploadURI#file:}"
-    echo $dir_path
     # Create the directory if it doesn't exist
     mkdir -p "$dir_path"
     # Check if the directory was successfully created or exists

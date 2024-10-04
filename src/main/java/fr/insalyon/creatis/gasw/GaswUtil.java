@@ -85,8 +85,7 @@ public class GaswUtil {
         if (redirectError) {
             builder.redirectErrorStream(true);
         }
-
-        //builder.environment().put("X509_USER_PROXY", System.getenv("X509_USER_PROXY"));
+        
         return builder.start();
     }
 

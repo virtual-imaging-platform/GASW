@@ -2,10 +2,6 @@ package fr.insalyon.creatis.gasw;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -21,12 +17,5 @@ public class GaswUtilTest {
         assertFalse(GaswUtil.isUri("girder:control_3DT1.nii"));
         assertFalse(GaswUtil.isUri("girder:////control_3DT1.nii"));
     }
-
-    @Test
-    @DisplayName("Script file copy test")
-    public void testScriptFileCopy() throws URISyntaxException {
-        
-            Path sourceScriptFile = Paths.get(getClass().getClassLoader().getResource("script.sh").toURI());
-            System.out.println(sourceScriptFile);
-    }
 }
+
