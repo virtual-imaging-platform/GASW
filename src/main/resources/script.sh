@@ -41,11 +41,11 @@ if [[ ! -d "config" || ! -d "inv" ]]; then
 
     # Copy the files to their respective directories after creation
     cp "${configurationFilename}" config/
-    echo "Copied ${configurationFilename} to config/"
+    info "Copied ${configurationFilename} to config/"
     cp "${invocationJsonFilename}" inv/
-    echo "Copied ${invocationJsonFilename} to inv/"
+    info "Copied ${invocationJsonFilename} to inv/"
 else
-    echo "Directories already exist. Skipping copy."
+    info "Directories already exist. Skipping copy."
 fi
 
 configurationFile="config/$configurationFilename"
