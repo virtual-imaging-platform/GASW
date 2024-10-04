@@ -32,8 +32,6 @@
  */
 package fr.insalyon.creatis.gasw.script;
 
-import java.io.IOException;
-
 import org.apache.log4j.Logger;
 
 import fr.insalyon.creatis.gasw.GaswConfiguration;
@@ -73,20 +71,15 @@ public class ScriptGenerator {
      *
      * @param downloads
      * @param uploads
-     * @param command
-     * @param regexs List of regular expressions to match with results
-     * @param defaultDir Default directory to store files matched against regexp
      * @param parameters
      * @param minorStatusService
      * @return A string containing the bash script source
      * @throws GaswException 
-     * @throws IOException 
      */
     public String generateScript(GaswInput gaswInput, 
             GaswMinorStatusServiceGenerator minorStatusService) {
 
         StringBuilder sb = new StringBuilder();
-
         try {
             sb.append("#!/bin/bash -l\n\n");
             sb.append(basic.loadLogFunctions());
