@@ -1,9 +1,9 @@
 package fr.insalyon.creatis.gasw;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("GaswUtil tests")
 public class GaswUtilTest {
@@ -18,3 +18,4 @@ public class GaswUtilTest {
         assertFalse(GaswUtil.isUri("girder:////control_3DT1.nii"));
     }
 }
+

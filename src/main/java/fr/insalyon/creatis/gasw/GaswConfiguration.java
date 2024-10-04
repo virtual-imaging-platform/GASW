@@ -32,13 +32,6 @@
  */
 package fr.insalyon.creatis.gasw;
 
-import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
-import fr.insalyon.creatis.gasw.bean.SEEntryPointID;
-import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.dao.DAOFactory;
-import fr.insalyon.creatis.gasw.plugin.DatabasePlugin;
-import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
-import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -46,10 +39,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import net.xeoh.plugins.base.PluginManager;
-import net.xeoh.plugins.base.impl.PluginManagerFactory;
-import net.xeoh.plugins.base.util.JSPFProperties;
-import net.xeoh.plugins.base.util.PluginManagerUtil;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
@@ -57,6 +47,18 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
+
+import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
+import fr.insalyon.creatis.gasw.bean.SEEntryPointID;
+import fr.insalyon.creatis.gasw.dao.DAOException;
+import fr.insalyon.creatis.gasw.dao.DAOFactory;
+import fr.insalyon.creatis.gasw.plugin.DatabasePlugin;
+import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
+import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
+import net.xeoh.plugins.base.PluginManager;
+import net.xeoh.plugins.base.impl.PluginManagerFactory;
+import net.xeoh.plugins.base.util.JSPFProperties;
+import net.xeoh.plugins.base.util.PluginManagerUtil;
 
 /**
  *
@@ -88,9 +90,11 @@ public class GaswConfiguration {
     private String voUseCloseSE;
     // Boutiques installation
     private String boshCVMFSPath;
+    private String apptainerPath;
     private String containersCVMFSPath;
     private String udockerTag;
     private String boutiquesProvenanceDir;
+    private String boutiquesFileName;
     // Failover Server
     private boolean failOverEnabled;
     private String failOverHost;
@@ -161,9 +165,11 @@ public class GaswConfiguration {
             voUseCloseSE = config.getString(GaswConstants.LAB_VO_USE_CLOSE_SE, "\"true\"");
 
             boshCVMFSPath = config.getString(GaswConstants.LAB_BOSH_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/virtualenv/bin\"");
+            apptainerPath = config.getString(GaswConstants.LAB_APPTAINER_PATH, "\"/cvmfs/dirac.egi.eu/container/apptainer/bin\"");
             containersCVMFSPath = config.getString(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/udocker/containers\"");
             udockerTag = config.getString(GaswConstants.LAB_UDOCKER_TAG, "\"1.3.1\"");
             boutiquesProvenanceDir = config.getString(GaswConstants.LAB_BOUTIQUES_PROV_DIR, "\"$HOME/.cache/boutiques/data\"");
+            boutiquesFileName = config.getString(GaswConstants.LAB_BOUTIQUES_FILE_NAME, "\"workflow.json\"");
 
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
             failOverHost = config.getString(GaswConstants.LAB_FAILOVER_HOST, "localhost");
@@ -194,9 +200,11 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_VO_USE_CLOSE_SE, voUseCloseSE);
             
 	        config.setProperty(GaswConstants.LAB_BOSH_CVMFS_PATH, boshCVMFSPath);
+            config.setProperty(GaswConstants.LAB_APPTAINER_PATH, apptainerPath);
             config.setProperty(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, containersCVMFSPath);
             config.setProperty(GaswConstants.LAB_UDOCKER_TAG, udockerTag);
             config.setProperty(GaswConstants.LAB_BOUTIQUES_PROV_DIR, boutiquesProvenanceDir);
+            config.setProperty(GaswConstants.LAB_BOUTIQUES_FILE_NAME, boutiquesFileName);
 
             config.setProperty(GaswConstants.LAB_FAILOVER_ENABLED, failOverEnabled);
             config.setProperty(GaswConstants.LAB_FAILOVER_HOST, failOverHost);
@@ -417,8 +425,16 @@ public class GaswConfiguration {
         return boshCVMFSPath;
     }
 
+    public String getApptainerPath() {
+        return apptainerPath;
+    }
+
     public String getBoutiquesProvenanceDir() {
         return boutiquesProvenanceDir;
+    }
+
+    public String getBoutiquesFilename() {
+        return boutiquesFileName;
     }
 
     public String getContainersCVMFSPath() {
