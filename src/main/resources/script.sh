@@ -904,13 +904,14 @@ function checkBosh {
         if [ -z "$HOMEBOSH" ]
         then
             info "bosh not found, trying to install it"
-            pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org boutiques --prefix $PWD 
+            export PATH="$HOME/.local/bin:$PATH"
+            pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --user boutiques
             if [ $? != 0 ]
             then
                 error "pip install boutiques failed"
                 exit 1
             else
-                export BOSHEXEC="$PWD/bin/bosh"
+                export BOSHEXEC="bosh"
             fi
         else
             info "local bosh found in $HOMEBOSH"

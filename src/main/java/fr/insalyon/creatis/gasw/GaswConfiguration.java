@@ -169,7 +169,7 @@ public class GaswConfiguration {
             containersCVMFSPath = config.getString(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/udocker/containers\"");
             udockerTag = config.getString(GaswConstants.LAB_UDOCKER_TAG, "\"1.3.1\"");
             boutiquesProvenanceDir = config.getString(GaswConstants.LAB_BOUTIQUES_PROV_DIR, "\"$HOME/.cache/boutiques/data\"");
-            boutiquesFileName = config.getString(GaswConstants.LAB_BOUTIQUES_FILE_NAME, "\"workflow.json\"");
+            boutiquesFileName = config.getString(GaswConstants.LAB_BOUTIQUES_FILE_NAME, "workflow.json");
 
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
             failOverHost = config.getString(GaswConstants.LAB_FAILOVER_HOST, "localhost");
