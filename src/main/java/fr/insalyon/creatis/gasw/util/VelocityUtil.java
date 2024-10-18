@@ -47,6 +47,7 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.runtime.log.NullLogChute;
 import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
 import org.apache.velocity.runtime.resource.util.StringResourceRepository;
 
@@ -62,12 +63,20 @@ public class VelocityUtil {
     private VelocityContext context;
 
     public VelocityUtil(String templatePath) throws Exception {
+        this(templatePath, true);
+    }
+
+    public VelocityUtil(String templatePath, boolean enableLogging) throws Exception {
 
         if (ve == null) {
             Properties properties = new Properties();
             properties.setProperty("resource.loader", "string");
             properties.setProperty("string.resource.loader.class", "org.apache.velocity.runtime.resource.loader.StringResourceLoader");
             properties.setProperty("string.resource.loader.repository.class", "org.apache.velocity.runtime.resource.util.StringResourceRepositoryImpl");
+
+            if ( ! enableLogging) {
+                properties.setProperty("runtime.log.logsystem.class", NullLogChute.class.getName());
+            }
 
             ve = new VelocityEngine(properties);
             ve.init();

@@ -34,8 +34,13 @@ package fr.insalyon.creatis.gasw.script;
 
 import fr.insalyon.creatis.gasw.util.VelocityUtil;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -47,7 +52,7 @@ class DataManagementGeneratorTest {
     public void checkCheckCacheDownloadAndCacheLFNFunctionTemplate()
         throws Exception {
 
-        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/checkCacheDownloadAndCacheLFNFunction.vm");
+        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/checkCacheDownloadAndCacheLFNFunction.vm", false);
 
         velocity.put("cacheDir", "dir");
         velocity.put("cacheFile", "file");
@@ -56,9 +61,39 @@ class DataManagementGeneratorTest {
     }
 
     @Test
+    @DisplayName("Check variables template")
+    public void checkVariablesTemplateNoVariable() throws Exception {
+        VelocityUtil velocity = new VelocityUtil("vm/script/execution/variables.vm", false);
+
+        velocity.put("variables", new HashMap<>());
+
+        String res = velocity.merge().toString();
+
+        Assertions.assertFalse(res.contains("export"));
+    }
+
+    @Test
+    @DisplayName("Check variables template")
+    public void checkVariablesTemplate() throws Exception {
+        VelocityUtil velocity = new VelocityUtil("vm/script/execution/variables.vm", false);
+
+        Map<String,String> variables = new HashMap<>() {{
+            put("var1", "value1");
+            put("var2", "value2");
+        }};
+        velocity.put("variables", variables);
+
+        String res = velocity.merge().toString();
+
+        Assertions.assertEquals(2, res.lines().filter(l -> l.contains("export")).count());
+        Assertions.assertTrue(res.contains("export var1=\"value1\""));
+        Assertions.assertTrue(res.contains("export var2=\"value2\""));
+    }
+
+    @Test
     @DisplayName("Check downloadFunction template")
     public void checkDownloadFunctionTemplate() throws Exception {
-        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/downloadFunctions.vm");
+        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/downloadFunctions.vm", false);
 
         velocity.put("timeout", 10);
         velocity.put("minAvgDownloadThroughput", 10);
@@ -75,7 +110,7 @@ class DataManagementGeneratorTest {
     @Test
     @DisplayName("Check addToCacheFunction template")
     public void checkAddToCacheFunctionTemplate() throws Exception {
-        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/addToCacheFunction.vm");
+        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/addToCacheFunction.vm", false);
 
         velocity.put("cacheDir", "dir");
         velocity.put("cacheFile", "file");
@@ -86,7 +121,7 @@ class DataManagementGeneratorTest {
     @Test
     @DisplayName("Check addToFailOverFunction template")
     public void checkAddToFailOverFunctionTemplate() throws Exception {
-        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/addToFailOverFunction.vm");
+        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/addToFailOverFunction.vm", false);
 
         velocity.put("failOverHost", "host");
         velocity.put("failOverPort", 10);
@@ -98,7 +133,7 @@ class DataManagementGeneratorTest {
     @Test
     @DisplayName("Check uploadFunction template")
     public void checkUploadFunctionTemplate() throws Exception {
-        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/uploadFunctions.vm");
+        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/uploadFunctions.vm", false);
 
         velocity.put("timeout", 10);
         velocity.put("minAvgDownloadThroughput", 10);
@@ -112,7 +147,7 @@ class DataManagementGeneratorTest {
     @Test
     @DisplayName("Check deleteFunctions template")
     public void checkDeleteFunctionsTemplate() throws Exception {
-        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/deleteFunctions.vm");
+        VelocityUtil velocity = new VelocityUtil("vm/script/datamanagement/deleteFunctions.vm", false);
 
         velocity.merge().toString();
     }
