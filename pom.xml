@@ -73,7 +73,6 @@
     </build>
 
     <dependencies>
-
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
@@ -116,7 +115,6 @@
           <version>5.11.0</version>
           <scope>test</scope>
         </dependency>
-
     </dependencies>
 
     <repositories>
