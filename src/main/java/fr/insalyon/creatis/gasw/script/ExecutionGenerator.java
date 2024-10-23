@@ -32,14 +32,15 @@
  */
 package fr.insalyon.creatis.gasw.script;
 
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+
 import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswUpload;
 import fr.insalyon.creatis.gasw.util.VelocityUtil;
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
 
 /**
  *

@@ -5,7 +5,7 @@
 
 startLog application_environment
 
-#foreach( $variable in $variables )
+#foreach( $variable in $variables.entrySet() )
     export $variable.key="$variable.value"
 #end
 

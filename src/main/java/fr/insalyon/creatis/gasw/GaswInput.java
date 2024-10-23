@@ -33,6 +33,8 @@
 package fr.insalyon.creatis.gasw;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,16 +48,23 @@ public class GaswInput {
     private List<String> parameters;
     private List<URI> downloads;
     private List<GaswUpload> uploads;
+    private URI uploadURI;
     private Map<String, String> gaswVariables;
     private Map<String, String> envVariables;
+    private String invocationString;
+    private String jobId;
+    private String applicationName;
+    private Boolean moteurLiteEnabled = false;
 
     /**
-     *
      * @param executableName Name of the executable file.
-     * @param parameters List of parameters associated with the command.
-     * @param downloads List of input files to be downloaded in the worker node.
-     * @param uploads List of output files to be uploaded to a Storage Element.
+     * @param parameters     List of parameters associated with the command.
+     * @param downloads      List of input files to be downloaded in the worker node.
+     * @param uploads        List of output files to be uploaded to a Storage Element.
+     * @param gaswVariables  Map of GASW variables.
+     * @param envVariables   Map of environment variables.
      */
+
     public GaswInput(String executableName, List<String> parameters,
             List<URI> downloads, List<GaswUpload> uploads,
             Map<String, String> gaswVariables, Map<String, String> envVariables) {
@@ -66,6 +75,30 @@ public class GaswInput {
         this.uploads = uploads;
         this.gaswVariables = gaswVariables;
         this.envVariables = envVariables;
+    }
+
+ /**
+ * @param applicationName Name of the application.
+ * @param executableName Name of the executable file.
+ * @param downloads List of input files to be downloaded in the worker node.
+ * @param uploadURI URI for the output file upload destination.
+ * @param invocationString String representation of the invocation.
+ * @param jobId Job ID.
+ */
+
+    public GaswInput(String applicationName, String executableName, List<URI> downloads,
+            URI uploadURI, String invocationString, String jobId) {
+        
+        this.executableName = executableName;
+        this.downloads = downloads;
+        this.uploadURI = uploadURI;
+        this.invocationString = invocationString;
+        this.jobId = jobId;
+        this.applicationName = applicationName;
+        this.moteurLiteEnabled = true;
+        this.parameters = new ArrayList<>();
+        this.gaswVariables = new HashMap<>();
+        this.envVariables = new HashMap<>();
     }
 
     /**
@@ -93,6 +126,10 @@ public class GaswInput {
      */
     public void addUpload(GaswUpload upload) {
         this.uploads.add(upload);
+    }
+
+    public void setUploadURI(URI uploadURI) {
+        this.uploadURI = uploadURI;
     }
 
     /**
@@ -127,6 +164,10 @@ public class GaswInput {
         return uploads;
     }
 
+    public URI getUploadURI() {
+        return uploadURI;
+    }
+
     public String getExecutableName() {
         return executableName;
     }
@@ -137,5 +178,21 @@ public class GaswInput {
 
     public Map<String, String> getEnvVariables() {
         return envVariables;
+    }
+
+    public String getInvocationString() {
+        return invocationString;
+    }
+
+    public String getJobId() {
+        return jobId;
+    }
+
+    public String getApplicationName(){
+        return applicationName;
+    }
+
+    public Boolean isMoteurLiteEnabled(){
+        return moteurLiteEnabled;
     }
 }

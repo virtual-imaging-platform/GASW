@@ -32,13 +32,7 @@
  */
 package fr.insalyon.creatis.gasw.parser;
 
-import fr.insalyon.creatis.gasw.GaswConstants;
-import fr.insalyon.creatis.gasw.GaswException;
-import fr.insalyon.creatis.gasw.GaswInput;
-import fr.insalyon.creatis.gasw.GaswUpload;
-import fr.insalyon.creatis.gasw.GaswUtil;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
@@ -53,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -60,6 +55,12 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
+
+import fr.insalyon.creatis.gasw.GaswConstants;
+import fr.insalyon.creatis.gasw.GaswException;
+import fr.insalyon.creatis.gasw.GaswInput;
+import fr.insalyon.creatis.gasw.GaswUpload;
+import fr.insalyon.creatis.gasw.GaswUtil;
 
 /**
  *
