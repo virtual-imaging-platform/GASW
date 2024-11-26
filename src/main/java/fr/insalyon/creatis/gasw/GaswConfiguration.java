@@ -91,6 +91,7 @@ public class GaswConfiguration {
     // Boutiques installation
     private String boshCVMFSPath;
     private String apptainerPath;
+    private String singularityPath;
     private String containersCVMFSPath;
     private String udockerTag;
     private String boutiquesProvenanceDir;
@@ -165,7 +166,8 @@ public class GaswConfiguration {
             voUseCloseSE = config.getString(GaswConstants.LAB_VO_USE_CLOSE_SE, "\"true\"");
 
             boshCVMFSPath = config.getString(GaswConstants.LAB_BOSH_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/virtualenv/bin\"");
-            apptainerPath = config.getString(GaswConstants.LAB_APPTAINER_PATH, "\"/cvmfs/dirac.egi.eu/container/apptainer/bin\"");
+            apptainerPath = config.getString(GaswConstants.LAB_APPTAINER_PATH, "\"/cvmfs/dirac.egi.eu/dirac/v8.0.39/Linux-x86_64/libexec/\"");
+            singularityPath = config.getString(GaswConstants.LAB_SINGULARITY_PATH, "\"/cvmfs/dirac.egi.eu/dirac/v8.0.39/Linux-x86_64/bin/\"");   
             containersCVMFSPath = config.getString(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/udocker/containers\"");
             udockerTag = config.getString(GaswConstants.LAB_UDOCKER_TAG, "\"1.3.1\"");
             boutiquesProvenanceDir = config.getString(GaswConstants.LAB_BOUTIQUES_PROV_DIR, "\"$HOME/.cache/boutiques/data\"");
@@ -201,6 +203,7 @@ public class GaswConfiguration {
             
 	        config.setProperty(GaswConstants.LAB_BOSH_CVMFS_PATH, boshCVMFSPath);
             config.setProperty(GaswConstants.LAB_APPTAINER_PATH, apptainerPath);
+            config.setProperty(GaswConstants.LAB_SINGULARITY_PATH, singularityPath);
             config.setProperty(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, containersCVMFSPath);
             config.setProperty(GaswConstants.LAB_UDOCKER_TAG, udockerTag);
             config.setProperty(GaswConstants.LAB_BOUTIQUES_PROV_DIR, boutiquesProvenanceDir);
@@ -427,6 +430,10 @@ public class GaswConfiguration {
 
     public String getApptainerPath() {
         return apptainerPath;
+    }
+
+    public String getSingularityPath() {
+        return singularityPath;
     }
 
     public String getBoutiquesProvenanceDir() {
