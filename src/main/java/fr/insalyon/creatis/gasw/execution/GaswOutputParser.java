@@ -199,6 +199,7 @@ public abstract class GaswOutputParser extends Thread {
                 while (scanner.hasNextLine()) {
 
                     String line = scanner.nextLine();
+                    String[] lineSplitted = line.split(" ");
 
                     // Application Output
                     if (line.contains("<application_execution>")) {
@@ -213,7 +214,7 @@ public abstract class GaswOutputParser extends Thread {
 
                     // General Output
                     if (line.contains("Input download time:")) {
-                        int downloadTime = Integer.valueOf(line.split(" ")[13]).intValue();
+                        int downloadTime = Integer.parseInt(lineSplitted[lineSplitted.length - 2]);
                         job.setRunning(addDate(job.getDownload(), Calendar.SECOND, downloadTime));
 
                     } else if (line.contains("Execution time:")) {
@@ -221,16 +222,16 @@ public abstract class GaswOutputParser extends Thread {
                         if (job.getRunning() == null) {
                             job.setRunning(job.getDownload());
                         }
-                        int executionTime = Integer.valueOf(line.split(" ")[12]).intValue();
+                        int executionTime = Integer.parseInt(lineSplitted[lineSplitted.length - 2]);
                         job.setUpload(addDate(job.getRunning(), Calendar.SECOND, executionTime));
 
                     } else if (line.contains("Results upload time:")) {
-                        int uploadTime = Integer.valueOf(line.split(" ")[13]).intValue();
+                        int uploadTime = Integer.parseInt(lineSplitted[lineSplitted.length - 2]);
                         job.setEnd(addDate(job.getUpload(), Calendar.SECOND, uploadTime));
 
                     } else if (line.contains("Exiting with return value") && isAfterExec) {
                         String[] errmsg = line.split("\\s+");
-                        exitCode = Integer.valueOf(errmsg[errmsg.length - 1]).intValue();
+                        exitCode = Integer.parseInt(errmsg[errmsg.length - 1]);
                         job.setExitCode(exitCode);
 
                     } else if (line.startsWith("===== uname =====")) {
