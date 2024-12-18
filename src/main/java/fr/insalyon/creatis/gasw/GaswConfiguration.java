@@ -165,7 +165,7 @@ public class GaswConfiguration {
             voUseCloseSE = config.getString(GaswConstants.LAB_VO_USE_CLOSE_SE, "\"true\"");
 
             boshCVMFSPath = config.getString(GaswConstants.LAB_BOSH_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/virtualenv/bin\"");
-            apptainerPath = config.getString(GaswConstants.LAB_APPTAINER_PATH, "\"/cvmfs/dirac.egi.eu/container/apptainer/bin\"");
+            apptainerPath = config.getString(GaswConstants.LAB_APPTAINER_PATH, "\"/cvmfs/dirac.egi.eu/dirac/v8.0.39/Linux-x86_64/libexec/\"");
             containersCVMFSPath = config.getString(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/udocker/containers\"");
             udockerTag = config.getString(GaswConstants.LAB_UDOCKER_TAG, "\"1.3.1\"");
             boutiquesProvenanceDir = config.getString(GaswConstants.LAB_BOUTIQUES_PROV_DIR, "\"$HOME/.cache/boutiques/data\"");
