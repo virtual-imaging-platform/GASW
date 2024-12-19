@@ -79,9 +79,9 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
             session.beginTransaction();
             List<JobMinorStatus> list = session.createNamedQuery("MinorStatus.findCheckpointById", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
-                    .setParameter("checkpointInit", GaswMinorStatus.CheckPoint_Init.name())
-                    .setParameter("checkpointUpload", GaswMinorStatus.CheckPoint_Upload.name())
-                    .setParameter("checkpointEnd", GaswMinorStatus.CheckPoint_Upload.name())
+                    .setParameter("checkpointInit", GaswMinorStatus.CheckPoint_Init)
+                    .setParameter("checkpointUpload", GaswMinorStatus.CheckPoint_Upload)
+                    .setParameter("checkpointEnd", GaswMinorStatus.CheckPoint_Upload)
                     .list();
             session.getTransaction().commit();
 
@@ -100,12 +100,12 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
             session.beginTransaction();
             List<JobMinorStatus> list = session.createNamedQuery("MinorStatus.findExecutionById", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
-                    .setParameter("start", GaswMinorStatus.Started.name())
-                    .setParameter("background", GaswMinorStatus.Background.name())
-                    .setParameter("input", GaswMinorStatus.Inputs.name())
-                    .setParameter("application", GaswMinorStatus.Application.name())
-                    .setParameter("output", GaswMinorStatus.Outputs.name())
-                    .setParameter("finished", GaswMinorStatus.Finished.name())
+                    .setParameter("start", GaswMinorStatus.Started)
+                    .setParameter("background", GaswMinorStatus.Background)
+                    .setParameter("input", GaswMinorStatus.Inputs)
+                    .setParameter("application", GaswMinorStatus.Application)
+                    .setParameter("output", GaswMinorStatus.Outputs)
+                    .setParameter("finished", GaswMinorStatus.Finished)
                     .list();
             session.getTransaction().commit();
 
@@ -125,8 +125,8 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
             session.beginTransaction();
             List<JobMinorStatus> list = session.createNamedQuery("MinorStatus.dateDiff", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
-                    .setParameter("start", start.name())
-                    .setParameter("end", end.name())
+                    .setParameter("start", start)
+                    .setParameter("end", end)
                     .list();
             session.close();
             
