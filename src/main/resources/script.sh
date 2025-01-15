@@ -1060,6 +1060,16 @@ if ! command -v docker
 then
     download_udocker
 fi
+# Check that singularity is in PATH
+if ! command -v singularity
+then
+    if test -d "$singularityPath"; then
+        export PATH="$singularityPath:$PATH"
+        info "adding singularityPath to PATH ($singularityPath)"
+    else
+        warning "singularityPath not found ($singularityPath), leaving PATH unchanged"
+    fi
+fi
 ####################################################################################################
 
 # Export current directory to LD_LIBRARY_PATH
