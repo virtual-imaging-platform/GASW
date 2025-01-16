@@ -85,6 +85,7 @@ import fr.insalyon.creatis.gasw.execution.GaswMinorStatusServiceGenerator;
              config.put("voUseCloseSE", conf.getVoUseCloseSE());
              config.put("boshCVMFSPath", conf.getBoshCVMFSPath());
              config.put("boutiquesProvenanceDir", conf.getBoutiquesProvenanceDir());
+             config.put("singularityPath", conf.getSingularityPath());
              config.put("containersCVMFSPath", conf.getContainersCVMFSPath());
              config.put("udockerTag", conf.getUdockerTag());
              config.put("simulationID", conf.getSimulationID());

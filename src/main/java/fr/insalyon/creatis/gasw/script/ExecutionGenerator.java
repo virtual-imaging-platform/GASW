@@ -81,6 +81,7 @@ public class ExecutionGenerator {
         velocity.put("voUseCloseSE", conf.getVoUseCloseSE());
         velocity.put("boshCVMFSPath", conf.getBoshCVMFSPath());
         velocity.put("boutiquesProvenanceDir", conf.getBoutiquesProvenanceDir());
+        velocity.put("singularityPath", conf.getSingularityPath());
         velocity.put("containersCVMFSPath", conf.getContainersCVMFSPath());
         velocity.put("udockerTag", conf.getUdockerTag());
         velocity.put("simulationID", conf.getSimulationID());
