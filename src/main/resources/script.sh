@@ -1,18 +1,29 @@
 #!/bin/bash
+# relatively harmless warnings, globally disabled:
+# shellcheck disable=SC2155  # local v=$(), ok if we ignore return value
+# shellcheck disable=SC2001  # echo|sed vs ${var//search/replace}
+# shellcheck disable=SC2012  # ls vs find
+# shellcheck disable=SC2181  # style: if [ $? = 0 ] vs if command
+
+# see if cleanable: (global vars tracking and configurationFile loading issue)
+# shellcheck disable=SC2154  # referenced but not assigned
+
+function logDate {
+  # LC_ALL=C: use neutral locale for date output
+  # xargs: merge consecutive spaces to keep previous unquoted behaviour
+  LC_ALL=C TZ=UTC date | xargs
+}
 
 function info {
-  local D=`date`
-  echo [ INFO - $D ] $*
+  echo "[ INFO - $(logDate) ] $*"
 }
 
 function warning {
-  local D=`date`
-  echo [ WARN - $D ] $*
+  echo "[ WARN - $(logDate) ] $*"
 }
 
 function error {
-  local D=`date`
-  echo [ ERROR - $D ] $* >&2
+  echo "[ ERROR - $(logDate) ] $*" >&2
 }
 
 function startLog {
@@ -21,7 +32,7 @@ function startLog {
 }
 
 function stopLog {
-  local logName=$1
+  local logName="$1"
   echo "</${logName}>" >&1
   echo "</${logName}>" >&2
 }
@@ -48,9 +59,11 @@ else
     info "Directories already exist. Skipping copy."
 fi
 
+export BASEDIR="$PWD"
 configurationFile="config/$configurationFilename"
 # Source the configuration file
 if [ -f "$configurationFile" ]; then
+    # shellcheck disable=SC1090
     source "$configurationFile"
 else
     error "Configuration file $configurationFile not found!"
@@ -60,19 +73,19 @@ fi
 
 function download_udocker {
   #installation of udocker
-  info "cloning udocker ${UDOCKER_TAG} "
-  git clone --depth=1 --branch ${UDOCKER_TAG} https://github.com/indigo-dc/udocker.git
-  (cd udocker/udocker; ln -s maincmd.py udocker)
-  export PATH=`pwd`/udocker/udocker:$PATH
+  info "cloning udocker $UDOCKER_TAG"
+  git clone --depth=1 --branch "$UDOCKER_TAG" https://github.com/indigo-dc/udocker.git
+  (cd udocker/udocker && ln -s maincmd.py udocker)
+  export PATH="$PWD/udocker/udocker:$PATH"
   
   #creating a temporary directory for udocker containers
   mkdir -p containers
-  export UDOCKER_CONTAINERS=$PWD/containers
+  export UDOCKER_CONTAINERS="$PWD/containers"
   
   #find pre-deployed containers on CVMFS, and create a symlink to the udocker containers directory
   ## use a global velocity escape to avoid velocity escaping issue
-  for d in ${CONTAINERS_CVMFS_PATH}/*/ ;
-     do mkdir containers/$(basename "${d%/}") && ln -s "${d%/}"/* containers/$(basename "${d%/}")/
+  for d in "$CONTAINERS_CVMFS_PATH"/*/ ;
+     do mkdir "containers/$(basename "${d%/}")" && ln -s "${d%/}"/* "containers/$(basename "${d%/}")/"
   done
   cat >docker <<'EOF'
         #!/bin/bash
@@ -81,33 +94,34 @@ function download_udocker {
         ./udocker/udocker/udocker $MYARGS
 EOF
   chmod a+x docker
-  export PATH=$PWD:$PATH
+  export PATH="$PWD:$PATH"
 }
 
 function cleanup {
     if [[ $isGfalmountExec -eq 0 ]]    #flag checks if directories are mounted with gfal
     then
         unmountGfal    #unmounts all gfal mounted directories
-        unlink /tmp/*_$(basename $PWD)
+        unlink /tmp/*_"$(basename "$PWD")"
     fi
     startLog cleanup
     info "=== ls -a ==="
     ls -a
     info "=== ls $cacheDir/$cacheFile ==="
-    ls $cacheDir/$cacheFile
+    ls "$cacheDir/$cacheFile"
     info "=== cat $cacheDir/$cacheFile === "
-    cat $cacheDir/$cacheFile
+    cat "$cacheDir/$cacheFile"
     info "Cleaning up: rm * -Rf"
     #\rm * -Rf
-    if [ "${BACKPID}" != "" ]
+    if [ "$BACKPID" != "" ]
     then
-        for i in `ps --ppid ${BACKPID} -o pid | grep -v PID`
+        # shellcheck disable=SC2009
+        for i in $(ps --ppid "$BACKPID" -o pid | grep -v PID)
         do
-            info "Killing child of background script (pid ${i})"
-            kill -9 ${i}
+            info "Killing child of background script (pid $i)"
+            kill -9 "$i"
         done
-        info "Killing background script (pid ${BACKPID})"
-        kill -9 ${BACKPID}
+        info "Killing background script (pid $BACKPID)"
+        kill -9 "$BACKPID"
     fi
     info "END date:"
     date +%s
@@ -126,11 +140,11 @@ fi' INT EXIT
 
 function checkCacheDownloadAndCacheLFN {
 
-    local LFN=$1
+    local LFN="$1"
     local download="true"
 
-    local LOCALPATH=$(awk -v L=${LFN} '$1==L {print $2}' $cacheDir/$cacheFile)
-    if [ -n "${LOCALPATH}" ]; then
+    local LOCALPATH=$(awk -v L="$LFN" '$1==L {print $2}' "$cacheDir/$cacheFile")
+    if [ -n "$LOCALPATH" ]; then
         info "There is an entry in the cache: test if the local file still here"
         local TIMESTAMP_LOCAL=""
         local TIMESTAMP_GRID=""
@@ -138,24 +152,24 @@ function checkCacheDownloadAndCacheLFN {
         if [ -f "${LOCALPATH}" ]; then
             info "The file exists: checking if it was modified since it was added to the cache"
             local YEAR=$(date +%Y)
-            local YEARBEFORE=$(expr ${YEAR} - 1)
+            local YEARBEFORE=$((YEAR - 1))
             local currentDate=$(date +%s)
-            local TIMESTAMP_CACHE=$(awk -v L=${LFN} '$1==L {print $3}' $cacheDir/$cacheFile)
-            local LOCALMONTH=$(ls -la ${LOCALPATH} | awk -F' ' '{print $6}')
-            local MONTHTIME=$(date -d "${LOCALMONTH} 1 00:00" +%s)
-            date_local=$(ls -la ${LOCALPATH} | awk -F' ' '{print $6, $7, $8}')
-            if [ "${MONTHTIME}" -gt "${currentDate}" ]; then
-                TIMESTAMP_LOCAL=$(date -d "${date_local} ${YEARBEFORE}" +%s)
+            local TIMESTAMP_CACHE=$(awk -v L="$LFN" '$1==L {print $3}' "$cacheDir/$cacheFile")
+            local LOCALMONTH=$(ls -la "$LOCALPATH" | awk -F' ' '{print $6}')
+            local MONTHTIME=$(date -d "$LOCALMONTH 1 00:00" +%s)
+            date_local=$(ls -la "$LOCALPATH" | awk -F' ' '{print $6, $7, $8}')
+            if [ "$MONTHTIME" -gt "$currentDate" ]; then
+                TIMESTAMP_LOCAL=$(date -d "$date_local $YEARBEFORE" +%s)
             else
-                TIMESTAMP_LOCAL=$(date -d "${date_local} ${YEAR}" +%s)
+                TIMESTAMP_LOCAL=$(date -d "$date_local $YEAR" +%s)
             fi
-            if [ "${TIMESTAMP_CACHE}" = "${TIMESTAMP_LOCAL}" ]; then
+            if [ "$TIMESTAMP_CACHE" = "$TIMESTAMP_LOCAL" ]; then
                 info "The file was not touched since it was added to the cache: test if it is up-to-date"
-                local date_grid_s=$(lfc-ls -l ${LFN} | awk -F' ' '{print $6, $7, $8}')
-                local MONTHGRID=$(echo ${date_grid_s} | awk -F' ' '{print $1}')
-                MONTHTIME=$(date -d "${MONTHGRID} 1 00:00" +%s)
-                if [ -n "${MONTHTIME}" ] && [ -n "${date_grid_s}" ]; then
-                    if [ "${MONTHTIME}" -gt "${currentDate}" ]; then
+                local date_grid_s=$(lfc-ls -l "$LFN" | awk -F' ' '{print $6, $7, $8}')
+                local MONTHGRID=$(echo "$date_grid_s" | awk -F' ' '{print $1}')
+                MONTHTIME=$(date -d "$MONTHGRID 1 00:00" +%s)
+                if [ -n "$MONTHTIME" ] && [ -n "$date_grid_s" ]; then
+                    if [ "$MONTHTIME" -gt "$currentDate" ]; then
                         # it must be last year
                         TIMESTAMP_GRID=$(date -d "${date_grid_s} ${YEARBEFORE}" +%s)
                     else
@@ -182,21 +196,18 @@ function checkCacheDownloadAndCacheLFN {
     
     if [ "${download}" = "false" ]; then
         info "Linking file from cache: ${LOCALPATH}"
-        BASE=$(basename ${LFN})
-        echo "BASE : ${BASE}"
-        echo "LOCALPATH : ${LOCALPATH}"
-        info "ln -s ${LOCALPATH} ./${BASE}"
-        ln -s ${LOCALPATH} ./${BASE}
+        BASE=$(basename "$LFN")
+        echo "BASE : $BASE"
+        echo "LOCALPATH : $LOCALPATH"
+        info "ln -s $LOCALPATH ./$BASE"
+        ln -s "$LOCALPATH" "./$BASE"
         return 0
     fi
 
     if [ "${download}" = "true" ]; then
         echo "${LFN}"
-        downloadLFN ${LFN}
-        if [ $? != 0 ]; then
-            return 1
-        fi
-        addToCache ${LFN} $(basename ${LFN})
+        downloadLFN "$LFN" || return 1
+        addToCache "$LFN" "$(basename "$LFN")"
         return 0
     fi
 }
@@ -224,7 +235,7 @@ function refresh_token {
 
     echo "refresh token process started !"
 
-    local URI=$1
+    local URI="$1"
     local keycloak_client_id=$(echo "$URI" | sed -r 's/^.*[?&]keycloak_client_id=([^&]*)(&.*)?$/\1/i')
     local refresh_token_url=$(echo "$URI" | sed -r 's/^.*[?&]refresh_token_url=([^&]*)(&.*)?$/\1/i')
 
@@ -307,7 +318,7 @@ function wait_for_token {
 
 function downloadLFN {
 
-    local LFN=$1
+    local LFN="$1"
     echo "LFN : ${LFN}"
 
     # Sanitize LFN:
@@ -315,13 +326,13 @@ function downloadLFN {
     #    but does not work as expected with comdirac commands like
     #    dmkdir.
     # - "//" are not accepted, neither by dirac-dms-*, nor by dmkdir.
-    LFN=$(echo ${LFN} | sed -r -e 's/^lfn://' -e 's#//#/#g')
+    LFN=$(echo "${LFN}" | sed -r -e 's/^lfn://' -e 's#//#/#g')
 
     info "getting file size and computing sendReceiveTimeout"
-    local size=$(dirac-dms-lfn-metadata ${LFN} | grep Size | sed -r 's/.* ([0-9]+),/\1/')
+    local size=$(dirac-dms-lfn-metadata "$LFN" | grep Size | sed -r 's/.* ([0-9]+),/\1/')
     #############################
     # Compute sendReceiveTimeout (doing a subbash command with ok to avoid a syntax error to stop the function)
-    local sendReceiveTimeout=$(echo $((${size:-0} / ${minAvgDownloadThroughput:-150} / 1024)))
+    local sendReceiveTimeout=$((${size:-0} / ${minAvgDownloadThroughput:-150} / 1024))
 
     ############################
     if [ "$sendReceiveTimeout" = "" ] || [ $sendReceiveTimeout -le 900 ]
@@ -332,14 +343,14 @@ function downloadLFN {
         info "sendReceiveTimeout is $sendReceiveTimeout"
     fi
 
-    local LOCAL=${PWD}/`basename ${LFN}`
+    local LOCAL="$PWD/$(basename "$LFN")"
     info "Removing file ${LOCAL} in case it is already here"
-    \rm -f ${LOCAL}
+    \rm -f "$LOCAL"
 
-    local totalTimeout=$((${timeout} + ${srmTimeout} + ${sendReceiveTimeout}))
+    local totalTimeout=$((timeout + srmTimeout + sendReceiveTimeout))
 
     local LINE="time -p dirac-dms-get-file -d -o /Resources/StorageElements/GFAL_TIMEOUT=${totalTimeout} ${LFN}"
-    info ${LINE}
+    info "$LINE"
     (${LINE}) &> get-file.log
 
     if [ $? = 0 ]
@@ -351,7 +362,7 @@ function downloadLFN {
         RET_VAL=0
     else
         error "dirac-dms-get-file failed"
-        error "`cat get-file.log`"
+        error "$(cat get-file.log)"
         RET_VAL=1
     fi
 
@@ -369,16 +380,16 @@ export -f downloadLFN
 # changes should be done the same in both functions.
 #
 function downloadGirderFile {
-    local URI=$1
+    local URI="$1"
 
     # The regexpes are written so that case is ignored and the
     # arguments can be in any order.
-    local fileName=$(echo $URI | sed -r 's#^girder:/(//)?([^/].*)\?.*$#\2#i')
-    local apiUrl=$(echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i')
-    local fileId=$(echo $URI | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i')
-    local token=$(echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i')
+    local fileName=$(echo "$URI" | sed -r 's#^girder:/(//)?([^/].*)\?.*$#\2#i')
+    local apiUrl=$(echo "$URI" | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i')
+    local fileId=$(echo "$URI" | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i')
+    local token=$(echo "$URI" | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i')
 
-    if [ ! $(which girder-client) ]; then
+    if ! command -v girder-client; then
         pip install --user girder-client
         if [ $? != 0 ]; then
             echo "girder-client not in PATH, and an error occurred while trying to install it."
@@ -401,17 +412,18 @@ export -f downloadGirderFile
 #
 # This function checks for all the gfal mounts in the current folder.
 
+# shellcheck disable=SC2016
 check_mount='$(test -z $(for file in *; do findmnt -t fuse.gfalFS -lo Target -n -T $(realpath ${file}); done) && echo 1 || echo 0)'
 isGfalmountExec=1
 
 function mountGfal {
-    local URI=$1
+    local URI="$1"
 
     # The regexpes are written so that case is ignored and the
     # arguments can be in any order.
-    local fileName=$(echo $URI | sed -r 's#^srm:/(//)?([^/].*)\?.*$#\2#i')
-    local gfal_basename=$(basename ${fileName})
-    local job_id=${gfal_basename}_$(basename $PWD)
+    local fileName=$(echo "$URI" | sed -r 's#^srm:/(//)?([^/].*)\?.*$#\2#i')
+    local gfal_basename=$(basename "$fileName")
+    local job_id=${gfal_basename}_$(basename "$PWD")
 
     CREATE_DIR_COMMAND="mkdir -p $gfal_basename"
     SYM_LINK_COMMAND="ln -s $PWD/$gfal_basename /tmp/$job_id"
@@ -422,6 +434,7 @@ function mountGfal {
     ${GFAL_COMMAND}
     # Let nfs-kernel-server export the directory and write logs
     sleep 30
+    # shellcheck disable=SC2086
     eval echo $check_mount
 }
 
@@ -433,17 +446,19 @@ export -f mountGfal
 # either after the execution of the job, failure of the job, or interruptions of the job.
 function unmountGfal {
     START=$SECONDS
-    while [ $(eval echo $check_mount) = 0 ]; do
-        for file in $PWD/*; do
-            findmnt -t fuse.gfalFS -lo Target -n -T $(realpath ${file}) && gfalFS_umount $(realpath ${file})
+    # shellcheck disable=SC2086
+    while [ "$(eval echo $check_mount)" = 0 ]; do
+        for file in "$PWD"/*; do
+            findmnt -t fuse.gfalFS -lo Target -n -T "$(realpath "$file")" && gfalFS_umount "$(realpath "$file")"
         done
         sleep 2
-        if [[ $(($SECONDS - $START)) -gt 600 ]]; then # while loop breaks automatically after 10 minutes
+        if [[ $((SECONDS - START)) -gt 600 ]]; then # while loop breaks automatically after 10 minutes
             echo "WARNING - gfal directory couldn't be unmounted: timeout"
             break
         fi
 
     done
+    # shellcheck disable=SC2086
     eval echo $check_mount
 }
 
@@ -457,21 +472,22 @@ export -f unmountGfal
 # This method depends on the refresh token process to refresh the token when it needs
 #
 function downloadShanoirFile {
-    local URI=$1
+    local URI="$1"
     
     wait_for_token
 
-    local token=`cat $SHANOIR_TOKEN_LOCATION`
+    local token=$(cat "$SHANOIR_TOKEN_LOCATION")
 
     echo "token inside download : ${token}"
 
-    local fileName=`echo $URI | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i'`
-    local apiUrl=`echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i'`
-    local format=`echo $URI | sed -r 's/^.*[?&]format=([^&]*)(&.*)?$/\1/i'`
-    local resourceId=`echo $URI | sed -r 's/^.*[?&]resourceId=([^&]*)(&.*)?$/\1/i'`
+    local fileName=$(echo "$URI" | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i')
+    local apiUrl=$(echo "$URI" | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i')
+    local format=$(echo "$URI" | sed -r 's/^.*[?&]format=([^&]*)(&.*)?$/\1/i')
+    local resourceId=$(echo "$URI" | sed -r 's/^.*[?&]resourceId=([^&]*)(&.*)?$/\1/i')
+    local converterId=$(echo "$URI" | sed -r 's/^.*[?&]converterId=([^&]*)(&.*)?$/\1/i')
 
     COMMAND(){
-        curl --write-out '%{http_code}' -o ${fileName} --request GET "${apiUrl}/${resourceId}?format=${format}" --header "Authorization: Bearer ${token}"
+        curl --write-out '%{http_code}' -o "$fileName" --request GET "$apiUrl/$resourceId?format=$format&converterId=$converterId" --header "Authorization: Bearer $token"
     }
 
     local attempts=0
@@ -498,9 +514,9 @@ function downloadShanoirFile {
 
     if [[ $format = "nii" ]]; then
        echo "its a nifti, shanoir has zipped it"
-       TMP_UNZIP_DIR="tmp_unzip_dir"
+       local TMP_UNZIP_DIR="tmp_unzip_dir"
        mkdir $TMP_UNZIP_DIR
-       mv $fileName $TMP_UNZIP_DIR/tmp.zip
+       mv "$fileName" "$TMP_UNZIP_DIR/tmp.zip"
        unzip -d $TMP_UNZIP_DIR $TMP_UNZIP_DIR/tmp.zip
        # there should be a unique .nii ou .nii.gz file somewhere
        searchResult=$(find $TMP_UNZIP_DIR -name '*.nii.gz' -o -name '*.nii')
@@ -516,8 +532,8 @@ function downloadShanoirFile {
 }
 
 function downloadURI {
-    local URI=$1
-    local URI_LOWER=`echo $1 | awk '{print tolower($0)}'`
+    local URI="$1"
+    local URI_LOWER=$(echo "$URI" | awk '{print tolower($0)}')
 
     startLog file_download uri="${URI}"
 
@@ -525,45 +541,45 @@ function downloadURI {
     then
         ## Extract the path part from the uri, and remove // if
         ## present in path.
-        LFN=`echo "${URI}" | sed -r -e 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%' -e 's#//#/#g'`
+        LFN=$(echo "${URI}" | sed -r -e 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%' -e 's#//#/#g')
 
-        checkCacheDownloadAndCacheLFN $LFN
+        checkCacheDownloadAndCacheLFN "$LFN"
         validateDownload "Cannot download LFN file"
     fi
 
     if [[ ${URI_LOWER} == file:/* ]]
     then
-        local FILENAME=`echo $URI | sed 's%file://*%/%'`
-        cp $FILENAME .
+        local FILENAME=$(echo "$URI" | sed 's%file://*%/%')
+        cp "$FILENAME" .
         validateDownload "Cannot copy input file: $FILENAME"
     fi
 
     if [[ ${URI_LOWER} == http://* ]]
     then
-        curl --insecure -O ${URI}
+        curl --insecure -O "$URI"
         validateDownload "Cannot download HTTP file"
     fi
 
     if [[ ${URI_LOWER} == girder:/* ]]
     then
-        downloadGirderFile ${URI}
+        downloadGirderFile "$URI"
         validateDownload "Cannot download Girder file"
     fi
 
     if [[ ${URI_LOWER} == shanoir:/* ]]
     then
         if [[ "$REFRESHING_JOB_STARTED" == false ]]; then
-            refresh_token ${URI} & 
+            refresh_token "$URI" &
             REFRESH_PID=$!  
             REFRESHING_JOB_STARTED=true
         fi
-        downloadShanoirFile ${URI}
+        downloadShanoirFile "$URI"
         validateDownload "Cannot download shanoir file"
     fi
 
     if [[ ${URI_LOWER} == srm:/* ]] 
     then
-            if [[ $(mountGfal ${URI}) -eq 0 ]]
+            if [[ $(mountGfal "$URI") -eq 0 ]]
                 then
                     isGfalmountExec=0
                 else
@@ -596,7 +612,7 @@ function addToCache {
         if [ $? != 0 ]; then
             exist="false"
         fi
-        i=$(expr $i + 1)
+        ((i++))
     done
     info "Removing all cache entries for ${LFN} (files will stay locally in case anyone else needs them)"
     local TEMP=$(mktemp temp.XXXXXX)
@@ -621,7 +637,7 @@ nSEs() {
 }
 
 getAndRemoveSE() {
-    local index=$1
+    local index="$1"
     local i=0
     local NSE=""
     RESULT=""
@@ -652,9 +668,9 @@ chooseRandomSE() {
 }
 
 uploadLfnFile() {
-    local LFN=$1
-    local FILE=$2
-    local nrep=$3
+    local LFN="$1"
+    local FILE="$2"
+    local nrep="$3"
     local SELIST=${SE}
 
     # Sanitize LFN:
@@ -662,11 +678,11 @@ uploadLfnFile() {
     #    but does not work as expected with comdirac commands like
     #    dmkdir.
     # - "//" are not accepted, neither by dirac-dms-*, nor by dmkdir.
-    LFN=$(echo ${LFN} | sed -r -e 's/^lfn://' -e 's#//#/#g')
+    LFN=$(echo "$LFN" | sed -r -e 's/^lfn://' -e 's#//#/#g')
 
     info "getting file size and computing sendReceiveTimeout"
-    local size=$(ls -l ${FILE} | awk -F' ' '{print $5}')
-    local sendReceiveTimeout=$(((${size:-0} / minAvgDownloadThroughput / 1024)))
+    local size=$(ls -l "$FILE" | awk -F' ' '{print $5}')
+    local sendReceiveTimeout=$((${size:-0} / minAvgDownloadThroughput / 1024))
     if [ -z "$sendReceiveTimeout" ] || [ "$sendReceiveTimeout" -le 900 ]; then
         info "sendReceiveTimeout empty or too small, setting it to 900s"
         sendReceiveTimeout=900
@@ -680,16 +696,16 @@ uploadLfnFile() {
     chooseRandomSE
     local DEST=${RESULT}
     local done=0
-    while [ $nrep -gt $done ] && [ "${DEST}" != "" ]; do
-        if [ "${done}" = "0" ]; then
+    while [ "$nrep" -gt "$done" ] && [ "${DEST}" != "" ]; do
+        if [ "$done" = "0" ]; then
             local command="dirac-dms-add-file"
             local source=$(hostname)
-            dirac-dms-remove-files ${OPTS} ${LFN} &>/dev/null
-            (time -p dirac-dms-add-file ${OPTS} ${LFN} ${FILE} ${DEST}) &> dirac.log
+            dirac-dms-remove-files "$OPTS" "$LFN" &>/dev/null
+            (time -p dirac-dms-add-file "$OPTS" "$LFN" "$FILE" "$DEST") &> dirac.log
             local error_code=$?
         else
             local command="dirac-dms-replicate-lfn"
-            (time -p dirac-dms-replicate-lfn -d ${OPTS} ${LFN} ${DEST}) &> dirac.log
+            (time -p dirac-dms-replicate-lfn -d "$OPTS" "$LFN" "$DEST") &> dirac.log
             local error_code=$?
 
             local source=$(grep "operation 'getFileSize'" dirac.log | tail -1 | sed -r 's/^.* StorageElement (.*) is .*$/\1/')
@@ -716,7 +732,7 @@ uploadLfnFile() {
         error "Exiting with return value 2"
         exit 2
     else
-        addToCache ${LFN} ${FILE}
+        addToCache "$LFN" "$FILE"
     fi
 }
 
@@ -730,21 +746,21 @@ uploadLfnFile() {
 #
 
 uploadShanoirFile() {
-    local URI=$1
+    local URI="$1"
 
     wait_for_token
 
-    local token=$(cat $SHANOIR_TOKEN_LOCATION)
+    local token=$(cat "$SHANOIR_TOKEN_LOCATION")
 
-    local upload_url=$(echo $URI | sed -r 's/^.*[?&]upload_url=([^&]*)(&.*)?$/\1/i')
-    local fileName=$(echo $URI | sed -r 's#^shanoir:/(//)?(.*/(.+))\?.*$#\3#i')
-    local filePath=$(echo $URI | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i')
+    local upload_url=$(echo "$URI" | sed -r 's/^.*[?&]upload_url=([^&]*)(&.*)?$/\1/i')
+    local fileName=$(echo "$URI" | sed -r 's#^shanoir:/(//)?(.*/(.+))\?.*$#\3#i')
+    local filePath=$(echo "$URI" | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i')
    
-    local type=$(echo $URI | sed -r 's/^.*[?&]type=([^&]*)(&.*)?$/\1/i')
-    local md5=$(echo $URI | sed -r 's/^.*[?&]md5=([^&]*)(&.*)?$/\1/i')
+    local type=$(echo "$URI" | sed -r 's/^.*[?&]type=([^&]*)(&.*)?$/\1/i')
+    local md5=$(echo "$URI" | sed -r 's/^.*[?&]md5=([^&]*)(&.*)?$/\1/i')
 
     COMMAND() { 
-        (echo -n '{"base64Content": "'; base64 ${fileName}; echo '", "type":"'; echo ${type}; echo '", "md5":"'; echo ${md5} ; echo '"}') | curl --write-out '%{http_code}' --request PUT "${upload_url}/${filePath}"  --header "Authorization: Bearer ${token}"  --header "Content-Type: application/carmin+json" --header 'Accept: application/json, text/plain, */*' -d @-
+        (echo -n '{"base64Content": "'; base64 "$fileName"; echo '", "type":"'; echo "$type"; echo '", "md5":"'; echo "$md5" ; echo '"}') | curl --write-out '%{http_code}' --request PUT "$upload_url/$filePath"  --header "Authorization: Bearer $token"  --header "Content-Type: application/carmin+json" --header 'Accept: application/json, text/plain, */*' -d @-
     }
 
     status_code=$(COMMAND)
@@ -767,14 +783,14 @@ uploadShanoirFile() {
 #
 
 uploadGirderFile() {
-    local URI=$1
+    local URI="$1"
 
-    local fileName=$(echo $URI | sed -r 's#^girder:/(//)?(.*/)?([^/].*)\?.*$#\3#i')
-    local apiUrl=$(echo $URI | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i')
-    local fileId=$(echo $URI | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i')
-    local token=$(echo $URI | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i')
+    local fileName=$(echo "$URI" | sed -r 's#^girder:/(//)?(.*/)?([^/].*)\?.*$#\3#i')
+    local apiUrl=$(echo "$URI" | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i')
+    local fileId=$(echo "$URI" | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i')
+    local token=$(echo "$URI" | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i')
 
-    if [ ! $(which girder-client) ]; then
+    if ! command -v girder-client; then
         pip install --user girder-client
         if [ $? != 0 ]; then
             error "girder-client not in PATH, and an error occured while trying to install it."
@@ -794,41 +810,42 @@ uploadGirderFile() {
 }
 
 function upload {
-    local URI=$1
-    local ID=$2
-    local NREP=$3
-    local TEST=$4
-    startLog file_upload uri="${URI}"
+    local URI="$1"
+    # shellcheck disable=SC2034
+    local ID="$2" # unused
+    local NREP="$3"
+    local TEST="$4"
+    startLog file_upload uri="$URI"
     
     # The pattern must NOT be put between quotation marks.
     if [[ ${URI} == shanoir:/* ]]; then
         if [ "${TEST}" != "true" ]; then
             if [ "$REFRESHING_JOB_STARTED" == false ]; then
-                refresh_token ${URI} &
+                refresh_token "$URI" &
                 REFRESH_PID=$!  
                 REFRESHING_JOB_STARTED=true
             fi
-            uploadShanoirFile ${URI}
+            uploadShanoirFile "$URI"
         fi
     elif [[ ${URI} == girder:/* ]]; then
         if [ "${TEST}" != "true" ]; then
-            uploadGirderFile ${URI}
+            uploadGirderFile "$URI"
         fi
     elif [[ ${URI} == file:/* ]]; then
-        local FILENAME=$(echo $URI | sed 's%file://*%/%')
-        local NAME=$(basename ${FILENAME})
+        local FILENAME=$(echo "$URI" | sed 's%file://*%/%')
+        local NAME=$(basename "$FILENAME")
 
-        if [ -e $FILENAME ]; then
+        if [ -e "$FILENAME" ]; then
             error "Result file already exists: $FILENAME"
             error "Exiting with return value 1"
             exit 1
         fi
 
         if [ "${TEST}" = "true" ]; then
-            echo "test result" > ${NAME}
+            echo "test result" > "$NAME"
         fi
 
-        mv $NAME $FILENAME
+        mv "$NAME" "$FILENAME"
         if [ $? != 0 ]; then
             error "Error while moving result local file."
             error "Exiting with return value 1"
@@ -841,13 +858,13 @@ function upload {
 
         if [ "${TEST}" = "true" ]; then
             LFN=${LFN}-uploadTest
-            echo "test result" > ${NAME}
+            echo "test result" > "$NAME"
         fi
 
-        uploadLfnFile ${LFN} ${PWD}/${NAME} ${NREP}
+        uploadLfnFile "$LFN" "$PWD/$NAME" "$NREP"
 
         if [ "${TEST}" = "true" ]; then
-            rm -f ${NAME}
+            rm -f "$NAME"
         fi
     fi
 
@@ -885,14 +902,15 @@ function delete {
 
     stopLog file_delete
 }
+if false; then delete X Y; fi # silence shellcheck warning on unused delete
 
 
 ####################################################################################################
 ####################################################################################################
 function checkBosh {
-  local BOSH_CVMFS_PATH=$1
+  local BOSH_CVMFS_PATH="$1"
   #by default, use CVMFS bosh
-  ${BOSH_CVMFS_PATH}/bosh create foo.sh
+  "$BOSH_CVMFS_PATH"/bosh create foo.sh
   if [ $? != 0 ]
   then
     info "CVMFS bosh in ${BOSH_CVMFS_PATH} not working, checking for a local version"
@@ -900,7 +918,7 @@ function checkBosh {
     if [ $? != 0 ]
     then
         info "bosh is not found in PATH or it is does not work fine, searching for another local version"
-        local HOMEBOSH=`find $HOME -name bosh`
+        local HOMEBOSH=$(find "$HOME" -name bosh)
         if [ -z "$HOMEBOSH" ]
         then
             info "bosh not found, trying to install it"
@@ -927,12 +945,13 @@ function checkBosh {
 }
 
 function copyProvenanceFile() {
-  local dest=$1
+  local dest="$1"
   # $BOUTIQUES_PROV_DIR is defined by GASW from the settings file
   if [ ! -d "$BOUTIQUES_PROV_DIR" ]; then
     error "Boutiques cache dir $BOUTIQUES_PROV_DIR does not exist."
     return 1
   fi
+  # shellcheck disable=SC2010
   local provenanceFile=$(ls -t "$BOUTIQUES_PROV_DIR" | grep -v "^descriptor_" | head -n 1)
   if [[ -z "$provenanceFile" ]]; then
     error "No provenance found in boutiques cache $BOUTIQUES_PROV_DIR"
@@ -940,8 +959,8 @@ function copyProvenanceFile() {
   fi
   info "Found provenance file $BOUTIQUES_PROV_DIR/$provenanceFile"
   info "Copying it to $dest"
-  cp $BOUTIQUES_PROV_DIR/$provenanceFile $BASEDIR
-  cp $BOUTIQUES_PROV_DIR/$provenanceFile $dest
+  cp "$BOUTIQUES_PROV_DIR/$provenanceFile" "$BASEDIR"
+  cp "$BOUTIQUES_PROV_DIR/$provenanceFile" "$dest"
 }
 
 startLog header
@@ -952,25 +971,26 @@ echo "START date is ${START}"
 # Execution environment setup
 
 # Builds the custom environment
-export BASEDIR=${PWD}
-ENV=$defaultEnvironment
+ENV="$defaultEnvironment"
+# shellcheck disable=SC2163,SC2086
 export $ENV
-export SE=$voDefaultSE
-USE_CLOSE_SE=$voUseCloseSE
-export BOSH_CVMFS_PATH=$boshCVMFSPath
-export CONTAINERS_CVMFS_PATH=$containersCVMFSPath
-export UDOCKER_TAG=$udockerTag
-export BOUTIQUES_PROV_DIR=$boutiquesProvenanceDir
+export SE="$voDefaultSE"
+# shellcheck disable=SC2034
+USE_CLOSE_SE="$voUseCloseSE" # unused
+export BOSH_CVMFS_PATH="$boshCVMFSPath"
+export CONTAINERS_CVMFS_PATH="$containersCVMFSPath"
+export UDOCKER_TAG="$udockerTag"
+export BOUTIQUES_PROV_DIR="$boutiquesProvenanceDir"
 
 export MOTEUR_WORKFLOWID="$simulationID"
 
 # Create execution directory
-mkdir ${DIRNAME}
+mkdir "$DIRNAME"
 if [ $? -eq 0 ]; then
-    echo "cd ${DIRNAME}"
-    cd ${DIRNAME} || exit 7
+    echo "cd $DIRNAME"
+    cd "$DIRNAME" || exit 7
 else
-    echo "Unable to create directory ${DIRNAME}"
+    echo "Unable to create directory $DIRNAME"
     echo "Exiting with return value 7"
     exit 7
 fi
@@ -978,8 +998,9 @@ fi
 BACKPID=""
 
 # DIRAC may wrongly position this variable
-if [ ! -d ${X509_CERT_DIR} ]; then
-    echo "Unsetting invalid X509_CERT_DIR (${X509_CERT_DIR})"
+# unset it if it is defined and not a directory
+if [ -n "${X509_CERT_DIR+set}" ] && [ ! -d "$X509_CERT_DIR" ]; then
+    echo "Unsetting invalid X509_CERT_DIR ($X509_CERT_DIR)"
     unset X509_CERT_DIR
 fi
 
@@ -999,7 +1020,7 @@ domainname -a
 echo "===== network config ===== "
 /sbin/ifconfig eth0
 dmesg_line=$(dmesg | grep 'Link is Up' | uniq)
-netspeed=$(echo $dmesg_line | grep -o '[0-9]*[[:space:]][a-zA-Z]bps'| awk '{gsub(/ /,"",$0);print}')
+netspeed=$(echo "$dmesg_line" | grep -o '[0-9]*[[:space:]][a-zA-Z]bps'| awk '{gsub(/ /,"",$0);print}')
 echo "NetSpeed = $netspeed ($dmesg_line)"
 echo "===== CPU info ===== "
 cat /proc/cpuinfo
@@ -1016,7 +1037,7 @@ env
 echo "===== rpm -qa  ===="
 rpm -qa
 
-mkdir -p $cacheDir
+mkdir -p "$cacheDir"
 
 stopLog host_config
 
@@ -1035,7 +1056,7 @@ for download in "${downloads[@]}"; do
 done
 
 # Change permissions of all files in the directory
-chmod 755 *
+chmod 755 -- *
 # Record the timestamp after downloads
 AFTERDOWNLOAD=$(date +%s)
 # Stop log for inputs download
@@ -1052,7 +1073,7 @@ startLog application_execution
 echo "BEFORE_EXECUTION_REFERENCE" > BEFORE_EXECUTION_REFERENCE_FILE
 sleep 1
 
-checkBosh $BOSH_CVMFS_PATH
+checkBosh "$BOSH_CVMFS_PATH"
 
 ####################################################################################################
 # Clone udocker (A basic user tool to execute simple docker containers in batch or interactive systems without root privileges)
@@ -1075,16 +1096,23 @@ fi
 ####################################################################################################
 
 # Export current directory to LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH="$PWD:$LD_LIBRARY_PATH"
+
+# Extract imagepath
+boshopts=()
+imagepath=$(python -c 'import sys,json;v=json.load(sys.stdin).get("custom",None);print(v.get("vip:imagepath","") if isinstance(v,dict) else "")' < "../$boutiquesFilename")
+if [ -n "$imagepath" ]; then
+    boshopts+=("--imagepath" "$imagepath")
+fi
 
 # Execute the command
-PYTHONPATH=".:$PYTHONPATH" $BOSHEXEC exec launch ../$boutiquesFilename ../inv/$invocationJsonFilename -v $PWD/../cache:$PWD/../cache
+PYTHONPATH=".:$PYTHONPATH" "$BOSHEXEC" exec launch "${boshopts[@]}" "../$boutiquesFilename" "../inv/$invocationJsonFilename" -v "$PWD/../cache:$PWD/../cache"
 
 # Check if execution was successful
 if [ $? -ne 0 ]; then
     error "Exiting with return value 6"
     BEFOREUPLOAD=$(date +%s)
-    info "Execution time: $(expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD}) seconds"
+    info "Execution time: $((BEFOREUPLOAD - AFTERDOWNLOAD)) seconds"
     stopLog application_execution
     cleanup
     exit 6
@@ -1093,7 +1121,7 @@ fi
 BEFOREUPLOAD=$(date +%s)
 stopLog application_execution
 
-info "Execution time was $(expr ${BEFOREUPLOAD} - ${AFTERDOWNLOAD})s"
+info "Execution time was $((BEFOREUPLOAD - AFTERDOWNLOAD))s"
 
 
 ####################################################################################################
@@ -1153,6 +1181,8 @@ fi
 
 stopLog results_upload
 
+startLog footer
+
 cleanup
 
 STOP=$(date +%s)
@@ -1162,9 +1192,9 @@ info "Total running time: $TOTAL seconds"
 UPLOAD=$((STOP - BEFOREUPLOAD))
 DOWNLOAD=$((AFTERDOWNLOAD - START))
 info "Input download time: ${DOWNLOAD} seconds"
-info "Execution time: $(expr $BEFOREUPLOAD - $AFTERDOWNLOAD) seconds"
+info "Execution time: $((BEFOREUPLOAD - AFTERDOWNLOAD)) seconds"
 info "Results upload time: ${UPLOAD} seconds"
 info "Exiting with return value 0"
-exit 0
 
 stopLog footer
+exit 0
