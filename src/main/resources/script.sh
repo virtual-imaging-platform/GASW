@@ -1061,6 +1061,8 @@ then
     download_udocker
 fi
 # Check that singularity is in PATH
+# command -v displays the path to singularity if found
+info "checking for singularity"
 if ! command -v singularity
 then
     if test -d "$singularityPath"; then
