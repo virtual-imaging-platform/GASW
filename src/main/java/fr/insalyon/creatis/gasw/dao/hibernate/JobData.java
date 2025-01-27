@@ -338,5 +338,21 @@ public class JobData implements JobDAO {
         }
     }
 
+    @Override
+    public List<Job> getByFileName(String filename) throws DAOException {
 
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            List<Job> list = session.createNamedQuery("Job.getJobsByFileName", Job.class)
+                    .setParameter("fileName", filename)
+                    .list();
+            session.getTransaction().commit();
+
+            return list;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
 }

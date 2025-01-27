@@ -216,7 +216,7 @@ public class GaswParser extends DefaultHandler {
             outputArg.setTemplate(true);
 
             if (value.contains("$rep-")) {
-                outputArg.setReplicas(new Integer(value.substring(value.lastIndexOf("-") + 1)));
+                outputArg.setReplicas(Integer.parseInt(value.substring(value.lastIndexOf("-") + 1)));
                 value = value.replaceAll("\\$rep-[0-9]*", "");
             }
 

@@ -56,6 +56,7 @@ import org.hibernate.annotations.Index;
     @NamedQuery(name = "Job.getCompletedByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :completed)"),
     @NamedQuery(name = "Job.getFailedByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :error OR status = :stalled OR status = :error_held OR status = :stalled_held)"),
     @NamedQuery(name = "Job.getJobsByCommand", query = "FROM Job j WHERE j.command = :command"),
+    @NamedQuery(name = "Job.getJobsByFileName", query = "FROM Job j WHERE j.fileName = :fileName"),
     @NamedQuery(name = "Job.getInvocationsByCommand", query = "SELECT DISTINCT j.invocationID FROM Job j WHERE j.command = :command")
             })
 @Table(name = "Jobs")
