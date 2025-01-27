@@ -122,12 +122,12 @@ public class JobData implements JobDAO {
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
             List<Job> list = session.createNamedQuery("Job.getActive", Job.class)
-                    .setParameter("submitted", GaswStatus.SUCCESSFULLY_SUBMITTED.name())
-                    .setParameter("queued", GaswStatus.QUEUED.name())
-                    .setParameter("running", GaswStatus.RUNNING.name())
-                    .setParameter("kill", GaswStatus.KILL.name())
-                    .setParameter("replicate", GaswStatus.REPLICATE.name())
-                    .setParameter("reschedule", GaswStatus.RESCHEDULE.name())
+                    .setParameter("submitted", GaswStatus.SUCCESSFULLY_SUBMITTED)
+                    .setParameter("queued", GaswStatus.QUEUED)
+                    .setParameter("running", GaswStatus.RUNNING)
+                    .setParameter("kill", GaswStatus.KILL)
+                    .setParameter("replicate", GaswStatus.REPLICATE)
+                    .setParameter("reschedule", GaswStatus.RESCHEDULE)
                     .list();
             session.getTransaction().commit();
 
@@ -145,7 +145,7 @@ public class JobData implements JobDAO {
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
             List<Job> list = session.createNamedQuery("Job.findByStatus", Job.class)
-                    .setParameter("status", status.name()).list();
+                    .setParameter("status", status).list();
             session.getTransaction().commit();
 
             return list;
@@ -163,7 +163,7 @@ public class JobData implements JobDAO {
             session.beginTransaction();
             long completedJobs = session.createNamedQuery("Job.getCompletedJobsByInvocationID", Long.class)
                     .setParameter("invocationID", invocationID)
-                    .setParameter("completed", GaswStatus.COMPLETED.name())
+                    .setParameter("completed", GaswStatus.COMPLETED)
                     .uniqueResult();
             session.getTransaction().commit();
 
@@ -182,12 +182,12 @@ public class JobData implements JobDAO {
             session.beginTransaction();
             List<Job> list = session.createNamedQuery("Job.findActiveByInvocationID", Job.class)
                     .setParameter("invocationID", invocationID)
-                    .setParameter("submitted", GaswStatus.SUCCESSFULLY_SUBMITTED.name())
-                    .setParameter("queued", GaswStatus.QUEUED.name())
-                    .setParameter("running", GaswStatus.RUNNING.name())
-                    .setParameter("kill", GaswStatus.KILL.name())
-                    .setParameter("replicate", GaswStatus.REPLICATE.name())
-                    .setParameter("reschedule", GaswStatus.RESCHEDULE.name())
+                    .setParameter("submitted", GaswStatus.SUCCESSFULLY_SUBMITTED)
+                    .setParameter("queued", GaswStatus.QUEUED)
+                    .setParameter("running", GaswStatus.RUNNING)
+                    .setParameter("kill", GaswStatus.KILL)
+                    .setParameter("replicate", GaswStatus.REPLICATE)
+                    .setParameter("reschedule", GaswStatus.RESCHEDULE)
                     .list();
             session.getTransaction().commit();
 
@@ -206,10 +206,10 @@ public class JobData implements JobDAO {
             session.beginTransaction();
             List<Job> list = session.createNamedQuery("Job.findFailedByInvocationID", Job.class)
                     .setParameter("invocationID", invocationID)
-                    .setParameter("error", GaswStatus.ERROR.name())
-                    .setParameter("stalled", GaswStatus.STALLED.name())
-                    .setParameter("error_held", GaswStatus.ERROR_HELD.name())
-                    .setParameter("stalled_held", GaswStatus.STALLED_HELD.name())
+                    .setParameter("error", GaswStatus.ERROR)
+                    .setParameter("stalled", GaswStatus.STALLED)
+                    .setParameter("error_held", GaswStatus.ERROR_HELD)
+                    .setParameter("stalled_held", GaswStatus.STALLED_HELD)
                     .list();
             session.getTransaction().commit();
 
@@ -228,10 +228,10 @@ public class JobData implements JobDAO {
             session.beginTransaction();
             List<Job> list = session.createNamedQuery("Job.getRunningByCommand", Job.class)
                     .setParameter("command", command)
-                    .setParameter("running", GaswStatus.RUNNING.name())
-                    .setParameter("kill", GaswStatus.KILL.name())
-                    .setParameter("replicate", GaswStatus.REPLICATE.name())
-                    .setParameter("reschedule", GaswStatus.RESCHEDULE.name())
+                    .setParameter("running", GaswStatus.RUNNING)
+                    .setParameter("kill", GaswStatus.KILL)
+                    .setParameter("replicate", GaswStatus.REPLICATE)
+                    .setParameter("reschedule", GaswStatus.RESCHEDULE)
                     .list();
             session.getTransaction().commit();
 
@@ -250,7 +250,7 @@ public class JobData implements JobDAO {
             session.beginTransaction();
             List<Job> list = session.createNamedQuery("Job.getCompletedByCommand", Job.class)
                     .setParameter("command", command)
-                    .setParameter("completed", GaswStatus.COMPLETED.name())
+                    .setParameter("completed", GaswStatus.COMPLETED)
                     .list();
             session.getTransaction().commit();
 
@@ -287,10 +287,10 @@ public class JobData implements JobDAO {
             session.beginTransaction();
             List<Job> list = session.createNamedQuery("Job.getFailedByCommand", Job.class)
                     .setParameter("command", command)
-                    .setParameter("error", GaswStatus.ERROR.name())
-                    .setParameter("stalled", GaswStatus.STALLED.name())
-                    .setParameter("error_held", GaswStatus.ERROR_HELD.name())
-                    .setParameter("stalled_held", GaswStatus.STALLED_HELD.name())
+                    .setParameter("error", GaswStatus.ERROR)
+                    .setParameter("stalled", GaswStatus.STALLED)
+                    .setParameter("error_held", GaswStatus.ERROR_HELD)
+                    .setParameter("stalled_held", GaswStatus.STALLED_HELD)
                     .list();
             session.getTransaction().commit();
 
