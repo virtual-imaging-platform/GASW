@@ -55,7 +55,7 @@ public abstract class GaswOutputParser extends Thread {
     protected BufferedWriter appStdOutWriter;
     protected BufferedWriter appStdErrWriter;
     protected List<Data> dataList;
-    protected List<URI> uploadedResults;
+    protected Map<String, URI> uploadedResults;
     protected StringBuilder inputsDownloadErrBuf;
     protected StringBuilder resultsUploadErrBuf;
     protected StringBuilder appStdOutBuf;
@@ -289,7 +289,7 @@ public abstract class GaswOutputParser extends Thread {
 
                     } else if (line.startsWith("<results_upload>")) {
                         isResultUpload = true;
-                        uploadedResults = new ArrayList<URI>();
+                        uploadedResults = new HashMap<String, URI>();
 
                     } else if (line.startsWith("</results_upload>")) {
                         isResultUpload = false;
@@ -298,7 +298,10 @@ public abstract class GaswOutputParser extends Thread {
                         lfcHost = line.substring(line.indexOf("=") + 1);
 
                     } else if (line.startsWith("<file_upload") && isResultUpload) {
-                        String uploadedFile = line.substring(line.indexOf("=") + 1, line.length() - 1);
+                        int uriStartIndex = line.lastIndexOf("uri=");
+                        // the output is like this <file upload id= uri= >
+                        String outputId = line.substring(line.indexOf("id=") + 3, uriStartIndex - 1);
+                        String uploadedFile = line.substring(uriStartIndex + 4, line.length() - 1);
                         URI uri;
                         if (GaswUtil.isUri(uploadedFile)) {
                             uri = new URI(uploadedFile);
@@ -307,9 +310,9 @@ public abstract class GaswOutputParser extends Thread {
                                 ? new URI("file://" + uploadedFile)
                                 : new URI("lfn://" + lfcHost + uploadedFile);
                         }
-                        uploadedResults.add(uri);
+                        uploadedResults.put(outputId, uri);
                         dataList.add(new Data(uri.toString(), Data.Type.Output));
-                        logger.info("[GASW Parser] Adding output " + uri + " for job " + job.getId());
+                        logger.info("[GASW Parser] Adding output " + outputId + " " + uri + " for job " + job.getId());
                     }
                 }
             } catch (Exception ex) {
