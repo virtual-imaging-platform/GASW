@@ -168,13 +168,10 @@ public abstract class GaswOutputParser extends Thread {
     protected abstract void resubmit() throws GaswException;
 
     /**
-     *
-     * @param stdOut Standard output file
-     * @return Exit code
+     * We use synchronized keyword in case of multiples jobs ending together (at the same time),
+     * it cause an issue if hibernate try to merge/add the same job inside the db
      */
-    protected int parseStdOut(File stdOut) {
-
-
+    protected synchronized int parseStdOut(File stdOut) {
         int exitCode = -1;
 
         try {
