@@ -437,15 +437,17 @@ public class GaswParser extends DefaultHandler {
                 break;
                 case NAME:
                 {
-                	String inputValue = inputsMap.get(part.getValue());
+                    URI u = new URI(inputsMap.get(part.getValue()));
+                    File f = new File(u.getPath());
+                    String basename = f.getName();
                 	if (part.getStripExtensions()!=null) {
                 		for (String extn : part.getStripExtensions()) {
-                    		if (inputValue.endsWith(extn)) {
-                                inputValue=inputValue.substring(0, inputValue.length() - extn.length());;
+                            if (basename.endsWith(extn)) {
+                                basename = basename.substring(0, basename.length() - extn.length());
                     		}
                     	}
                 	}
-                    addName("", inputValue, content);
+                    content.append(basename);
                 }
                 break;
                 case OPTIONS:
