@@ -427,7 +427,7 @@ public class GaswParser extends DefaultHandler {
                 case DIR_AND_NAME:
                 {
                     addDir(inputsMap.get(part.getValue()), content);
-                    addName("/", inputsMap.get(part.getValue()), content);
+                    addName("/", inputsMap.get(part.getValue()), content, null);
                 }
                 break;
                 case DIR:
@@ -437,15 +437,7 @@ public class GaswParser extends DefaultHandler {
                 break;
                 case NAME:
                 {
-                	String inputValue = inputsMap.get(part.getValue());
-                	if (part.getStripExtensions()!=null) {
-                		for (String extn : part.getStripExtensions()) {
-                    		if (inputValue.endsWith(extn)) {
-                                inputValue=inputValue.substring(0, inputValue.length() - extn.length());;
-                    		}
-                    	}
-                	}
-                    addName("", inputValue, content);
+                    addName("", inputsMap.get(part.getValue()), content, part.getStripExtensions());
                 }
                 break;
                 case OPTIONS:
@@ -481,13 +473,20 @@ public class GaswParser extends DefaultHandler {
     }
 
     private static void addName(
-        String separator, String s, StringBuilder content)
+        String separator, String uri, StringBuilder content, Set<String> strippedExtensions)
         throws URISyntaxException {
 
-        URI u = new URI(s);
-        File f = new File(u.getPath());
-        if (f.getName().length() > 0) {
-            content.append(separator).append(f.getName());
+        URI u = new URI(uri);
+        String filename = new File(u.getPath()).getName();
+        if (strippedExtensions != null) {
+            for (String extn : strippedExtensions) {
+                if (filename.endsWith(extn)) {
+                    filename = filename.substring(0, filename.length() - extn.length());;
+                }
+            }
+        }
+        if (filename.length() > 0) {
+            content.append(separator).append(filename);
         }
     }
 }
