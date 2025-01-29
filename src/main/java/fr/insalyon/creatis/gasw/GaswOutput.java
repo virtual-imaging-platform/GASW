@@ -34,7 +34,9 @@ package fr.insalyon.creatis.gasw;
 
 import java.io.File;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -45,7 +47,7 @@ public class GaswOutput {
     private String jobID;
     private GaswExitCode exitCode;
     private String exitMessage;
-    private List<URI> uploadedResults;
+    private Map<String, URI> uploadedResults;
     private File appStdOut;
     private File appStdErr;
     private File stdOut;
@@ -62,7 +64,7 @@ public class GaswOutput {
      * @param stdErr Job standard error file
      */
     public GaswOutput(String jobID, GaswExitCode exitCode, String exitMessage,
-            List<URI> uploadedResults, File appStdOut, File appStdErr, File stdOut, File stdErr) {
+            Map<String, URI> uploadedResults, File appStdOut, File appStdErr, File stdOut, File stdErr) {
 
         this.jobID = jobID;
         this.exitCode = exitCode;
@@ -86,8 +88,12 @@ public class GaswOutput {
         return exitMessage;
     }
 
-    public List<URI> getUploadedResults() {
+    public Map<String, URI> getUploadedResultsAsMap() {
         return uploadedResults;
+    }
+
+    public List<URI> getUploadedResults() {
+        return new ArrayList<>(uploadedResults.values());
     }
 
     public File getAppStdErr() {

@@ -77,7 +77,8 @@ public abstract class GaswMonitor extends Thread {
     protected synchronized void add(Job job) throws GaswException {
         try {
             // Defining invocation ID
-            List<Job> list = jobDAO.getByParameters(job.getParameters());
+
+            List<Job> list = jobDAO.getByFileName(job.getFileName());
             if (!list.isEmpty()) {
                 job.setInvocationID(list.get(0).getInvocationID());
             } else {
