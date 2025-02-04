@@ -1,0 +1,1282 @@
+[ INFO - Tue Jan 28 13:27:46 UTC 2025 ] Directories already exist. Skipping copy.
+<header>
+START date is 1738070866
+export BASEDIR="/var/www/html/workflows/workflow-gENTZc"
+export CLASSPATH="/var/www/cgi-bin/m2Server-gasw3/moteurlite.jar:/var/www/cgi-bin/m2Server-gasw3/libs/gasw-3.12.0-20250117.085739-4-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/libs/grida-client-2.3.0.jar:/var/www/cgi-bin/m2Server-gasw3/libs/grida-common-2.3.0.jar:/var/www/cgi-bin/m2Server-gasw3/libs/moteur2-grida-1.2.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-dirac-plugin-3.11.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-dirac-plugin.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-h2-plugin-3.1.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-h2-plugin.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-healing-plugin-3.4.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-healing-plugin.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-local-plugin-3.2.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-local-plugin.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-stats-plugin-3.5.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-stats-plugin.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/moteur2-workflowsdb-plugin-1.7.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/moteur2-workflowsdb-plugin.jar"
+export CONTENT_LENGTH="2609"
+export CONTENT_TYPE="text/xml; charset=utf-8"
+export CONTEXT_DOCUMENT_ROOT="/var/www/cgi-bin/"
+export CONTEXT_PREFIX="/cgi-bin/"
+export DOCUMENT_ROOT="/var/www/html"
+export GATEWAY_INTERFACE="CGI/1.1"
+export GRIDCONF="conf/settings.conf"
+export GRIDCONF_BUFFER="conf/settings2.conf"
+export HISTCONTROL="ignoredups"
+export HISTSIZE="1000"
+export HOME="/var/www"
+export HOSTNAME="vip-ethaniel-test-bis.novalocal"
+export HTTP_ACCEPT="application/soap+xml, application/dime, multipart/related, text/*"
+export HTTP_CACHE_CONTROL="no-cache"
+export HTTP_HOST="localhost"
+export HTTP_PRAGMA="no-cache"
+export HTTP_SOAPACTION="\"\""
+export HTTP_USER_AGENT="Axis/1.4.1-SNAPSHOT"
+export JAVA_HOME="/usr/lib/jvm/jre"
+export LANG="us_US.UTF-8"
+export LCG_GFAL_INFOSYS="cclcgtopbdii01.in2p3.fr:2170"
+export LESSOPEN="||/usr/bin/lesspipe.sh %s"
+export LFC_HOST="lfc-biomed.in2p3.fr"
+export LOGNAME="apache"
+export MAIL="/var/spool/mail/apache"
+export MOTEUR_HOME="/var/www/cgi-bin/m2Server-gasw3"
+export OLDPWD="/var/www/cgi-bin/m2Server-gasw3"
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+export PWD="/var/www/html/workflows/workflow-gENTZc"
+export QUERY_STRING=""
+export REMOTE_ADDR="127.0.0.1"
+export REMOTE_PORT="57122"
+export REQUEST_METHOD="POST"
+export REQUEST_SCHEME="http"
+export REQUEST_URI="/cgi-bin/m2Server-gasw3/moteur_server"
+export SCRIPT_FILENAME="/var/www/cgi-bin/m2Server-gasw3/moteur_server"
+export SCRIPT_NAME="/cgi-bin/m2Server-gasw3/moteur_server"
+export SERVER_ADDR="127.0.0.1"
+export SERVER_ADMIN="root@localhost"
+export SERVER_NAME="localhost"
+export SERVER_PORT="80"
+export SERVER_PROTOCOL="HTTP/1.0"
+export SERVER_SIGNATURE=""
+export SERVER_SOFTWARE="Apache/2.4.62 (AlmaLinux)"
+export SHLVL="2"
+export UNIQUE_ID="Z5jbSIDdC86zxpO5STGYTgAAAME"
+export USER="apache"
+export X509_USER_PROXY="/tmp/workflow-gENTZc-proxy"
+export XDG_DATA_DIRS="/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share"
+export which_declare="declare -f"
+cd BasicGrep-360261301594475
+END date is 1738070866
+</header>
+<host_config>
+SE Linux mode is:
+Permissive
+gLite Job Id is 
+===== uname ===== 
+Linux vip-ethaniel-test-bis.novalocal 5.14.0-503.14.1.el9_5.x86_64 #1 SMP PREEMPT_DYNAMIC Tue Nov 19 21:25:22 EST 2024 x86_64 x86_64 x86_64 GNU/Linux
+
+===== network config ===== 
+NetSpeed =  ()
+===== CPU info ===== 
+processor   : 0
+vendor_id   : AuthenticAMD
+cpu family  : 23
+model       : 49
+model name  : AMD EPYC-Rome Processor
+stepping    : 0
+microcode   : 0x1000065
+cpu MHz     : 2345.592
+cache size  : 512 KB
+physical id : 0
+siblings    : 1
+core id     : 0
+cpu cores   : 1
+apicid      : 0
+initial apicid  : 0
+fpu     : yes
+fpu_exception   : yes
+cpuid level : 13
+wp      : yes
+flags       : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm rep_good nopl cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase tsc_adjust bmi1 avx2 smep bmi2 rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 clzero xsaveerptr wbnoinvd arat umip rdpid arch_capabilities
+bugs        : sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass retbleed smt_rsb srso
+bogomips    : 4691.18
+TLB size    : 1024 4K pages
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 48 bits physical, 48 bits virtual
+power management:
+
+processor   : 1
+vendor_id   : AuthenticAMD
+cpu family  : 23
+model       : 49
+model name  : AMD EPYC-Rome Processor
+stepping    : 0
+microcode   : 0x1000065
+cpu MHz     : 2345.592
+cache size  : 512 KB
+physical id : 1
+siblings    : 1
+core id     : 0
+cpu cores   : 1
+apicid      : 1
+initial apicid  : 1
+fpu     : yes
+fpu_exception   : yes
+cpuid level : 13
+wp      : yes
+flags       : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm rep_good nopl cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase tsc_adjust bmi1 avx2 smep bmi2 rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 clzero xsaveerptr wbnoinvd arat umip rdpid arch_capabilities
+bugs        : sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass retbleed smt_rsb srso
+bogomips    : 4691.18
+TLB size    : 1024 4K pages
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 48 bits physical, 48 bits virtual
+power management:
+
+processor   : 2
+vendor_id   : AuthenticAMD
+cpu family  : 23
+model       : 49
+model name  : AMD EPYC-Rome Processor
+stepping    : 0
+microcode   : 0x1000065
+cpu MHz     : 2345.592
+cache size  : 512 KB
+physical id : 2
+siblings    : 1
+core id     : 0
+cpu cores   : 1
+apicid      : 2
+initial apicid  : 2
+fpu     : yes
+fpu_exception   : yes
+cpuid level : 13
+wp      : yes
+flags       : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm rep_good nopl cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase tsc_adjust bmi1 avx2 smep bmi2 rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 clzero xsaveerptr wbnoinvd arat umip rdpid arch_capabilities
+bugs        : sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass retbleed smt_rsb srso
+bogomips    : 4691.18
+TLB size    : 1024 4K pages
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 48 bits physical, 48 bits virtual
+power management:
+
+processor   : 3
+vendor_id   : AuthenticAMD
+cpu family  : 23
+model       : 49
+model name  : AMD EPYC-Rome Processor
+stepping    : 0
+microcode   : 0x1000065
+cpu MHz     : 2345.592
+cache size  : 512 KB
+physical id : 3
+siblings    : 1
+core id     : 0
+cpu cores   : 1
+apicid      : 3
+initial apicid  : 3
+fpu     : yes
+fpu_exception   : yes
+cpuid level : 13
+wp      : yes
+flags       : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm rep_good nopl cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase tsc_adjust bmi1 avx2 smep bmi2 rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 clzero xsaveerptr wbnoinvd arat umip rdpid arch_capabilities
+bugs        : sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass retbleed smt_rsb srso
+bogomips    : 4691.18
+TLB size    : 1024 4K pages
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 48 bits physical, 48 bits virtual
+power management:
+
+===== Memory info ===== 
+MemTotal:        8130640 kB
+MemFree:         2700108 kB
+MemAvailable:    5119548 kB
+Buffers:            2224 kB
+Cached:          2703324 kB
+SwapCached:            0 kB
+Active:          2517664 kB
+Inactive:        2405368 kB
+Active(anon):    2372012 kB
+Inactive(anon):        0 kB
+Active(file):     145652 kB
+Inactive(file):  2405368 kB
+Unevictable:        1536 kB
+Mlocked:               0 kB
+SwapTotal:             0 kB
+SwapFree:              0 kB
+Zswap:                 0 kB
+Zswapped:              0 kB
+Dirty:              3608 kB
+Writeback:             0 kB
+AnonPages:       2205740 kB
+Mapped:           129636 kB
+Shmem:            154528 kB
+KReclaimable:     173824 kB
+Slab:             305912 kB
+SReclaimable:     173824 kB
+SUnreclaim:       132088 kB
+KernelStack:       11008 kB
+PageTables:        11800 kB
+SecPageTables:         0 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     4065320 kB
+Committed_AS:    5908328 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:       23932 kB
+VmallocChunk:          0 kB
+Percpu:             1744 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:   1634304 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+CmaTotal:              0 kB
+CmaFree:               0 kB
+Unaccepted:            0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+Hugetlb:               0 kB
+DirectMap4k:      212844 kB
+DirectMap2M:     5029888 kB
+DirectMap1G:     5242880 kB
+===== lcg-cp location ===== 
+===== ls -a . ===== 
+.
+..
+===== ls -a .. ===== 
+.
+..
+BasicGrep-360261238786034
+BasicGrep-360261238786034.sh.provenance.json
+BasicGrep-360261291503518
+BasicGrep-360261291503518.sh.provenance.json
+BasicGrep-360261301594475
+BasicGrep_2025-01-28_13h27m43s114569ms.json
+BasicGrep_2025-01-28_13h27m46s230871ms.json
+DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
+cache
+conf
+config
+db
+err
+gasw.log
+input-m2.xml
+inputs.xml
+inv
+out
+sh
+workflow.err
+workflow.json
+workflow.out
+===== env =====
+SERVER_NAME=localhost
+LCG_GFAL_INFOSYS=cclcgtopbdii01.in2p3.fr:2170
+HISTCONTROL=ignoredups
+CONTAINERS_CVMFS_PATH=/cvmfs/biomed.egi.eu/vip/udocker/containers
+UNIQUE_ID=Z5jbSIDdC86zxpO5STGYTgAAAME
+HOSTNAME=vip-ethaniel-test-bis.novalocal
+HISTSIZE=1000
+JAVA_HOME=/usr/lib/jvm/jre
+SCRIPT_NAME=/cgi-bin/m2Server-gasw3/moteur_server
+HTTP_PRAGMA=no-cache
+GATEWAY_INTERFACE=CGI/1.1
+SERVER_SOFTWARE=Apache/2.4.62 (AlmaLinux)
+DOCUMENT_ROOT=/var/www/html
+PWD=/var/www/html/workflows/workflow-gENTZc/BasicGrep-360261301594475
+LOGNAME=apache
+REQUEST_URI=/cgi-bin/m2Server-gasw3/moteur_server
+SERVER_SIGNATURE=
+REQUEST_SCHEME=http
+HOME=/var/www
+LANG=us_US.UTF-8
+MOTEUR_HOME=/var/www/cgi-bin/m2Server-gasw3
+QUERY_STRING=
+UDOCKER_TAG=1.3.1
+CONTEXT_DOCUMENT_ROOT=/var/www/cgi-bin/
+HTTP_ACCEPT=application/soap+xml, application/dime, multipart/related, text/*
+REMOTE_PORT=57122
+SERVER_ADMIN=root@localhost
+HTTP_HOST=localhost
+LESSOPEN=||/usr/bin/lesspipe.sh %s
+USER=apache
+SERVER_ADDR=127.0.0.1
+GRIDCONF_BUFFER=conf/settings2.conf
+HTTP_USER_AGENT=Axis/1.4.1-SNAPSHOT
+CONTEXT_PREFIX=/cgi-bin/
+BOSH_CVMFS_PATH=/cvmfs/biomed.egi.eu/vip/virtualenv/bin
+SHLVL=2
+CONTENT_LENGTH=2609
+SE=SBG-disk CPPM-disk NIKHEF-disk
+MOTEUR_WORKFLOWID=workflow-gENTZc
+CLASSPATH=/var/www/cgi-bin/m2Server-gasw3/moteurlite.jar:/var/www/cgi-bin/m2Server-gasw3/libs/gasw-3.12.0-20250117.085739-4-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/libs/grida-client-2.3.0.jar:/var/www/cgi-bin/m2Server-gasw3/libs/grida-common-2.3.0.jar:/var/www/cgi-bin/m2Server-gasw3/libs/moteur2-grida-1.2.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-dirac-plugin-3.11.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-dirac-plugin.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-h2-plugin-3.1.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-h2-plugin.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-healing-plugin-3.4.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-healing-plugin.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-local-plugin-3.2.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-local-plugin.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-stats-plugin-3.5.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/gasw-stats-plugin.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/moteur2-workflowsdb-plugin-1.7.0-jar-with-dependencies.jar:/var/www/cgi-bin/m2Server-gasw3/plugins/moteur2-workflowsdb-plugin.jar
+BOUTIQUES_PROV_DIR=/var/www/.cache/boutiques/data
+BASEDIR=/var/www/html/workflows/workflow-gENTZc
+which_declare=declare -f
+SERVER_PROTOCOL=HTTP/1.0
+SERVER_PORT=80
+SCRIPT_FILENAME=/var/www/cgi-bin/m2Server-gasw3/moteur_server
+HTTP_SOAPACTION=""
+REMOTE_ADDR=127.0.0.1
+XDG_DATA_DIRS=/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share
+HTTP_CACHE_CONTROL=no-cache
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+CONTENT_TYPE=text/xml; charset=utf-8
+LFC_HOST=lfc-biomed.in2p3.fr
+MAIL=/var/spool/mail/apache
+X509_USER_PROXY=/tmp/workflow-gENTZc-proxy
+OLDPWD=/var/www/html/workflows/workflow-gENTZc
+REQUEST_METHOD=POST
+GRIDCONF=conf/settings.conf
+BASH_FUNC_which%%=() {  ( alias;
+ eval ${which_declare} ) | /usr/bin/which --tty-only --read-alias --read-functions --show-tilde --show-dot $@
+}
+BASH_FUNC_mountGfal%%=() {  local URI="$1";
+ local fileName=$(echo "$URI" | sed -r 's#^srm:/(//)?([^/].*)\?.*$#\2#i');
+ local gfal_basename=$(basename "$fileName");
+ local job_id=${gfal_basename}_$(basename "$PWD");
+ CREATE_DIR_COMMAND="mkdir -p $gfal_basename";
+ SYM_LINK_COMMAND="ln -s $PWD/$gfal_basename /tmp/$job_id";
+ GFAL_COMMAND="gfalFS -s /tmp/$job_id ${fileName}";
+ ${CREATE_DIR_COMMAND};
+ ${SYM_LINK_COMMAND};
+ ${GFAL_COMMAND};
+ sleep 30;
+ eval echo $check_mount
+}
+BASH_FUNC_cleanup%%=() {  if [[ $isGfalmountExec -eq 0 ]]; then
+ unmountGfal;
+ unlink /tmp/*_"$(basename "$PWD")";
+ fi;
+ startLog cleanup;
+ info "=== ls -a ===";
+ ls -a;
+ info "=== ls $cacheDir/$cacheFile ===";
+ ls "$cacheDir/$cacheFile";
+ info "=== cat $cacheDir/$cacheFile === ";
+ cat "$cacheDir/$cacheFile";
+ info "Cleaning up: rm * -Rf";
+ if [ "$BACKPID" != "" ]; then
+ for i in $(ps --ppid "$BACKPID" -o pid | grep -v PID);
+ do
+ info "Killing child of background script (pid $i)";
+ kill -9 "$i";
+ done;
+ info "Killing background script (pid $BACKPID)";
+ kill -9 "$BACKPID";
+ fi;
+ info "END date:";
+ date +%s;
+ stopLog cleanup;
+ check_cleanup=true
+}
+BASH_FUNC_checkCacheDownloadAndCacheLFN%%=() {  local LFN="$1";
+ local download="true";
+ local LOCALPATH=$(awk -v L="$LFN" '$1==L {print $2}' "$cacheDir/$cacheFile");
+ if [ -n "$LOCALPATH" ]; then
+ info "There is an entry in the cache: test if the local file still here";
+ local TIMESTAMP_LOCAL="";
+ local TIMESTAMP_GRID="";
+ local date_local="";
+ if [ -f "${LOCALPATH}" ]; then
+ info "The file exists: checking if it was modified since it was added to the cache";
+ local YEAR=$(date +%Y);
+ local YEARBEFORE=$((YEAR - 1));
+ local currentDate=$(date +%s);
+ local TIMESTAMP_CACHE=$(awk -v L="$LFN" '$1==L {print $3}' "$cacheDir/$cacheFile");
+ local LOCALMONTH=$(ls -la "$LOCALPATH" | awk -F' ' '{print $6}');
+ local MONTHTIME=$(date -d "$LOCALMONTH 1 00:00" +%s);
+ date_local=$(ls -la "$LOCALPATH" | awk -F' ' '{print $6, $7, $8}');
+ if [ "$MONTHTIME" -gt "$currentDate" ]; then
+ TIMESTAMP_LOCAL=$(date -d "$date_local $YEARBEFORE" +%s);
+ else
+ TIMESTAMP_LOCAL=$(date -d "$date_local $YEAR" +%s);
+ fi;
+ if [ "$TIMESTAMP_CACHE" = "$TIMESTAMP_LOCAL" ]; then
+ info "The file was not touched since it was added to the cache: test if it is up-to-date";
+ local date_grid_s=$(lfc-ls -l "$LFN" | awk -F' ' '{print $6, $7, $8}');
+ local MONTHGRID=$(echo "$date_grid_s" | awk -F' ' '{print $1}');
+ MONTHTIME=$(date -d "$MONTHGRID 1 00:00" +%s);
+ if [ -n "$MONTHTIME" ] && [ -n "$date_grid_s" ]; then
+ if [ "$MONTHTIME" -gt "$currentDate" ]; then
+ TIMESTAMP_GRID=$(date -d "${date_grid_s} ${YEARBEFORE}" +%s);
+ else
+ TIMESTAMP_GRID=$(date -d "${date_grid_s} ${YEAR}" +%s);
+ fi;
+ if [ "${TIMESTAMP_LOCAL}" -gt "${TIMESTAMP_GRID}" ]; then
+ info "The file is up-to-date ; there is no need to download it again";
+ download="false";
+ else
+ warning "The cache entry is outdated (local modification date is ${TIMESTAMP_LOCAL} - ${date_local} while grid is ${TIMESTAMP_GRID} ${date_grid_s})";
+ fi;
+ else
+ warning "Cannot determine file timestamp on the LFC";
+ fi;
+ else
+ warning "The cache entry was modified since it was created (cache time is ${TIMESTAMP_CACHE} and file time is ${TIMESTAMP_LOCAL} - ${date_local})";
+ fi;
+ else
+ warning "The cache entry disappeared";
+ fi;
+ else
+ info "There is no entry in the cache";
+ fi;
+ if [ "${download}" = "false" ]; then
+ info "Linking file from cache: ${LOCALPATH}";
+ BASE=$(basename "$LFN");
+ echo "BASE : $BASE";
+ echo "LOCALPATH : $LOCALPATH";
+ info "ln -s $LOCALPATH ./$BASE";
+ ln -s "$LOCALPATH" "./$BASE";
+ return 0;
+ fi;
+ if [ "${download}" = "true" ]; then
+ echo "${LFN}";
+ downloadLFN "$LFN" || return 1;
+ addToCache "$LFN" "$(basename "$LFN")";
+ return 0;
+ fi
+}
+BASH_FUNC_unmountGfal%%=() {  START=$SECONDS;
+ while [ "$(eval echo $check_mount)" = 0 ]; do
+ for file in "$PWD"/*;
+ do
+ findmnt -t fuse.gfalFS -lo Target -n -T "$(realpath "$file")" && gfalFS_umount "$(realpath "$file")";
+ done;
+ sleep 2;
+ if [[ $((SECONDS - START)) -gt 600 ]]; then
+ echo "WARNING - gfal directory couldn't be unmounted: timeout";
+ break;
+ fi;
+ done;
+ eval echo $check_mount
+}
+BASH_FUNC_downloadLFN%%=() {  local LFN="$1";
+ echo "LFN : ${LFN}";
+ LFN=$(echo "${LFN}" | sed -r -e 's/^lfn://' -e 's#//#/#g');
+ info "getting file size and computing sendReceiveTimeout";
+ local size=$(dirac-dms-lfn-metadata "$LFN" | grep Size | sed -r 's/.* ([0-9]+),/\1/');
+ local sendReceiveTimeout=$((${size:-0} / ${minAvgDownloadThroughput:-150} / 1024));
+ if [ "$sendReceiveTimeout" = "" ] || [ $sendReceiveTimeout -le 900 ]; then
+ info "sendReceiveTimeout empty or too small, setting it to 900s";
+ sendReceiveTimeout=900;
+ else
+ info "sendReceiveTimeout is $sendReceiveTimeout";
+ fi;
+ local LOCAL="$PWD/$(basename "$LFN")";
+ info "Removing file ${LOCAL} in case it is already here";
+ \rm -f "$LOCAL";
+ local totalTimeout=$((timeout + srmTimeout + sendReceiveTimeout));
+ local LINE="time -p dirac-dms-get-file -d -o /Resources/StorageElements/GFAL_TIMEOUT=${totalTimeout} ${LFN}";
+ info "$LINE";
+ ( ${LINE} ) &> get-file.log;
+ if [ $? = 0 ]; then
+ info "dirac-dms-get-file worked fine";
+ local source=$(grep "generating url" get-file.log | tail -1 | sed -r 's/^.* (.*)\.$/\1/');
+ local duration=$(grep -P '^real[ \t]' get-file.log | sed -r 's/real[ \t]//');
+ info "DownloadCommand=dirac-dms-get-file Source=${source} Destination=$(hostname) Size=${size} Time=${duration}";
+ RET_VAL=0;
+ else
+ error "dirac-dms-get-file failed";
+ error "$(cat get-file.log)";
+ RET_VAL=1;
+ fi;
+ \rm get-file.log;
+ return ${RET_VAL}
+}
+BASH_FUNC_addToCache%%=() {  cacheDir=${BASEDIR}/cache;
+ mkdir -p "$cacheDir";
+ touch "$cacheDir/$cacheFile";
+ local LFN="$1";
+ local FILE=$(basename "$2");
+ local i=0;
+ local exist="true";
+ local NAME="";
+ while [ "$exist" = "true" ]; do
+ NAME="$cacheDir/${FILE}-cache-${i}";
+ test -f "${NAME}";
+ if [ $? != 0 ]; then
+ exist="false";
+ fi;
+ ((i++));
+ done;
+ info "Removing all cache entries for ${LFN} (files will stay locally in case anyone else needs them)";
+ local TEMP=$(mktemp temp.XXXXXX);
+ awk -v L="${LFN}" '$1!=L {print}' "$cacheDir/$cacheFile" > "${TEMP}";
+ \mv -f "${TEMP}" "$cacheDir/$cacheFile";
+ info "Adding file ${FILE} to cache and setting the timestamp";
+ \cp -f "${FILE}" "${NAME}";
+ local date_local=$(ls -la "${NAME}" | awk -F' ' '{print $6, $7, $8}');
+ local TIMESTAMP=$(date -d "${date_local}" +%s);
+ echo "${LFN} ${NAME} ${TIMESTAMP}" >> "$cacheDir/$cacheFile"
+}
+BASH_FUNC_downloadGirderFile%%=() {  local URI="$1";
+ local fileName=$(echo "$URI" | sed -r 's#^girder:/(//)?([^/].*)\?.*$#\2#i');
+ local apiUrl=$(echo "$URI" | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i');
+ local fileId=$(echo "$URI" | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i');
+ local token=$(echo "$URI" | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i');
+ if ! command -v girder-client; then
+ pip install --user girder-client;
+ if [ $? != 0 ]; then
+ echo "girder-client not in PATH, and an error occurred while trying to install it.";
+ echo "Exiting with return value 1";
+ exit 1;
+ fi;
+ fi;
+ COMMLINE="girder-client --api-url ${apiUrl} --token ${token} download --parent-type file ${fileId} ./${fileName}";
+ echo "downloadGirderFile, command line is ${COMMLINE}";
+ ${COMMLINE}
+}
+_=/usr/bin/env
+===== rpm -qa  ====
+libgcc-11.5.0-2.el9.alma.1.x86_64
+tzdata-2024b-2.el9.noarch
+python3-setuptools-wheel-53.0.0-13.el9.noarch
+publicsuffix-list-dafsa-20210518-3.el9.noarch
+pcre2-syntax-10.40-6.el9.noarch
+ncurses-base-6.2-10.20210508.el9.noarch
+libssh-config-0.10.4-13.el9.noarch
+libreport-filesystem-2.15.2-6.el9.alma.noarch
+dnf-data-4.14.0-17.el9.alma.1.noarch
+kbd-misc-2.4.0-10.el9.noarch
+kbd-legacy-2.4.0-10.el9.noarch
+hwdata-0.348-9.15.el9.noarch
+fonts-filesystem-2.0.5-7.el9.1.noarch
+dejavu-sans-fonts-2.37-18.el9.noarch
+langpacks-core-font-en-3.0-16.el9.noarch
+coreutils-common-8.32-36.el9.x86_64
+almalinux-gpg-keys-9.5-1.el9.x86_64
+almalinux-release-9.5-1.el9.x86_64
+almalinux-repos-9.5-1.el9.x86_64
+setup-2.13.7-10.el9.noarch
+filesystem-3.16-5.el9.x86_64
+efi-filesystem-6-2.el9_0.0.1.noarch
+basesystem-11-13.el9.noarch
+ncurses-libs-6.2-10.20210508.el9.x86_64
+bash-5.1.8-9.el9.x86_64
+zlib-1.2.11-40.el9.x86_64
+xz-libs-5.2.5-8.el9_0.x86_64
+libzstd-1.5.1-2.el9.x86_64
+libcap-2.48-9.el9_2.x86_64
+popt-1.18-8.el9.x86_64
+libxcrypt-4.4.18-3.el9.x86_64
+bzip2-libs-1.0.8-8.el9.x86_64
+libuuid-2.37.4-20.el9.x86_64
+sqlite-libs-3.34.1-7.el9_3.x86_64
+libstdc++-11.5.0-2.el9.alma.1.x86_64
+libcom_err-1.46.5-5.el9.x86_64
+elfutils-libelf-0.191-4.el9.alma.1.x86_64
+libxml2-2.9.13-6.el9_4.x86_64
+crypto-policies-20240828-2.git626aa59.el9_5.noarch
+libgpg-error-1.42-5.el9.x86_64
+libunistring-0.9.10-15.el9.x86_64
+readline-8.1-4.el9.x86_64
+alternatives-1.24-1.el9_5.1.x86_64
+keyutils-libs-1.6.3-1.el9.x86_64
+libcap-ng-0.8.2-7.el9.x86_64
+audit-libs-3.1.5-1.el9.x86_64
+libtalloc-2.4.2-1.el9.x86_64
+lua-libs-5.4.4-4.el9.x86_64
+libidn2-2.3.0-7.el9.x86_64
+expat-2.5.0-3.el9_5.1.x86_64
+libattr-2.5.1-3.el9.x86_64
+libacl-2.3.1-4.el9.x86_64
+libmnl-1.0.4-16.el9_4.x86_64
+libnl3-3.9.0-1.el9.x86_64
+libsepol-3.6-1.el9.x86_64
+libsmartcols-2.37.4-20.el9.x86_64
+lz4-libs-1.9.3-5.el9.x86_64
+pcre2-10.40-6.el9.x86_64
+libselinux-3.6-1.el9.x86_64
+sed-4.8-9.el9.x86_64
+findutils-4.8.0-7.el9.x86_64
+libtevent-0.16.1-1.el9.x86_64
+libgcrypt-1.10.0-11.el9.x86_64
+file-libs-5.39-16.el9.x86_64
+gdbm-libs-1.23-1.el9.x86_64
+gmp-6.2.0-13.el9.x86_64
+json-c-0.14-11.el9.x86_64
+libedit-3.1-38.20210216cvs.el9.x86_64
+libffi-3.4.2-8.el9.x86_64
+libtasn1-4.16.0-8.el9_1.x86_64
+libtdb-1.4.10-1.el9.x86_64
+file-5.39-16.el9.x86_64
+libselinux-utils-3.6-1.el9.x86_64
+libassuan-2.5.5-3.el9.x86_64
+libbpf-1.4.0-1.el9.x86_64
+efivar-libs-38-3.el9.x86_64
+fuse-libs-2.9.9-16.el9.x86_64
+jansson-2.14-1.el9.x86_64
+libbasicobjects-0.1.1-53.el9.x86_64
+libcollection-0.7.0-53.el9.x86_64
+libdb-5.3.28-54.el9.x86_64
+libdhash-0.5.0-53.el9.x86_64
+libgomp-11.5.0-2.el9.alma.1.x86_64
+libref_array-0.1.5-53.el9.x86_64
+libseccomp-2.5.2-2.el9.x86_64
+libsigsegv-2.13-4.el9.x86_64
+lzo-2.10-7.el9.x86_64
+numactl-libs-2.0.18-2.el9.x86_64
+pcre-8.44-4.el9.x86_64
+grep-3.6-5.el9.x86_64
+openssl-libs-3.2.2-6.el9_5.x86_64
+coreutils-8.32-36.el9.x86_64
+ca-certificates-2024.2.69_v8.0.303-91.4.el9_4.noarch
+systemd-libs-252-46.el9_5.2.alma.1.x86_64
+libblkid-2.37.4-20.el9.x86_64
+libmount-2.37.4-20.el9.x86_64
+util-linux-core-2.37.4-20.el9.x86_64
+libfdisk-2.37.4-20.el9.x86_64
+dbus-libs-1.12.20-8.el9.x86_64
+gzip-1.12-1.el9.x86_64
+kmod-28-10.el9.x86_64
+kmod-libs-28-10.el9.x86_64
+cracklib-2.9.6-27.el9.x86_64
+libarchive-3.5.3-4.el9.x86_64
+which-2.21-29.el9.x86_64
+cracklib-dicts-2.9.6-27.el9.x86_64
+libusbx-1.0.26-1.el9.x86_64
+procps-ng-3.3.17-14.el9.x86_64
+python3-pip-wheel-21.3.1-1.el9.noarch
+python3-six-1.15.0-9.el9.noarch
+python3-dateutil-2.8.1-7.el9.noarch
+python3-systemd-234-19.el9.x86_64
+openssl-3.2.2-6.el9_5.x86_64
+libevent-2.1.12-8.el9_4.x86_64
+mokutil-0.6.0-4.el9.x86_64
+xz-5.2.5-8.el9_0.x86_64
+squashfs-tools-4.4-10.git1.el9.x86_64
+mpfr-4.1.0-7.el9.x86_64
+gawk-5.1.0-6.el9.x86_64
+libutempter-1.2.1-6.el9.x86_64
+libnl3-cli-3.9.0-1.el9.x86_64
+libteam-1.31-16.el9_1.x86_64
+ethtool-6.2-1.el9.x86_64
+acl-2.3.1-4.el9.x86_64
+gettext-libs-0.21-8.el9.x86_64
+gettext-0.21-8.el9.x86_64
+attr-2.5.1-3.el9.x86_64
+libcomps-0.1.18-1.el9.x86_64
+python3-libcomps-0.1.18-1.el9.x86_64
+libpsl-0.21.1-5.el9.x86_64
+keyutils-1.6.3-1.el9.x86_64
+libksba-1.5.1-7.el9.x86_64
+e2fsprogs-libs-1.46.5-5.el9.x86_64
+libss-1.46.5-5.el9.x86_64
+groff-base-1.22.4-10.el9.x86_64
+snappy-1.1.8-8.el9.x86_64
+pigz-2.5-4.el9.x86_64
+langpacks-core-en-3.0-16.el9.noarch
+hostname-3.23-6.el9.x86_64
+less-590-5.el9.x86_64
+systemd-rpm-macros-252-46.el9_5.2.alma.1.noarch
+c-ares-1.19.1-2.el9_4.x86_64
+cpio-2.13-16.el9.x86_64
+diffutils-3.7-12.el9.x86_64
+inih-49-6.el9.x86_64
+libcbor-0.7.0-5.el9.x86_64
+libdaemon-0.14-23.el9.x86_64
+teamd-1.31-16.el9_1.x86_64
+libeconf-0.4.1-4.el9.x86_64
+libpwquality-1.4.4-8.el9.x86_64
+util-linux-2.37.4-20.el9.x86_64
+grub2-common-2.06-92.el9.alma.1.noarch
+openssh-8.7p1-43.el9.x86_64
+grub2-pc-modules-2.06-92.el9.alma.1.noarch
+kbd-2.4.0-10.el9.x86_64
+libndp-1.9-1.el9.x86_64
+libnfnetlink-1.0.1-21.el9.x86_64
+libnetfilter_conntrack-1.0.9-1.el9.x86_64
+iptables-libs-1.8.10-4.el9_4.x86_64
+libnghttp2-1.43.0-6.el9.x86_64
+libpath_utils-0.2.1-53.el9.x86_64
+libini_config-1.3.1-53.el9.x86_64
+libpipeline-1.5.3-4.el9.x86_64
+libverto-0.3.2-3.el9.x86_64
+krb5-libs-1.21.1-4.el9_5.x86_64
+cyrus-sasl-lib-2.1.27-21.el9.x86_64
+openldap-2.6.6-3.el9.x86_64
+libssh-0.10.4-13.el9.x86_64
+libcurl-7.76.1-31.el9.x86_64
+tpm2-tss-3.2.3-1.el9.x86_64
+ima-evm-utils-1.5-2.el9.x86_64
+curl-7.76.1-31.el9.x86_64
+rpm-libs-4.16.1.3-34.el9.x86_64
+rpm-4.16.1.3-34.el9.x86_64
+policycoreutils-3.6-2.1.el9.x86_64
+selinux-policy-38.1.45-3.el9_5.noarch
+selinux-policy-targeted-38.1.45-3.el9_5.noarch
+dbus-1.12.20-8.el9.x86_64
+systemd-pam-252-46.el9_5.2.alma.1.x86_64
+systemd-252-46.el9_5.2.alma.1.x86_64
+dbus-common-1.12.20-8.el9.noarch
+dbus-broker-28-7.el9.x86_64
+crontabs-1.11-27.20190603git.el9_0.noarch
+libsolv-0.7.24-3.el9.x86_64
+authselect-libs-1.2.6-2.el9.x86_64
+device-mapper-libs-1.02.198-2.el9.x86_64
+device-mapper-1.02.198-2.el9.x86_64
+grub2-tools-minimal-2.06-92.el9.alma.1.x86_64
+cryptsetup-libs-2.7.2-3.el9_5.x86_64
+systemd-udev-252-46.el9_5.2.alma.1.x86_64
+libfido2-1.13.0-2.el9.x86_64
+os-prober-1.77-10.el9.x86_64
+kpartx-0.8.7-32.el9.x86_64
+elfutils-default-yama-scope-0.191-4.el9.alma.1.noarch
+elfutils-libs-0.191-4.el9.alma.1.x86_64
+elfutils-debuginfod-client-0.191-4.el9.alma.1.x86_64
+binutils-gold-2.35.2-54.el9.x86_64
+binutils-2.35.2-54.el9.x86_64
+rpm-build-libs-4.16.1.3-34.el9.x86_64
+libkcapi-1.4.0-2.el9.x86_64
+libkcapi-hmaccalc-1.4.0-2.el9.x86_64
+dracut-057-70.git20240819.el9.x86_64
+kernel-modules-core-5.14.0-503.14.1.el9_5.x86_64
+kernel-core-5.14.0-503.14.1.el9_5.x86_64
+grub2-tools-2.06-92.el9.alma.1.x86_64
+grubby-8.40-64.el9.x86_64
+grub2-efi-x64-2.06-92.el9.alma.1.x86_64
+kernel-modules-5.14.0-503.14.1.el9_5.x86_64
+dracut-squash-057-70.git20240819.el9.x86_64
+libyaml-0.2.5-7.el9.x86_64
+lmdb-libs-0.9.29-3.el9.x86_64
+libldb-2.9.1-2.el9.x86_64
+nettle-3.9.1-1.el9.x86_64
+gnutls-3.8.3-4.el9_4.x86_64
+glib2-2.68.4-14.el9_4.1.x86_64
+json-glib-1.6.6-1.el9.x86_64
+libmodulemd-2.13.0-2.el9.x86_64
+python3-dbus-1.2.18-2.el9.x86_64
+shared-mime-info-2.1-5.el9.x86_64
+libxmlb-0.3.10-1.el9.x86_64
+libgudev-237-1.el9.x86_64
+libgusb-0.3.8-2.el9.x86_64
+libuser-0.63-15.el9.x86_64
+polkit-libs-0.117-13.el9.x86_64
+npth-1.6-8.el9.x86_64
+gnupg2-2.3.3-4.el9.x86_64
+gpgme-1.15.1-6.el9.x86_64
+libjcat-0.1.6-3.el9.x86_64
+fwupd-1.9.13-2.el9.alma.1.x86_64
+librepo-1.14.5-2.el9.x86_64
+libdnf-0.69.0-12.el9.alma.1.x86_64
+python3-libdnf-0.69.0-12.el9.alma.1.x86_64
+python3-hawkey-0.69.0-12.el9.alma.1.x86_64
+python3-gpg-1.15.1-6.el9.x86_64
+rpm-sign-libs-4.16.1.3-34.el9.x86_64
+python3-rpm-4.16.1.3-34.el9.x86_64
+python3-dnf-4.14.0-17.el9.alma.1.noarch
+dnf-4.14.0-17.el9.alma.1.noarch
+python3-dnf-plugins-core-4.3.0-16.el9.noarch
+oniguruma-6.9.6-1.el9.6.x86_64
+jq-1.6-17.el9.x86_64
+pciutils-libs-3.7.0-5.el9.x86_64
+psmisc-23.4-3.el9.x86_64
+iproute-6.2.0-6.el9_4.x86_64
+dracut-network-057-70.git20240819.el9.x86_64
+sg3_utils-libs-1.47-9.el9.x86_64
+slang-2.3.2-11.el9.x86_64
+newt-0.52.21-11.el9.x86_64
+userspace-rcu-0.12.1-6.el9.x86_64
+libestr-0.1.11-4.el9.x86_64
+libfastjson-0.99.9-5.el9.x86_64
+liburing-2.5-1.el9.x86_64
+qemu-guest-agent-9.0.0-10.el9_5.x86_64
+rsyslog-8.2310.0-4.el9.x86_64
+xfsprogs-6.4.0-4.el9.x86_64
+sg3_utils-1.47-9.el9.x86_64
+kexec-tools-2.0.27-16.el9_5.1.x86_64
+iproute-tc-6.2.0-6.el9_4.x86_64
+dnf-plugins-core-4.3.0-16.el9.noarch
+yum-4.14.0-17.el9.alma.1.noarch
+shim-x64-15.8-4.el9_3.alma.2.x86_64
+passwd-0.80-12.el9.x86_64
+initscripts-rename-device-10.11.7-1.el9.x86_64
+irqbalance-1.9.4-1.el9.x86_64
+chrony-4.5-3.el9.x86_64
+kernel-5.14.0-503.14.1.el9_5.x86_64
+crypto-policies-scripts-20240828-2.git626aa59.el9_5.noarch
+grub2-pc-2.06-92.el9.alma.1.x86_64
+openssh-clients-8.7p1-43.el9.x86_64
+parted-3.5-2.el9.x86_64
+authselect-1.2.6-2.el9.x86_64
+audit-3.1.5-1.el9.x86_64
+logrotate-3.18.0-8.el9.x86_64
+microcode_ctl-20240910-1.el9_5.noarch
+openssh-server-8.7p1-43.el9.x86_64
+rpm-plugin-selinux-4.16.1.3-34.el9.x86_64
+rpm-plugin-audit-4.16.1.3-34.el9.x86_64
+sudo-1.9.5p2-10.el9_3.x86_64
+man-db-2.9.3-7.el9.x86_64
+langpacks-en-3.0-16.el9.noarch
+e2fsprogs-1.46.5-5.el9.x86_64
+python3-libselinux-3.6-1.el9.x86_64
+prefixdevname-0.1.0-8.el9.x86_64
+efibootmgr-16-12.el9.x86_64
+tar-1.34-7.el9.x86_64
+vim-minimal-8.2.2637-21.el9.x86_64
+lshw-B.02.19.2-10.el9.x86_64
+dosfstools-4.2-3.el9.x86_64
+libsysfs-2.1.1-10.el9.x86_64
+lsscsi-0.32-6.el9.x86_64
+ncurses-6.2-10.20210508.el9.x86_64
+rootfiles-8.1-31.el9.noarch
+gpg-pubkey-b86b3716-61e69f29
+python3-setuptools-53.0.0-13.el9.noarch
+python3-distro-1.5.0-7.el9.noarch
+python3-idna-2.10-7.el9_4.1.noarch
+python3-setools-4.4.4-1.el9.x86_64
+python3-pyyaml-5.4.1-6.el9.x86_64
+python3-pysocks-1.7.1-12.el9.noarch
+python3-urllib3-1.26.5-6.el9.noarch
+python3-chardet-4.0.0-5.el9.noarch
+python3-requests-2.25.1-8.el9.noarch
+dhcp-common-4.4.2-19.b1.el9.noarch
+python3-pytz-2021.1-5.el9.noarch
+python3-babel-2.9.1-2.el9.noarch
+python3-pyserial-3.4-12.el9.noarch
+python3-pyrsistent-0.17.3-8.el9.x86_64
+python3-prettytable-0.7.2-27.el9.noarch
+python3-oauthlib-3.1.1-5.el9.noarch
+python3-netifaces-0.10.6-15.el9.x86_64
+python3-markupsafe-1.1.1-12.el9.x86_64
+python3-jinja2-2.11.3-6.el9.noarch
+python3-jsonpointer-2.0-4.el9.noarch
+python3-jsonpatch-1.21-16.el9.noarch
+python3-configobj-5.0.6-25.el9.noarch
+python3-audit-3.1.5-1.el9.x86_64
+python3-attrs-20.3.0-7.el9.noarch
+python3-jsonschema-3.2.0-13.el9.noarch
+libmaxminddb-1.5.2-4.el9.x86_64
+geolite2-country-20191217-6.el9.noarch
+geolite2-city-20191217-6.el9.noarch
+ipcalc-1.0.0-5.el9.x86_64
+dhcp-client-4.4.2-19.b1.el9.x86_64
+gdisk-1.0.7-5.el9.x86_64
+checkpolicy-3.6-1.el9.x86_64
+python3-policycoreutils-3.6-2.1.el9.noarch
+dracut-config-generic-057-70.git20240819.el9.x86_64
+cloud-utils-growpart-0.33-1.el9.x86_64
+libtirpc-1.3.3-9.el9.x86_64
+libnfsidmap-2.5.4-27.el9.x86_64
+rpcbind-1.2.6-7.el9.x86_64
+quota-nls-4.09-2.el9.noarch
+quota-4.09-2.el9.x86_64
+libibverbs-51.0-1.el9.x86_64
+libpcap-1.10.0-4.el9.x86_64
+libev-4.33-5.el9.x86_64
+libverto-libev-0.3.2-3.el9.x86_64
+gssproxy-0.8.4-7.el9.x86_64
+nfs-utils-2.5.4-27.el9.x86_64
+tcpdump-4.99.0-9.el9.x86_64
+polkit-0.117-13.el9.x86_64
+polkit-pkla-compat-0.1-21.el9.x86_64
+dmidecode-3.6-1.el9.x86_64
+virt-what-1.25-10.el9.x86_64
+python3-pyudev-0.22.0-6.el9.noarch
+python3-linux-procfs-0.7.3-1.el9.noarch
+libtraceevent-1.5.3-3.el9.x86_64
+hdparm-9.62-2.el9.x86_64
+gobject-introspection-1.68.0-11.el9.x86_64
+python3-gobject-base-noarch-3.40.1-6.el9.noarch
+python3-gobject-base-3.40.1-6.el9.x86_64
+glibc-common-2.34-125.el9_5.1.alma.2.x86_64
+glibc-langpack-en-2.34-125.el9_5.1.alma.2.x86_64
+glibc-2.34-125.el9_5.1.alma.2.x86_64
+python3-3.9.21-1.el9_5.x86_64
+python3-libs-3.9.21-1.el9_5.x86_64
+libsemanage-3.6-2.1.el9_5.x86_64
+pam-1.5.1-22.el9_5.x86_64
+kernel-modules-core-5.14.0-503.21.1.el9_5.x86_64
+kernel-core-5.14.0-503.21.1.el9_5.x86_64
+shadow-utils-4.9-10.el9_5.x86_64
+NetworkManager-libnm-1.48.10-5.el9_5.x86_64
+NetworkManager-1.48.10-5.el9_5.x86_64
+libsss_idmap-2.9.5-4.el9_5.4.x86_64
+p11-kit-0.25.3-3.el9_5.x86_64
+kernel-modules-5.14.0-503.21.1.el9_5.x86_64
+cronie-anacron-1.5.7-12.el9_5.x86_64
+cronie-1.5.7-12.el9_5.x86_64
+python3-perf-5.14.0-503.21.1.el9_5.x86_64
+kernel-tools-libs-5.14.0-503.21.1.el9_5.x86_64
+kernel-tools-5.14.0-503.21.1.el9_5.x86_64
+libsss_certmap-2.9.5-4.el9_5.4.x86_64
+libsss_nss_idmap-2.9.5-4.el9_5.4.x86_64
+sssd-client-2.9.5-4.el9_5.4.x86_64
+libsss_sudo-2.9.5-4.el9_5.4.x86_64
+sssd-nfs-idmap-2.9.5-4.el9_5.4.x86_64
+sssd-common-2.9.5-4.el9_5.4.x86_64
+sssd-kcm-2.9.5-4.el9_5.4.x86_64
+tuned-2.24.0-2.el9_5.alma.1.noarch
+kernel-5.14.0-503.21.1.el9_5.x86_64
+p11-kit-trust-0.25.3-3.el9_5.x86_64
+NetworkManager-team-1.48.10-5.el9_5.x86_64
+NetworkManager-tui-1.48.10-5.el9_5.x86_64
+cloud-init-23.4-19.el9_5.4.alma.1.noarch
+python3-libsemanage-3.6-2.1.el9_5.x86_64
+iputils-20210202-10.el9_5.x86_64
+libbrotli-1.0.9-7.el9_5.x86_64
+rsync-3.2.3-20.el9_5.1.x86_64
+apr-1.7.0-12.el9_3.x86_64
+apr-util-bdb-1.6.1-23.el9.x86_64
+apr-util-openssl-1.6.1-23.el9.x86_64
+apr-util-1.6.1-23.el9.x86_64
+git-core-2.43.5-2.el9_5.x86_64
+git-core-doc-2.43.5-2.el9_5.noarch
+httpd-tools-2.4.62-1.el9_5.2.x86_64
+perl-Digest-1.19-4.el9.noarch
+perl-Digest-MD5-2.58-4.el9.x86_64
+perl-B-1.80-481.el9.x86_64
+perl-FileHandle-2.03-481.el9.noarch
+perl-Data-Dumper-2.174-462.el9.x86_64
+perl-libnet-3.13-4.el9.noarch
+perl-base-2.27-481.el9.noarch
+perl-URI-5.09-3.el9.noarch
+perl-AutoLoader-5.74-481.el9.noarch
+perl-Mozilla-CA-20200520-6.el9.noarch
+perl-if-0.60.800-481.el9.noarch
+perl-IO-Socket-IP-0.41-5.el9.noarch
+perl-Time-Local-1.300-7.el9.noarch
+perl-File-Path-2.18-4.el9.noarch
+perl-Pod-Escapes-1.07-460.el9.noarch
+perl-Text-Tabs+Wrap-2013.0523-460.el9.noarch
+perl-IO-Socket-SSL-2.073-2.el9.noarch
+perl-Net-SSLeay-1.94-1.el9.x86_64
+perl-Class-Struct-0.66-481.el9.noarch
+perl-POSIX-1.94-481.el9.x86_64
+perl-Term-ANSIColor-5.01-461.el9.noarch
+perl-IPC-Open3-1.21-481.el9.noarch
+perl-subs-1.03-481.el9.noarch
+perl-File-Temp-0.231.100-4.el9.noarch
+perl-Term-Cap-1.17-460.el9.noarch
+perl-Pod-Simple-3.42-4.el9.noarch
+perl-HTTP-Tiny-0.076-462.el9.noarch
+perl-Socket-2.031-4.el9.x86_64
+perl-SelectSaver-1.02-481.el9.noarch
+perl-Symbol-1.08-481.el9.noarch
+perl-File-stat-1.09-481.el9.noarch
+perl-podlators-4.14-460.el9.noarch
+perl-Pod-Perldoc-3.28.01-461.el9.noarch
+perl-Fcntl-1.13-481.el9.x86_64
+perl-Text-ParseWords-3.30-460.el9.noarch
+perl-mro-1.23-481.el9.x86_64
+perl-IO-1.43-481.el9.x86_64
+perl-overloading-0.02-481.el9.noarch
+perl-Pod-Usage-2.01-4.el9.noarch
+perl-Errno-1.30-481.el9.x86_64
+perl-File-Basename-2.85-481.el9.noarch
+perl-Getopt-Std-1.12-481.el9.noarch
+perl-MIME-Base64-3.16-4.el9.x86_64
+perl-Scalar-List-Utils-1.56-462.el9.x86_64
+perl-constant-1.33-461.el9.noarch
+perl-Storable-3.21-460.el9.x86_64
+perl-overload-1.31-481.el9.noarch
+perl-parent-0.238-460.el9.noarch
+perl-vars-1.05-481.el9.noarch
+perl-Getopt-Long-2.52-4.el9.noarch
+perl-Carp-1.50-460.el9.noarch
+perl-Exporter-5.74-461.el9.noarch
+perl-NDBM_File-1.15-481.el9.x86_64
+perl-PathTools-3.78-461.el9.x86_64
+perl-Encode-3.08-462.el9.x86_64
+perl-libs-5.32.1-481.el9.x86_64
+perl-interpreter-5.32.1-481.el9.x86_64
+perl-DynaLoader-1.47-481.el9.x86_64
+perl-TermReadKey-2.38-11.el9.x86_64
+perl-Error-0.17029-7.el9.noarch
+perl-File-Find-1.37-481.el9.noarch
+perl-lib-0.65-481.el9.x86_64
+vim-filesystem-8.2.2637-21.el9.noarch
+vim-common-8.2.2637-21.el9.x86_64
+mailcap-2.1.49-5.el9.noarch
+nmap-ncat-7.92-3.el9.x86_64
+libxcrypt-compat-4.4.18-3.el9.x86_64
+httpd-filesystem-2.4.62-1.el9_5.2.noarch
+httpd-core-2.4.62-1.el9_5.2.x86_64
+mod_lua-2.4.62-1.el9_5.2.x86_64
+gpm-libs-1.20.7-29.el9.x86_64
+emacs-filesystem-27.2-10.el9_4.noarch
+perl-Git-2.43.5-2.el9_5.noarch
+git-2.43.5-2.el9_5.x86_64
+almalinux-logos-httpd-90.5.1-1.1.el9.noarch
+mod_http2-2.0.26-2.el9_4.1.x86_64
+httpd-2.4.62-1.el9_5.2.x86_64
+vim-enhanced-8.2.2637-21.el9.x86_64
+python3-pip-21.3.1-1.el9.noarch
+nmap-7.92-3.el9.x86_64
+unzip-6.0-57.el9.x86_64
+time-1.9-18.el9.x86_64
+wget-1.21.1-8.el9_4.x86_64
+libpng-1.6.37-12.el9.x86_64
+nspr-4.35.0-17.el9_2.x86_64
+libjpeg-turbo-2.0.90-7.el9.x86_64
+gdk-pixbuf2-2.42.6-4.el9_4.x86_64
+avahi-libs-0.8-21.el9.x86_64
+libogg-1.3.4-6.el9.x86_64
+alsa-lib-1.2.12-1.el9.x86_64
+libvorbis-1.3.7-5.el9.x86_64
+nss-util-3.101.0-10.el9_2.x86_64
+libicu-67.1-9.el9.x86_64
+libwayland-client-1.21.0-1.el9.x86_64
+opus-1.3.1-10.el9.x86_64
+libstemmer-0-18.585svn.el9.x86_64
+libX11-xcb-1.7.0-9.el9.x86_64
+lcms2-2.12-3.el9.x86_64
+gstreamer1-1.22.1-2.el9.x86_64
+atk-2.36.0-5.el9.x86_64
+libwayland-cursor-1.21.0-1.el9.x86_64
+cups-libs-2.3.3op2-31.el9_5.x86_64
+libproxy-0.4.15-35.el9.x86_64
+xml-common-0.6.3-58.el9.noarch
+pixman-0.40.0-6.el9_3.x86_64
+libxshmfence-1.3-10.el9.x86_64
+libwayland-server-1.21.0-1.el9.x86_64
+libwayland-egl-1.21.0-1.el9.x86_64
+libtool-ltdl-2.4.6-46.el9.x86_64
+libglvnd-1.3.4-1.el9.x86_64
+libXau-1.0.9-8.el9.x86_64
+libxcb-1.13.1-9.el9.x86_64
+fribidi-1.0.10-6.el9.2.x86_64
+dconf-0.40.0-6.el9.x86_64
+iso-codes-4.6.0-3.el9.noarch
+colord-libs-1.4.5-4.el9.x86_64
+nss-softokn-freebl-3.101.0-10.el9_2.x86_64
+nss-softokn-3.101.0-10.el9_2.x86_64
+nss-3.101.0-10.el9_2.x86_64
+nss-sysinit-3.101.0-10.el9_2.x86_64
+flac-libs-1.3.3-10.el9_2.1.x86_64
+libtheora-1.1.1-31.el9.x86_64
+avahi-glib-0.8-21.el9.x86_64
+gtk-update-icon-cache-3.24.31-5.el9.x86_64
+libgsf-1.14.47-5.el9.x86_64
+libnotify-0.7.9-8.el9.x86_64
+exiv2-libs-0.27.5-2.el9.x86_64
+exiv2-0.27.5-2.el9.x86_64
+libgexiv2-0.12.3-1.el9.x86_64
+lksctp-tools-1.0.19-3.el9_4.x86_64
+libpciaccess-0.16-7.el9.x86_64
+libdrm-2.4.121-1.el9.x86_64
+libatomic-11.5.0-2.el9.alma.1.x86_64
+webkit2gtk3-jsc-2.46.5-1.el9_5.x86_64
+libproxy-webkitgtk4-0.4.15-35.el9.x86_64
+graphite2-1.3.14-9.el9.x86_64
+harfbuzz-2.7.4-10.el9.x86_64
+freetype-2.10.4-9.el9.x86_64
+fontconfig-2.14.0-2.el9_1.x86_64
+ttmkfdir-3.0.9-65.el9.x86_64
+fuse-common-3.10.2-9.el9.x86_64
+fuse-2.9.9-16.el9.x86_64
+bubblewrap-0.4.1-8.el9_5.x86_64
+bluez-libs-5.72-2.el9.x86_64
+adobe-source-code-pro-fonts-2.030.1.050-12.el9.1.noarch
+ModemManager-glib-1.20.2-1.el9.x86_64
+xkeyboard-config-2.33-2.el9.noarch
+libxkbcommon-1.0.3-4.el9.x86_64
+xdg-dbus-proxy-0.1.3-1.el9.x86_64
+webrtc-audio-processing-0.3.1-8.el9.x86_64
+upower-0.99.13-2.el9.x86_64
+tzdata-java-2024b-2.el9.noarch
+totem-pl-parser-3.26.6-2.el9.x86_64
+sound-theme-freedesktop-0.8-17.el9.noarch
+rtkit-0.11-29.el9.x86_64
+poppler-data-0.4.9-9.el9.noarch
+policycoreutils-python-utils-3.6-2.1.el9.noarch
+flatpak-selinux-1.12.9-3.el9_5.noarch
+p11-kit-server-0.25.3-3.el9_5.x86_64
+osinfo-db-20240701-2.el9.noarch
+orc-0.4.31-8.el9.x86_64
+openjpeg2-2.4.0-7.el9.x86_64
+mesa-filesystem-24.1.2-3.el9.alma.1.x86_64
+lua-posix-35.0-8.el9.x86_64
+lua-5.4.4-4.el9.x86_64
+copy-jdk-configs-4.0-3.el9.noarch
+low-memory-monitor-2.1-4.el9.x86_64
+llvm-libs-18.1.8-3.el9.x86_64
+libglvnd-egl-1.3.4-1.el9.x86_64
+mesa-libgbm-24.1.2-3.el9.alma.1.x86_64
+mesa-libglapi-24.1.2-3.el9.alma.1.x86_64
+mesa-dri-drivers-24.1.2-3.el9.alma.1.x86_64
+mesa-libEGL-24.1.2-3.el9.alma.1.x86_64
+libxslt-1.1.34-9.el9.x86_64
+libwebp-1.2.0-8.el9_3.x86_64
+libvisual-0.4.0-34.el9.x86_64
+libsbc-1.4-9.el9.x86_64
+libldac-2.0.2.3-10.el9.x86_64
+libiptcdata-1.0.5-10.el9.x86_64
+libfontenc-1.1.3-17.el9.x86_64
+mkfontscale-1.2.1-3.el9.x86_64
+xorg-x11-fonts-Type1-7.5-33.el9.noarch
+libexif-0.6.22-6.el9.x86_64
+libepoxy-1.5.5-4.el9.x86_64
+libdatrie-0.2.13-4.el9.x86_64
+libthai-0.1.28-8.el9.x86_64
+libasyncns-0.8-22.el9.x86_64
+libX11-common-1.7.0-9.el9.noarch
+libX11-1.7.0-9.el9.x86_64
+libXext-1.3.4-8.el9.x86_64
+libXrender-0.9.10-16.el9.x86_64
+cairo-1.17.4-7.el9.x86_64
+libXi-1.7.10-8.el9.x86_64
+libXfixes-5.0.3-16.el9.x86_64
+cairo-gobject-1.17.4-7.el9.x86_64
+libXtst-1.2.3-16.el9.x86_64
+libXcomposite-0.4.5-7.el9.x86_64
+at-spi2-core-2.40.3-1.el9.x86_64
+at-spi2-atk-2.38.0-4.el9.x86_64
+libXcursor-1.2.0-7.el9.x86_64
+libXdamage-1.1.5-7.el9.x86_64
+libXft-2.3.3-8.el9.x86_64
+pango-1.48.7-3.el9.x86_64
+librsvg2-2.50.7-3.el9.x86_64
+libXrandr-1.5.2-8.el9.x86_64
+libXinerama-1.1.4-10.el9.x86_64
+libXv-1.0.11-16.el9.x86_64
+libXxf86vm-1.1.4-18.el9.x86_64
+libglvnd-glx-1.3.4-1.el9.x86_64
+mesa-libGL-24.1.2-3.el9.alma.1.x86_64
+jbigkit-libs-2.1-23.el9.x86_64
+libtiff-4.4.0-13.el9.x86_64
+gdk-pixbuf2-modules-2.42.6-4.el9_4.x86_64
+libgxps-0.3.2-3.el9.x86_64
+poppler-21.01.0-21.el9.x86_64
+poppler-glib-21.01.0-21.el9.x86_64
+javapackages-filesystem-6.0.0-7.el9_5.noarch
+java-21-openjdk-headless-21.0.5.0.11-2.el9.alma.1.x86_64
+hicolor-icon-theme-0.17-13.el9.noarch
+gsm-1.0.19-6.el9.x86_64
+libsndfile-1.0.31-8.el9_5.2.x86_64
+pulseaudio-libs-15.0-2.el9.x86_64
+libcanberra-0.30-27.el9.x86_64
+graphene-1.10.6-2.el9.x86_64
+gstreamer1-plugins-base-1.22.1-3.el9_5.x86_64
+giflib-5.2.1-9.el9.x86_64
+flatpak-session-helper-1.12.9-3.el9_5.x86_64
+fdk-aac-free-2.0.0-8.el9.x86_64
+pipewire-1.0.1-1.el9.x86_64
+pipewire-libs-1.0.1-1.el9.x86_64
+wireplumber-0.4.14-1.el9.x86_64
+wireplumber-libs-0.4.14-1.el9.x86_64
+pipewire-jack-audio-connection-kit-libs-1.0.1-1.el9.x86_64
+exempi-2.6.0-0.2.20211007gite23c213.el9.x86_64
+composefs-libs-1.0.5-1.el9.x86_64
+ostree-libs-2024.9-1.el9_5.x86_64
+adwaita-cursor-theme-40.1.1-3.el9.noarch
+adwaita-icon-theme-40.1.1-3.el9.noarch
+abattis-cantarell-fonts-0.301-4.el9.noarch
+gsettings-desktop-schemas-40.0-6.el9.x86_64
+glib-networking-2.68.3-3.el9.x86_64
+libsoup-2.72.0-8.el9_5.2.x86_64
+geoclue2-2.6.0-7.el9.x86_64
+libappstream-glib-0.7.18-5.el9_4.x86_64
+xdg-desktop-portal-1.12.6-1.el9.x86_64
+flatpak-1.12.9-3.el9_5.x86_64
+osinfo-db-tools-1.10.0-1.el9.x86_64
+libosinfo-1.10.0-1.el9.x86_64
+libtracker-sparql-3.1.2-3.el9_1.x86_64
+tracker-3.1.2-3.el9_1.x86_64
+tracker-miners-3.1.2-4.el9_3.x86_64
+libcanberra-gtk3-0.30-27.el9.x86_64
+xdg-desktop-portal-gtk-1.12.0-3.el9.x86_64
+gtk3-3.24.31-5.el9.x86_64
+java-21-openjdk-21.0.5.0.11-2.el9.alma.1.x86_64
+java-21-openjdk-devel-21.0.5.0.11-2.el9.alma.1.x86_64
+pipewire-jack-audio-connection-kit-1.0.1-1.el9.x86_64
+pipewire-alsa-1.0.1-1.el9.x86_64
+pipewire-pulseaudio-1.0.1-1.el9.x86_64
+libnftnl-1.2.6-4.el9_4.x86_64
+iptables-nft-1.8.10-4.el9_4.x86_64
+nftables-1.0.9-3.el9.x86_64
+python3-nftables-1.0.9-3.el9.x86_64
+python3-firewall-1.3.4-7.el9.noarch
+ipset-libs-7.11-8.el9.x86_64
+ipset-7.11-8.el9.x86_64
+firewalld-filesystem-1.3.4-7.el9.noarch
+libcap-ng-python3-0.8.2-7.el9.x86_64
+firewalld-1.3.4-7.el9.noarch
+mariadb-connector-c-config-3.2.6-1.el9_0.noarch
+mariadb-common-10.5.22-1.el9_2.alma.1.x86_64
+mariadb-connector-c-3.2.6-1.el9_0.x86_64
+libaio-0.3.111-13.el9.x86_64
+perl-Sys-Hostname-1.23-481.el9.x86_64
+mariadb-errmsg-10.5.22-1.el9_2.alma.1.x86_64
+perl-Math-Complex-1.59-481.el9.noarch
+perl-Math-BigInt-1.9998.18-460.el9.noarch
+perl-DBI-1.643-9.el9.x86_64
+perl-DBD-MariaDB-1.21-16.el9_0.x86_64
+perl-File-Copy-2.34-481.el9.noarch
+mysql-selinux-1.0.10-1.el9.noarch
+mariadb-backup-10.5.22-1.el9_2.alma.1.x86_64
+mariadb-gssapi-server-10.5.22-1.el9_2.alma.1.x86_64
+mariadb-server-utils-10.5.22-1.el9_2.alma.1.x86_64
+mariadb-server-10.5.22-1.el9_2.alma.1.x86_64
+mariadb-10.5.22-1.el9_2.alma.1.x86_64
+compat-openssl11-1.1.1k-4.el9_0.x86_64
+</host_config>
+<inputs_download>
+<file_download uri=file:/var/www/html/workflows/SharedData/users/admin_test/basic-grep-slow-multi.json>
+</inputs_download>
+<application_environment>
+<application_execution>
+[ INFO - Tue Jan 28 13:27:47 UTC 2025 ] CVMFS bosh in /cvmfs/biomed.egi.eu/vip/virtualenv/bin not working, checking for a local version
+[ INFO - Tue Jan 28 13:27:47 UTC 2025 ] local bosh found in /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+[ INFO - Tue Jan 28 13:27:47 UTC 2025 ] cloning udocker 1.3.1
+[ INFO - Tue Jan 28 13:27:48 UTC 2025 ] checking for singularity
+[ WARN - Tue Jan 28 13:27:48 UTC 2025 ] singularityPath not found (/cvmfs/dirac.egi.eu/dirac/v8.0.39/Linux-x86_64/bin), leaving PATH unchanged
+Shell command
+grep c basic-grep-slow-multi.json > output_c.txt; cat output_c.txt
+Container location
+
+Container command
+
+Exit code
+0
+Std out
+  "name": "BasicGrepSlowMulti",
+  "description": "Test pipelines that search text in a file (with docker).<br />",
+  "command-line": "sleep [DELAY] && grep [TEXT] [INPUT] > [OUTPUT]; echo bla > [GENERATOR]; cat [OUTPUT]",
+  "schema-version": "0.5",
+      "description": "Text to search",
+      "description": "File to search in",
+      "description": "Delay to apply on the execution in seconds",
+  "custom": {}
+
+Error message
+
+Output files
+    - output_c.txt (output, Required)
+Missing files
+
+
+</application_execution>
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] Execution time was 3s
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] Found provenance file /var/www/.cache/boutiques/data/BasicGrep_2025-01-28_13h27m49s297187ms.json
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] Copying it to /var/www/html/workflows/workflow-gENTZc/BasicGrep-360261301594475.sh.provenance.json
+<results_upload>
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] uploadURI : file:/var/www/html/workflows/SharedData/users/admin_test/28-01-2025_13:27:36
+Directory '/var/www/html/workflows/SharedData/users/admin_test/28-01-2025_13:27:36' successfully created or already exists.
+File names found:
+<file_upload id=output uri=file:/var/www/html/workflows/SharedData/users/admin_test/28-01-2025_13:27:36/output_c.txt>
+</file_upload>
+</results_upload>
+<footer>
+<cleanup>
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] === ls -a ===
+.
+..
+BEFORE_EXECUTION_REFERENCE_FILE
+basic-grep-slow-multi.json
+containers
+docker
+foo.sh
+udocker
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] === ls /var/www/html/workflows/workflow-gENTZc/cache/cache.txt ===
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] === cat /var/www/html/workflows/workflow-gENTZc/cache/cache.txt === 
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] Cleaning up: rm * -Rf
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] END date:
+1738070869
+</cleanup>
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] Stop date is 1738070869
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] Total running time: 3 seconds
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] Input download time: 1 seconds
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] Execution time: 3 seconds
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] Results upload time: 0 seconds
+[ INFO - Tue Jan 28 13:27:49 UTC 2025 ] Exiting with return value 0
+</footer>
+trap activation
+cleanup was already executed successfully

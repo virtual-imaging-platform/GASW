@@ -171,7 +171,7 @@ public abstract class GaswOutputParser extends Thread {
      * We use synchronized keyword in case of multiples jobs ending together (at the same time),
      * it cause an issue if hibernate try to merge/add the same job inside the db
      */
-    protected synchronized int parseStdOut(File stdOut) {
+    protected int parseStdOut(File stdOut) {
         int exitCode = -1;
 
         try {
@@ -335,6 +335,7 @@ public abstract class GaswOutputParser extends Thread {
             if (job.getEnd() == null) {
                 job.setEnd(new Date());
             }
+
             factory.getJobDAO().update(job);
 
         } catch (DAOException | IOException ex) {
@@ -562,8 +563,8 @@ public abstract class GaswOutputParser extends Thread {
      * @return
      */
     protected File getAppStdFile(String extension, String dir) {
-
         File stdDir = new File(dir);
+
         if (!stdDir.exists()) {
             stdDir.mkdirs();
         }
