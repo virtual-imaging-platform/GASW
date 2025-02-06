@@ -41,12 +41,10 @@ package fr.insalyon.creatis.gasw.dao;
 public abstract class DAOFactory {
 
     public synchronized static DAOFactory getDAOFactory() throws DAOException {
-
         return HibernateDAOFactory.getInstance();
     }
 
-    protected DAOFactory() {
-    }
+    protected DAOFactory() {}
 
     public abstract void close();
     

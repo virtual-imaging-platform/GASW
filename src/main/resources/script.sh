@@ -921,10 +921,9 @@ function uploadGirderFile {
 # upload: upload a file to various URI schemes
 function upload {
   local URI="$1"
-  # shellcheck disable=SC2034
-  local ID="$2" # unused
+  local ID="$2"
   local NREP="$3"
-  startLog file_upload uri="$URI"
+  startLog file_upload id="$ID" uri="$URI"
 
   # The pattern must NOT be put between quotation marks.
   if [[ ${URI} == shanoir:/* ]]; then
@@ -991,11 +990,11 @@ function performUpload {
   startLog results_upload
 
   # Extract the file names and store them in a bash array
-  local file_names=$(python <<EOF
+  local outputs=$(python <<EOF
 import json, sys
 with open("$provenanceFile", "r") as file:
     outputs = json.load(file)['public-output']['output-files']
-    print(*[value.get('file-name') for value in outputs.values()])
+    print(*[f"{k}::{v.get('file-name')}" for k, v in outputs.items()])
 EOF
 )
 
@@ -1021,21 +1020,19 @@ EOF
   fi
 
   # Check if the array is not empty and print the results
-  if [ -z "$file_names" ]; then
+  if [ -z "$outputs" ]; then
     echo "No file names found in the output-files section."
   else
     echo "File names found:"
-    for file_name in $file_names; do
-      echo "$file_name"
+    for output in $outputs; do
+      output_id="${output%%::*}"
+      file_name="${output#*::}"
 
       # Define the upload path
       local upload_path="${uploadURI}/${file_name}"
 
-      # Generate a random string for the upload command
-      local random_string=$(tr -dc '[:alpha:]' < /dev/urandom 2>/dev/null | head -c 32)
-
       # Execute the upload command
-      upload "$upload_path" "$random_string" "$nrep"
+      upload "$upload_path" "$output_id" "$nrep"
     done
   fi
 

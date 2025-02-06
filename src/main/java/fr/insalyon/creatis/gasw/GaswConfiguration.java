@@ -289,7 +289,7 @@ public class GaswConfiguration {
         cfg.setProperty("hibernate.connection.password", dbPlugin.getPassword());
         cfg.setProperty("hibernate.hbm2ddl.auto", "update");
         cfg.setProperty("hibernate.show_sql", false);
-        cfg.setProperty("hibernate.format_sql", "false");
+        cfg.setProperty("hibernate.format_sql", false);
         cfg.addAnnotatedClass(Data.class);
         cfg.addAnnotatedClass(DataToReplicate.class);
         cfg.addAnnotatedClass(Job.class);
@@ -312,7 +312,6 @@ public class GaswConfiguration {
         }
 
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(cfg.getProperties()).build();
-        cfg.configure();
         sessionFactory = cfg.buildSessionFactory(serviceRegistry);
     }
 
@@ -492,5 +491,9 @@ public class GaswConfiguration {
 
     public int getDefaultRetryCount() {
         return defaultRetryCount;
+    }
+
+    public void setDbPlugin(DatabasePlugin databasePlugin) {
+        dbPlugin = databasePlugin;
     }
 }

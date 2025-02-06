@@ -47,9 +47,7 @@ public class HibernateDAOFactory extends DAOFactory {
 
     private static HibernateDAOFactory instance;
     private SessionFactory sessionFactory;
-
     public static HibernateDAOFactory getInstance() throws DAOException {
-
         if (instance == null) {
             instance = new HibernateDAOFactory();
         }

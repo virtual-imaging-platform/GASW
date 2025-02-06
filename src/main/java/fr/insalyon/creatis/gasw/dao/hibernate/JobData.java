@@ -52,13 +52,11 @@ public class JobData implements JobDAO {
     private SessionFactory sessionFactory;
 
     public JobData(SessionFactory sessionFactory) {
-
         this.sessionFactory = sessionFactory;
     }
 
     @Override
     public void add(Job job) throws DAOException {
-
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
             session.merge(job);
@@ -70,31 +68,37 @@ public class JobData implements JobDAO {
         }
     }
 
+    /**
+     * Synchronized keyword for multi-threading context cause SQL Constraints violations issues
+     * due to unsynchronization of requests
+     */
     @Override
     public void update(Job job) throws DAOException {
-
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.merge(job);
-            session.getTransaction().commit();
-
-        } catch (HibernateException ex) {
-            logger.error(ex);
-            throw new DAOException(ex);
+        synchronized (sessionFactory) {
+            try (Session session = sessionFactory.openSession()) {
+                session.beginTransaction();
+                session.merge(job);
+                session.getTransaction().commit();
+    
+            } catch (HibernateException ex) {
+                logger.error(ex);
+                throw new DAOException(ex);
+            }
         }
     }
 
     @Override
     public void remove(Job job) throws DAOException {
+        synchronized (sessionFactory) {
+            try (Session session = sessionFactory.openSession()) {
+                session.beginTransaction();
+                session.remove(job);
+                session.getTransaction().commit();
 
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.remove(job);
-            session.getTransaction().commit();
-
-        } catch (HibernateException ex) {
-            logger.error(ex);
-            throw new DAOException(ex);
+            } catch (HibernateException ex) {
+                logger.error(ex);
+                throw new DAOException(ex);
+           }
         }
     }
 
@@ -338,5 +342,21 @@ public class JobData implements JobDAO {
         }
     }
 
+    @Override
+    public List<Job> getByFileName(String filename) throws DAOException {
 
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            List<Job> list = session.createNamedQuery("Job.getJobsByFileName", Job.class)
+                    .setParameter("fileName", filename)
+                    .list();
+            session.getTransaction().commit();
+
+            return list;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
 }
