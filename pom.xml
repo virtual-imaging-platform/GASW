@@ -59,6 +59,32 @@
               <artifactId>maven-surefire-plugin</artifactId>
               <version>3.5.1</version>
             </plugin>
+
+            <plugin>
+                <groupId>dev.dimlight</groupId>
+                <artifactId>shellcheck-maven-plugin</artifactId>
+                <version>0.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>
+                                    <directory>${project.basedir}/src/main/resources</directory>
+                                    <includes>
+                                        <include>script.sh</include>
+                                    </includes>
+                                </sourceDir>
+                            </sourceDirs>
+                            <failBuildIfWarnings>true</failBuildIfWarnings>
+                            <binaryResolutionMethod>embedded</binaryResolutionMethod>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

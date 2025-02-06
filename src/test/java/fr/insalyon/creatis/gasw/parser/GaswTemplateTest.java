@@ -299,4 +299,26 @@ class GaswTemplateTest {
         // Then
         assertEquals("file:/a/b/c/f_brain.out", output);
     }
+
+    @Test
+    @DisplayName("full template, Girder URI with strip extension")
+    public void fullTemplateGirderUriWithStripExtn() throws SAXException {
+        // Given
+        String template = "$prefix1$dir1/$na1/$na2.out$options1";
+        List<String> inputs = Arrays.asList("input1", "input2");
+        Set<String> stripExtensions= new HashSet<>();
+        stripExtensions.add(".nii");
+
+        List<GaswOutputTemplatePart> templateParts =
+                GaswParser.templateParts(template, inputs, stripExtensions);
+        Map<String, String> inputsMap = new HashMap<>();
+        // actual Girder query strings are of the form ?apiurl=https://host/main/api/v1&fileId=...&token=...
+        inputsMap.put("input1", "girder:/outputdir/results?fileId=5678");
+        inputsMap.put("input2", "girder:/inputdir/file.nii?fileId=1234");
+
+        // When
+        String output = GaswParser.parseOutputTemplate(templateParts, inputsMap);
+        // Then
+        assertEquals("girder:/outputdir/results/file.out?fileId=5678", output);
+    }
 }
