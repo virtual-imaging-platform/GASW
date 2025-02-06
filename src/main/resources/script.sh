@@ -1032,7 +1032,7 @@ EOF
       local upload_path="${uploadURI}/${file_name}"
 
       # Execute the upload command
-      upload "$upload_path" "$output_id" "$nrep" false
+      upload "$upload_path" "$output_id" "$nrep"
     done
   fi
 
