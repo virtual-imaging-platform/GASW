@@ -811,8 +811,7 @@ uploadGirderFile() {
 
 function upload {
     local URI="$1"
-    # shellcheck disable=SC2034
-    local ID="$2" # unused
+    local ID="$2"
     local NREP="$3"
     local TEST="$4"
     startLog file_upload id="$ID" uri="$URI"

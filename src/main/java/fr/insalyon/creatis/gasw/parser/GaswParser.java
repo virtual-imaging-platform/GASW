@@ -297,7 +297,7 @@ public class GaswParser extends DefaultHandler {
                 // lfn and the prefix is added.
                 URI valueURI = new URI(
                     GaswUtil.isUri(value) ? value : LFN_PREFIX + value);
-                uploads.add(new GaswUpload(valueURI, output.getReplicas()));
+                uploads.add(new GaswUpload(output.getName(), valueURI, output.getReplicas()));
                 param.append(new File(valueURI.getPath()).getName());
             }
 
