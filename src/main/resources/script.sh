@@ -715,7 +715,7 @@ function performExec {
   mkdir -p "$tmpfolder"
 
   # Extract imagepath
-  local boshopts=()
+  local boshopts=("--stream")
   local imagepath=$(python -c 'import sys,json;v=json.load(sys.stdin).get("custom",None);print(v.get("vip:imagepath","") if isinstance(v,dict) else "")' < "../$boutiquesFilename")
   if [ -n "$imagepath" ]; then
     boshopts+=("--imagepath" "$imagepath")
