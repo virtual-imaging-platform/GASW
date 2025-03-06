@@ -677,7 +677,7 @@ function performDownload {
   touch ../DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
 
   # Iterate over each URL in the 'downloads' array
-  for download in "${downloads[@]}"; do
+  for download in ${downloads}; do
     # Remove leading and trailing whitespace
     local download="$(echo -e "${download}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
     # Process the URL using downloadURI function
