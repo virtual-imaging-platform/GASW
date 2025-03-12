@@ -831,16 +831,16 @@ function uploadLfnFile {
     fi
     if [ ${error_code} = 0 ]; then
       info "Copy/Replication of ${LFN} to SE ${DEST} worked fine."
-    done=$((done + 1))
-    local duration=$(grep -P '^real[ \t]' dirac.log | sed -r 's/real[ \t]//')
-    info "UploadCommand=${command} Source=${source} Destination=${DEST} Size=${size} Time=${duration}"
-    if [ -z "${duration}" ]; then
-      info "Missing duration info, printing the whole log file."
-      cat dirac.log
-    fi
-  else
-    error "$(cat dirac.log)"
-    warning "Copy/Replication of ${LFN} to SE ${DEST} failed"
+      done=$((done + 1))
+      local duration=$(grep -P '^real[ \t]' dirac.log | sed -r 's/real[ \t]//')
+      info "UploadCommand=${command} Source=${source} Destination=${DEST} Size=${size} Time=${duration}"
+      if [ -z "${duration}" ]; then
+        info "Missing duration info, printing the whole log file."
+        cat dirac.log
+      fi
+    else
+      error "$(cat dirac.log)"
+      warning "Copy/Replication of ${LFN} to SE ${DEST} failed"
     fi
     rm dirac.log
     chooseRandomSE
