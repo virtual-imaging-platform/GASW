@@ -444,14 +444,15 @@ function downloadLFN {
 
   local totalTimeout=$((timeout + srmTimeout + sendReceiveTimeout))
 
-  local LINE="time -p dirac-dms-get-file -d -o /Resources/StorageElements/GFAL_TIMEOUT=${totalTimeout} ${LFN}"
+  local LINE="dirac-dms-get-file -d -o /Resources/StorageElements/GFAL_TIMEOUT=${totalTimeout} ${LFN}"
   info "$LINE"
+  local startDownload=$(date +%s)
   (${LINE}) &> get-file.log
 
   if [ $? = 0 ]; then
+    local duration=$(($(date +%s) - startDownload))
     info "dirac-dms-get-file worked fine"
     local source=$(grep "generating url" get-file.log | tail -1 | sed -r 's/^.* (.*)\.$/\1/')
-    local duration=$(grep -P '^real[ \t]' get-file.log | sed -r 's/real[ \t]//')
     info "DownloadCommand=dirac-dms-get-file Source=${source} Destination=$(hostname) Size=${size} Time=${duration}"
     RET_VAL=0
   else
@@ -820,27 +821,29 @@ function uploadLfnFile {
       local command="dirac-dms-add-file"
       local source=$(hostname)
       dirac-dms-remove-files "$OPTS" "$LFN" &>/dev/null
-      (time -p dirac-dms-add-file "$OPTS" "$LFN" "$FILE" "$DEST") &> dirac.log
+      local startUpload=$(date +%s)
+      (dirac-dms-add-file "$OPTS" "$LFN" "$FILE" "$DEST") &> dirac.log
       local error_code=$?
     else
       local command="dirac-dms-replicate-lfn"
-      (time -p dirac-dms-replicate-lfn -d "$OPTS" "$LFN" "$DEST") &> dirac.log
+      local startUpload=$(date +%s)
+      (dirac-dms-replicate-lfn -d "$OPTS" "$LFN" "$DEST") &> dirac.log
       local error_code=$?
 
       local source=$(grep "operation 'getFileSize'" dirac.log | tail -1 | sed -r 's/^.* StorageElement (.*) is .*$/\1/')
     fi
     if [ ${error_code} = 0 ]; then
       info "Copy/Replication of ${LFN} to SE ${DEST} worked fine."
-    done=$((done + 1))
-    local duration=$(grep -P '^real[ \t]' dirac.log | sed -r 's/real[ \t]//')
-    info "UploadCommand=${command} Source=${source} Destination=${DEST} Size=${size} Time=${duration}"
-    if [ -z "${duration}" ]; then
-      info "Missing duration info, printing the whole log file."
-      cat dirac.log
-    fi
-  else
-    error "$(cat dirac.log)"
-    warning "Copy/Replication of ${LFN} to SE ${DEST} failed"
+      done=$((done + 1))
+      local duration=$(($(date +%s) - startUpload))
+      info "UploadCommand=${command} Source=${source} Destination=${DEST} Size=${size} Time=${duration}"
+      if [ -z "${duration}" ]; then
+        info "Missing duration info, printing the whole log file."
+        cat dirac.log
+      fi
+    else
+      error "$(cat dirac.log)"
+      warning "Copy/Replication of ${LFN} to SE ${DEST} failed"
     fi
     rm dirac.log
     chooseRandomSE
