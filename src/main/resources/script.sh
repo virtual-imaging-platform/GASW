@@ -723,8 +723,9 @@ function performExec {
   local tmpfolder=$(mktemp -d -p "$PWD" "tmp-XXXXXX")
   mkdir -p "$tmpfolder"
 
-  # Extract imagepath
+  # Prepare bosh exec flags
   local boshopts=("--stream")
+  boshopts+=("--provenance" "{\"jobid\":\"$DIRNAME\"}")
   local imagepath=$(getJsonDepth2 "../$boutiquesFilename" "custom" "vip:imagepath")
   if [ -n "$imagepath" ]; then
     boshopts+=("--imagepath" "$imagepath")
@@ -971,6 +972,21 @@ function upload {
   stopLog file_upload
 }
 
+# getProvenanceFilename: get the provenance filename for a given jobid
+function getProvenanceFilename {
+  local targetjobid="$1"
+  # process most recent files first, stop at the first match
+  # shellcheck disable=SC2010
+  ls -t "$boutiquesProvenanceDir" | grep -v "^descriptor_" |
+    while read -r filename; do
+      local jobid=$(getJsonDepth2 "$boutiquesProvenanceDir/$filename" "additional-information" "jobid")
+      if [ "$jobid" = "$targetjobid" ]; then
+        echo "$filename"
+        break
+      fi
+    done
+}
+
 # copyProvenanceFile: copy the provenance file to a specified destination
 function copyProvenanceFile {
   local dest="$1"
@@ -979,8 +995,7 @@ function copyProvenanceFile {
     error "Boutiques cache dir $boutiquesProvenanceDir does not exist."
     return 1
   fi
-  # shellcheck disable=SC2010
-  local provenanceFile=$(ls -t "$boutiquesProvenanceDir" | grep -v "^descriptor_" | head -n 1)
+  local provenanceFile=$(getProvenanceFilename "$DIRNAME")
   if [[ -z "$provenanceFile" ]]; then
     error "No provenance found in boutiques cache $boutiquesProvenanceDir"
     return 2
