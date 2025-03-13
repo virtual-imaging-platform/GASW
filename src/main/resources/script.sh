@@ -1000,10 +1000,18 @@ function copyProvenanceFile {
     error "No provenance found in boutiques cache $boutiquesProvenanceDir"
     return 2
   fi
+  # found a provenance file for our job, get the related archived descriptor
   info "Found provenance file $boutiquesProvenanceDir/$provenanceFile"
-  info "Copying it to $dest"
+  local descriptorFile=$(getJsonDepth2 "$boutiquesProvenanceDir/$provenanceFile" "summary" "descriptor-doi")
+  # move the provenance file from boutiques cache
+  info "Moving it to $dest"
   cp "$boutiquesProvenanceDir/$provenanceFile" "$BASEDIR"
-  cp "$boutiquesProvenanceDir/$provenanceFile" "$dest"
+  mv "$boutiquesProvenanceDir/$provenanceFile" "$dest"
+  # also cleanup the archived descriptor, to avoid accumulation over time
+  if [ -e "$boutiquesProvenanceDir/$descriptorFile" ]; then
+    info "Cleaning up descriptor cache $descriptorFile"
+    rm -f "$boutiquesProvenanceDir/$descriptorFile"
+  fi
 }
 
 # performUpload: handle top-level upload step
