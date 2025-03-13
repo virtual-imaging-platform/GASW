@@ -93,6 +93,15 @@ function showHostConfig {
   stopLog host_config
 }
 
+# getJsonDepth2: get the value of key1.key2 from a json file.
+# Print output on stdout, blank when not found.
+function getJsonDepth2 {
+  local file="$1"
+  local key1="$2"
+  local key2="$3"
+  python -c 'import sys,json;v=json.load(sys.stdin).get("'"$key1"'",None);print(v.get("'"$key2"'","") if isinstance(v,dict) else "")' < "$file"
+}
+
 ## runtime tools installation
 
 # checkBosh: install bosh if needed, or make it available in PATH
@@ -704,7 +713,7 @@ function performExec {
 
   # Get execution tools
   checkBosh
-  local containerType=$(python -c 'import sys,json;v=json.load(sys.stdin).get("container-image",None);print(v.get("type","") if isinstance(v,dict) else "")' < "../$boutiquesFilename")
+  local containerType=$(getJsonDepth2 "../$boutiquesFilename" "container-image" "type")
   case "$containerType" in
     docker) checkDocker ;;
     singularity) checkSingularity ;;
@@ -716,7 +725,7 @@ function performExec {
 
   # Extract imagepath
   local boshopts=("--stream")
-  local imagepath=$(python -c 'import sys,json;v=json.load(sys.stdin).get("custom",None);print(v.get("vip:imagepath","") if isinstance(v,dict) else "")' < "../$boutiquesFilename")
+  local imagepath=$(getJsonDepth2 "../$boutiquesFilename" "custom" "vip:imagepath")
   if [ -n "$imagepath" ]; then
     boshopts+=("--imagepath" "$imagepath")
   fi
