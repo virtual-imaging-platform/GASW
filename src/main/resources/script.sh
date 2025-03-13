@@ -93,6 +93,15 @@ function showHostConfig {
   stopLog host_config
 }
 
+# getJsonDepth2: get the value of key1.key2 from a json file.
+# Print output on stdout, blank when not found.
+function getJsonDepth2 {
+  local file="$1"
+  local key1="$2"
+  local key2="$3"
+  python -c 'import sys,json;v=json.load(sys.stdin).get("'"$key1"'",None);print(v.get("'"$key2"'","") if isinstance(v,dict) else "")' < "$file"
+}
+
 ## runtime tools installation
 
 # checkBosh: install bosh if needed, or make it available in PATH
@@ -705,7 +714,7 @@ function performExec {
 
   # Get execution tools
   checkBosh
-  local containerType=$(python -c 'import sys,json;v=json.load(sys.stdin).get("container-image",None);print(v.get("type","") if isinstance(v,dict) else "")' < "../$boutiquesFilename")
+  local containerType=$(getJsonDepth2 "../$boutiquesFilename" "container-image" "type")
   case "$containerType" in
     docker) checkDocker ;;
     singularity) checkSingularity ;;
@@ -715,9 +724,10 @@ function performExec {
   local tmpfolder=$(mktemp -d -p "$PWD" "tmp-XXXXXX")
   mkdir -p "$tmpfolder"
 
-  # Extract imagepath
+  # Prepare bosh exec flags
   local boshopts=("--stream")
-  local imagepath=$(python -c 'import sys,json;v=json.load(sys.stdin).get("custom",None);print(v.get("vip:imagepath","") if isinstance(v,dict) else "")' < "../$boutiquesFilename")
+  boshopts+=("--provenance" "{\"jobid\":\"$DIRNAME\"}")
+  local imagepath=$(getJsonDepth2 "../$boutiquesFilename" "custom" "vip:imagepath")
   if [ -n "$imagepath" ]; then
     boshopts+=("--imagepath" "$imagepath")
   fi
@@ -965,6 +975,21 @@ function upload {
   stopLog file_upload
 }
 
+# getProvenanceFilename: get the provenance filename for a given jobid
+function getProvenanceFilename {
+  local targetjobid="$1"
+  # process most recent files first, stop at the first match
+  # shellcheck disable=SC2010
+  ls -t "$boutiquesProvenanceDir" | grep -v "^descriptor_" |
+    while read -r filename; do
+      local jobid=$(getJsonDepth2 "$boutiquesProvenanceDir/$filename" "additional-information" "jobid")
+      if [ "$jobid" = "$targetjobid" ]; then
+        echo "$filename"
+        break
+      fi
+    done
+}
+
 # copyProvenanceFile: copy the provenance file to a specified destination
 function copyProvenanceFile {
   local dest="$1"
@@ -973,16 +998,23 @@ function copyProvenanceFile {
     error "Boutiques cache dir $boutiquesProvenanceDir does not exist."
     return 1
   fi
-  # shellcheck disable=SC2010
-  local provenanceFile=$(ls -t "$boutiquesProvenanceDir" | grep -v "^descriptor_" | head -n 1)
+  local provenanceFile=$(getProvenanceFilename "$DIRNAME")
   if [[ -z "$provenanceFile" ]]; then
     error "No provenance found in boutiques cache $boutiquesProvenanceDir"
     return 2
   fi
+  # found a provenance file for our job, get the related archived descriptor
   info "Found provenance file $boutiquesProvenanceDir/$provenanceFile"
-  info "Copying it to $dest"
+  local descriptorFile=$(getJsonDepth2 "$boutiquesProvenanceDir/$provenanceFile" "summary" "descriptor-doi")
+  # move the provenance file from boutiques cache
+  info "Moving it to $dest"
   cp "$boutiquesProvenanceDir/$provenanceFile" "$BASEDIR"
-  cp "$boutiquesProvenanceDir/$provenanceFile" "$dest"
+  mv "$boutiquesProvenanceDir/$provenanceFile" "$dest"
+  # also cleanup the archived descriptor, to avoid accumulation over time
+  if [ -e "$boutiquesProvenanceDir/$descriptorFile" ]; then
+    info "Cleaning up descriptor cache $descriptorFile"
+    rm -f "$boutiquesProvenanceDir/$descriptorFile"
+  fi
 }
 
 # performUpload: handle top-level upload step
