@@ -600,8 +600,8 @@ function downloadShanoirFile {
     exit 1
   fi
 
-  if [[ $format = "nii" ]]; then
-    echo "its a nifti, shanoir has zipped it"
+  if [[ $format = "zipped_nii" ]]; then
+    echo "its a zipped nifti, it will be automatically unzipped"
     local TMP_UNZIP_DIR="tmp_unzip_dir"
     mkdir $TMP_UNZIP_DIR
     mv "$fileName" "$TMP_UNZIP_DIR/tmp.zip"
