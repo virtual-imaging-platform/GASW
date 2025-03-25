@@ -878,24 +878,26 @@ function uploadLfnFile {
 # This method depends on refresh token process to refresh the token when it needs
 function uploadShanoirFile {
   local URI="$1"
+  local FILENAME="$2"
 
   wait_for_token
 
   local token=$(cat "$SHANOIR_TOKEN_LOCATION")
 
   local upload_url=$(echo "$URI" | sed -r 's/^.*[?&]upload_url=([^&]*)(&.*)?$/\1/i')
-  local fileName=$(echo "$URI" | sed -r 's#^shanoir:/(//)?(.*/(.+))\?.*$#\3#i')
   local filePath=$(echo "$URI" | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i')
 
   local type=$(echo "$URI" | sed -r 's/^.*[?&]type=([^&]*)(&.*)?$/\1/i')
   local md5=$(echo "$URI" | sed -r 's/^.*[?&]md5=([^&]*)(&.*)?$/\1/i')
 
   COMMAND() {
-    (echo -n '{"base64Content": "'; base64 "$fileName"; echo '", "type":"'; echo "$type"; echo '", "md5":"'; echo "$md5" ; echo '"}') | curl --write-out '%{http_code}' --request PUT "$upload_url/$filePath"  --header "Authorization: Bearer $token"  --header "Content-Type: application/carmin+json" --header 'Accept: application/json, text/plain, */*' -d @-
+    (echo -n '{"base64Content": "'; base64 "$FILENAME"; echo '", "type":"'; echo "$type"; echo '", "md5":"'; echo "$md5" ; echo '"}') | curl --output shanoir_upload_response.json --write-out '%{http_code}' --request PUT "$upload_url/$filePath"  --header "Authorization: Bearer $token"  --header "Content-Type: application/carmin+json" --header 'Accept: application/json, text/plain, */*' -d @-
   }
 
   status_code=$(COMMAND)
-  echo "uploadShanoirFIle, status code is : ${status_code}"
+  echo "uploadShanoirFile, status code is : ${status_code}"
+  echo "uploadShanoirFile, response is : $(cat shanoir_upload_response.json)"
+  rm -f shanoir_upload_response.json
 
   if [[ "$status_code" -ne 201 ]]; then
     error "error while uploading the file with status : ${status_code}"
@@ -913,15 +915,15 @@ function uploadShanoirFile {
 # changes should be done the same in both functions.
 function uploadGirderFile {
   local URI="$1"
+  local FILENAME="$2"
 
-  local fileName=$(echo "$URI" | sed -r 's#^girder:/(//)?(.*/)?([^/].*)\?.*$#\3#i')
   local apiUrl=$(echo "$URI" | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i')
   local fileId=$(echo "$URI" | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i')
   local token=$(echo "$URI" | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i')
 
   checkGirderClient
 
-  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${fileId} ./${fileName}"
+  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${fileId} ./${FILENAME}"
   echo "uploadGirderFile, command line is ${COMMLINE}"
   ${COMMLINE}
   if [ $? != 0 ]; then
@@ -933,32 +935,33 @@ function uploadGirderFile {
 
 # upload: upload a file to various URI schemes
 function upload {
-  local URI="$1"
-  local ID="$2"
-  local NREP="$3"
-  startLog file_upload id="$ID" uri="$URI"
+  local RES_DIR_URI="$1"
+  local FILENAME="$2"
+  local ID="$3"
+  local NREP="$4"
+  startLog file_upload id="$ID" uri="$RES_DIR_LFN/$FILENAME"
 
   # The pattern must NOT be put between quotation marks.
-  if [[ ${URI} == shanoir:/* ]]; then
+  if [[ ${RES_DIR_URI} == shanoir:/* ]]; then
     if [ "$REFRESHING_JOB_STARTED" == false ]; then
-      refresh_token "$URI" &
+      refresh_token "$RES_DIR_URI" &
       REFRESH_PID=$!
       REFRESHING_JOB_STARTED=true
     fi
-    uploadShanoirFile "$URI"
-  elif [[ ${URI} == girder:/* ]]; then
-    uploadGirderFile "$URI"
-  elif [[ ${URI} == file:/* ]]; then
-    local FILENAME=$(echo "$URI" | sed 's%file://*%/%')
-    local NAME=$(basename "$FILENAME")
+    uploadShanoirFile "$RES_DIR_URI" "$FILENAME"
+  elif [[ ${RES_DIR_URI} == girder:/* ]]; then
+    uploadGirderFile "$RES_DIR_URI" "$FILENAME"
+  elif [[ ${RES_DIR_URI} == file:/* ]]; then
+    local RES_DIR=$(echo "$RES_DIR_URI" | sed 's%file://*%/%')
+    local DEST="${RES_DIR}/${FILENAME}"
 
-    if [ -e "$FILENAME" ]; then
-      error "Result file already exists: $FILENAME"
+    if [ -e "$DEST" ]; then
+      error "Result file already exists: $DEST"
       error "Exiting with return value 1"
       exit 1
     fi
 
-    mv "$NAME" "$FILENAME"
+    mv "$FILENAME" "$DEST"
     if [ $? != 0 ]; then
       error "Error while moving result local file."
       error "Exiting with return value 1"
@@ -966,10 +969,9 @@ function upload {
     fi
   else
     # Extract the path part from the uri.
-    local LFN=$(echo "${URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%')
-    local NAME=${LFN##*/}
+    local RES_DIR_LFN=$(echo "${RES_DIR_URI}" | sed -r 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%')
 
-    uploadLfnFile "$LFN" "$PWD/$NAME" "$NREP"
+    uploadLfnFile "$RES_DIR_LFN/$FILENAME" "$PWD/$FILENAME" "$NREP"
   fi
 
   stopLog file_upload
@@ -1063,11 +1065,8 @@ EOF
       output_id="${output%%::*}"
       file_name="${output#*::}"
 
-      # Define the upload path
-      local upload_path="${uploadURI}/${file_name}"
-
       # Execute the upload command
-      upload "$upload_path" "$output_id" "$nrep"
+      upload "${uploadURI}" "${file_name}" "$output_id" "$nrep"
     done
   fi
 
@@ -1083,7 +1082,7 @@ function delete {
   startLog file_delete uri="${URI}"
 
   # The pattern must NOT be put between quotation marks.
-  if [[ ${URI_LOWER} == lfn* ]] || [[ $URI_LOWER == /* ]]; then
+  if [[ ${URI} == lfn* ]] || [[ URI == /* ]]; then
     # Extract the path part from the uri, and sanitize it.
     # "//" are not accepted by dirac commands.
     local LFN=$(echo "${URI}" | sed -r -e 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%' -e 's#//#/#g')
@@ -1105,20 +1104,18 @@ function delete {
 # testUpload: check that upload works, and remove our traces
 function testUpload {
   local filename="uploadTest_$(basename "$PWD")"
-  local URI="$uploadURI/$filename"
-  local URI_LOWER=$(echo "$URI" | awk '{print tolower($0)}')
 
   # upload_test is only done on Dirac, to avoid running the whole execution
   # if we don't have a reliable way of uploading the result.
   # This assumes that the "upload" function exits on error.
-  if [[ ${URI_LOWER} == lfn* ]] || [[ $URI_LOWER == /* ]]; then
+  if [[ ${uploadURI} == lfn* ]] || [[ $uploadURI == /* ]]; then
     startLog upload_test
     if [ -f "$cacheDir/uploadChecked" ]; then
       info "Skipping upload test (it has already been done by a previous job)"
     else
       echo "test result" > "$filename"
-      upload "$URI" "" 1
-      delete "$URI"
+      upload "$uploadURI" "$filename" "" 1
+      delete "$uploadURI/$filename"
       rm -f "$filename"
       touch "$cacheDir/uploadChecked"
     fi
