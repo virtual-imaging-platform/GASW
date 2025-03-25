@@ -1082,7 +1082,7 @@ function delete {
   startLog file_delete uri="${URI}"
 
   # The pattern must NOT be put between quotation marks.
-  if [[ ${URI} == lfn* ]] || [[ URI == /* ]]; then
+  if [[ ${URI} == lfn* ]] || [[ ${URI} == /* ]]; then
     # Extract the path part from the uri, and sanitize it.
     # "//" are not accepted by dirac commands.
     local LFN=$(echo "${URI}" | sed -r -e 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%' -e 's#//#/#g')
