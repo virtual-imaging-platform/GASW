@@ -939,6 +939,9 @@ function upload {
   local FILENAME="$2"
   local ID="$3"
   local NREP="$4"
+  # TODO : this uri log is not perfect as it well append the filename at the end of a
+  # complex shanoir or girder uri (after the "?" arguments) which makes no real sense.
+  # It makes no harm as it is then parsed and only displayed
   startLog file_upload id="$ID" uri="$RES_DIR_LFN/$FILENAME"
 
   # The pattern must NOT be put between quotation marks.
