@@ -942,7 +942,7 @@ function upload {
   # TODO : this uri log is not perfect as it well append the filename at the end of a
   # complex shanoir or girder uri (after the "?" arguments) which makes no real sense.
   # It makes no harm as it is then parsed and only displayed
-  startLog file_upload id="$ID" uri="$RES_DIR_LFN/$FILENAME"
+  startLog file_upload id="$ID" uri="$RES_DIR_URI/$FILENAME"
 
   # The pattern must NOT be put between quotation marks.
   if [[ ${RES_DIR_URI} == shanoir:/* ]]; then
