@@ -873,7 +873,7 @@ function uploadLfnFile {
 # This method is used to upload results of an execution to an upload url.
 # URI are of the form of the following example.  A single "/", instead
 # of 3, after "shanoir:" is also allowed.
-# shanoir:/path/to/file/filename?upload_url=https://upload/url/&type=File&md5=None
+# shanoir:/path/to/folder?upload_url=https://upload/url/&type=File&md5=None
 #
 # This method depends on refresh token process to refresh the token when it needs
 function uploadShanoirFile {
@@ -885,13 +885,13 @@ function uploadShanoirFile {
   local token=$(cat "$SHANOIR_TOKEN_LOCATION")
 
   local upload_url=$(echo "$URI" | sed -r 's/^.*[?&]upload_url=([^&]*)(&.*)?$/\1/i')
-  local filePath=$(echo "$URI" | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i')
+  local directoryPath=$(echo "$URI" | sed -r 's#^shanoir:/(//)?([^/].*)\?.*$#\2#i')
 
   local type=$(echo "$URI" | sed -r 's/^.*[?&]type=([^&]*)(&.*)?$/\1/i')
   local md5=$(echo "$URI" | sed -r 's/^.*[?&]md5=([^&]*)(&.*)?$/\1/i')
 
   COMMAND() {
-    (echo -n '{"base64Content": "'; base64 "$FILENAME"; echo '", "type":"'; echo "$type"; echo '", "md5":"'; echo "$md5" ; echo '"}') | curl --output shanoir_upload_response.json --write-out '%{http_code}' --request PUT "$upload_url/$filePath"  --header "Authorization: Bearer $token"  --header "Content-Type: application/carmin+json" --header 'Accept: application/json, text/plain, */*' -d @-
+    (echo -n '{"base64Content": "'; base64 "$FILENAME"; echo '", "type":"'; echo "$type"; echo '", "md5":"'; echo "$md5" ; echo '"}') | curl --output shanoir_upload_response.json --write-out '%{http_code}' --request PUT "$upload_url/$directoryPath/$FILENAME"  --header "Authorization: Bearer $token"  --header "Content-Type: application/carmin+json" --header 'Accept: application/json, text/plain, */*' -d @-
   }
 
   status_code=$(COMMAND)
