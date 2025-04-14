@@ -364,11 +364,12 @@ function refresh_token {
     }
 
     local refresh_response=$(COMMAND)
+    local exit_code=$?
     local status_code=$(echo "$refresh_response" | grep -o '"status":"[^"]*' | grep -o '[^"]*$')
 
-    if [[ "$status_code" -ne 200 ]]; then
+    if ! [[ "$exit_code" -eq 0 && "$status_code" -eq 200 ]]; then
       local error_message=$(echo "$refresh_response" | grep -o '"error_description":"[^"]*' | grep -o '[^"]*$')
-      error "error while refreshing the token with status : ${status_code} and message error : ${error_message}"
+      error "error while refreshing the token: exit=${exit_code}, status=${status_code}, message: ${error_message}"
       exit 1
     fi
 
@@ -581,11 +582,12 @@ function downloadShanoirFile {
   local attempts=0
 
   while [[ "${attempts}" -ne 3 ]]; do
-    status_code=$(COMMAND)
-    info "downloadShanoirFIle, status code is : ${status_code}"
+    local status_code=$(COMMAND)
+    local exit_code=$?
+    info "downloadShanoirFile, exit code is : ${exit_code}, status code is : ${status_code}"
 
-    if [[ "$status_code" -ne 200 ]]; then
-      error "error while downloading the file with status : ${status_code}"
+    if ! [[ "$exit_code" -eq 0 && "$status_code" -eq 200 ]]; then
+      error "error while downloading the file: exit=${exit_code}, status=${status_code}"
       attempts=$((attempts + 1))
       info "${attempts} done. Waiting 3 seconds and maybe do another attempt"
       sleep 3
@@ -894,13 +896,14 @@ function uploadShanoirFile {
     (echo -n '{"base64Content": "'; base64 "$FILENAME"; echo '", "type":"'; echo "$type"; echo '", "md5":"'; echo "$md5" ; echo '"}') | curl --output shanoir_upload_response.json --write-out '%{http_code}' --request PUT "$upload_url/$directoryPath/$FILENAME"  --header "Authorization: Bearer $token"  --header "Content-Type: application/carmin+json" --header 'Accept: application/json, text/plain, */*' -d @-
   }
 
-  status_code=$(COMMAND)
-  echo "uploadShanoirFile, status code is : ${status_code}"
+  local status_code=$(COMMAND)
+  local exit_code=$?
+  echo "uploadShanoirFile, exit code is : ${exit_code}, status code is : ${status_code}"
   echo "uploadShanoirFile, response is : $(cat shanoir_upload_response.json)"
   rm -f shanoir_upload_response.json
 
-  if [[ "$status_code" -ne 201 ]]; then
-    error "error while uploading the file with status : ${status_code}"
+  if ! [[ "$exit_code" -eq 0 && "$status_code" -eq 201 ]]; then
+    error "error while uploading the file: exit=${exit_code}, status=${status_code}"
     stopRefreshingToken
     exit 1
   fi
