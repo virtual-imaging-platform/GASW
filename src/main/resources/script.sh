@@ -741,7 +741,7 @@ function performExec {
       singularity)
         boshopts+=("--force-singularity")
         # get image base name and tag from descriptor
-        local image=$(getJsonDepth2 "../$boutiquesFilename" "container-image" "image")
+        local image=$(basename "$(getJsonDepth2 "../$boutiquesFilename" "container-image" "image")")
         local imgname=$(echo "$image" | cut -d: -f1)
         local imgtag=$(echo "$image" | cut -d: -f2)
         if [ -z "$imgname" ] || [ -z "$imgtag" ]; then
