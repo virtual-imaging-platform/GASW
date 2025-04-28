@@ -25,6 +25,13 @@ sleep 1
 
 export LD_LIBRARY_PATH=${PWD}:${LD_LIBRARY_PATH}
 
+## Set HOME if not defined.
+## Also set APPTAINER_HOME, so that HOME is set inside singularity containers.
+if [ -z "${HOME}" ]; then
+  export HOME="${PWD}"
+  export APPTAINER_HOME="${PWD}:${PWD}"
+fi
+
 ## The command_line variable is an array to allow spaces in string inputs
 COMMAND_LINE=(./$executableName $parameters)
 
