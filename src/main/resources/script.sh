@@ -15,6 +15,13 @@ DIRNAME=$(basename "${0%.sh}")
 # Base directory
 BASEDIR="$PWD"
 
+# Set HOME if not defined.
+# Also set APPTAINER_HOME, so that HOME is set inside singularity containers.
+if [ -z "$HOME" ]; then
+  export HOME="$PWD"
+  export APPTAINER_HOME="$PWD:$PWD"
+fi
+
 # Names of the configuration and invocation files
 configurationFilename="$DIRNAME-configuration.sh"
 invocationJsonFilename="$DIRNAME-invocation.json"
