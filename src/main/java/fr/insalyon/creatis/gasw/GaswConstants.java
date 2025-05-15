@@ -65,6 +65,8 @@ public class GaswConstants {
     public static final String LAB_UDOCKER_TAG = "udocker.tag";
     public static final String LAB_BOUTIQUES_PROV_DIR = "boutiques.provenance.dir";
     public static final String LAB_BOUTIQUES_FILE_NAME = "boutiques.filename";
+    public static final String LAB_CONTAINERS_RUNTIME = "containers.runtime";
+    public static final String LAB_CONTAINERS_IMAGES_BASEPATH = "containers.images.basepath";
     // timeouts used in lcg-c*
     //public static final int SEND_RECEIVE_TIMEOUT = 900;
     public static final String LAB_MIN_AVG_DOWNLOAD_THROUGHPUT = "min.avg.download.throughput";

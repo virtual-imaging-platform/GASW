@@ -87,6 +87,8 @@ import fr.insalyon.creatis.gasw.execution.GaswMinorStatusServiceGenerator;
              config.put("boutiquesProvenanceDir", conf.getBoutiquesProvenanceDir());
              config.put("singularityPath", conf.getSingularityPath());
              config.put("containersCVMFSPath", conf.getContainersCVMFSPath());
+             config.put("containersRuntime", conf.getContainersRuntime());
+             config.put("containersImagesBasePath", conf.getContainersImagesBasePath());
              config.put("udockerTag", conf.getUdockerTag());
              config.put("simulationID", conf.getSimulationID());
              config.put("cacheDir", GaswConstants.CACHE_DIR);
