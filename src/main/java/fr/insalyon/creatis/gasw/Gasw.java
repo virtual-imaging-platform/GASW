@@ -124,19 +124,12 @@ public class Gasw {
      * @throws GaswException
      */
     public synchronized void terminate() throws GaswException {
+        notification.terminate();
 
-        try {
-            DAOFactory.getDAOFactory().close();
-            notification.terminate();
-
-            if (GaswConfiguration.getInstance().isFailOverEnabled()) {
-                FailOver.getInstance().terminate();
-            }
-
-            GaswConfiguration.getInstance().terminate();
-
-        } catch (DAOException ex) {
-            throw new GaswException(ex);
+        if (GaswConfiguration.getInstance().isFailOverEnabled()) {
+            FailOver.getInstance().terminate();
         }
+
+        GaswConfiguration.getInstance().terminate();
     }
 }
