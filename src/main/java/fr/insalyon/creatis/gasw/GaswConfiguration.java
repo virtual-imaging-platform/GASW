@@ -101,6 +101,9 @@ public class GaswConfiguration {
     private String udockerTag;
     private String boutiquesProvenanceDir;
     private String boutiquesFileName;
+    // Containers stuff
+    private String containersRuntime;
+    private String containersImagesBasePath;
     // Failover Server
     private boolean failOverEnabled;
     private String failOverHost;
@@ -176,6 +179,9 @@ public class GaswConfiguration {
             udockerTag = config.getString(GaswConstants.LAB_UDOCKER_TAG, "\"1.3.1\"");
             boutiquesProvenanceDir = config.getString(GaswConstants.LAB_BOUTIQUES_PROV_DIR, "\"$HOME/.cache/boutiques/data\"");
             boutiquesFileName = config.getString(GaswConstants.LAB_BOUTIQUES_FILE_NAME, "workflow.json");
+
+            containersRuntime = config.getString(GaswConstants.LAB_CONTAINERS_RUNTIME,"\"singularity\""); // docker / singularity. Should be provided by config
+            containersImagesBasePath = config.getString(GaswConstants.LAB_CONTAINERS_IMAGES_BASEPATH,"\"/cvmfs/biomed.egi.eu/vip/singularity\""); // path on singularity images. Should be provided by config
 
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
             failOverHost = config.getString(GaswConstants.LAB_FAILOVER_HOST, "localhost");
@@ -455,6 +461,14 @@ public class GaswConfiguration {
 
     public String getContainersCVMFSPath() {
         return containersCVMFSPath;
+    }
+
+    public String getContainersRuntime() {
+        return containersRuntime;
+    }
+
+    public String getContainersImagesBasePath() {
+        return containersImagesBasePath;
     }
 
     public String getUdockerTag() {
