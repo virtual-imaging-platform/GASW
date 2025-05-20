@@ -720,32 +720,39 @@ function performExec {
   echo "BEFORE_EXECUTION_REFERENCE" > BEFORE_EXECUTION_REFERENCE_FILE
   sleep 1
 
-  # Get execution tools
+  # Get bosh
   checkBosh
+
+  # Get containerType from the descriptor: it can be "docker", "singularity",
+  # or blank (i.e. no container). If $containerType is not blank, its value
+  # may still get overridden by $containersRuntime below.
   local containerType=$(getJsonDepth2 "../$boutiquesFilename" "container-image" "type")
-  case "$containerType" in
-    docker) checkDocker ;;
-    singularity) checkSingularity ;;
-  esac
 
   # Temporary directory for /tmp in containers
   local tmpfolder=$(mktemp -d -p "$PWD" "tmp-XXXXXX")
-  mkdir -p "$tmpfolder"
 
-  # Prepare bosh exec flags
+  # Common bosh exec flags
   local boshopts=("--stream")
   boshopts+=("--provenance" "{\"jobid\":\"$DIRNAME\"}")
+  boshopts+=("-v" "$PWD/../cache:$PWD/../cache")
+  boshopts+=("-v" "$tmpfolder:/tmp")
+
+  # Compute imagepath and select the real containerType
   local imagepath=
   if [ -z "$containersRuntime" ]; then
-    # Legacy mode: get imagepath and container runtime from the descriptor
+    # Legacy mode: get imagepath and container runtime from the descriptor,
+    # leave containerType unchanged
     imagepath=$(getJsonDepth2 "../$boutiquesFilename" "custom" "vip:imagepath")
-  else
+  elif [ -n "$containerType" ]; then
     # Dynamic resource mode: use $containersRuntime+$containersImagesBasePath
+    # Do nothing if have no "container-image" in the descriptor
     case "$containersRuntime" in
       docker)
+        containerType="docker"
         boshopts+=("--force-docker")
         ;;
       singularity)
+        containerType="singularity"
         boshopts+=("--force-singularity")
         # get image base name and tag from descriptor
         local image=$(basename "$(getJsonDepth2 "../$boutiquesFilename" "container-image" "image")")
@@ -771,8 +778,23 @@ function performExec {
   if [ -n "$imagepath" ]; then
     boshopts+=("--imagepath" "$imagepath")
   fi
-  boshopts+=("-v" "$PWD/../cache:$PWD/../cache")
-  boshopts+=("-v" "$tmpfolder:/tmp")
+
+  # $containerType now contains the real runtime, check it
+  case "$containerType" in
+    docker)
+      checkDocker
+      ;;
+    singularity)
+      checkSingularity
+      # Set an overlay dir to allow filesystem writes to any user-writable dir
+      # within the container. This overlay is a one-time use, and will be
+      # removed in cleanup(). Note that:
+      # . --container-opts requires bosh >=0.5.29
+      # . it overrides "container-opts" from the descriptor
+      local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
+      boshopts+=("--container-opts" "--overlay $overlayfolder")
+      ;;
+  esac
 
   # Execute the command
   info "Running bosh:" "$BOSHEXEC" exec launch "${boshopts[@]}" "../$boutiquesFilename" "../inv/$invocationJsonFilename"
