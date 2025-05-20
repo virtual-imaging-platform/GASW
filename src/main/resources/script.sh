@@ -786,9 +786,9 @@ function performExec {
       ;;
     singularity)
       checkSingularity
-      # With singularity, set an overlay dir to allow filesystem writes to
-      # any user-writable directory within the container. This directory is
-      # a one-time use, and will be removed in cleanup(). Note that:
+      # Set an overlay dir to allow filesystem writes to any user-writable dir
+      # within the container. This overlay is a one-time use, and will be
+      # removed in cleanup(). Note that:
       # . --container-opts requires bosh >=0.5.29
       # . it overrides "container-opts" from the descriptor
       local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
