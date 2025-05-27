@@ -736,6 +736,7 @@ function performExec {
   boshopts+=("--provenance" "{\"jobid\":\"$DIRNAME\"}")
   boshopts+=("-v" "$PWD/../cache:$PWD/../cache")
   boshopts+=("-v" "$tmpfolder:/tmp")
+  boshopts+=("-v" "$PWD/../inv/$invocationJsonFilename:$PWD/input_params.json")
 
   # Compute imagepath and select the real containerType
   local imagepath=
@@ -763,7 +764,7 @@ function performExec {
           exit 1
         fi
         # set imagepath
-        imagepath="$containersImagesBasePath/${imgname}_${imgtag}"
+        imagepath="$containersImagesBasePath/${imgname}-${imgtag}"
         if ! [ -e "$imagepath" ]; then
           error "Image file not found: $imagepath"
           exit 1
