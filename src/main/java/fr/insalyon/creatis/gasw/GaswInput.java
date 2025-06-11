@@ -34,9 +34,7 @@ package fr.insalyon.creatis.gasw;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -49,42 +47,24 @@ public class GaswInput {
     private List<URI> downloads;
     private List<GaswUpload> uploads;
     private URI uploadURI;
-    private Map<String, String> gaswVariables;
-    private Map<String, String> envVariables;
     private String invocationString;
     private String jobId;
     private String applicationName;
-    private Boolean moteurLiteEnabled = false;
 
     /**
      * @param executableName Name of the executable file.
      * @param parameters     List of parameters associated with the command.
      * @param downloads      List of input files to be downloaded in the worker node.
      * @param uploads        List of output files to be uploaded to a Storage Element.
-     * @param gaswVariables  Map of GASW variables.
-     * @param envVariables   Map of environment variables.
      */
-
     public GaswInput(String executableName, List<String> parameters,
-            List<URI> downloads, List<GaswUpload> uploads,
-            Map<String, String> gaswVariables, Map<String, String> envVariables) {
+            List<URI> downloads, List<GaswUpload> uploads) {
 
         this.executableName = executableName;
         this.parameters = parameters;
         this.downloads = downloads;
         this.uploads = uploads;
-        this.gaswVariables = gaswVariables;
-        this.envVariables = envVariables;
     }
-
- /**
- * @param applicationName Name of the application.
- * @param executableName Name of the executable file.
- * @param downloads List of input files to be downloaded in the worker node.
- * @param uploadURI URI for the output file upload destination.
- * @param invocationString String representation of the invocation.
- * @param jobId Job ID.
- */
 
     public GaswInput(String applicationName, String executableName, List<URI> downloads,
             URI uploadURI, String invocationString, String jobId) {
@@ -95,61 +75,23 @@ public class GaswInput {
         this.invocationString = invocationString;
         this.jobId = jobId;
         this.applicationName = applicationName;
-        this.moteurLiteEnabled = true;
         this.parameters = new ArrayList<>();
-        this.gaswVariables = new HashMap<>();
-        this.envVariables = new HashMap<>();
     }
 
-    /**
-     * Adds a parameter to the list of parameters.
-     *
-     * @param param Parameter
-     */
     public void addParameter(String param) {
         this.parameters.add(param);
     }
 
-    /**
-     * Adds an URI to the list of URIs to be downloaded.
-     *
-     * @param download URI
-     */
     public void addDownload(URI download) {
         this.downloads.add(download);
     }
 
-    /**
-     * Adds an URI to the list of URIs to be uploaded.
-     *
-     * @param upload URI
-     */
     public void addUpload(GaswUpload upload) {
         this.uploads.add(upload);
     }
 
     public void setUploadURI(URI uploadURI) {
         this.uploadURI = uploadURI;
-    }
-
-    /**
-     * Adds a GASW variable to the request.
-     *
-     * @param key
-     * @param value
-     */
-    public void addGaswVariable(String key, String value) {
-        gaswVariables.put(key, value);
-    }
-
-    /**
-     * Adds an environment variable to be set on job execution.
-     *
-     * @param key
-     * @param value
-     */
-    public void addEnvVariable(String key, String value) {
-        envVariables.put(key, value);
     }
 
     public List<URI> getDownloads() {
@@ -172,14 +114,6 @@ public class GaswInput {
         return executableName;
     }
 
-    public String getGaswVariable(String key) {
-        return gaswVariables.get(key);
-    }
-
-    public Map<String, String> getEnvVariables() {
-        return envVariables;
-    }
-
     public String getInvocationString() {
         return invocationString;
     }
@@ -190,9 +124,5 @@ public class GaswInput {
 
     public String getApplicationName(){
         return applicationName;
-    }
-
-    public Boolean isMoteurLiteEnabled(){
-        return moteurLiteEnabled;
     }
 }
