@@ -50,12 +50,7 @@ import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.script.MoteurliteConfigGenerator;
-import fr.insalyon.creatis.gasw.script.ScriptGenerator;
 
-/**
- *
- * @author Rafael Ferreira da Silva
- */
 public abstract class GaswSubmit {
 
     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
@@ -64,12 +59,7 @@ public abstract class GaswSubmit {
     protected String jdlName;
     protected GaswMinorStatusServiceGenerator minorStatusServiceGenerator;
 
-    /**
-     *
-     * @param gaswInput
-     * @param minorStatusServiceGenerator
-     * @throws GaswException
-     */
+
     public GaswSubmit(GaswInput gaswInput, GaswMinorStatusServiceGenerator minorStatusServiceGenerator)
             throws GaswException {
 
@@ -79,46 +69,26 @@ public abstract class GaswSubmit {
         if (GaswConfiguration.getInstance().isFailOverEnabled()) {
             FailOver.getInstance().addData(gaswInput.getDownloads());
         }
-        logger.info("moteurlite status: " + gaswInput.isMoteurLiteEnabled());
     }
 
-    /**
-     * Submits a job to a grid or local execution.
-     *
-     * @return Job ID
-     * @throws GaswException
-     */
     public abstract String submit() throws GaswException;
 
-    /**
-     * Generates job script.
-     *
-     * @return
-     * @throws GaswException
-     */
     protected String generateScript() throws GaswException {
         try {
             String scriptName;
 
-            if (gaswInput.isMoteurLiteEnabled()) {
-                // Logic for Moteurlite-specific script generation
-                logger.info("MoteurLite is enabled, generating Moteurlite-specific script.");
-                
-                // Generate the Moteurlite-specific configuration
-                Map<String, String> configMoteurlite = MoteurliteConfigGenerator.getInstance().generateConfig(gaswInput, minorStatusServiceGenerator);
-                
-                // Publish the configuration and invocation
-                publishConfiguration(gaswInput.getJobId(), configMoteurlite);
-                publishInvocation(gaswInput.getJobId(), gaswInput.getInvocationString());
-                
-                // Publish the script itself
-                scriptName = publishMoteurLiteScript();
-
-            } else {
-                // Original default behavior (when Moteurlite is not enabled)
-                String defaultScript = ScriptGenerator.getInstance().generateScript(gaswInput, minorStatusServiceGenerator);
-                scriptName = publishOldScript(gaswInput.getExecutableName(), defaultScript);
-            }
+            // Logic for Moteurlite-specific script generation
+            logger.info("MoteurLite is enabled, generating Moteurlite-specific script.");
+            
+            // Generate the Moteurlite-specific configuration
+            Map<String, String> configMoteurlite = MoteurliteConfigGenerator.getInstance().generateConfig(gaswInput, minorStatusServiceGenerator);
+            
+            // Publish the configuration and invocation
+            publishConfiguration(gaswInput.getJobId(), configMoteurlite);
+            publishInvocation(gaswInput.getJobId(), gaswInput.getInvocationString());
+            
+            // Publish the script itself
+            scriptName = publishMoteurLiteScript();
     
             return scriptName;
             
@@ -128,18 +98,6 @@ public abstract class GaswSubmit {
         }
     }
 
-    private String publishOldScript(String symbolicName, String script) throws IOException {
-        String fileName = null;
-    
-        prepareScriptDir();
-
-        // If MoteurLite is not enabled, generate the script name with a timestamp
-        fileName = symbolicName.replace(" ", "-");
-        fileName += "-" + System.nanoTime() + ".sh";
-        writeToFile(GaswConstants.SCRIPT_ROOT + "/" + fileName, script);
-        
-        return fileName;
-    }
     private String publishMoteurLiteScript() throws IOException, GaswException {
         prepareScriptDir();
     
