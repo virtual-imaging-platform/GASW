@@ -33,31 +33,15 @@
 package fr.insalyon.creatis.gasw.execution;
 
 import fr.insalyon.creatis.gasw.GaswConfiguration;
-import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
 
-/**
- *
- * @author Rafael Ferreira da Silva
- */
 public class ExecutorFactory {
 
-    /**
-     *
-     * @param executorName
-     * @return
-     * @throws GaswException
-     */
     public static ExecutorPlugin getExecutor(GaswInput gaswInput) throws GaswException {
 
         String executorName = GaswConfiguration.getInstance().getDefaultExecutor();
-
-        String variable = gaswInput.getGaswVariable(GaswConstants.ENV_EXECUTOR);
-        if (variable != null) {
-            executorName = variable;
-        }
 
         for (ExecutorPlugin executor : GaswConfiguration.getInstance().getExecutorPlugins()) {
             if (executor.getName().equalsIgnoreCase(executorName)) {
