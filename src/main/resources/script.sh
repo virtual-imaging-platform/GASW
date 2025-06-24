@@ -510,6 +510,7 @@ function downloadLFNdir {
     RET_VAL=1
   fi
 
+  rm get-dir.log
   return ${RET_VAL}
 }
 
