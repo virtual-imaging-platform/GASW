@@ -52,19 +52,15 @@ public class JobData implements JobDAO {
     private SessionFactory sessionFactory;
 
     public JobData(SessionFactory sessionFactory) {
-
         this.sessionFactory = sessionFactory;
     }
 
     @Override
     public void add(Job job) throws DAOException {
-
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            session.saveOrUpdate(job);
+            session.merge(job);
             session.getTransaction().commit();
-            session.close();
 
         } catch (HibernateException ex) {
             logger.error(ex);
@@ -72,49 +68,49 @@ public class JobData implements JobDAO {
         }
     }
 
+    /**
+     * Synchronized keyword for multi-threading context cause SQL Constraints violations issues
+     * due to unsynchronization of requests
+     */
     @Override
     public void update(Job job) throws DAOException {
-
-        try {
-            Session session = sessionFactory.openSession();
-            session.beginTransaction();
-            session.merge(job);
-            session.getTransaction().commit();
-            session.close();
-
-        } catch (HibernateException ex) {
-            logger.error(ex);
-            throw new DAOException(ex);
+        synchronized (sessionFactory) {
+            try (Session session = sessionFactory.openSession()) {
+                session.beginTransaction();
+                session.merge(job);
+                session.getTransaction().commit();
+    
+            } catch (HibernateException ex) {
+                logger.error(ex);
+                throw new DAOException(ex);
+            }
         }
     }
 
     @Override
     public void remove(Job job) throws DAOException {
+        synchronized (sessionFactory) {
+            try (Session session = sessionFactory.openSession()) {
+                session.beginTransaction();
+                session.remove(job);
+                session.getTransaction().commit();
 
-        try {
-            Session session = sessionFactory.openSession();
-            session.beginTransaction();
-            session.delete(job);
-            session.getTransaction().commit();
-            session.close();
-
-        } catch (HibernateException ex) {
-            logger.error(ex);
-            throw new DAOException(ex);
+            } catch (HibernateException ex) {
+                logger.error(ex);
+                throw new DAOException(ex);
+           }
         }
     }
 
     @Override
     public Job getJobByID(String id) throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            Job job = (Job) session.getNamedQuery("Job.findById")
-                    .setString("id", id)
+            Job job = session.createNamedQuery("Job.findById", Job.class)
+                    .setParameter("id", id)
                     .uniqueResult();
             session.getTransaction().commit();
-            session.close();
 
             return job;
 
@@ -127,19 +123,17 @@ public class JobData implements JobDAO {
     @Override
     public List<Job> getActiveJobs() throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            List<Job> list = (List<Job>) session.getNamedQuery("Job.getActive")
-                    .setString("submitted", GaswStatus.SUCCESSFULLY_SUBMITTED.name())
-                    .setString("queued", GaswStatus.QUEUED.name())
-                    .setString("running", GaswStatus.RUNNING.name())
-                    .setString("kill", GaswStatus.KILL.name())
-                    .setString("replicate", GaswStatus.REPLICATE.name())
-                    .setString("reschedule", GaswStatus.RESCHEDULE.name())
+            List<Job> list = session.createNamedQuery("Job.getActive", Job.class)
+                    .setParameter("submitted", GaswStatus.SUCCESSFULLY_SUBMITTED)
+                    .setParameter("queued", GaswStatus.QUEUED)
+                    .setParameter("running", GaswStatus.RUNNING)
+                    .setParameter("kill", GaswStatus.KILL)
+                    .setParameter("replicate", GaswStatus.REPLICATE)
+                    .setParameter("reschedule", GaswStatus.RESCHEDULE)
                     .list();
             session.getTransaction().commit();
-            session.close();
 
             return list;
 
@@ -152,13 +146,11 @@ public class JobData implements JobDAO {
     @Override
     public List<Job> getJobs(GaswStatus status) throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            List<Job> list = (List<Job>) session.getNamedQuery("Job.findByStatus")
-                    .setString("status", status.name()).list();
+            List<Job> list = session.createNamedQuery("Job.findByStatus", Job.class)
+                    .setParameter("status", status).list();
             session.getTransaction().commit();
-            session.close();
 
             return list;
 
@@ -171,15 +163,13 @@ public class JobData implements JobDAO {
     @Override
     public long getNumberOfCompletedJobsByInvocationID(int invocationID) throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            long completedJobs = (Long) session.getNamedQuery("Job.getCompletedJobsByInvocationID")
-                    .setInteger("invocationID", invocationID)
-                    .setString("completed", GaswStatus.COMPLETED.name())
+            long completedJobs = session.createNamedQuery("Job.getCompletedJobsByInvocationID", Long.class)
+                    .setParameter("invocationID", invocationID)
+                    .setParameter("completed", GaswStatus.COMPLETED)
                     .uniqueResult();
             session.getTransaction().commit();
-            session.close();
 
             return completedJobs;
 
@@ -192,20 +182,18 @@ public class JobData implements JobDAO {
     @Override
     public List<Job> getActiveJobsByInvocationID(int invocationID) throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            List<Job> list = (List<Job>) session.getNamedQuery("Job.findActiveByInvocationID")
-                    .setInteger("invocationID", invocationID)
-                    .setString("submitted", GaswStatus.SUCCESSFULLY_SUBMITTED.name())
-                    .setString("queued", GaswStatus.QUEUED.name())
-                    .setString("running", GaswStatus.RUNNING.name())
-                    .setString("kill", GaswStatus.KILL.name())
-                    .setString("replicate", GaswStatus.REPLICATE.name())
-                    .setString("reschedule", GaswStatus.RESCHEDULE.name())
+            List<Job> list = session.createNamedQuery("Job.findActiveByInvocationID", Job.class)
+                    .setParameter("invocationID", invocationID)
+                    .setParameter("submitted", GaswStatus.SUCCESSFULLY_SUBMITTED)
+                    .setParameter("queued", GaswStatus.QUEUED)
+                    .setParameter("running", GaswStatus.RUNNING)
+                    .setParameter("kill", GaswStatus.KILL)
+                    .setParameter("replicate", GaswStatus.REPLICATE)
+                    .setParameter("reschedule", GaswStatus.RESCHEDULE)
                     .list();
             session.getTransaction().commit();
-            session.close();
 
             return list;
 
@@ -218,18 +206,16 @@ public class JobData implements JobDAO {
     @Override
     public List<Job> getFailedJobsByInvocationID(int invocationID) throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            List<Job> list = (List<Job>) session.getNamedQuery("Job.findFailedByInvocationID")
-                    .setInteger("invocationID", invocationID)
-                    .setString("error", GaswStatus.ERROR.name())
-                    .setString("stalled", GaswStatus.STALLED.name())
-                    .setString("error_held", GaswStatus.ERROR_HELD.name())
-                    .setString("stalled_held", GaswStatus.STALLED_HELD.name())
+            List<Job> list = session.createNamedQuery("Job.findFailedByInvocationID", Job.class)
+                    .setParameter("invocationID", invocationID)
+                    .setParameter("error", GaswStatus.ERROR)
+                    .setParameter("stalled", GaswStatus.STALLED)
+                    .setParameter("error_held", GaswStatus.ERROR_HELD)
+                    .setParameter("stalled_held", GaswStatus.STALLED_HELD)
                     .list();
             session.getTransaction().commit();
-            session.close();
 
             return list;
 
@@ -242,18 +228,16 @@ public class JobData implements JobDAO {
     @Override
     public List<Job> getRunningByCommand(String command) throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            List<Job> list = (List<Job>) session.getNamedQuery("Job.getRunningByCommand")
-                    .setString("command", command)
-                    .setString("running", GaswStatus.RUNNING.name())
-                    .setString("kill", GaswStatus.KILL.name())
-                    .setString("replicate", GaswStatus.REPLICATE.name())
-                    .setString("reschedule", GaswStatus.RESCHEDULE.name())
+            List<Job> list = session.createNamedQuery("Job.getRunningByCommand", Job.class)
+                    .setParameter("command", command)
+                    .setParameter("running", GaswStatus.RUNNING)
+                    .setParameter("kill", GaswStatus.KILL)
+                    .setParameter("replicate", GaswStatus.REPLICATE)
+                    .setParameter("reschedule", GaswStatus.RESCHEDULE)
                     .list();
             session.getTransaction().commit();
-            session.close();
 
             return list;
 
@@ -266,15 +250,13 @@ public class JobData implements JobDAO {
     @Override
     public List<Job> getCompletedByCommand(String command) throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            List<Job> list = (List<Job>) session.getNamedQuery("Job.getCompletedByCommand")
-                    .setString("command", command)
-                    .setString("completed", GaswStatus.COMPLETED.name())
+            List<Job> list = session.createNamedQuery("Job.getCompletedByCommand", Job.class)
+                    .setParameter("command", command)
+                    .setParameter("completed", GaswStatus.COMPLETED)
                     .list();
             session.getTransaction().commit();
-            session.close();
 
             return list;
 
@@ -287,14 +269,12 @@ public class JobData implements JobDAO {
     @Override
     public List<Job> getByParameters(String parameters) throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            List<Job> list = (List<Job>) session.getNamedQuery("Job.findByParameters")
-                    .setString("parameters", parameters)
+            List<Job> list = session.createNamedQuery("Job.findByParameters", Job.class)
+                    .setParameter("parameters", parameters)
                     .list();
             session.getTransaction().commit();
-            session.close();
 
             return list;
 
@@ -307,18 +287,16 @@ public class JobData implements JobDAO {
     @Override
     public List<Job> getFailedByCommand(String command) throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            List<Job> list = (List<Job>) session.getNamedQuery("Job.getFailedByCommand")
-                    .setString("command", command)
-                    .setString("error", GaswStatus.ERROR.name())
-                    .setString("stalled", GaswStatus.STALLED.name())
-                    .setString("error_held", GaswStatus.ERROR_HELD.name())
-                    .setString("stalled_held", GaswStatus.STALLED_HELD.name())
+            List<Job> list = session.createNamedQuery("Job.getFailedByCommand", Job.class)
+                    .setParameter("command", command)
+                    .setParameter("error", GaswStatus.ERROR)
+                    .setParameter("stalled", GaswStatus.STALLED)
+                    .setParameter("error_held", GaswStatus.ERROR_HELD)
+                    .setParameter("stalled_held", GaswStatus.STALLED_HELD)
                     .list();
             session.getTransaction().commit();
-            session.close();
 
             return list;
 
@@ -331,14 +309,12 @@ public class JobData implements JobDAO {
     @Override
     public List<Job>  getJobsByCommand(String command) throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            List<Job> list = (List<Job>) session.getNamedQuery("Job.getJobsByCommand")
-                    .setString("command", command)
+            List<Job> list = session.createNamedQuery("Job.getJobsByCommand", Job.class)
+                    .setParameter("command", command)
                     .list();
             session.getTransaction().commit();
-            session.close();
 
             return list;
 
@@ -351,14 +327,12 @@ public class JobData implements JobDAO {
     @Override
     public List<Integer> getInvocationsByCommand(String command) throws DAOException {
 
-        try {
-            Session session = sessionFactory.openSession();
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            List<Integer> list = (List<Integer>) session.getNamedQuery("Job.getInvocationsByCommand")
-                    .setString("command", command)
+            List<Integer> list = session.createNamedQuery("Job.getInvocationsByCommand", Integer.class)
+                    .setParameter("command", command)
                     .list();
             session.getTransaction().commit();
-            session.close();
 
             return list;
 
@@ -368,5 +342,21 @@ public class JobData implements JobDAO {
         }
     }
 
+    @Override
+    public List<Job> getByFileName(String filename) throws DAOException {
 
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            List<Job> list = session.createNamedQuery("Job.getJobsByFileName", Job.class)
+                    .setParameter("fileName", filename)
+                    .list();
+            session.getTransaction().commit();
+
+            return list;
+
+        } catch (HibernateException ex) {
+            logger.error(ex);
+            throw new DAOException(ex);
+        }
+    }
 }

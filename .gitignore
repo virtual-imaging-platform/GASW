@@ -1,2 +1,7 @@
 /target
 .idea/
+.vscode/
+velocity.log
+out/
+err/
+conf/

@@ -47,4 +47,8 @@ public class GaswException extends Exception {
     public GaswException(String message) {
         super(message);
     }
+
+    public GaswException(String message, Exception e) {
+        super(message, e);
+    }
 }

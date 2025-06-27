@@ -32,8 +32,6 @@
  */
 package fr.insalyon.creatis.gasw;
 
-import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.execution.ExecutorFactory;
 import fr.insalyon.creatis.gasw.execution.FailOver;
 import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
@@ -124,19 +122,12 @@ public class Gasw {
      * @throws GaswException
      */
     public synchronized void terminate() throws GaswException {
+        notification.terminate();
 
-        try {
-            DAOFactory.getDAOFactory().close();
-            notification.terminate();
-
-            if (GaswConfiguration.getInstance().isFailOverEnabled()) {
-                FailOver.getInstance().terminate();
-            }
-
-            GaswConfiguration.getInstance().terminate();
-
-        } catch (DAOException ex) {
-            throw new GaswException(ex);
+        if (GaswConfiguration.getInstance().isFailOverEnabled()) {
+            FailOver.getInstance().terminate();
         }
+
+        GaswConfiguration.getInstance().terminate();
     }
 }

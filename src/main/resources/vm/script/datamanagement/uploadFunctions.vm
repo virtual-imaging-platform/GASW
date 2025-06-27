@@ -211,7 +211,7 @@ function upload {
     local NREP=$3
     local TEST=$4
 
-    startLog file_upload uri="${URI}"
+    startLog file_upload id="$ID" uri="$URI"
 
     ## The pattern must NOT be put between quotation marks.
     if [[ ${URI} == shanoir:/* ]]

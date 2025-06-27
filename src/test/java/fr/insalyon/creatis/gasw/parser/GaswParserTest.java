@@ -1,10 +1,8 @@
 package fr.insalyon.creatis.gasw.parser;
 
-import fr.insalyon.creatis.gasw.GaswException;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

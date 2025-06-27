@@ -60,11 +60,13 @@ public class GaswConstants {
     public static final String LAB_VO_NAME = "vo.name";
     public static final String LAB_VO_USE_CLOSE_SE = "vo.use.close.se";
     public static final String LAB_BOSH_CVMFS_PATH = "bosh.cvmfs.path";
-    public static final String LAB_APPTAINER_PATH = "apptainer.path";
+    public static final String LAB_SINGULARITY_PATH = "singularity.path";
     public static final String LAB_CONTAINERS_CVMFS_PATH = "containers.cvmfs.path";
     public static final String LAB_UDOCKER_TAG = "udocker.tag";
     public static final String LAB_BOUTIQUES_PROV_DIR = "boutiques.provenance.dir";
     public static final String LAB_BOUTIQUES_FILE_NAME = "boutiques.filename";
+    public static final String LAB_CONTAINERS_RUNTIME = "containers.runtime";
+    public static final String LAB_CONTAINERS_IMAGES_BASEPATH = "containers.images.basepath";
     // timeouts used in lcg-c*
     //public static final int SEND_RECEIVE_TIMEOUT = 900;
     public static final String LAB_MIN_AVG_DOWNLOAD_THROUGHPUT = "min.avg.download.throughput";

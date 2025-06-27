@@ -44,10 +44,16 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
 
+import fr.insalyon.creatis.gasw.bean.Data;
+import fr.insalyon.creatis.gasw.bean.DataToReplicate;
+import fr.insalyon.creatis.gasw.bean.Job;
+import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
+import fr.insalyon.creatis.gasw.bean.Node;
+import fr.insalyon.creatis.gasw.bean.NodeID;
 import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
 import fr.insalyon.creatis.gasw.bean.SEEntryPointID;
 import fr.insalyon.creatis.gasw.dao.DAOException;
@@ -90,11 +96,14 @@ public class GaswConfiguration {
     private String voUseCloseSE;
     // Boutiques installation
     private String boshCVMFSPath;
-    private String apptainerPath;
+    private String singularityPath;
     private String containersCVMFSPath;
     private String udockerTag;
     private String boutiquesProvenanceDir;
     private String boutiquesFileName;
+    // Containers stuff
+    private String containersRuntime;
+    private String containersImagesBasePath;
     // Failover Server
     private boolean failOverEnabled;
     private String failOverHost;
@@ -165,11 +174,14 @@ public class GaswConfiguration {
             voUseCloseSE = config.getString(GaswConstants.LAB_VO_USE_CLOSE_SE, "\"true\"");
 
             boshCVMFSPath = config.getString(GaswConstants.LAB_BOSH_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/virtualenv/bin\"");
-            apptainerPath = config.getString(GaswConstants.LAB_APPTAINER_PATH, "\"/cvmfs/dirac.egi.eu/container/apptainer/bin\"");
+            singularityPath = config.getString(GaswConstants.LAB_SINGULARITY_PATH, "\"/cvmfs/dirac.egi.eu/dirac/v8.0.39/Linux-x86_64/bin\"");
             containersCVMFSPath = config.getString(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, "\"/cvmfs/biomed.egi.eu/vip/udocker/containers\"");
             udockerTag = config.getString(GaswConstants.LAB_UDOCKER_TAG, "\"1.3.1\"");
             boutiquesProvenanceDir = config.getString(GaswConstants.LAB_BOUTIQUES_PROV_DIR, "\"$HOME/.cache/boutiques/data\"");
             boutiquesFileName = config.getString(GaswConstants.LAB_BOUTIQUES_FILE_NAME, "workflow.json");
+
+            containersRuntime = config.getString(GaswConstants.LAB_CONTAINERS_RUNTIME,"\"singularity\""); // docker / singularity. Should be provided by config
+            containersImagesBasePath = config.getString(GaswConstants.LAB_CONTAINERS_IMAGES_BASEPATH,"\"/cvmfs/biomed.egi.eu/vip/singularity\""); // path on singularity images. Should be provided by config
 
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
             failOverHost = config.getString(GaswConstants.LAB_FAILOVER_HOST, "localhost");
@@ -200,7 +212,7 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_VO_USE_CLOSE_SE, voUseCloseSE);
             
 	        config.setProperty(GaswConstants.LAB_BOSH_CVMFS_PATH, boshCVMFSPath);
-            config.setProperty(GaswConstants.LAB_APPTAINER_PATH, apptainerPath);
+            config.setProperty(GaswConstants.LAB_SINGULARITY_PATH, singularityPath);
             config.setProperty(GaswConstants.LAB_CONTAINERS_CVMFS_PATH, containersCVMFSPath);
             config.setProperty(GaswConstants.LAB_UDOCKER_TAG, udockerTag);
             config.setProperty(GaswConstants.LAB_BOUTIQUES_PROV_DIR, boutiquesProvenanceDir);
@@ -281,7 +293,18 @@ public class GaswConfiguration {
         cfg.setProperty("hibernate.dialect", dbPlugin.getHibernateDialect());
         cfg.setProperty("hibernate.connection.username", dbPlugin.getUserName());
         cfg.setProperty("hibernate.connection.password", dbPlugin.getPassword());
-
+        cfg.setProperty("hibernate.hbm2ddl.auto", "update");
+        cfg.setProperty("hibernate.show_sql", false);
+        cfg.setProperty("hibernate.format_sql", false);
+        cfg.addAnnotatedClass(Data.class);
+        cfg.addAnnotatedClass(DataToReplicate.class);
+        cfg.addAnnotatedClass(Job.class);
+        cfg.addAnnotatedClass(JobMinorStatus.class);
+        cfg.addAnnotatedClass(Node.class);
+        cfg.addAnnotatedClass(NodeID.class);
+        cfg.addAnnotatedClass(SEEntryPoint.class);
+        cfg.addAnnotatedClass(SEEntryPointID.class);
+        
         for (ExecutorPlugin executor : executorPlugins) {
             for (Class c : executor.getPersistentClasses()) {
                 cfg.addAnnotatedClass(c);
@@ -294,8 +317,7 @@ public class GaswConfiguration {
             listener.load();
         }
 
-        ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(cfg.getProperties()).buildServiceRegistry();
-        cfg.configure();
+        ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(cfg.getProperties()).build();
         sessionFactory = cfg.buildSessionFactory(serviceRegistry);
     }
 
@@ -425,10 +447,6 @@ public class GaswConfiguration {
         return boshCVMFSPath;
     }
 
-    public String getApptainerPath() {
-        return apptainerPath;
-    }
-
     public String getBoutiquesProvenanceDir() {
         return boutiquesProvenanceDir;
     }
@@ -437,8 +455,20 @@ public class GaswConfiguration {
         return boutiquesFileName;
     }
 
+    public String getSingularityPath() {
+        return singularityPath;
+    }
+
     public String getContainersCVMFSPath() {
         return containersCVMFSPath;
+    }
+
+    public String getContainersRuntime() {
+        return containersRuntime;
+    }
+
+    public String getContainersImagesBasePath() {
+        return containersImagesBasePath;
     }
 
     public String getUdockerTag() {
@@ -475,5 +505,9 @@ public class GaswConfiguration {
 
     public int getDefaultRetryCount() {
         return defaultRetryCount;
+    }
+
+    public void setDbPlugin(DatabasePlugin databasePlugin) {
+        dbPlugin = databasePlugin;
     }
 }

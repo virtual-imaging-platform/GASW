@@ -55,7 +55,7 @@ public abstract class GaswOutputParser extends Thread {
     protected BufferedWriter appStdOutWriter;
     protected BufferedWriter appStdErrWriter;
     protected List<Data> dataList;
-    protected List<URI> uploadedResults;
+    protected Map<String, URI> uploadedResults;
     protected StringBuilder inputsDownloadErrBuf;
     protected StringBuilder resultsUploadErrBuf;
     protected StringBuilder appStdOutBuf;
@@ -168,13 +168,10 @@ public abstract class GaswOutputParser extends Thread {
     protected abstract void resubmit() throws GaswException;
 
     /**
-     *
-     * @param stdOut Standard output file
-     * @return Exit code
+     * We use synchronized keyword in case of multiples jobs ending together (at the same time),
+     * it cause an issue if hibernate try to merge/add the same job inside the db
      */
     protected int parseStdOut(File stdOut) {
-
-
         int exitCode = -1;
 
         try {
@@ -259,22 +256,22 @@ public abstract class GaswOutputParser extends Thread {
                         }
 
                     } else if (line.startsWith("processor")) {
-                        node.setnCpus(new Integer(line.split(":")[1].trim()) + 1);
+                        node.setnCpus(Integer.parseInt(line.split(":")[1].trim()) + 1);
 
                     } else if (line.startsWith("model name")) {
                         node.setCpuModelName(line.split(":")[1].trim());
 
                     } else if (line.startsWith("cpu MHz")) {
-                        node.setCpuMhz(new Double(line.split(":")[1].trim()));
+                        node.setCpuMhz(Double.parseDouble(line.split(":")[1].trim()));
 
                     } else if (line.startsWith("cache size")) {
-                        node.setCpuCacheSize(new Integer(line.split(":")[1].trim().split(" ")[0]));
+                        node.setCpuCacheSize(Integer.parseInt(line.split(":")[1].trim().split(" ")[0]));
 
                     } else if (line.startsWith("bogomips")) {
-                        node.setCpuBogoMips(new Double(line.split(":")[1].trim()));
+                        node.setCpuBogoMips(Double.parseDouble(line.split(":")[1].trim()));
 
                     } else if (line.startsWith("MemTotal:")) {
-                        node.setMemTotal(new Integer(line.split("\\s+")[1]));
+                        node.setMemTotal(Integer.parseInt(line.split("\\s+")[1]));
 
                     } else if (line.startsWith("<inputs_download>")) {
                         isInputDownload = true;
@@ -289,7 +286,7 @@ public abstract class GaswOutputParser extends Thread {
 
                     } else if (line.startsWith("<results_upload>")) {
                         isResultUpload = true;
-                        uploadedResults = new ArrayList<URI>();
+                        uploadedResults = new HashMap<String, URI>();
 
                     } else if (line.startsWith("</results_upload>")) {
                         isResultUpload = false;
@@ -298,7 +295,10 @@ public abstract class GaswOutputParser extends Thread {
                         lfcHost = line.substring(line.indexOf("=") + 1);
 
                     } else if (line.startsWith("<file_upload") && isResultUpload) {
-                        String uploadedFile = line.substring(line.indexOf("=") + 1, line.length() - 1);
+                        int uriStartIndex = line.lastIndexOf("uri=");
+                        // the output is like this <file upload id= uri= >
+                        String outputId = line.substring(line.indexOf("id=") + 3, uriStartIndex - 1);
+                        String uploadedFile = line.substring(uriStartIndex + 4, line.length() - 1);
                         URI uri;
                         if (GaswUtil.isUri(uploadedFile)) {
                             uri = new URI(uploadedFile);
@@ -307,9 +307,9 @@ public abstract class GaswOutputParser extends Thread {
                                 ? new URI("file://" + uploadedFile)
                                 : new URI("lfn://" + lfcHost + uploadedFile);
                         }
-                        uploadedResults.add(uri);
+                        uploadedResults.put(outputId, uri);
                         dataList.add(new Data(uri.toString(), Data.Type.Output));
-                        logger.info("[GASW Parser] Adding output " + uri + " for job " + job.getId());
+                        logger.info("[GASW Parser] Adding output " + outputId + " " + uri + " for job " + job.getId());
                     }
                 }
             } catch (Exception ex) {
@@ -335,6 +335,7 @@ public abstract class GaswOutputParser extends Thread {
             if (job.getEnd() == null) {
                 job.setEnd(new Date());
             }
+
             factory.getJobDAO().update(job);
 
         } catch (DAOException | IOException ex) {
@@ -562,8 +563,8 @@ public abstract class GaswOutputParser extends Thread {
      * @return
      */
     protected File getAppStdFile(String extension, String dir) {
-
         File stdDir = new File(dir);
+
         if (!stdDir.exists()) {
             stdDir.mkdirs();
         }

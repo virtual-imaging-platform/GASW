@@ -42,14 +42,14 @@ public class GaswUpload {
 
     private URI uri;
     private int numberOfReplicas;
+    private String id;
 
-    public GaswUpload(URI uri) {
-        
-        this(uri, 1);
+    public GaswUpload(String id, URI uri) {
+        this(id, uri, 1);
     }
 
-    public GaswUpload(URI uri, int numberOfReplicas) {
-
+    public GaswUpload(String id, URI uri, int numberOfReplicas) {
+        this.id = id;
         this.uri = uri;
         this.numberOfReplicas = numberOfReplicas;
     }
@@ -65,4 +65,13 @@ public class GaswUpload {
     public void setURI(URI uri) {
         this.uri = uri;
     }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
 }
