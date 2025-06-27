@@ -481,6 +481,39 @@ function downloadLFN {
   return ${RET_VAL}
 }
 
+# downloadLFNdir: download a directory from a LFN path on Dirac
+# Differences with downloadLFN, besides the file/dir input:
+# no cache, no timeout, incremental transfer to target (which can exist)
+function downloadLFNdir {
+  local LFN="$1"
+  echo "LFNdir : ${LFN}"
+
+  # Sanitize LFN:
+  LFN=$(echo "${LFN}" | sed -r -e 's/^lfn://' -e 's#//#/#g')
+
+  # Create local directory if needed
+  local target=$(basename "$LFN")
+  mkdir -p "$target"
+
+  # Perform download
+  info "downloading directory: dirac-dms-directory-sync $LFN $target"
+  local startDownload=$(date +%s)
+  dirac-dms-directory-sync "$LFN" "$target" &> get-dir.log
+
+  if [ $? = 0 ]; then
+    local duration=$(($(date +%s) - startDownload))
+    info "DownloadCommand=dirac-dms-directory-sync LFN=$LFN Destination=$(hostname) Time=$duration"
+    RET_VAL=0
+  else
+    error "dirac-dms-directory-sync failed"
+    error "$(cat get-dir.log)"
+    RET_VAL=1
+  fi
+
+  rm get-dir.log
+  return ${RET_VAL}
+}
+
 # downloadGirderFile: download a file from a Girder server using the Girder
 # client.
 # URI are of the form of the following example. A single "/", instead
@@ -647,15 +680,23 @@ function downloadURI {
   if [[ ${URI_LOWER} == lfn* ]] || [[ $URI_LOWER == /* ]]; then
     ## Extract the path part from the uri, and remove // if present in path.
     LFN=$(echo "${URI}" | sed -r -e 's%^\w+://[^/]*(/[^?]+)(\?.*)?$%\1%' -e 's#//#/#g')
-
-    checkCacheDownloadAndCacheLFN "$LFN"
+    if dirac-dms-lfn-metadata "$LFN" | grep -q "'DirID':"; then # directory
+      downloadLFNdir "$LFN"
+    else # file
+      checkCacheDownloadAndCacheLFN "$LFN"
+    fi
     validateDownload "Cannot download LFN file"
   fi
 
   if [[ ${URI_LOWER} == file:/* ]]; then
     local FILENAME=$(echo "$URI" | sed 's%file://*%/%')
-    cp "$FILENAME" .
-    validateDownload "Cannot copy input file: $FILENAME"
+    if test -d "$FILENAME"; then # directory
+      cp -r "$FILENAME" .
+      validateDownload "Cannot copy input directory: $FILENAME"
+    else # file
+      cp "$FILENAME" .
+      validateDownload "Cannot copy input file: $FILENAME"
+    fi
   fi
 
   if [[ ${URI_LOWER} == http://* ]]; then
