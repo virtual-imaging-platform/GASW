@@ -7,7 +7,7 @@
     <groupId>fr.insalyon.creatis</groupId>
     <artifactId>gasw</artifactId>
     <packaging>jar</packaging>
-    <version>4.0</version>
+    <version>4.1-SNAPSHOT</version>
     <name>GASW</name>
 
     <properties>
