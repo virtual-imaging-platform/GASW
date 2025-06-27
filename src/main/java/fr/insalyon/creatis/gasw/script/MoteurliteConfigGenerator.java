@@ -39,8 +39,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
-
 import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
@@ -54,7 +52,6 @@ import fr.insalyon.creatis.gasw.execution.GaswMinorStatusServiceGenerator;
   */
  public class MoteurliteConfigGenerator {
  
-     private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
      private static MoteurliteConfigGenerator instance;
      private GaswConfiguration conf;
  
