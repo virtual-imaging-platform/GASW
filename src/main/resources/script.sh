@@ -109,6 +109,28 @@ function getJsonDepth2 {
   python -c 'import sys,json;v=json.load(sys.stdin).get("'"$key1"'",None);print(v.get("'"$key2"'","") if isinstance(v,dict) else "")' < "$file"
 }
 
+# getContainerOpts: get container-opts from a descriptor file.
+# This should stay consistent with how boutiques builds this options string.
+function getContainerOpts {
+  local file="$1"
+  local key1="container-image"
+  local key2="container-opts"
+  python <<EOF
+import sys,json
+with open("$file", "r") as f:
+    v = json.load(f).get("$key1")
+    if not isinstance(v,dict):
+        exit(0)
+    conOpts = v.get("$key2")
+    if not isinstance(conOpts,list):
+        exit(0)
+    conOptsString=""
+    for opt in conOpts:
+        conOptsString += opt + " "
+    print(conOptsString)
+EOF
+}
+
 ## runtime tools installation
 
 # checkBosh: install bosh if needed, or make it available in PATH
@@ -768,6 +790,7 @@ function performExec {
   # or blank (i.e. no container). If $containerType is not blank, its value
   # may still get overridden by $containersRuntime below.
   local containerType=$(getJsonDepth2 "../$boutiquesFilename" "container-image" "type")
+  local descriptorContainerType="$containerType"
 
   # Temporary directory for /tmp in containers
   local tmpfolder=$(mktemp -d -p "$PWD" "tmp-XXXXXX")
@@ -828,13 +851,17 @@ function performExec {
       ;;
     singularity)
       checkSingularity
+      # Get original container options from the descriptor
+      local conopts=""
+      if [ "$descriptorContainerType" = "singularity" ]; then
+        conopts=$(getContainerOpts "../$boutiquesFilename")
+      fi
       # Set an overlay dir to allow filesystem writes to any user-writable dir
       # within the container. This overlay is a one-time use, and will be
-      # removed in cleanup(). Note that:
-      # . --container-opts requires bosh >=0.5.29
-      # . it overrides "container-opts" from the descriptor
+      # removed in cleanup(). It requires bosh >= 0.5.30.
       local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
-      boshopts+=("--container-opts" "--overlay $overlayfolder")
+      # Pass all options to bosh
+      boshopts+=("--container-opts" "${conopts}--overlay $overlayfolder")
       ;;
   esac
 
