@@ -113,8 +113,8 @@ function getJsonDepth2 {
 # This should stay consistent with how boutiques builds this options string.
 function getContainerOpts {
   local file="$1"
-  local key1="container-image"
-  local key2="container-opts"
+  local key1="$2"
+  local key2="$3"
   python <<EOF
 import sys,json
 with open("$file", "r") as f:
@@ -844,18 +844,34 @@ function performExec {
     boshopts+=("--imagepath" "$imagepath")
   fi
 
-  # $containerType now contains the real runtime, check it
+  # $containerType now contains the container system we'll use,
+  # and $descriptorContainerType contains the one from the descriptor.
+  # Here we get container options from the descriptor for the appropriate
+  # system, using either the builtin boutiques field or vip custom one.
+  local conopts=""
+  local conoptsCustom=false
+  if [ "$descriptorContainerType" = "$containerType" ]; then
+    conopts=$(getContainerOpts "../$boutiquesFilename" "container-image" "container-opts")
+  else
+    conopts=$(getContainerOpts "../$boutiquesFilename" "custom" "vip:altContainerOpts")
+    conoptsCustom=true
+  fi
+
+  # check that the container system is available, and adjust runtime options
   case "$containerType" in
     docker)
       checkDocker
+      if $conoptsCustom && [ -n "$conopts" ]; then
+        # Known limitation: with bosh <=0.5.30, the line below is effectively
+        # a no-op, as command-line options passed here are just ignored by
+        # bosh when $descriptorContainerType=singularity.
+        # This is a bosh issue with --force-docker, which might be patched in
+        # a future version.
+        boshopts+=("--container-opts" "$conopts")
+      fi # else, just let bosh use container-opts from the descriptor
       ;;
     singularity)
       checkSingularity
-      # Get original container options from the descriptor
-      local conopts=""
-      if [ "$descriptorContainerType" = "singularity" ]; then
-        conopts=$(getContainerOpts "../$boutiquesFilename")
-      fi
       # Set an overlay dir to allow filesystem writes to any user-writable dir
       # within the container. This overlay is a one-time use, and will be
       # removed in cleanup(). It requires bosh >= 0.5.30.
