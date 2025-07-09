@@ -53,6 +53,7 @@ public class GaswConstants {
     public static final String LAB_FAILOVER_PORT = "failover.server.port";
     public static final String LAB_FAILOVER_RETRY = "failover.max.retry";
     public static final String LAB_MINORSTATUS_ENABLED = "minorstatus.service.enabled";
+    public static final String LAB_SOURCE_SCRIPT = "source.script";
     public static final String LAB_PLUGIN_DB = "plugin.db";
     public static final String LAB_PLUGIN_EXECUTOR = "plugin.executor";
     public static final String LAB_PLUGIN_LISTENER = "plugin.listener";

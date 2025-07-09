@@ -31,9 +31,9 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
- package fr.insalyon.creatis.gasw.script;
+package fr.insalyon.creatis.gasw.script;
 
- import java.io.IOException;
+import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,62 +44,58 @@ import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.execution.GaswMinorStatusServiceGenerator;
- 
- /**
-  *
-  * Author: Sandesh Patil [https://github.com/sandepat]
-  *
-  */
- public class MoteurliteConfigGenerator {
- 
-     private static MoteurliteConfigGenerator instance;
-     private GaswConfiguration conf;
- 
-     public synchronized static MoteurliteConfigGenerator getInstance() throws GaswException {
-         if (instance == null) {
-             instance = new MoteurliteConfigGenerator();
-         }
-         return instance;
-     }
- 
-     private MoteurliteConfigGenerator() throws GaswException {
-         conf = GaswConfiguration.getInstance();
-     }
- 
-     // Generates the configuration based on the input and minor status service
-     public Map<String, String> generateConfig(GaswInput gaswInput, GaswMinorStatusServiceGenerator minorStatusService)
-             throws IOException {
-         Map<String, String> config = new HashMap<>();
-         if (gaswInput.getExecutableName() != null) {
+
+public class MoteurliteConfigGenerator {
+
+    private static MoteurliteConfigGenerator instance;
+    private GaswConfiguration conf;
+
+    public synchronized static MoteurliteConfigGenerator getInstance() throws GaswException {
+        if (instance == null) {
+            instance = new MoteurliteConfigGenerator();
+        }
+        return instance;
+    }
+
+    private MoteurliteConfigGenerator() throws GaswException {
+        conf = GaswConfiguration.getInstance();
+    }
+
+    // Generates the configuration based on the input and minor status service
+    public Map<String, String> generateConfig(GaswInput gaswInput, GaswMinorStatusServiceGenerator minorStatusService)
+            throws IOException {
+        Map<String, String> config = new HashMap<>();
+        if (gaswInput.getExecutableName() != null) {
             // Extract and append the current date and time to the first upload URI
             URI uploadURI = gaswInput.getUploadURI();
             String downloads = gaswInput.getDownloads().stream()
                 .map(URI::toString)
                 .collect(Collectors.joining(" "));
  
-             config.put("defaultEnvironment", conf.getDefaultEnvironment());
-             config.put("voDefaultSE", conf.getVoDefaultSE());
-             config.put("voUseCloseSE", conf.getVoUseCloseSE());
-             config.put("boshCVMFSPath", conf.getBoshCVMFSPath());
-             config.put("boutiquesProvenanceDir", conf.getBoutiquesProvenanceDir());
-             config.put("singularityPath", conf.getSingularityPath());
-             config.put("containersCVMFSPath", conf.getContainersCVMFSPath());
-             config.put("containersRuntime", conf.getContainersRuntime());
-             config.put("containersImagesBasePath", conf.getContainersImagesBasePath());
-             config.put("udockerTag", conf.getUdockerTag());
-             config.put("simulationID", conf.getSimulationID());
-             config.put("cacheDir", GaswConstants.CACHE_DIR);
-             config.put("nrep", String.valueOf(GaswConstants.numberOfReplicas));
-             config.put("cacheFile", GaswConstants.CACHE_FILE);
-             config.put("timeout", String.valueOf(GaswConstants.CONNECT_TIMEOUT));
-             config.put("minAvgDownloadThroughput", String.valueOf(conf.getMinAvgDownloadThroughput()));
-             config.put("bdiiTimeout", String.valueOf(GaswConstants.BDII_TIMEOUT));
-             config.put("srmTimeout", String.valueOf(GaswConstants.SRM_TIMEOUT));
-             config.put("downloads", downloads);
-             config.put("boutiquesFilename", conf.getBoutiquesFilename());
-             config.put("uploadURI", uploadURI.toString());
-         }
- 
-         return config;
-     }
- }
+            config.put("defaultEnvironment", conf.getDefaultEnvironment());
+            config.put("voDefaultSE", conf.getVoDefaultSE());
+            config.put("voUseCloseSE", conf.getVoUseCloseSE());
+            config.put("boshCVMFSPath", conf.getBoshCVMFSPath());
+            config.put("boutiquesProvenanceDir", conf.getBoutiquesProvenanceDir());
+            config.put("singularityPath", conf.getSingularityPath());
+            config.put("containersCVMFSPath", conf.getContainersCVMFSPath());
+            config.put("containersRuntime", conf.getContainersRuntime());
+            config.put("containersImagesBasePath", conf.getContainersImagesBasePath());
+            config.put("udockerTag", conf.getUdockerTag());
+            config.put("simulationID", conf.getSimulationID());
+            config.put("cacheDir", GaswConstants.CACHE_DIR);
+            config.put("nrep", String.valueOf(GaswConstants.numberOfReplicas));
+            config.put("cacheFile", GaswConstants.CACHE_FILE);
+            config.put("timeout", String.valueOf(GaswConstants.CONNECT_TIMEOUT));
+            config.put("minAvgDownloadThroughput", String.valueOf(conf.getMinAvgDownloadThroughput()));
+            config.put("bdiiTimeout", String.valueOf(GaswConstants.BDII_TIMEOUT));
+            config.put("srmTimeout", String.valueOf(GaswConstants.SRM_TIMEOUT));
+            config.put("downloads", downloads);
+            config.put("boutiquesFilename", conf.getBoutiquesFilename());
+            config.put("uploadURI", uploadURI.toString());
+            config.put("sourceScript", conf.getSourceScript());
+        }
+
+        return config;
+    }
+}
