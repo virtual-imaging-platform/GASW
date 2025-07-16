@@ -1115,6 +1115,13 @@ function upload {
       exit 1
     fi
 
+    if [[ "$FILENAME" == */* ]]; then
+      local destdir=$(dirname "$DEST")
+      if ! [ -e "$destdir" ]; then
+        info "Creating destination directory $destdir"
+        mkdir -p "$destdir"
+      fi
+    fi
     mv "$FILENAME" "$DEST"
     if [ $? != 0 ]; then
       error "Error while moving result local file."
@@ -1218,6 +1225,17 @@ EOF
     for output in $outputs; do
       output_id="${output%%::*}"
       file_name="${output#*::}"
+
+      # XXX these ids are coilcar-specific,
+      # should get subdir prefix from desc+provenance:
+      # bosh evaluate "../$boutiquesFilename" "../inv/$invocationJsonFilename" "output-files/id=$output_id"
+      if [ "$output_id" = "comparison" ]; then
+        file_name="comparison/$file_name"
+      fi
+      if [ "$output_id" = "reportFile" ]; then
+        file_name="reportFile/$file_name"
+      fi
+      info XXX upload "${uploadURI}" "${file_name}" "$output_id" "$nrep"
 
       # Execute the upload command
       upload "${uploadURI}" "${file_name}" "$output_id" "$nrep"
