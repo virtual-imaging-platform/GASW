@@ -1226,16 +1226,14 @@ EOF
       output_id="${output%%::*}"
       file_name="${output#*::}"
 
-      # XXX these ids are coilcar-specific,
-      # should get subdir prefix from desc+provenance:
-      # bosh evaluate "../$boutiquesFilename" "../inv/$invocationJsonFilename" "output-files/id=$output_id"
-      if [ "$output_id" = "comparison" ]; then
-        file_name="comparison/$file_name"
+      # get subdir prefix from desc+provenance:
+      local outname=$("$BOSHEXEC" evaluate "../$boutiquesFilename" "../inv/$invocationJsonFilename" "output-files/id=$output_id" | python -c "import sys,ast; a=ast.literal_eval(sys.stdin.read()); print(a['$output_id'] if type(a)==dict and '$output_id' in a else '')")
+      info "XXX pre-upload: output_id=$output_id file_name=$file_name outname=$outname"
+      if [[ "$outname" == */* ]]; then
+        local outdir=$(dirname "$outname")
+        info "Prepending $outdir to output $file_name"
+        file_name="$outdir/$file_name"
       fi
-      if [ "$output_id" = "reportFile" ]; then
-        file_name="reportFile/$file_name"
-      fi
-      info XXX upload "${uploadURI}" "${file_name}" "$output_id" "$nrep"
 
       # Execute the upload command
       upload "${uploadURI}" "${file_name}" "$output_id" "$nrep"
