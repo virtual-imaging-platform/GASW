@@ -164,6 +164,11 @@ function checkBosh {
   else # if bosh CVMFS works fine
     export BOSHEXEC="$boshCVMFSPath/bosh"
   fi
+  # also check that "import boutiques" works (see getOutputFilenames)
+  if ! python -c "import boutiques"; then
+    error "import boutiques fails"
+    exit 1
+  fi
 }
 
 # checkDocker: install udocker if needed
@@ -1073,6 +1078,10 @@ function uploadGirderFile {
   local token=$(echo "$URI" | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i')
 
   checkGirderClient
+  if [[ "$FILENAME" == */* ]]; then
+    local destdir=$(dirname "$FILENAME")
+    # TODO check girder output subdir, and create it if needed
+  fi
 
   local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${fileId} ./${FILENAME}"
   echo "uploadGirderFile, command line is ${COMMLINE}"
@@ -1097,6 +1106,10 @@ function upload {
 
   # The pattern must NOT be put between quotation marks.
   if [[ ${RES_DIR_URI} == shanoir:/* ]]; then
+    if [[ "$FILENAME" == */* ]]; then
+      error "Unsupported subdirectory in filename for shanoir upload"
+      exit 1
+    fi
     if [ "$REFRESHING_JOB_STARTED" == false ]; then
       refresh_token "$RES_DIR_URI" &
       REFRESH_PID=$!
@@ -1189,7 +1202,6 @@ function copyProvenanceFile {
 #   descriptor+invocation files, using boutiques.evaluate
 # subdir will be used to create subdirectories in the upload destination,
 # so we disallow wildcards and ".."
-# XXX check if we can always import boutiques here
 function getOutputFilenames {
   local provenanceFile="$1"
   local descriptorFile="$2"
