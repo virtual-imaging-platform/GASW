@@ -1116,9 +1116,10 @@ function upload {
     fi
 
     if [[ "$FILENAME" == */* ]]; then
+      # this output file is in a subdir, make sure the target dir exists
       local destdir=$(dirname "$DEST")
       if ! [ -e "$destdir" ]; then
-        info "Creating destination directory $destdir"
+        info "Creating destination subdirectory $destdir"
         mkdir -p "$destdir"
       fi
     fi
@@ -1180,6 +1181,39 @@ function copyProvenanceFile {
   fi
 }
 
+# getOutputFilenames: Extract the outputs ids and file names.
+# Boutiques provenance file contains the basename of outputs, but not their
+# relative path, in case path-template defines one. So we combine two sources:
+# - the basename from the provenance file
+# - an optional subdir prefix, from an evaluated path-template with the
+#   descriptor+invocation files, using boutiques.evaluate
+# subdir will be used to create subdirectories in the upload destination,
+# so we disallow wildcards and ".."
+# XXX check if we can always import boutiques here
+function getOutputFilenames {
+  local provenanceFile="$1"
+  local descriptorFile="$2"
+  local invocationFile="$3"
+  python <<EOF
+import json, sys, os, boutiques
+def getPathTemplate(outputs,name):
+    if(type(outputs) is dict and name in outputs):
+        return outputs[name]
+    return None
+def addSubdir(outputs,name,filename):
+    pathTemplate = getPathTemplate(outputs, name)
+    if pathTemplate is not None and "/" in pathTemplate:
+        subdir = os.path.dirname(pathTemplate)
+        if "*" not in subdir and "?" not in subdir and "../" not in subdir:
+            return os.path.join(subdir, filename)
+    return filename
+descOutputs = boutiques.evaluate("$descriptorFile","$invocationFile","output-files")
+with open("$provenanceFile", "r") as file:
+    provOutputs = json.load(file)["public-output"]["output-files"]
+    print(*[f"{k}::{addSubdir(descOutputs,k,v.get('file-name'))}" for k, v in provOutputs.items()])
+EOF
+}
+
 # performUpload: handle top-level upload step
 function performUpload {
   local provenanceFile="$BASEDIR/$DIRNAME.sh.provenance.json"
@@ -1187,14 +1221,8 @@ function performUpload {
 
   startLog results_upload
 
-  # Extract the file names and store them in a bash array
-  local outputs=$(python <<EOF
-import json, sys
-with open("$provenanceFile", "r") as file:
-    outputs = json.load(file)['public-output']['output-files']
-    print(*[f"{k}::{v.get('file-name')}" for k, v in outputs.items()])
-EOF
-)
+  # Get outputs ids and filenames
+  local outputs=$(getOutputFilenames "$provenanceFile" "../$boutiquesFilename" "../inv/$invocationJsonFilename")
 
   # Remove square brackets from uploadURI
   # (we assume UploadURI will always be a single string)
@@ -1223,17 +1251,8 @@ EOF
   else
     echo "File names found:"
     for output in $outputs; do
-      output_id="${output%%::*}"
-      file_name="${output#*::}"
-
-      # get subdir prefix from desc+provenance:
-      local outname=$("$BOSHEXEC" evaluate "../$boutiquesFilename" "../inv/$invocationJsonFilename" "output-files/id=$output_id" | python -c "import sys,ast; a=ast.literal_eval(sys.stdin.read()); print(a['$output_id'] if type(a)==dict and '$output_id' in a else '')")
-      info "XXX pre-upload: output_id=$output_id file_name=$file_name outname=$outname"
-      if [[ "$outname" == */* ]]; then
-        local outdir=$(dirname "$outname")
-        info "Prepending $outdir to output $file_name"
-        file_name="$outdir/$file_name"
-      fi
+      local output_id="${output%%::*}"
+      local file_name="${output#*::}"
 
       # Execute the upload command
       upload "${uploadURI}" "${file_name}" "$output_id" "$nrep"
