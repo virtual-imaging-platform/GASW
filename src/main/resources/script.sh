@@ -131,6 +131,21 @@ with open("$file", "r") as f:
 EOF
 }
 
+# addToPath: add a directory to $PATH if not already there
+function addToPath {
+  local dir="$1"
+  if [[ ":$PATH:" != *":$dir:"* ]]; then
+    export PATH="$dir:$PATH"
+  fi
+}
+
+# pipInstallUser: install python packages as local user,
+# and make sure that $HOME/.local/bin is in $PATH
+function pipInstallUser {
+  addToPath "$HOME/.local/bin"
+  pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --user "$@"
+}
+
 ## runtime tools installation
 
 # checkBosh: install bosh if needed, or make it available in PATH
@@ -145,8 +160,7 @@ function checkBosh {
       local HOMEBOSH=$(find "$HOME" -name bosh)
       if [ -z "$HOMEBOSH" ]; then
         info "bosh not found, trying to install it"
-        export PATH="$HOME/.local/bin:$PATH"
-        pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --user boutiques
+        pipInstallUser boutiques
         if [ $? != 0 ]; then
           error "pip install boutiques failed"
           exit 1
@@ -216,7 +230,7 @@ function checkSingularity {
 # checkGirderClient: install girder-client if needed
 function checkGirderClient {
   if ! command -v girder-client; then
-    pip install --user girder-client
+    pipInstallUser girder-client
     if [ $? != 0 ]; then
       error "girder-client not in PATH, and an error occured while trying to install it."
       error "Exiting with return value 1"
