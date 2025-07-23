@@ -810,7 +810,7 @@ function performExec {
   local tmpfolder=$(mktemp -d -p "$PWD" "tmp-XXXXXX")
 
   # Common bosh exec flags
-  local boshopts=("--stream")
+  local boshopts=("--stream" "--no-automounts")
   boshopts+=("--provenance" "{\"jobid\":\"$DIRNAME\"}")
   boshopts+=("-v" "$PWD/../cache:$PWD/../cache")
   boshopts+=("-v" "$tmpfolder:/tmp")
