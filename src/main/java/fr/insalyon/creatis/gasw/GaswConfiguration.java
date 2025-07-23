@@ -114,6 +114,8 @@ public class GaswConfiguration {
     private int minAvgDownloadThroughput;
     // Minor Status Service
     private boolean minorStatusEnabled;
+    // Others
+    private String sourceScript;
     // Plugins
     private List<Object> executorPluginsURI;
     private List<ExecutorPlugin> executorPlugins;
@@ -192,6 +194,8 @@ public class GaswConfiguration {
             minAvgDownloadThroughput = config.getInt(GaswConstants.LAB_MIN_AVG_DOWNLOAD_THROUGHPUT, 150);
 
             minorStatusEnabled = config.getBoolean(GaswConstants.LAB_MINORSTATUS_ENABLED, false);
+
+            sourceScript = config.getString(GaswConstants.LAB_SOURCE_SCRIPT, "");
 
             dbPluginURI = config.getString(GaswConstants.LAB_PLUGIN_DB, "");
             executorPluginsURI = config.getList(GaswConstants.LAB_PLUGIN_EXECUTOR);
@@ -497,6 +501,10 @@ public class GaswConfiguration {
 
     public boolean isMinorStatusEnabled() {
         return minorStatusEnabled;
+    }
+
+    public String getSourceScript() {
+        return sourceScript;
     }
 
     public int getMinAvgDownloadThroughput() {

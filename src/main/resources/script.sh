@@ -1338,12 +1338,21 @@ if [ -f "$configurationFile" ]; then
   containersImagesBasePath=
   nrep=
   boutiquesProvenanceDir=
+  sourceScript=
 
   # shellcheck disable=SC1090
   source "$configurationFile"
 else
   error "Configuration file $configurationFile not found!"
   exit 1
+fi
+
+# Register custom source script
+if [ -n "$sourceScript" ]; then
+    echo "sourcing ${sourceScript}"
+
+    # shellcheck disable=SC1090
+    source "$sourceScript"
 fi
 
 # Register cleanup handler
