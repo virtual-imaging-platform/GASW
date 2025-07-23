@@ -1062,6 +1062,61 @@ function uploadShanoirFile {
   fi
 }
 
+# girderMkdir: check and create N levels of directories on a girder API
+function girderMkdir {
+  local apiUrl="$1"    # girder API URL (including the /v1/api part)
+  local token="$2"     # authentication token
+  local subdir="$3"    # subdirectory name, can be multi-level
+  # $parentId: input/output arg:
+  # . input: top-level girder id under which $subdir must be created
+  # . output: low
+
+  # Temporary file for HTTP response storage
+  local response=$(mktemp girderMkdir.XXXXXX)
+
+  info "girderMkdir: parentId=$parentId subdir=$subdir"
+  while [ -n "$subdir" ]; do
+    # Get the next top-level directory name in $subdir
+    local itemname=${subdir%%/*}
+
+    # Check if directory exists
+    local status_code=$(curl -s --write-out "%{http_code}" -o "$response" -H "Girder-Token: $token" -X GET "$apiUrl/folder?parentType=folder&parentId=$parentId&name=$itemname")
+    if [ "$status_code" != 200 ]; then
+      error "Error while checking girder directory (HTTP: $status_code)"
+      exit 1
+    fi
+    # Get ".[0]._id" in response: a non-empty value means the directory exists
+    local childId=$(python -c 'import sys,json;v=json.load(sys.stdin);print(v[0].get("_id") if type(v) is list and len(v)>0 and type(v[0]) is dict and "_id" in v[0] else "")' < "$response")
+
+    if [ -z "$childId" ]; then
+      # Directory doesn't exist, create it. Set reuseExisting=true to avoid
+      # a race in case multiple jobs share the same output dir.
+      info "girderMkdir: creating directory $itemname"
+      status_code=$(curl -s --write-out "%{http_code}" -o "$response" -H "Girder-Token: $token" -X POST "$apiUrl/folder?parentType=folder&parentId=$parentId&name=$itemname&reuseExisting=true" -d "")
+      if [ "$status_code" != 200 ]; then
+        error "Error while creating girder directory (HTTP: $status_code)"
+        exit 1
+      fi
+      # Get "._id" in response: id of the newly created directory
+      childId=$(python -c 'import sys,json;v=json.load(sys.stdin);print(v.get("_id") if type(v) is dict and "_id" in v else "")' < "$response")
+      if [ -z "$childId" ]; then
+        error "Error while creating girder directory (HTTP: $status_code, response: $(cat "$response"))"
+        exit 1
+      fi
+    else
+      info "girderMkdir: directory $itemname already exists, reusing"
+    fi
+
+    if [[ "$subdir" == */* ]]; then # move one level down, go on with next item
+      subdir=${subdir#*/}
+      parentId="$childId"
+    else # final dir item, stop
+      subdir=""
+    fi
+  done
+  rm -f "$response"
+}
+
 # uploadGirderFile: upload a file to a Girder server using the Girder client.
 # URI are of the form of the following example.  A single "/", instead
 # of 3, after "girder:" is also allowed.
@@ -1074,16 +1129,16 @@ function uploadGirderFile {
   local FILENAME="$2"
 
   local apiUrl=$(echo "$URI" | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i')
-  local fileId=$(echo "$URI" | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i')
+  local parentId=$(echo "$URI" | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i')
   local token=$(echo "$URI" | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i')
 
   checkGirderClient
   if [[ "$FILENAME" == */* ]]; then
     local destdir=$(dirname "$FILENAME")
-    # TODO check girder output subdir, and create it if needed
+    girderMkdir "$apiUrl" "$token" "$parentId" "$destdir"
   fi
 
-  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${fileId} ./${FILENAME}"
+  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${parentId} ./${FILENAME}"
   echo "uploadGirderFile, command line is ${COMMLINE}"
   ${COMMLINE}
   if [ $? != 0 ]; then
