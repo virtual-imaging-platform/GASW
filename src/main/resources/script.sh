@@ -109,6 +109,43 @@ function getJsonDepth2 {
   python -c 'import sys,json;v=json.load(sys.stdin).get("'"$key1"'",None);print(v.get("'"$key2"'","") if isinstance(v,dict) else "")' < "$file"
 }
 
+# getContainerOpts: get container-opts from a descriptor file.
+# This should stay consistent with how boutiques builds this options string.
+function getContainerOpts {
+  local file="$1"
+  local key1="$2"
+  local key2="$3"
+  python <<EOF
+import sys,json
+with open("$file", "r") as f:
+    v = json.load(f).get("$key1")
+    if not isinstance(v,dict):
+        exit(0)
+    conOpts = v.get("$key2")
+    if not isinstance(conOpts,list):
+        exit(0)
+    conOptsString=""
+    for opt in conOpts:
+        conOptsString += opt + " "
+    print(conOptsString)
+EOF
+}
+
+# addToPath: add a directory to $PATH if not already there
+function addToPath {
+  local dir="$1"
+  if [[ ":$PATH:" != *":$dir:"* ]]; then
+    export PATH="$dir:$PATH"
+  fi
+}
+
+# pipInstallUser: install python packages as local user,
+# and make sure that $HOME/.local/bin is in $PATH
+function pipInstallUser {
+  addToPath "$HOME/.local/bin"
+  pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --user "$@"
+}
+
 ## runtime tools installation
 
 # checkBosh: install bosh if needed, or make it available in PATH
@@ -123,8 +160,7 @@ function checkBosh {
       local HOMEBOSH=$(find "$HOME" -name bosh)
       if [ -z "$HOMEBOSH" ]; then
         info "bosh not found, trying to install it"
-        export PATH="$HOME/.local/bin:$PATH"
-        pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --user boutiques
+        pipInstallUser boutiques
         if [ $? != 0 ]; then
           error "pip install boutiques failed"
           exit 1
@@ -194,7 +230,7 @@ function checkSingularity {
 # checkGirderClient: install girder-client if needed
 function checkGirderClient {
   if ! command -v girder-client; then
-    pip install --user girder-client
+    pipInstallUser girder-client
     if [ $? != 0 ]; then
       error "girder-client not in PATH, and an error occured while trying to install it."
       error "Exiting with return value 1"
@@ -534,7 +570,7 @@ function downloadGirderFile {
 
   checkGirderClient
 
-  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} download --parent-type file ${fileId} ./${fileName}"
+  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} download --parent-type auto ${fileId} ./${fileName}"
   echo "downloadGirderFile, command line is ${COMMLINE}"
   ${COMMLINE}
 }
@@ -768,12 +804,13 @@ function performExec {
   # or blank (i.e. no container). If $containerType is not blank, its value
   # may still get overridden by $containersRuntime below.
   local containerType=$(getJsonDepth2 "../$boutiquesFilename" "container-image" "type")
+  local descriptorContainerType="$containerType"
 
   # Temporary directory for /tmp in containers
   local tmpfolder=$(mktemp -d -p "$PWD" "tmp-XXXXXX")
 
   # Common bosh exec flags
-  local boshopts=("--stream")
+  local boshopts=("--stream" "--no-automounts")
   boshopts+=("--provenance" "{\"jobid\":\"$DIRNAME\"}")
   boshopts+=("-v" "$PWD/../cache:$PWD/../cache")
   boshopts+=("-v" "$tmpfolder:/tmp")
@@ -821,20 +858,40 @@ function performExec {
     boshopts+=("--imagepath" "$imagepath")
   fi
 
-  # $containerType now contains the real runtime, check it
+  # $containerType now contains the container system we'll use,
+  # and $descriptorContainerType contains the one from the descriptor.
+  # Here we get container options from the descriptor for the appropriate
+  # system, using either the builtin boutiques field or vip custom one.
+  local conopts=""
+  local conoptsCustom=false
+  if [ "$descriptorContainerType" = "$containerType" ]; then
+    conopts=$(getContainerOpts "../$boutiquesFilename" "container-image" "container-opts")
+  else
+    conopts=$(getContainerOpts "../$boutiquesFilename" "custom" "vip:altContainerOpts")
+    conoptsCustom=true
+  fi
+
+  # check that the container system is available, and adjust runtime options
   case "$containerType" in
     docker)
       checkDocker
+      if $conoptsCustom && [ -n "$conopts" ]; then
+        # Known limitation: with bosh <=0.5.30, the line below is effectively
+        # a no-op, as command-line options passed here are just ignored by
+        # bosh when $descriptorContainerType=singularity.
+        # This is a bosh issue with --force-docker, which might be patched in
+        # a future version.
+        boshopts+=("--container-opts" "$conopts")
+      fi # else, just let bosh use container-opts from the descriptor
       ;;
     singularity)
       checkSingularity
       # Set an overlay dir to allow filesystem writes to any user-writable dir
       # within the container. This overlay is a one-time use, and will be
-      # removed in cleanup(). Note that:
-      # . --container-opts requires bosh >=0.5.29
-      # . it overrides "container-opts" from the descriptor
+      # removed in cleanup(). It requires bosh >= 0.5.30.
       local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
-      boshopts+=("--container-opts" "--overlay $overlayfolder")
+      # Pass all options to bosh
+      boshopts+=("--container-opts" "${conopts}--overlay $overlayfolder")
       ;;
   esac
 
@@ -1281,12 +1338,21 @@ if [ -f "$configurationFile" ]; then
   containersImagesBasePath=
   nrep=
   boutiquesProvenanceDir=
+  sourceScript=
 
   # shellcheck disable=SC1090
   source "$configurationFile"
 else
   error "Configuration file $configurationFile not found!"
   exit 1
+fi
+
+# Register custom source script
+if [ -n "$sourceScript" ]; then
+    echo "sourcing ${sourceScript}"
+
+    # shellcheck disable=SC1090
+    source "$sourceScript"
 fi
 
 # Register cleanup handler
