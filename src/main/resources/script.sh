@@ -570,7 +570,7 @@ function downloadGirderFile {
 
   checkGirderClient
 
-  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} download --parent-type file ${fileId} ./${fileName}"
+  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} download --parent-type auto ${fileId} ./${fileName}"
   echo "downloadGirderFile, command line is ${COMMLINE}"
   ${COMMLINE}
 }
