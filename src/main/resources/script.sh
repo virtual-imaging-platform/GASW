@@ -1063,13 +1063,14 @@ function uploadShanoirFile {
 }
 
 # girderMkdir: check and create N levels of directories on a girder API
+# In addition to positional args, this function also updates
+# $parentId as an input/output arg:
+# . $parentId input: top-level girder id under which $subdir must be created
+# . $parentId output: girder id of the last subdirectory in $subdir
 function girderMkdir {
   local apiUrl="$1"    # girder API URL (including the /v1/api part)
   local token="$2"     # authentication token
   local subdir="$3"    # subdirectory name, can be multi-level
-  # $parentId: input/output arg:
-  # . input: top-level girder id under which $subdir must be created
-  # . output: low
 
   # Temporary file for HTTP response storage
   local response=$(mktemp girderMkdir.XXXXXX)
@@ -1107,10 +1108,10 @@ function girderMkdir {
       info "girderMkdir: directory $itemname already exists, reusing"
     fi
 
+    parentId="$childId"
     if [[ "$subdir" == */* ]]; then # move one level down, go on with next item
       subdir=${subdir#*/}
-      parentId="$childId"
-    else # final dir item, stop
+    else # final dir item, just update parentId and stop
       subdir=""
     fi
   done
@@ -1134,8 +1135,9 @@ function uploadGirderFile {
 
   checkGirderClient
   if [[ "$FILENAME" == */* ]]; then
+    # output file is in a subdir: create it if needed, and update $parentId
     local destdir=$(dirname "$FILENAME")
-    girderMkdir "$apiUrl" "$token" "$parentId" "$destdir"
+    girderMkdir "$apiUrl" "$token" "$destdir"
   fi
 
   local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${parentId} ./${FILENAME}"
