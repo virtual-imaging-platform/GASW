@@ -127,7 +127,7 @@ function checkBosh {
         pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --user boutiques
         if [ $? != 0 ]; then
           error "pip install boutiques failed"
-          exit 1
+          exit 14
         else
           export BOSHEXEC="bosh"
         fi
@@ -197,8 +197,8 @@ function checkGirderClient {
     pip install --user girder-client
     if [ $? != 0 ]; then
       error "girder-client not in PATH, and an error occured while trying to install it."
-      error "Exiting with return value 1"
-      exit 1
+      error "Exiting with return value 11"
+      exit 11
     fi
   fi
 }
@@ -376,7 +376,7 @@ function refresh_token {
     if ! [[ "$exit_code" -eq 0 && "$status_code" -eq 200 ]]; then
       local error_message=$(echo "$refresh_response" | grep -o '"error_description":"[^"]*' | grep -o '[^"]*$')
       error "error while refreshing the token: exit=${exit_code}, status=${status_code}, message: ${error_message}"
-      exit 1
+      exit 52
     fi
 
     # setting the new tokens
@@ -422,7 +422,7 @@ function wait_for_token {
   if [[ -z "${token}" ]]; then
     echo "Token refreshing is taking too long. Aborting the process."
     stopRefreshingToken
-    exit 1
+    exit 50
   fi
 }
 
@@ -638,7 +638,7 @@ function downloadShanoirFile {
   if [[ "${attempts}" -ge 3 ]]; then
     error "3 failures at downloading, stop trying and stop the job"
     stopRefreshingToken
-    exit 1
+    exit 51
   fi
 
   if [[ $format = "zipped_nii" ]]; then
@@ -653,7 +653,7 @@ function downloadShanoirFile {
     if [[ $(echo -n "$searchResult" | grep -c '^') -ne 1 ]]; then
       error "too many or none nifti file (.nii or .nii.gz) in shanoir zip, supporting only 1"
       stopRefreshingToken
-      exit 1
+      exit 13
     fi
     mv "$searchResult" "$fileName"
     rm -rf $TMP_UNZIP_DIR
@@ -665,8 +665,8 @@ function downloadShanoirFile {
 function validateDownload {
   if [ $? != 0 ]; then
     echo "$1"
-    echo "Exiting with return value 1"
-    exit 1
+    echo "ERROR_DL - Download was not successful "
+    exit 30
   fi
 }
 
@@ -802,18 +802,18 @@ function performExec {
         local imgtag=$(echo "$image" | cut -d: -f2)
         if [ -z "$imgname" ] || [ -z "$imgtag" ]; then
           error "Invalid image name: '$image'"
-          exit 1
+          exit 43
         fi
         # set imagepath
         imagepath="$containersImagesBasePath/${imgname}-${imgtag}"
         if ! [ -e "$imagepath" ]; then
           error "Image file not found: $imagepath"
-          exit 1
+          exit 44
         fi
         ;;
       *)
         error "Invalid containersRuntime: '$containersRuntime'"
-        exit 1
+        exit 45
         ;;
     esac
   fi
@@ -844,12 +844,12 @@ function performExec {
 
   # Check if execution was successful
   if [ $? -ne 0 ]; then
-    error "Exiting with return value 6"
+    error "EXECUTION_FAILED - execution was not successful"
     BEFOREUPLOAD=$(date +%s)
     info "Execution time: $((BEFOREUPLOAD - AFTERDOWNLOAD)) seconds"
     stopLog application_execution
     cleanup
-    exit 6
+    exit 40
   fi
 
   BEFOREUPLOAD=$(date +%s)
@@ -967,9 +967,9 @@ function uploadLfnFile {
     DEST=${RESULT}
   done
   if [ "${done}" = "0" ]; then
-    error "Cannot copy file ${FILE} to lfn ${LFN}"
-    error "Exiting with return value 2"
-    exit 2
+    error "ERROR_WRITE_GRID - Cannot copy file ${FILE} to lfn ${LFN}"
+    error "Exiting with return value 21"
+    exit 21
   else
     addToCache "$LFN" "$FILE"
   fi
@@ -1010,7 +1010,7 @@ function uploadShanoirFile {
   if ! [[ "$exit_code" -eq 0 && "$status_code" -eq 201 ]]; then
     error "error while uploading the file: exit=${exit_code}, status=${status_code}"
     stopRefreshingToken
-    exit 1
+    exit 25
   fi
 }
 
@@ -1035,9 +1035,9 @@ function uploadGirderFile {
   echo "uploadGirderFile, command line is ${COMMLINE}"
   ${COMMLINE}
   if [ $? != 0 ]; then
-    error "Error while uploading girder file"
-    error "Exiting with return value 1"
-    exit 1
+    error "ERROR_UPLOAD_GIRDER - Error while uploading girder file"
+    error "Exiting with return value 24"
+    exit 24
   fi
 }
 
@@ -1067,16 +1067,16 @@ function upload {
     local DEST="${RES_DIR}/${FILENAME}"
 
     if [ -e "$DEST" ]; then
-      error "Result file already exists: $DEST"
-      error "Exiting with return value 1"
-      exit 1
+      error "ERROR_RESULT_FILE_EXIST - Result file already exists: $DEST"
+      error "Exiting with return value 23"
+      exit 23
     fi
 
     mv "$FILENAME" "$DEST"
     if [ $? != 0 ]; then
-      error "Error while moving result local file."
-      error "Exiting with return value 1"
-      exit 1
+      error "ERROR_MV_FILE - Error while moving result local file"
+      error "Exiting with return value 22"
+      exit 22
     fi
   else
     # Extract the path part from the uri.
@@ -1163,7 +1163,7 @@ EOF
       echo "Directory '$dir_path' successfully created or already exists."
     else
       echo "Failed to create directory '$dir_path'."
-      exit 1 # Exit the script with an error status
+      exit 12 # Exit the script with an error status
     fi
   fi
 
@@ -1286,7 +1286,7 @@ if [ -f "$configurationFile" ]; then
   source "$configurationFile"
 else
   error "Configuration file $configurationFile not found!"
-  exit 1
+  exit 15
 fi
 
 # Register cleanup handler
@@ -1324,9 +1324,9 @@ if [ $? -eq 0 ]; then
   echo "cd $DIRNAME"
   cd "$DIRNAME" || exit 7
 else
-  echo "Unable to create directory $DIRNAME"
-  echo "Exiting with return value 7"
-  exit 7
+  echo "ERROR_WRITE_LOCAL - Unable to create directory $DIRNAME"
+  echo "Exiting with return value 20"
+  exit 20
 fi
 
 # Create cache directory

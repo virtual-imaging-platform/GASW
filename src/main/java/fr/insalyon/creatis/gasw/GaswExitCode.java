@@ -47,7 +47,29 @@ public enum GaswExitCode {
     EXECUTION_FAILED(6), // execution failed
     EXECUTION_CANCELED(9),// execution canceled
     EXECUTION_STALLED(10),// execution stalled used in DIRAC execution 
-    UNDEFINED(-1);        // default exit code 
+    UNDEFINED(-1),      // default exit code
+    GIRDER_NOT_FOUND(11),
+    FAILED_CREATE_DIR(12),
+    TOO_MANY_NIFTI(13),
+    BOUTIQUE_INSTALL_FAILED(14),
+    CONFIG_NOT_FOUND(15),
+    ERROR_WRITE_LOCAL_(20),
+    ERROR_WRITE_GRID_(21),
+    ERROR_MV_FILE(22),
+    ERROR_RESULT_FILE_EXIST(23),
+    ERROR_UPLOAD_GIRDER(24),
+    ERROR_UPLOAD_FILE(25),
+    ERROR_DL(30),
+    EXECUTION_FAILED_(40),
+    EXECUTION_CANCELED_(41),
+    EXECUTION_STALLED_(42),
+    INVALID_IMAGE_NAME(43),
+    IMAGE_NOT_FOUND(44),
+    INVALID_CONTAINER_RUNTIME(45),
+    TOKEN_REFRESH_TOO_LONG(50),
+    TOKEN_DL_FAILED(51),
+    TOKEN_REFRESH_ERROR(52),
+    UNDEFINED_(90);
     private int exitCode;
 
     private GaswExitCode(int exitCode) {
