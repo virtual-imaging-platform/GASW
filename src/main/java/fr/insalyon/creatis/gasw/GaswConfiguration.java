@@ -383,10 +383,10 @@ public class GaswConfiguration {
      *
      * @throws GaswException
      */
-    public void terminate() throws GaswException {
+    public void terminate(boolean force) throws GaswException {
 
         for (ExecutorPlugin executorPlugin : executorPlugins) {
-            executorPlugin.terminate();
+            executorPlugin.terminate(force);
         }
         for (ListenerPlugin listenerPlugin : listenerPlugins) {
             listenerPlugin.terminate();
