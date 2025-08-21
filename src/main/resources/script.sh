@@ -178,6 +178,11 @@ function checkBosh {
   else # if bosh CVMFS works fine
     export BOSHEXEC="$boshCVMFSPath/bosh"
   fi
+  # also check that "import boutiques" works (see getOutputFilenames)
+  if ! python -c "import boutiques"; then
+    error "import boutiques fails"
+    exit 1
+  fi
 }
 
 # checkDocker: install udocker if needed
@@ -1071,6 +1076,62 @@ function uploadShanoirFile {
   fi
 }
 
+# girderMkdir: check and create N levels of directories on a girder API
+# In addition to positional args, this function also updates
+# $parentId as an input/output arg:
+# . $parentId input: top-level girder id under which $subdir must be created
+# . $parentId output: girder id of the last subdirectory in $subdir
+function girderMkdir {
+  local apiUrl="$1"    # girder API URL (including the /v1/api part)
+  local token="$2"     # authentication token
+  local subdir="$3"    # subdirectory name, can be multi-level
+
+  # Temporary file for HTTP response storage
+  local response=$(mktemp girderMkdir.XXXXXX)
+
+  info "girderMkdir: parentId=$parentId subdir=$subdir"
+  while [ -n "$subdir" ]; do
+    # Get the next top-level directory name in $subdir
+    local itemname=${subdir%%/*}
+
+    # Check if directory exists
+    local status_code=$(curl -s --write-out "%{http_code}" -o "$response" -H "Girder-Token: $token" -X GET "$apiUrl/folder?parentType=folder&parentId=$parentId&name=$itemname")
+    if [ "$status_code" != 200 ]; then
+      error "Error while checking girder directory (HTTP: $status_code)"
+      exit 1
+    fi
+    # Get ".[0]._id" in response: a non-empty value means the directory exists
+    local childId=$(python -c 'import sys,json;v=json.load(sys.stdin);print(v[0].get("_id") if type(v) is list and len(v)>0 and type(v[0]) is dict and "_id" in v[0] else "")' < "$response")
+
+    if [ -z "$childId" ]; then
+      # Directory doesn't exist, create it. Set reuseExisting=true to avoid
+      # a race in case multiple jobs share the same output dir.
+      info "girderMkdir: creating directory $itemname"
+      status_code=$(curl -s --write-out "%{http_code}" -o "$response" -H "Girder-Token: $token" -X POST "$apiUrl/folder?parentType=folder&parentId=$parentId&name=$itemname&reuseExisting=true" -d "")
+      if [ "$status_code" != 200 ]; then
+        error "Error while creating girder directory (HTTP: $status_code)"
+        exit 1
+      fi
+      # Get "._id" in response: id of the newly created directory
+      childId=$(python -c 'import sys,json;v=json.load(sys.stdin);print(v.get("_id") if type(v) is dict and "_id" in v else "")' < "$response")
+      if [ -z "$childId" ]; then
+        error "Error while creating girder directory (HTTP: $status_code, response: $(cat "$response"))"
+        exit 1
+      fi
+    else
+      info "girderMkdir: directory $itemname already exists, reusing"
+    fi
+
+    parentId="$childId"
+    if [[ "$subdir" == */* ]]; then # move one level down, go on with next item
+      subdir=${subdir#*/}
+    else # final dir item, just update parentId and stop
+      subdir=""
+    fi
+  done
+  rm -f "$response"
+}
+
 # uploadGirderFile: upload a file to a Girder server using the Girder client.
 # URI are of the form of the following example.  A single "/", instead
 # of 3, after "girder:" is also allowed.
@@ -1083,12 +1144,17 @@ function uploadGirderFile {
   local FILENAME="$2"
 
   local apiUrl=$(echo "$URI" | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i')
-  local fileId=$(echo "$URI" | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i')
+  local parentId=$(echo "$URI" | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i')
   local token=$(echo "$URI" | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i')
 
   checkGirderClient
+  if [[ "$FILENAME" == */* ]]; then
+    # output file is in a subdir: create it if needed, and update $parentId
+    local destdir=$(dirname "$FILENAME")
+    girderMkdir "$apiUrl" "$token" "$destdir"
+  fi
 
-  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${fileId} ./${FILENAME}"
+  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${parentId} ./${FILENAME}"
   echo "uploadGirderFile, command line is ${COMMLINE}"
   ${COMMLINE}
   if [ $? != 0 ]; then
@@ -1111,6 +1177,10 @@ function upload {
 
   # The pattern must NOT be put between quotation marks.
   if [[ ${RES_DIR_URI} == shanoir:/* ]]; then
+    if [[ "$FILENAME" == */* ]]; then
+      error "Unsupported subdirectory in filename for shanoir upload"
+      exit 1
+    fi
     if [ "$REFRESHING_JOB_STARTED" == false ]; then
       refresh_token "$RES_DIR_URI" &
       REFRESH_PID=$!
@@ -1129,6 +1199,14 @@ function upload {
       exit 1
     fi
 
+    if [[ "$FILENAME" == */* ]]; then
+      # this output file is in a subdir, make sure the target dir exists
+      local destdir=$(dirname "$DEST")
+      if ! [ -e "$destdir" ]; then
+        info "Creating destination subdirectory $destdir"
+        mkdir -p "$destdir"
+      fi
+    fi
     mv "$FILENAME" "$DEST"
     if [ $? != 0 ]; then
       error "Error while moving result local file."
@@ -1187,6 +1265,38 @@ function copyProvenanceFile {
   fi
 }
 
+# getOutputFilenames: Extract the outputs ids and file names.
+# Boutiques provenance file contains the basename of outputs, but not their
+# relative path, in case path-template defines one. So we combine two sources:
+# - the basename from the provenance file
+# - an optional subdir prefix, from an evaluated path-template with the
+#   descriptor+invocation files, using boutiques.evaluate
+# subdir will be used to create subdirectories in the upload destination,
+# so we disallow wildcards and ".."
+function getOutputFilenames {
+  local provenanceFile="$1"
+  local descriptorFile="$2"
+  local invocationFile="$3"
+  python <<EOF
+import json, sys, os, boutiques
+def getPathTemplate(outputs,name):
+    if(type(outputs) is dict and name in outputs):
+        return outputs[name]
+    return None
+def addSubdir(outputs,name,filename):
+    pathTemplate = getPathTemplate(outputs, name)
+    if pathTemplate is not None and "/" in pathTemplate:
+        subdir = os.path.dirname(pathTemplate)
+        if "*" not in subdir and "?" not in subdir and "../" not in subdir:
+            return os.path.join(subdir, filename)
+    return filename
+descOutputs = boutiques.evaluate("$descriptorFile","$invocationFile","output-files")
+with open("$provenanceFile", "r") as file:
+    provOutputs = json.load(file)["public-output"]["output-files"]
+    print(*[f"{k}::{addSubdir(descOutputs,k,v.get('file-name'))}" for k, v in provOutputs.items()])
+EOF
+}
+
 # performUpload: handle top-level upload step
 function performUpload {
   local provenanceFile="$BASEDIR/$DIRNAME.sh.provenance.json"
@@ -1194,14 +1304,8 @@ function performUpload {
 
   startLog results_upload
 
-  # Extract the file names and store them in a bash array
-  local outputs=$(python <<EOF
-import json, sys
-with open("$provenanceFile", "r") as file:
-    outputs = json.load(file)['public-output']['output-files']
-    print(*[f"{k}::{v.get('file-name')}" for k, v in outputs.items()])
-EOF
-)
+  # Get outputs ids and filenames
+  local outputs=$(getOutputFilenames "$provenanceFile" "../$boutiquesFilename" "../inv/$invocationJsonFilename")
 
   # Remove square brackets from uploadURI
   # (we assume UploadURI will always be a single string)
@@ -1230,8 +1334,8 @@ EOF
   else
     echo "File names found:"
     for output in $outputs; do
-      output_id="${output%%::*}"
-      file_name="${output#*::}"
+      local output_id="${output%%::*}"
+      local file_name="${output#*::}"
 
       # Execute the upload command
       upload "${uploadURI}" "${file_name}" "$output_id" "$nrep"
