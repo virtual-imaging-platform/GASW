@@ -883,6 +883,17 @@ function performExec {
         # a future version.
         boshopts+=("--container-opts" "$conopts")
       fi # else, just let bosh use container-opts from the descriptor
+      # Name of the container is the name of the directory (workflow-xxx)
+      local docker_container_name="$(basename "$BASEDIR")"
+      docker_container_name=$(echo "$docker_container_name" \
+        | tr '[:upper:]' '[:lower:]' \
+        | sed -r 's/[^a-z0-9_.-]+/-/g; s/^-+//; s/-+$//')
+
+      local dockeropts="$conopts"
+      if [[ "$dockeropts" != *"--name "* && "$dockeropts" != *"--name="* ]]; then
+        dockeropts="$dockeropts --name ${docker_container_name}"
+      fi
+      boshopts+=("--container-opts" "$dockeropts")
       ;;
     singularity)
       checkSingularity
