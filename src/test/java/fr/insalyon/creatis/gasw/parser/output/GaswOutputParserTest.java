@@ -45,6 +45,7 @@ public class GaswOutputParserTest {
 
     @BeforeEach
     public void mockDB() throws GaswException, SQLException {
+        GaswConfiguration.setStrict(false);
         config =  GaswConfiguration.getInstance();
         MockitoAnnotations.openMocks(this);
 

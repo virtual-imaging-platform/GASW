@@ -76,6 +76,7 @@ public class GaswConfiguration {
     private static final String configDir = "./conf";
     private static final String configFile = "settings.conf";
     private static GaswConfiguration instance;
+    private static boolean strict = true;
     private PropertiesConfiguration config;
     private PluginManager pm;
     // Properties
@@ -125,12 +126,6 @@ public class GaswConfiguration {
     private List<ListenerPlugin> listenerPlugins;
     private SessionFactory sessionFactory;
 
-    /**
-     * Gets an instance of GASW configuration class.
-     *
-     * @return
-     * @throws GaswException
-     */
     public static GaswConfiguration getInstance() throws GaswException {
 
         if (instance == null) {
@@ -139,8 +134,11 @@ public class GaswConfiguration {
         return instance;
     }
 
-    private GaswConfiguration() throws GaswException {
+    public static void setStrict(boolean strict) {
+        GaswConfiguration.strict = strict;
+    }
 
+    private GaswConfiguration() throws GaswException {
         loadConfigurationFile();
         loadPlugins();
 
@@ -149,13 +147,7 @@ public class GaswConfiguration {
         }
     }
 
-    /**
-     * Loads GASW configuration file.
-     *
-     * @throws GaswException
-     */
     private void loadConfigurationFile() throws GaswException {
-
         try {
             executionPath = new File("").getAbsolutePath();
             simulationID = executionPath.substring(executionPath.lastIndexOf("/") + 1);
@@ -182,7 +174,7 @@ public class GaswConfiguration {
             boutiquesProvenanceDir = config.getString(GaswConstants.LAB_BOUTIQUES_PROV_DIR, "\"$HOME/.cache/boutiques/data\"");
             boutiquesFileName = config.getString(GaswConstants.LAB_BOUTIQUES_FILE_NAME, "workflow.json");
 
-            containersRuntime = config.getString(GaswConstants.LAB_CONTAINERS_RUNTIME,"\"singularity\""); // docker / singularity. Should be provided by config
+            containersRuntime = getRequiredString(config, GaswConstants.LAB_CONTAINERS_RUNTIME);
             containersImagesBasePath = config.getString(GaswConstants.LAB_CONTAINERS_IMAGES_BASEPATH,"\"/cvmfs/biomed.egi.eu/vip/singularity\""); // path on singularity images. Should be provided by config
 
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
@@ -240,6 +232,14 @@ public class GaswConfiguration {
 
         } catch (ConfigurationException ex) {
             logger.error(ex);
+        }
+    }
+
+    private String getRequiredString(PropertiesConfiguration config, String key) throws GaswException {
+        if (config.getString(key) == null && strict) {
+            throw new GaswException("The property " + key + " should be present in configuration file!");
+        } else {
+            return config.getString(key);
         }
     }
 
