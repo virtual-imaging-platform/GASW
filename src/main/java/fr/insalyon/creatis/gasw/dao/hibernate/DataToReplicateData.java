@@ -37,19 +37,17 @@ package fr.insalyon.creatis.gasw.dao.hibernate;
 import fr.insalyon.creatis.gasw.bean.DataToReplicate;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DataToReplicateDAO;
+
 import java.util.List;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-/**
- *
- * @author Rafael Silva
- */
 public class DataToReplicateData implements DataToReplicateDAO {
 
-    private static final Logger logger = Logger.getLogger(JobData.class);
+    private static final Logger logger = LoggerFactory.getLogger(DataToReplicate.class);
     private SessionFactory sessionFactory;
 
     public DataToReplicateData(SessionFactory sessionFactory) {
@@ -66,7 +64,7 @@ public class DataToReplicateData implements DataToReplicateDAO {
             session.getTransaction().commit();
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while adding", ex);
             throw new DAOException(ex);
         }
     }
@@ -80,7 +78,7 @@ public class DataToReplicateData implements DataToReplicateDAO {
             session.getTransaction().commit();
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while updating", ex);
             throw new DAOException(ex);
         }
     }
@@ -94,7 +92,7 @@ public class DataToReplicateData implements DataToReplicateDAO {
             session.getTransaction().commit();
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error whice removing", ex);
             throw new DAOException(ex);
         }
     }
@@ -111,7 +109,7 @@ public class DataToReplicateData implements DataToReplicateDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving", ex);
             throw new DAOException(ex);
         }
     }

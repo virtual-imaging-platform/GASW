@@ -4,4 +4,6 @@
 velocity.log
 out/
 err/
+workflow.out
+workflow.err
 conf/

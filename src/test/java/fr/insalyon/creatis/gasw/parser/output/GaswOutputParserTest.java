@@ -23,7 +23,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Logger;
+
 import org.h2.jdbcx.JdbcDataSource;
 
 import fr.insalyon.creatis.gasw.GaswConfiguration;
@@ -35,7 +38,7 @@ import fr.insalyon.creatis.gasw.execution.GaswStatus;
 import fr.insalyon.creatis.gasw.plugin.DatabasePlugin;
 
 public class GaswOutputParserTest {
-    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private static final Logger logger = (Logger) LoggerFactory.getLogger(GaswOutputParserTest.class);
 
     @Mock
     private DatabasePlugin databasePlugin;
@@ -100,7 +103,7 @@ public class GaswOutputParserTest {
             assertDoesNotThrow(() -> parser.get(10, TimeUnit.SECONDS));
         }
 
-        assertFalse(appender.getLogMessages().stream().anyMatch(msg -> msg.contains("[GASW Parser] Error parsing stdout")));
+    assertFalse(appender.getLogMessages().stream().anyMatch(msg -> msg.contains("Error parsing stdout")));
     }
 
     public Callable<Void> createCallable(String jobID, String filePath) {

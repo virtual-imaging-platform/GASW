@@ -37,7 +37,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 
 public class GaswUtil {
 
@@ -49,8 +49,7 @@ public class GaswUtil {
         if (index < times.length - 1) {
             index++;
         }
-        logger.warn(message + ". Next "
-                + "attempt in " + times[index] + " seconds.");
+        logger.warn("{}. Next attempt in {} seconds.", message, times[index]);
         Thread.sleep(times[index] * 1000);
         return index;
     }
@@ -77,7 +76,6 @@ public class GaswUtil {
     }
 
     public static void closeProcess(Process process) throws IOException {
-
         process.getOutputStream().close();
         process.getInputStream().close();
         process.getErrorStream().close();
