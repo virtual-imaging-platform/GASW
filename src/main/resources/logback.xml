@@ -1,5 +1,4 @@
-<configuration debug="false" scan="true" scanPeriod="60 seconds" packagingData="true"
- statusListenerClass="ch.qos.logback.core.status.NopStatusListener">
+<configuration debug="false" scan="true" scanPeriod="60 seconds" packagingData="true">
   <!-- main log file-->
   <appender name="GASW_LOG" class="ch.qos.logback.core.FileAppender">
     <file>workflow.out</file>
