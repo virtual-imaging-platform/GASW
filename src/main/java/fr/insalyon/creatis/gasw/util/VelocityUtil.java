@@ -35,12 +35,14 @@
 package fr.insalyon.creatis.gasw.util;
 
 import fr.insalyon.creatis.gasw.GaswException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Properties;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -51,13 +53,9 @@ import org.apache.velocity.runtime.log.NullLogChute;
 import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
 import org.apache.velocity.runtime.resource.util.StringResourceRepository;
 
-/**
- *
- * @author Rafael Ferreira da Silva
- */
 public class VelocityUtil {
 
-    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private static final Logger logger = LoggerFactory.getLogger(VelocityUtil.class);
     private static volatile VelocityEngine ve;
     private Template template;
     private VelocityContext context;
@@ -67,7 +65,6 @@ public class VelocityUtil {
     }
 
     public VelocityUtil(String templatePath, boolean enableLogging) throws Exception {
-
         if (ve == null) {
             Properties properties = new Properties();
             properties.setProperty("resource.loader", "string");
@@ -109,7 +106,6 @@ public class VelocityUtil {
      * @throws GaswException
      */
     public StringWriter merge() throws GaswException {
-
         try {
             StringWriter writer = new StringWriter();
             template.merge(context, writer);
@@ -117,19 +113,18 @@ public class VelocityUtil {
             return writer;
 
         } catch (ResourceNotFoundException ex) {
-            logger.error(ex);
+            logger.error("Error:", ex);
             throw new GaswException(ex);
         } catch (ParseErrorException ex) {
-            logger.error(ex);
+            logger.error("Error:", ex);
             throw new GaswException(ex);
         } catch (MethodInvocationException ex) {
-            logger.error(ex);
+            logger.error("Error:", ex);
             throw new GaswException(ex);
         }
     }
 
     private String getTemplateFromResource(final String templatePath) {
-
         try {
             InputStream stream = ClassLoader.getSystemResourceAsStream(templatePath);
             return IOUtils.toString(stream, "UTF-8");

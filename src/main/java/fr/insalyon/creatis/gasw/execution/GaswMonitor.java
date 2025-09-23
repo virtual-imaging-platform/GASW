@@ -40,25 +40,21 @@ import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.dao.NodeDAO;
 import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.List;
 
-/**
- *
- * @author Rafael Ferreira da Silva
- */
 public abstract class GaswMonitor extends Thread {
 
-    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private static final Logger logger = LoggerFactory.getLogger(GaswMonitor.class);
 
     private volatile static int INVOCATION_ID = 1;
     protected JobDAO jobDAO;
     protected NodeDAO nodeDAO;
 
     protected GaswMonitor() {
-
         try {
             jobDAO = DAOFactory.getDAOFactory().getJobDAO();
             nodeDAO = DAOFactory.getDAOFactory().getNodeDAO();
@@ -68,12 +64,6 @@ public abstract class GaswMonitor extends Thread {
         }
     }
 
-    /**
-     * Adds a job to the database.
-     *
-     * @param job
-     * @param fileName
-     */
     protected synchronized void add(Job job) throws GaswException {
         try {
             // Defining invocation ID
@@ -101,20 +91,12 @@ public abstract class GaswMonitor extends Thread {
     /**
      * Adds a job to be monitored. It should constructs a Job object and invoke
      * the protected method add(job).
-     *
-     * @param jobID
-     * @param symbolicName
-     * @param fileName
-     * @throws GaswException
      */
     public abstract void add(String jobID, String symbolicName, String fileName,
             String parameters) throws GaswException;
 
     /**
      * Updates the job status and notifies listeners.
-     *
-     * @param job
-     * @throws DAOException
      */
     protected void updateStatus(Job job) throws GaswException, DAOException {
 
@@ -124,9 +106,6 @@ public abstract class GaswMonitor extends Thread {
         jobDAO.update(job);
     }
 
-    /**
-     * Verifies if there are signaled jobs.
-     */
     protected void verifySignaledJobs() {
 
         try {
@@ -158,54 +137,20 @@ public abstract class GaswMonitor extends Thread {
                 resume(job);
             }
         } catch (DAOException ex) {
-            logger.error("[Gasw Monitor] Error handling signaled jobs", ex);
+            logger.error("Error handling signaled jobs", ex);
         }
     }
 
     /**
      * Verifies if a job is replica and handles it in case it is.
-     *
-     * @param job
-     * @return
-     * @throws GaswException
-     * @throws DAOException
      */
     protected boolean isReplica(Job job) throws DAOException {
         return jobDAO.getNumberOfCompletedJobsByInvocationID(job.getInvocationID()) > 0;
     }
 
-    /**
-     * Kills a job.
-     *
-     * @param jobID
-     */
     protected abstract void kill(Job job);
-
-    /**
-     * Reschedule a job.
-     *
-     * @param jobID
-     */
     protected abstract void reschedule(Job job);
-
-    /**
-     * Replicates a job.
-     *
-     * @param jobID
-     */
     protected abstract void replicate(Job job);
-
-    /**
-     * Kills job replicas.
-     *
-     * @param invocationID
-     */
     protected abstract void killReplicas(Job job);
-
-    /**
-     * Resumes a job.
-     *
-     * @param jobID
-     */
     protected abstract void resume(Job job);
 }

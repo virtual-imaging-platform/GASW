@@ -37,18 +37,15 @@ package fr.insalyon.creatis.gasw.dao.hibernate;
 import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.SEEntryPointsDAO;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-/**
- *
- * @author Rafael Silva
- */
 public class SEEntryPointData implements SEEntryPointsDAO {
 
-    private static final Logger logger = Logger.getLogger(JobData.class);
+    private static final Logger logger = LoggerFactory.getLogger(SEEntryPointData.class);
     private SessionFactory sessionFactory;
 
     public SEEntryPointData(SessionFactory sessionFactory) {
@@ -65,7 +62,7 @@ public class SEEntryPointData implements SEEntryPointsDAO {
             session.getTransaction().commit();
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while adding", ex);
             throw new DAOException(ex);
         }
     }
@@ -83,7 +80,7 @@ public class SEEntryPointData implements SEEntryPointsDAO {
             return entryPoint;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving", ex);
             throw new DAOException(ex);
         }
     }

@@ -42,7 +42,8 @@ import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -66,13 +67,9 @@ import net.xeoh.plugins.base.impl.PluginManagerFactory;
 import net.xeoh.plugins.base.util.JSPFProperties;
 import net.xeoh.plugins.base.util.PluginManagerUtil;
 
-/**
- *
- * @author Rafael Ferreira da Silva
- */
 public class GaswConfiguration {
 
-    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private static final Logger logger = LoggerFactory.getLogger(GaswConfiguration.class);
     private static final String configDir = "./conf";
     private static final String configFile = "settings.conf";
     private static GaswConfiguration instance;
@@ -127,7 +124,6 @@ public class GaswConfiguration {
     private SessionFactory sessionFactory;
 
     public static GaswConfiguration getInstance() throws GaswException {
-
         if (instance == null) {
             instance = new GaswConfiguration();
         }
@@ -231,7 +227,7 @@ public class GaswConfiguration {
             config.save();
 
         } catch (ConfigurationException ex) {
-            logger.error(ex);
+            logger.error("Error:", ex);
         }
     }
 
@@ -243,11 +239,6 @@ public class GaswConfiguration {
         }
     }
 
-    /**
-     * Loads GASW plugins.
-     *
-     * @throws GaswException
-     */
     private void loadPlugins() throws GaswException {
 
         final JSPFProperties props = new JSPFProperties();
@@ -274,19 +265,12 @@ public class GaswConfiguration {
 
     private URI getAndLogPluginUri(String pluginPath, String pluginType) {
         URI pluginUri = new File(pluginPath).toURI();
-        logger.info("Loading " + pluginType + " plugin from " + pluginPath
-            + " (loaded URI : " + pluginUri + ")");
+        logger.info("Loading {} plugin from {} (loaded URI : {})", pluginType, pluginPath, pluginUri);
         return pluginUri;
     }
 
-    /**
-     * Loads Hibernate properties
-     *
-     * @throws GaswException
-     */
     public void loadHibernate() throws GaswException {
-
-        logger.info("Loading database plugin '" + dbPlugin.getName() + "'.");
+        logger.info("Loading database plugin '{}'.", dbPlugin.getName());
         dbPlugin.load();
 
         Configuration cfg = new Configuration();
@@ -325,10 +309,6 @@ public class GaswConfiguration {
         sessionFactory = cfg.buildSessionFactory(serviceRegistry);
     }
 
-    /**
-     *
-     * @throws GaswException
-     */
     private void loadSEEntryPoints() throws GaswException {
         try {
             logger.info("Loading SEs entry points.");
@@ -353,10 +333,10 @@ public class GaswConfiguration {
                                 service.getPath()));
 
                     } catch (URISyntaxException ex) {
-                        logger.warn("Unable to read end point from: " + s);
+                        logger.warn("Unable to read end point from: {}", s);
                     } catch (DAOException ex) {
                         if (!ex.getMessage().contains("duplicate key value")) {
-                            logger.warn("Unable to save end point: " + ex.getMessage());
+                            logger.warn("Unable to save end point: {}", ex.getMessage());
                         }
                     }
                 }
@@ -369,20 +349,15 @@ public class GaswConfiguration {
                 throw new GaswException("Unable to load SEs entry points.");
             }
         } catch (InterruptedException ex) {
-            logger.error(ex);
+            logger.error("Error:", ex);
             throw new GaswException(ex);
 
         } catch (IOException ex) {
-            logger.error(ex);
+            logger.error("Error:", ex);
             throw new GaswException(ex);
         }
     }
 
-    /**
-     * Terminates all plugins.
-     *
-     * @throws GaswException
-     */
     public void terminate(boolean force) throws GaswException {
 
         for (ExecutorPlugin executorPlugin : executorPlugins) {

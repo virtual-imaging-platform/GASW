@@ -52,21 +52,17 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author Rafael Silva
- */
 public class FailOver extends Thread {
 
-    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private static final Logger logger = LoggerFactory.getLogger(FailOver.class);
     private static FailOver instance;
     private volatile boolean stop = false;
     private DataToReplicateDAO dataToReplicateDAO;
 
     public synchronized static FailOver getInstance() {
-
         if (instance == null) {
             instance = new FailOver();
             instance.start();
@@ -75,7 +71,6 @@ public class FailOver extends Thread {
     }
 
     private FailOver() {
-
         try {
             dataToReplicateDAO = DAOFactory.getDAOFactory().getDataToReplicateDAO();
         } catch (DAOException ex) {
@@ -85,7 +80,6 @@ public class FailOver extends Thread {
 
     @Override
     public void run() {
-
         try {
             while (!stop) {
 
@@ -101,7 +95,7 @@ public class FailOver extends Thread {
                             data.setEventDate(new Date());
                             dataToReplicateDAO.update(data);
                         } else {
-                            logger.warn("Achieved data max attempts to reply '" + data.getUrl().getPath() + "'.");
+                            logger.warn("Achieved data max attempts to reply '{}'.", data.getUrl().getPath());
                             dataToReplicateDAO.remove(data);
                         }
                     }
@@ -113,17 +107,11 @@ public class FailOver extends Thread {
         } catch (GaswException ex) {
             // do nothing
         } catch (InterruptedException ex) {
-            logger.error(ex);
+            logger.error("InterruptedException: ",ex);
         }
     }
 
-    /**
-     *
-     * @param uri
-     * @throws DAOException
-     */
     public synchronized void addData(URI uri) {
-
         try {
             String scheme = uri.getScheme();
             if (scheme == null || (!scheme.equalsIgnoreCase("file")
@@ -132,35 +120,20 @@ public class FailOver extends Thread {
                 dataToReplicateDAO.add(new DataToReplicate(uri));
             }
         } catch (DAOException ex) {
-            logger.error("Unable to add data to replication table: " + ex.getMessage());
+            logger.error("Unable to add data to replication table: {}", ex.getMessage());
         }
     }
 
-    /**
-     *
-     * @param uris
-     * @throws DAOException
-     */
     public synchronized void addData(List<URI> uris) {
-
         for (URI uri : uris) {
             addData(uri);
         }
     }
 
-    /**
-     * Terminates the fail over thread.
-     */
     public synchronized void terminate() {
-
         this.stop = true;
     }
 
-    /**
-     *
-     * @param uri
-     * @throws GaswException
-     */
     private void replicate(URI uri) throws GaswException {
 
         List<URI> replicas = getReplicas(uri);
@@ -171,7 +144,7 @@ public class FailOver extends Thread {
             }
         }
 
-        logger.info("Replicating '" + uri.getPath() + "'.");
+        logger.info("Replicating '{}'.", uri.getPath());
         Process process = null;
         BufferedReader br = null;
 
@@ -197,11 +170,11 @@ public class FailOver extends Thread {
                     return;
                 }
             } catch (InterruptedException ex) {
-                logger.warn(ex);
+                logger.warn("InterruptedException:", ex);
             } catch (DAOException ex) {
-                logger.warn("Unable to find entry point for '" + replica.getHost() + "'.");
+                logger.warn("Unable to find entry point for '{}'.", replica.getHost());
             } catch (IOException ex) {
-                logger.warn(ex);
+                logger.warn("IOException:", ex);
             } finally {
                 if (process != null) {
                     close(process);
@@ -210,7 +183,7 @@ public class FailOver extends Thread {
                     try {
                         br.close();
                     } catch (IOException ex) {
-                        logger.error(ex);
+                        logger.error("IOException:", ex);
                     }
                 }
             }
@@ -218,12 +191,6 @@ public class FailOver extends Thread {
         throw new GaswException("Unable to replicate '" + uri.getPath() + "'.");
     }
 
-    /**
-     *
-     * @param uri
-     * @return
-     * @throws GaswException
-     */
     private List<URI> getReplicas(URI uri) throws GaswException {
 
         Process process = null;
@@ -244,17 +211,17 @@ public class FailOver extends Thread {
             process.waitFor();
 
             if (process.exitValue() != 0) {
-                logger.error("Unable to get replicas from '" + uri.getPath() + "'.");
+                logger.error("Unable to get replicas from '{}'.", uri.getPath());
                 throw new GaswException("Unable to get replicas from '" + uri.getPath() + "'.");
             }
         } catch (InterruptedException ex) {
-            logger.error(ex);
+            logger.error("InterruptedException:", ex);
             throw new GaswException(ex);
         } catch (IOException ex) {
-            logger.error(ex);
+            logger.error("IOException:", ex);
             throw new GaswException(ex);
         } catch (URISyntaxException ex) {
-            logger.error(ex);
+            logger.error("URISyntaxException:", ex);
             throw new GaswException(ex);
 
         } finally {
@@ -265,19 +232,13 @@ public class FailOver extends Thread {
                 try {
                     br.close();
                 } catch (IOException ex) {
-                    logger.error(ex);
+                    logger.error("IOException:", ex);
                 }
             }
         }
         return replicas;
     }
 
-    /**
-     * Gets the destination SURL
-     *
-     * @return
-     * @throws GaswException
-     */
     private String getDestinationSURL() throws GaswException {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -288,14 +249,6 @@ public class FailOver extends Thread {
                 + "/" + sdf.format(new Date()) + "/file-" + UUID.randomUUID();
     }
 
-    /**
-     * Gets the source file SURL and type
-     *
-     * @param host
-     * @param path
-     * @return
-     * @throws DAOException
-     */
     private String[] getSourceTypeAndSURL(String host, String path) throws DAOException {
 
         SEEntryPoint ep = DAOFactory.getDAOFactory().getSEEntryPointDAO().getByHostName(host);
