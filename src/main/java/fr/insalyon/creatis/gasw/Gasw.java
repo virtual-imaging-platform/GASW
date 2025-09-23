@@ -89,13 +89,13 @@ public class Gasw {
         notification.waitForNotification();
     }
 
-    public synchronized void terminate() throws GaswException {
+    public synchronized void terminate(boolean force) throws GaswException {
         notification.terminate();
 
         if (GaswConfiguration.getInstance().isFailOverEnabled()) {
             FailOver.getInstance().terminate();
         }
 
-        GaswConfiguration.getInstance().terminate();
+        GaswConfiguration.getInstance().terminate(force);
     }
 }

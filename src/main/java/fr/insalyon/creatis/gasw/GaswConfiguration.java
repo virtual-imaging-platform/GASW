@@ -73,6 +73,7 @@ public class GaswConfiguration {
     private static final String configDir = "./conf";
     private static final String configFile = "settings.conf";
     private static GaswConfiguration instance;
+    private static boolean strict = true;
     private PropertiesConfiguration config;
     private PluginManager pm;
     // Properties
@@ -129,6 +130,10 @@ public class GaswConfiguration {
         return instance;
     }
 
+    public static void setStrict(boolean strict) {
+        GaswConfiguration.strict = strict;
+    }
+
     private GaswConfiguration() throws GaswException {
         loadConfigurationFile();
         loadPlugins();
@@ -165,7 +170,7 @@ public class GaswConfiguration {
             boutiquesProvenanceDir = config.getString(GaswConstants.LAB_BOUTIQUES_PROV_DIR, "\"$HOME/.cache/boutiques/data\"");
             boutiquesFileName = config.getString(GaswConstants.LAB_BOUTIQUES_FILE_NAME, "workflow.json");
 
-            containersRuntime = config.getString(GaswConstants.LAB_CONTAINERS_RUNTIME,"\"singularity\""); // docker / singularity. Should be provided by config
+            containersRuntime = getRequiredString(config, GaswConstants.LAB_CONTAINERS_RUNTIME);
             containersImagesBasePath = config.getString(GaswConstants.LAB_CONTAINERS_IMAGES_BASEPATH,"\"/cvmfs/biomed.egi.eu/vip/singularity\""); // path on singularity images. Should be provided by config
 
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
@@ -223,6 +228,14 @@ public class GaswConfiguration {
 
         } catch (ConfigurationException ex) {
             logger.error("Error:", ex);
+        }
+    }
+
+    private String getRequiredString(PropertiesConfiguration config, String key) throws GaswException {
+        if (config.getString(key) == null && strict) {
+            throw new GaswException("The property " + key + " should be present in configuration file!");
+        } else {
+            return config.getString(key);
         }
     }
 
@@ -345,10 +358,10 @@ public class GaswConfiguration {
         }
     }
 
-    public void terminate() throws GaswException {
+    public void terminate(boolean force) throws GaswException {
 
         for (ExecutorPlugin executorPlugin : executorPlugins) {
-            executorPlugin.terminate();
+            executorPlugin.terminate(force);
         }
         for (ListenerPlugin listenerPlugin : listenerPlugins) {
             listenerPlugin.terminate();

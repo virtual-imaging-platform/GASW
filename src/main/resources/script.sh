@@ -815,7 +815,7 @@ function performExec {
   local tmpfolder=$(mktemp -d -p "$PWD" "tmp-XXXXXX")
 
   # Common bosh exec flags
-  local boshopts=("--stream" "--no-automounts")
+  local boshopts=("--stream" "--no-automounts" "--no-pull")
   boshopts+=("--provenance" "{\"jobid\":\"$DIRNAME\"}")
   boshopts+=("-v" "$PWD/../cache:$PWD/../cache")
   boshopts+=("-v" "$tmpfolder:/tmp")
@@ -868,26 +868,25 @@ function performExec {
   # Here we get container options from the descriptor for the appropriate
   # system, using either the builtin boutiques field or vip custom one.
   local conopts=""
-  local conoptsCustom=false
   if [ "$descriptorContainerType" = "$containerType" ]; then
     conopts=$(getContainerOpts "../$boutiquesFilename" "container-image" "container-opts")
   else
     conopts=$(getContainerOpts "../$boutiquesFilename" "custom" "vip:altContainerOpts")
-    conoptsCustom=true
   fi
 
   # check that the container system is available, and adjust runtime options
   case "$containerType" in
     docker)
       checkDocker
-      if $conoptsCustom && [ -n "$conopts" ]; then
-        # Known limitation: with bosh <=0.5.30, the line below is effectively
-        # a no-op, as command-line options passed here are just ignored by
-        # bosh when $descriptorContainerType=singularity.
-        # This is a bosh issue with --force-docker, which might be patched in
-        # a future version.
-        boshopts+=("--container-opts" "$conopts")
-      fi # else, just let bosh use container-opts from the descriptor
+      # Build a unique container name: workflow-id + job-id, then normalize
+      local workflow_id="$(basename "$BASEDIR")"
+      local docker_container_name="${workflow_id}-${DIRNAME}"
+      docker_container_name=$(echo "$docker_container_name" \
+        | tr '[:upper:]' '[:lower:]' \
+        | sed -r 's/[^a-z0-9_.-]+/-/g; s/^-+//; s/-+$//')
+      # Always append --name to override any prior name and ensure uniqueness
+      conopts="$conopts --name ${docker_container_name}"
+      boshopts+=("--container-opts" "$conopts")
       ;;
     singularity)
       checkSingularity
