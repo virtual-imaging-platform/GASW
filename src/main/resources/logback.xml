@@ -1,0 +1,25 @@
+<configuration debug="false" scan="true" scanPeriod="60 seconds" packagingData="true">
+  <!-- main log file-->
+  <appender name="GASW_LOG" class="ch.qos.logback.core.FileAppender">
+    <file>workflow.out</file>
+    <encoder>
+      <pattern>%d | %5p | %t | %c{1}:%L - %m%n %ex{2}</pattern>
+    </encoder>
+  </appender>
+
+  <!-- error log file-->
+  <appender name="GASW_ERROR" class="ch.qos.logback.core.FileAppender">
+    <file>workflow.err</file>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>WARN</level>
+    </filter>
+    <encoder>
+      <pattern>%d | %5p | %t | %c{1}:%M:%L - %m%n %ex</pattern>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="GASW_LOG"/>
+    <appender-ref ref="GASW_ERROR"/>
+  </root>
+</configuration>

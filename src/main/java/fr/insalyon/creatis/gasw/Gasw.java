@@ -35,17 +35,13 @@ package fr.insalyon.creatis.gasw;
 import fr.insalyon.creatis.gasw.execution.ExecutorFactory;
 import fr.insalyon.creatis.gasw.execution.FailOver;
 import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
+
 import java.util.List;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author Rafael Ferreira da Silva
- */
 public class Gasw {
-
-    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private static final Logger logger = LoggerFactory.getLogger(Gasw.class);
     private static Gasw instance;
     private GaswNotification notification;
 
@@ -63,10 +59,7 @@ public class Gasw {
     }
 
     private Gasw() throws GaswException {
-
         try {
-            PropertyConfigurator.configure(
-                    Gasw.class.getClassLoader().getResource("gaswLog4j.properties"));
             logger.info("Initializing GASW.");
             GaswConfiguration.getInstance().loadHibernate();
 
@@ -77,22 +70,10 @@ public class Gasw {
         }
     }
 
-    /**
-     * Sets the client which will receive notifications.
-     *
-     * @param client
-     */
     public synchronized void setNotificationClient(Object client) {
-
         notification.setClient(client);
     }
 
-    /**
-     *
-     * @param gaswInput
-     * @return
-     * @throws GaswException
-     */
     public synchronized String submit(GaswInput gaswInput) throws GaswException {
 
         ExecutorPlugin executor = ExecutorFactory.getExecutor(gaswInput);
@@ -100,34 +81,21 @@ public class Gasw {
         return executor.submit();
     }
 
-    /**
-     * Gets the list of output objects of all finished jobs
-     *
-     * @return List of output objects of finished jobs.
-     */
     public synchronized List<GaswOutput> getFinishedJobs() {
         return notification.getFinishedJobs();
     }
 
-    /**
-     * The client informs GASW that it is waiting for new notifications.
-     */
     public synchronized void waitForNotification() {
         notification.waitForNotification();
     }
 
-    /**
-     * Terminates all GASW threads and close the connection with the database.
-     *
-     * @throws GaswException
-     */
-    public synchronized void terminate() throws GaswException {
+    public synchronized void terminate(boolean force) throws GaswException {
         notification.terminate();
 
         if (GaswConfiguration.getInstance().isFailOverEnabled()) {
             FailOver.getInstance().terminate();
         }
 
-        GaswConfiguration.getInstance().terminate();
+        GaswConfiguration.getInstance().terminate(force);
     }
 }

@@ -36,19 +36,17 @@ import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.execution.GaswStatus;
+
 import java.util.List;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-/**
- *
- * @author Rafael Ferreira da Silva
- */
 public class JobData implements JobDAO {
 
-    private static final Logger logger = Logger.getLogger(JobData.class);
+    private static final Logger logger = LoggerFactory.getLogger(JobData.class);
     private SessionFactory sessionFactory;
 
     public JobData(SessionFactory sessionFactory) {
@@ -63,7 +61,7 @@ public class JobData implements JobDAO {
             session.getTransaction().commit();
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while adding", ex);
             throw new DAOException(ex);
         }
     }
@@ -81,7 +79,7 @@ public class JobData implements JobDAO {
                 session.getTransaction().commit();
     
             } catch (HibernateException ex) {
-                logger.error(ex);
+                logger.error("Error while updateing", ex);
                 throw new DAOException(ex);
             }
         }
@@ -96,7 +94,7 @@ public class JobData implements JobDAO {
                 session.getTransaction().commit();
 
             } catch (HibernateException ex) {
-                logger.error(ex);
+                logger.error("Error while removing", ex);
                 throw new DAOException(ex);
            }
         }
@@ -115,7 +113,7 @@ public class JobData implements JobDAO {
             return job;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving by ID", ex);
             throw new DAOException(ex);
         }
     }
@@ -138,7 +136,7 @@ public class JobData implements JobDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving actives jobs", ex);
             throw new DAOException(ex);
         }
     }
@@ -155,7 +153,7 @@ public class JobData implements JobDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving jobs", ex);
             throw new DAOException(ex);
         }
     }
@@ -174,7 +172,7 @@ public class JobData implements JobDAO {
             return completedJobs;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving completed jobs by invocation ID",ex);
             throw new DAOException(ex);
         }
     }
@@ -198,7 +196,7 @@ public class JobData implements JobDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving actives jobs by invocation ID", ex);
             throw new DAOException(ex);
         }
     }
@@ -220,7 +218,7 @@ public class JobData implements JobDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving failed jobs by invocation ID", ex);
             throw new DAOException(ex);
         }
     }
@@ -242,7 +240,7 @@ public class JobData implements JobDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving running jobs by command", ex);
             throw new DAOException(ex);
         }
     }
@@ -261,7 +259,7 @@ public class JobData implements JobDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving completed jobs by command", ex);
             throw new DAOException(ex);
         }
     }
@@ -279,7 +277,7 @@ public class JobData implements JobDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving jobs by parameters", ex);
             throw new DAOException(ex);
         }
     }
@@ -301,13 +299,13 @@ public class JobData implements JobDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving failed jobs by command", ex);
             throw new DAOException(ex);
         }
     }
 
     @Override
-    public List<Job>  getJobsByCommand(String command) throws DAOException {
+    public List<Job> getJobsByCommand(String command) throws DAOException {
 
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
@@ -319,7 +317,7 @@ public class JobData implements JobDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving jobs by command", ex);
             throw new DAOException(ex);
         }
     }
@@ -337,7 +335,7 @@ public class JobData implements JobDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving invocations by command", ex);
             throw new DAOException(ex);
         }
     }
@@ -355,7 +353,7 @@ public class JobData implements JobDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving jobs by filename", ex);
             throw new DAOException(ex);
         }
     }

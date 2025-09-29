@@ -37,18 +37,15 @@ package fr.insalyon.creatis.gasw.dao.hibernate;
 import fr.insalyon.creatis.gasw.bean.Node;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.NodeDAO;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-/**
- *
- * @author Rafael Silva
- */
 public class NodeData implements NodeDAO {
 
-    private static final Logger logger = Logger.getLogger(JobData.class);
+    private static final Logger logger = LoggerFactory.getLogger(NodeData.class);
     private SessionFactory sessionFactory;
 
     public NodeData(SessionFactory sessionFactory) {
@@ -65,7 +62,7 @@ public class NodeData implements NodeDAO {
             session.getTransaction().commit();
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while adding", ex);
             throw new DAOException(ex);
         }
     }
@@ -84,7 +81,7 @@ public class NodeData implements NodeDAO {
             return node;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving", ex);
             throw new DAOException(ex);
         }
     }

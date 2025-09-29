@@ -43,7 +43,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswConstants;
@@ -53,7 +54,7 @@ import fr.insalyon.creatis.gasw.script.MoteurliteConfigGenerator;
 
 public abstract class GaswSubmit {
 
-    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private static final Logger logger = LoggerFactory.getLogger(GaswSubmit.class);
     protected GaswInput gaswInput;
     protected String scriptName;
     protected String jdlName;
@@ -135,7 +136,7 @@ public abstract class GaswSubmit {
             return fileName;
 
         } catch (IOException ex) {
-            logger.error(ex);
+            logger.error("Failed to publishJdl", ex);
             return null;
         }
     }
