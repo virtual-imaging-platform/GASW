@@ -178,8 +178,10 @@ function checkBosh {
   else # if bosh CVMFS works fine
     export BOSHEXEC="$boshCVMFSPath/bosh"
   fi
-  # also check that "import boutiques" works (see getOutputFilenames)
-  if ! python -c "import boutiques"; then
+  # Get the python interpreter used by bosh,
+  # and check that "import boutiques" works, for use in getOutputFilenames.
+  export BOSHPYTHON=$(head -n1 "$(which "$BOSHEXEC")" | tail -c +3)
+  if ! "$BOSHPYTHON" -c "import boutiques"; then
     error "import boutiques fails"
     exit 1
   fi
@@ -1276,7 +1278,7 @@ function getOutputFilenames {
   local provenanceFile="$1"
   local descriptorFile="$2"
   local invocationFile="$3"
-  python <<EOF
+  "$BOSHPYTHON" <<EOF
 import json, sys, os, boutiques
 def getPathTemplate(outputs,name):
     if(type(outputs) is dict and name in outputs):
