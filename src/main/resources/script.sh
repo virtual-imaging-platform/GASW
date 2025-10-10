@@ -109,6 +109,43 @@ function getJsonDepth2 {
   python -c 'import sys,json;v=json.load(sys.stdin).get("'"$key1"'",None);print(v.get("'"$key2"'","") if isinstance(v,dict) else "")' < "$file"
 }
 
+# getContainerOpts: get container-opts from a descriptor file.
+# This should stay consistent with how boutiques builds this options string.
+function getContainerOpts {
+  local file="$1"
+  local key1="$2"
+  local key2="$3"
+  python <<EOF
+import sys,json
+with open("$file", "r") as f:
+    v = json.load(f).get("$key1")
+    if not isinstance(v,dict):
+        exit(0)
+    conOpts = v.get("$key2")
+    if not isinstance(conOpts,list):
+        exit(0)
+    conOptsString=""
+    for opt in conOpts:
+        conOptsString += opt + " "
+    print(conOptsString)
+EOF
+}
+
+# addToPath: add a directory to $PATH if not already there
+function addToPath {
+  local dir="$1"
+  if [[ ":$PATH:" != *":$dir:"* ]]; then
+    export PATH="$dir:$PATH"
+  fi
+}
+
+# pipInstallUser: install python packages as local user,
+# and make sure that $HOME/.local/bin is in $PATH
+function pipInstallUser {
+  addToPath "$HOME/.local/bin"
+  pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --user "$@"
+}
+
 ## runtime tools installation
 
 # checkBosh: install bosh if needed, or make it available in PATH
@@ -123,8 +160,7 @@ function checkBosh {
       local HOMEBOSH=$(find "$HOME" -name bosh)
       if [ -z "$HOMEBOSH" ]; then
         info "bosh not found, trying to install it"
-        export PATH="$HOME/.local/bin:$PATH"
-        pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --user boutiques
+        pipInstallUser boutiques
         if [ $? != 0 ]; then
           error "pip install boutiques failed"
           error "Exiting with return value 14"
@@ -142,6 +178,13 @@ function checkBosh {
     fi
   else # if bosh CVMFS works fine
     export BOSHEXEC="$boshCVMFSPath/bosh"
+  fi
+  # Get the python interpreter used by bosh,
+  # and check that "import boutiques" works, for use in getOutputFilenames.
+  export BOSHPYTHON=$(head -n1 "$(which "$BOSHEXEC")" | tail -c +3)
+  if ! "$BOSHPYTHON" -c "import boutiques"; then
+    error "import boutiques fails"
+    exit 1
   fi
 }
 
@@ -195,7 +238,7 @@ function checkSingularity {
 # checkGirderClient: install girder-client if needed
 function checkGirderClient {
   if ! command -v girder-client; then
-    pip install --user girder-client
+    pipInstallUser girder-client
     if [ $? != 0 ]; then
       error "girder-client not in PATH, and an error occured while trying to install it."
       error "Exiting with return value 11"
@@ -537,7 +580,7 @@ function downloadGirderFile {
 
   checkGirderClient
 
-  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} download --parent-type file ${fileId} ./${fileName}"
+  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} download --parent-type auto ${fileId} ./${fileName}"
   echo "downloadGirderFile, command line is ${COMMLINE}"
   ${COMMLINE}
 }
@@ -774,12 +817,13 @@ function performExec {
   # or blank (i.e. no container). If $containerType is not blank, its value
   # may still get overridden by $containersRuntime below.
   local containerType=$(getJsonDepth2 "../$boutiquesFilename" "container-image" "type")
+  local descriptorContainerType="$containerType"
 
   # Temporary directory for /tmp in containers
   local tmpfolder=$(mktemp -d -p "$PWD" "tmp-XXXXXX")
 
   # Common bosh exec flags
-  local boshopts=("--stream")
+  local boshopts=("--stream" "--no-automounts" "--no-pull")
   boshopts+=("--provenance" "{\"jobid\":\"$DIRNAME\"}")
   boshopts+=("-v" "$PWD/../cache:$PWD/../cache")
   boshopts+=("-v" "$tmpfolder:/tmp")
@@ -830,20 +874,39 @@ function performExec {
     boshopts+=("--imagepath" "$imagepath")
   fi
 
-  # $containerType now contains the real runtime, check it
+  # $containerType now contains the container system we'll use,
+  # and $descriptorContainerType contains the one from the descriptor.
+  # Here we get container options from the descriptor for the appropriate
+  # system, using either the builtin boutiques field or vip custom one.
+  local conopts=""
+  if [ "$descriptorContainerType" = "$containerType" ]; then
+    conopts=$(getContainerOpts "../$boutiquesFilename" "container-image" "container-opts")
+  else
+    conopts=$(getContainerOpts "../$boutiquesFilename" "custom" "vip:altContainerOpts")
+  fi
+
+  # check that the container system is available, and adjust runtime options
   case "$containerType" in
     docker)
       checkDocker
+      # Build a unique container name: workflow-id + job-id, then normalize
+      local workflow_id="$(basename "$BASEDIR")"
+      local docker_container_name="${workflow_id}-${DIRNAME}"
+      docker_container_name=$(echo "$docker_container_name" \
+        | tr '[:upper:]' '[:lower:]' \
+        | sed -r 's/[^a-z0-9_.-]+/-/g; s/^-+//; s/-+$//')
+      # Always append --name to override any prior name and ensure uniqueness
+      conopts="$conopts --name ${docker_container_name}"
+      boshopts+=("--container-opts" "$conopts")
       ;;
     singularity)
       checkSingularity
       # Set an overlay dir to allow filesystem writes to any user-writable dir
       # within the container. This overlay is a one-time use, and will be
-      # removed in cleanup(). Note that:
-      # . --container-opts requires bosh >=0.5.29
-      # . it overrides "container-opts" from the descriptor
+      # removed in cleanup(). It requires bosh >= 0.5.30.
       local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
-      boshopts+=("--container-opts" "--overlay $overlayfolder")
+      # Pass all options to bosh
+      boshopts+=("--container-opts" "${conopts}--overlay $overlayfolder")
       ;;
   esac
 
@@ -1025,6 +1088,62 @@ function uploadShanoirFile {
   fi
 }
 
+# girderMkdir: check and create N levels of directories on a girder API
+# In addition to positional args, this function also updates
+# $parentId as an input/output arg:
+# . $parentId input: top-level girder id under which $subdir must be created
+# . $parentId output: girder id of the last subdirectory in $subdir
+function girderMkdir {
+  local apiUrl="$1"    # girder API URL (including the /v1/api part)
+  local token="$2"     # authentication token
+  local subdir="$3"    # subdirectory name, can be multi-level
+
+  # Temporary file for HTTP response storage
+  local response=$(mktemp girderMkdir.XXXXXX)
+
+  info "girderMkdir: parentId=$parentId subdir=$subdir"
+  while [ -n "$subdir" ]; do
+    # Get the next top-level directory name in $subdir
+    local itemname=${subdir%%/*}
+
+    # Check if directory exists
+    local status_code=$(curl -s --write-out "%{http_code}" -o "$response" -H "Girder-Token: $token" -X GET "$apiUrl/folder?parentType=folder&parentId=$parentId&name=$itemname")
+    if [ "$status_code" != 200 ]; then
+      error "Error while checking girder directory (HTTP: $status_code)"
+      exit 1
+    fi
+    # Get ".[0]._id" in response: a non-empty value means the directory exists
+    local childId=$(python -c 'import sys,json;v=json.load(sys.stdin);print(v[0].get("_id") if type(v) is list and len(v)>0 and type(v[0]) is dict and "_id" in v[0] else "")' < "$response")
+
+    if [ -z "$childId" ]; then
+      # Directory doesn't exist, create it. Set reuseExisting=true to avoid
+      # a race in case multiple jobs share the same output dir.
+      info "girderMkdir: creating directory $itemname"
+      status_code=$(curl -s --write-out "%{http_code}" -o "$response" -H "Girder-Token: $token" -X POST "$apiUrl/folder?parentType=folder&parentId=$parentId&name=$itemname&reuseExisting=true" -d "")
+      if [ "$status_code" != 200 ]; then
+        error "Error while creating girder directory (HTTP: $status_code)"
+        exit 1
+      fi
+      # Get "._id" in response: id of the newly created directory
+      childId=$(python -c 'import sys,json;v=json.load(sys.stdin);print(v.get("_id") if type(v) is dict and "_id" in v else "")' < "$response")
+      if [ -z "$childId" ]; then
+        error "Error while creating girder directory (HTTP: $status_code, response: $(cat "$response"))"
+        exit 1
+      fi
+    else
+      info "girderMkdir: directory $itemname already exists, reusing"
+    fi
+
+    parentId="$childId"
+    if [[ "$subdir" == */* ]]; then # move one level down, go on with next item
+      subdir=${subdir#*/}
+    else # final dir item, just update parentId and stop
+      subdir=""
+    fi
+  done
+  rm -f "$response"
+}
+
 # uploadGirderFile: upload a file to a Girder server using the Girder client.
 # URI are of the form of the following example.  A single "/", instead
 # of 3, after "girder:" is also allowed.
@@ -1037,12 +1156,17 @@ function uploadGirderFile {
   local FILENAME="$2"
 
   local apiUrl=$(echo "$URI" | sed -r 's/^.*[?&]apiurl=([^&]*)(&.*)?$/\1/i')
-  local fileId=$(echo "$URI" | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i')
+  local parentId=$(echo "$URI" | sed -r 's/^.*[?&]fileid=([^&]*)(&.*)?$/\1/i')
   local token=$(echo "$URI" | sed -r 's/^.*[?&]token=([^&]*)(&.*)?$/\1/i')
 
   checkGirderClient
+  if [[ "$FILENAME" == */* ]]; then
+    # output file is in a subdir: create it if needed, and update $parentId
+    local destdir=$(dirname "$FILENAME")
+    girderMkdir "$apiUrl" "$token" "$destdir"
+  fi
 
-  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${fileId} ./${FILENAME}"
+  local COMMLINE="girder-client --api-url ${apiUrl} --token ${token} upload --parent-type folder ${parentId} ./${FILENAME}"
   echo "uploadGirderFile, command line is ${COMMLINE}"
   ${COMMLINE}
   if [ $? != 0 ]; then
@@ -1065,6 +1189,10 @@ function upload {
 
   # The pattern must NOT be put between quotation marks.
   if [[ ${RES_DIR_URI} == shanoir:/* ]]; then
+    if [[ "$FILENAME" == */* ]]; then
+      error "Unsupported subdirectory in filename for shanoir upload"
+      exit 1
+    fi
     if [ "$REFRESHING_JOB_STARTED" == false ]; then
       refresh_token "$RES_DIR_URI" &
       REFRESH_PID=$!
@@ -1083,6 +1211,14 @@ function upload {
       exit 23
     fi
 
+    if [[ "$FILENAME" == */* ]]; then
+      # this output file is in a subdir, make sure the target dir exists
+      local destdir=$(dirname "$DEST")
+      if ! [ -e "$destdir" ]; then
+        info "Creating destination subdirectory $destdir"
+        mkdir -p "$destdir"
+      fi
+    fi
     mv "$FILENAME" "$DEST"
     if [ $? != 0 ]; then
       error "ERROR_MV_FILE - Error while moving result local file"
@@ -1141,6 +1277,38 @@ function copyProvenanceFile {
   fi
 }
 
+# getOutputFilenames: Extract the outputs ids and file names.
+# Boutiques provenance file contains the basename of outputs, but not their
+# relative path, in case path-template defines one. So we combine two sources:
+# - the basename from the provenance file
+# - an optional subdir prefix, from an evaluated path-template with the
+#   descriptor+invocation files, using boutiques.evaluate
+# subdir will be used to create subdirectories in the upload destination,
+# so we disallow wildcards and ".."
+function getOutputFilenames {
+  local provenanceFile="$1"
+  local descriptorFile="$2"
+  local invocationFile="$3"
+  "$BOSHPYTHON" <<EOF
+import json, sys, os, boutiques
+def getPathTemplate(outputs,name):
+    if(type(outputs) is dict and name in outputs):
+        return outputs[name]
+    return None
+def addSubdir(outputs,name,filename):
+    pathTemplate = getPathTemplate(outputs, name)
+    if pathTemplate is not None and "/" in pathTemplate:
+        subdir = os.path.dirname(pathTemplate)
+        if "*" not in subdir and "?" not in subdir and "../" not in subdir:
+            return os.path.join(subdir, filename)
+    return filename
+descOutputs = boutiques.evaluate("$descriptorFile","$invocationFile","output-files")
+with open("$provenanceFile", "r") as file:
+    provOutputs = json.load(file)["public-output"]["output-files"]
+    print(*[f"{k}::{addSubdir(descOutputs,k,v.get('file-name'))}" for k, v in provOutputs.items()])
+EOF
+}
+
 # performUpload: handle top-level upload step
 function performUpload {
   local provenanceFile="$BASEDIR/$DIRNAME.sh.provenance.json"
@@ -1148,14 +1316,8 @@ function performUpload {
 
   startLog results_upload
 
-  # Extract the file names and store them in a bash array
-  local outputs=$(python <<EOF
-import json, sys
-with open("$provenanceFile", "r") as file:
-    outputs = json.load(file)['public-output']['output-files']
-    print(*[f"{k}::{v.get('file-name')}" for k, v in outputs.items()])
-EOF
-)
+  # Get outputs ids and filenames
+  local outputs=$(getOutputFilenames "$provenanceFile" "../$boutiquesFilename" "../inv/$invocationJsonFilename")
 
   # Remove square brackets from uploadURI
   # (we assume UploadURI will always be a single string)
@@ -1185,8 +1347,8 @@ EOF
   else
     echo "File names found:"
     for output in $outputs; do
-      output_id="${output%%::*}"
-      file_name="${output#*::}"
+      local output_id="${output%%::*}"
+      local file_name="${output#*::}"
 
       # Execute the upload command
       upload "${uploadURI}" "${file_name}" "$output_id" "$nrep"
@@ -1293,6 +1455,7 @@ if [ -f "$configurationFile" ]; then
   containersImagesBasePath=
   nrep=
   boutiquesProvenanceDir=
+  sourceScript=
 
   # shellcheck disable=SC1090
   source "$configurationFile"
@@ -1300,6 +1463,14 @@ else
   error "Configuration file $configurationFile not found!"
   error "Exiting with return value 15"
   exit 15
+fi
+
+# Register custom source script
+if [ -n "$sourceScript" ]; then
+    echo "sourcing ${sourceScript}"
+
+    # shellcheck disable=SC1090
+    source "$sourceScript"
 fi
 
 # Register cleanup handler

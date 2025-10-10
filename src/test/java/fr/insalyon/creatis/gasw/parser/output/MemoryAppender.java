@@ -3,23 +3,15 @@ package fr.insalyon.creatis.gasw.parser.output;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.spi.LoggingEvent;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.AppenderBase;
 
-public class MemoryAppender extends AppenderSkeleton {
+public class MemoryAppender extends AppenderBase<ILoggingEvent> {
     private final List<String> logMessages = new ArrayList<>();
 
     @Override
-    protected void append(LoggingEvent event) {
-        logMessages.add(event.getRenderedMessage());
-    }
-
-    @Override
-    public void close() {}
-
-    @Override
-    public boolean requiresLayout() {
-        return false;
+    protected void append(ILoggingEvent event) {
+        logMessages.add(event.getFormattedMessage());
     }
 
     public List<String> getLogMessages() {

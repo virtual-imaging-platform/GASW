@@ -79,5 +79,5 @@ public interface ExecutorPlugin extends Plugin {
      *
      * @throws GaswException
      */
-    public void terminate() throws GaswException;
+    public void terminate(boolean force) throws GaswException;
 }

@@ -39,15 +39,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author Rafael Silva
- */
 public class GaswNotification extends Thread {
 
-    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private static final Logger logger = LoggerFactory.getLogger(GaswNotification.class);
     private static GaswNotification instance;
     private Notification notification;
     private Object client;
@@ -76,30 +73,19 @@ public class GaswNotification extends Thread {
      * @param client
      */
     public void setClient(Object client) {
-
         this.client = client;
         notification = new Notification();
         notification.start();
     }
 
-    /**
-     *
-     * @param finishedJobs
-     */
     public synchronized void addFinishedJob(GaswOutput finishedJob) {
-
         this.finishedJobs.add(finishedJob);
     }
 
-    /**
-     * Gets the list of output objects of all finished jobs
-     *
-     * @return List of output objects of finished jobs.
-     */
     public List<GaswOutput> getFinishedJobs() {
-
         gettingOutputs = true;
         List<GaswOutput> outputsList = new ArrayList<GaswOutput>();
+
         synchronized (finishedJobs) {
             for (GaswOutput output : finishedJobs) {
                 outputsList.add(output);
@@ -110,9 +96,8 @@ public class GaswNotification extends Thread {
         return outputsList;
     }
 
-
     public synchronized void addErrorJob(GaswOutput errorJob) {
-        if (errorJob.getStdErr()!=null) {
+        if (errorJob.getStdErr() != null) {
             String instanceId = errorJob.getJobID();
             if (this.instanceErrorJobs.containsKey(instanceId)) {
                 this.instanceErrorJobs.replace(instanceId,errorJob);
@@ -122,9 +107,6 @@ public class GaswNotification extends Thread {
         }
     }
 
-    /**
-     * Gets the GaswOutput for the last job in error for instanceId
-     */
     public GaswOutput getGaswOutputFromLastFailedJob(String instanceId) {
         if (this.instanceErrorJobs.containsKey(instanceId)) {
             return this.instanceErrorJobs.get(instanceId);
@@ -132,27 +114,16 @@ public class GaswNotification extends Thread {
         return null;
     }
 
-    /**
-     * The client informs GASW that it is waiting for new notifications.
-     */
     public void waitForNotification() {
-
         gettingOutputs = false;
     }
 
-    /**
-     * Terminates the notification thread.
-     */
-    public void terminate() {
 
+    public void terminate() {
         notification.terminate();
     }
 
-    /**
-     * Notifies the client when tasks are finished.
-     */
     private class Notification extends Thread {
-
         private boolean stop = false;
 
         @Override
@@ -169,9 +140,9 @@ public class GaswNotification extends Thread {
                 try {
                     sleep(GaswConfiguration.getInstance().getDefaultSleeptime() / 2);
                 } catch (GaswException ex) {
-                    logger.error(ex);
+                    logger.error("Error:", ex);
                 } catch (InterruptedException ex) {
-                    logger.error(ex);
+                    logger.error("Error:", ex);
                 }
             }
         }

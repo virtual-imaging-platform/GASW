@@ -40,15 +40,12 @@ import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author Rafael Ferreira da Silva
- */
 public abstract class GaswOutputParser extends Thread {
 
-    private static final Logger logger = Logger.getLogger("fr.insalyon.creatis.gasw");
+    private static final Logger logger = LoggerFactory.getLogger(GaswOutputParser.class);
     protected Job job;
     protected File appStdOut;
     protected File appStdErr;
@@ -61,12 +58,7 @@ public abstract class GaswOutputParser extends Thread {
     protected StringBuilder appStdOutBuf;
     protected StringBuilder appStdErrBuf;
 
-    /**
-     *
-     * @param jobID job identification
-     */
     public GaswOutputParser(String jobID) {
-
         try {
             this.job = DAOFactory.getDAOFactory().getJobDAO().getJobByID(jobID);
 
@@ -86,13 +78,12 @@ public abstract class GaswOutputParser extends Thread {
 
         } catch (IOException | DAOException ex) {
             closeBuffers();
-            logger.error("[GASW Parser] Error creating std out/err " +
-                    "files and buffers for " + jobID, ex);
+            logger.error("Error creating std out/err " +
+                    "files and buffers for {}", jobID, ex);
         }
     }
 
     private void closeBuffers() {
-
         try {
             if (appStdOutWriter != null) {
                 appStdOutWriter.close();
@@ -101,13 +92,12 @@ public abstract class GaswOutputParser extends Thread {
                 appStdErrWriter.close();
             }
         } catch (IOException ex) {
-            logger.error("[GASW Parser] Error closing buffers", ex);
+            logger.error("Error closing buffers", ex);
         }
     }
 
     @Override
     public void run() {
-
         try {
             GaswOutput gaswOutput = getGaswOutput();
 
@@ -129,10 +119,10 @@ public abstract class GaswOutputParser extends Thread {
                 } else {
                     int retries = DAOFactory.getDAOFactory().getJobDAO().getFailedJobsByInvocationID(job.getInvocationID()).size() - 1;
                     if (retries < GaswConfiguration.getInstance().getDefaultRetryCount()) {
-                        logger.warn("Job [" + job.getId() + "] finished as \"" + job.getStatus().name() + "\" (retried " + retries + " times).");
+                        logger.warn("Job [{}] finished as \"{}\" (retried {} times).", job.getId(), job.getStatus().name(), retries);
                         resubmit();
                     } else {
-                        logger.warn("Job [" + job.getId() + "] finished as \"" + job.getStatus().name() + "\": holding job (max retries reached).");
+                        logger.warn("Job [{}] finished as \"{}\": holding job (max retries reached).", job.getId(), job.getStatus().name());
                         if (job.getStatus() == GaswStatus.ERROR) {
                             job.setStatus(GaswStatus.ERROR_HELD);
                         } else if (job.getStatus() == GaswStatus.STALLED) {
@@ -145,14 +135,12 @@ public abstract class GaswOutputParser extends Thread {
                     return;
                 }
             } catch (DAOException | GaswException ex) {
-                logger.error("[GASW Parser] Error finalising job " +
-                        job.getId(), ex);
+                logger.error("Error finalising job {}", job.getId(), ex);
             }
             GaswNotification.getInstance().addFinishedJob(gaswOutput);
 
         } catch (GaswException ex) {
-            logger.error("[GASW Parser] Error processing output for" +
-                    " job " + job.getId(), ex);
+            logger.error("Error processing output for job {}", job.getId(), ex);
         }
     }
 
@@ -282,7 +270,7 @@ public abstract class GaswOutputParser extends Thread {
                     } else if (line.startsWith("<file_download") && isInputDownload) {
                         String downloadedFile = line.substring(line.indexOf("=") + 1, line.length() - 1);
                         dataList.add(new Data(downloadedFile, Data.Type.Input));
-                        logger.info("[GASW Parser] Adding input " + downloadedFile + " for job " + job.getId());
+                        logger.info("Adding input {} for job {}", downloadedFile, job.getId());
 
                     } else if (line.startsWith("<results_upload>")) {
                         isResultUpload = true;
@@ -309,12 +297,11 @@ public abstract class GaswOutputParser extends Thread {
                         }
                         uploadedResults.put(outputId, uri);
                         dataList.add(new Data(uri.toString(), Data.Type.Output));
-                        logger.info("[GASW Parser] Adding output " + outputId + " " + uri + " for job " + job.getId());
+                        logger.info("Adding output {} {} for job {}" + outputId, uri, job.getId());
                     }
                 }
             } catch (Exception ex) {
-                logger.error("[GASW Parser] Error parsing stdout " +
-                        stdOut.getAbsolutePath(), ex);
+                logger.error("Error parsing stdout {}", stdOut.getAbsolutePath(), ex);
             } finally {
                 scanner.close();
             }
@@ -340,20 +327,12 @@ public abstract class GaswOutputParser extends Thread {
 
         } catch (DAOException | IOException ex) {
             closeBuffers();
-            logger.error("[GASW Parser] Error parsing stdout " +
-                    stdOut.getAbsolutePath(), ex);
+            logger.error("Error parsing stdout {}", stdOut.getAbsolutePath(), ex);
         }
         return exitCode;
     }
 
-    /**
-     *
-     * @param exitCode
-     * @return Exit code
-     */
     protected int parseStdErr(File stdErr, int exitCode) {
-
-
         try {
             Scanner scanner = new Scanner(new FileInputStream(stdErr));
 
@@ -420,17 +399,12 @@ public abstract class GaswOutputParser extends Thread {
 
         } catch (DAOException | IOException ex) {
             closeBuffers();
-            logger.error("[GASW Parser] Error parsing stderr " +
-                    stdErr.getAbsolutePath(), ex);
+            logger.error("Error parsing stderr {}", stdErr.getAbsolutePath(), ex);
 
         }
         return exitCode;
     }
 
-    /**
-     *
-     * @param exitCode
-     */
     protected void parseNonStdOut(int exitCode) {
 
         try {
@@ -438,9 +412,7 @@ public abstract class GaswOutputParser extends Thread {
             DAOFactory factory = DAOFactory.getDAOFactory();
 
             for (JobMinorStatus minorStatus : factory.getJobMinorStatusDAO().getExecutionMinorStatus(job.getId())) {
-
                 switch (minorStatus.getStatus()) {
-
                     case Application:
                         job.setRunning(minorStatus.getDate());
                         break;
@@ -454,14 +426,10 @@ public abstract class GaswOutputParser extends Thread {
 
         } catch (DAOException ex) {
             closeBuffers();
-            logger.error("[GASW Parser] Error parsing NonStdOut", ex);
+            logger.error("Error parsing NonStdOut", ex);
         }
     }
 
-    /**
-     *
-     * @return
-     */
     private void parseCheckpoint() {
 
         try {
@@ -500,17 +468,10 @@ public abstract class GaswOutputParser extends Thread {
             }
         } catch (DAOException ex) {
             closeBuffers();
-            logger.error("[GASW Parser] Error parsing checkpoints", ex);
+            logger.error("Error parsing checkpoints", ex);
         }
     }
 
-    /**
-     *
-     * @param extension File extension
-     * @param dir Output directory
-     * @param content File content
-     * @return
-     */
     protected File saveFile(String extension, String dir, String content) {
         FileWriter fstream = null;
         try {
@@ -527,12 +488,12 @@ public abstract class GaswOutputParser extends Thread {
             return stdFile;
 
         } catch (IOException ex) {
-            logger.error(ex);
+            logger.error("Error:", ex);
         } finally {
             try {
                 fstream.close();
             } catch (IOException ex) {
-                logger.error(ex);
+                logger.error("Error:", ex);
             }
         }
         return null;
@@ -556,12 +517,6 @@ public abstract class GaswOutputParser extends Thread {
                 GaswConstants.PROVENANCE_ROOT);
     }
 
-    /**
-     *
-     * @param extension
-     * @param dir
-     * @return
-     */
     protected File getAppStdFile(String extension, String dir) {
         File stdDir = new File(dir);
 
@@ -591,13 +546,6 @@ public abstract class GaswOutputParser extends Thread {
         return appStdOutBuf.toString();
     }
 
-    /**
-     *
-     * @param dateToBeAdded
-     * @param field
-     * @param amount
-     * @return
-     */
     private Date addDate(Date dateToBeAdded, int field, int amount) {
 
         Calendar calendar = Calendar.getInstance();

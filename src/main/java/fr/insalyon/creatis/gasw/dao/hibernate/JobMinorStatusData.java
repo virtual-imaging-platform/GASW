@@ -39,18 +39,15 @@ import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.JobMinorStatusDAO;
 import fr.insalyon.creatis.gasw.execution.GaswMinorStatus;
 import java.util.List;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-/**
- *
- * @author Rafael Ferreira da Silva
- */
 public class JobMinorStatusData implements JobMinorStatusDAO {
 
-    private static final Logger logger = Logger.getLogger(JobData.class);
+    private static final Logger logger = LoggerFactory.getLogger(JobMinorStatusData.class);
     private SessionFactory sessionFactory;
 
     public JobMinorStatusData(SessionFactory sessionFactory) {
@@ -67,7 +64,7 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
             session.getTransaction().commit();
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while adding", ex);
             throw new DAOException(ex);
         }
     }
@@ -88,7 +85,7 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving checkpoints", ex);
             throw new DAOException(ex);
         }
     }
@@ -112,7 +109,7 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
             return list;
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving minorstatus", ex);
             throw new DAOException(ex);
         }
     }
@@ -133,7 +130,7 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
             return Math.abs(list.get(1).getDate().getTime() - list.get(0).getDate().getTime());
 
         } catch (HibernateException ex) {
-            logger.error(ex);
+            logger.error("Error while retrieving date diff", ex);
             throw new DAOException(ex);
         }
     }
