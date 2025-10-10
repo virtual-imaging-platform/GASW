@@ -32,6 +32,9 @@
  */
 package fr.insalyon.creatis.gasw;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  * @author Tram Truong Huu, Rafael Ferreira da Silva
@@ -78,5 +81,17 @@ public enum GaswExitCode {
 
     public int getExitCode() {
         return this.exitCode;
+    }
+
+    private static final Map<Integer, GaswExitCode> LOOKUP = new HashMap<>();
+
+    static {
+        for (GaswExitCode e : values()) {
+            LOOKUP.put(e.exitCode, e);
+        }
+    }
+
+    public static GaswExitCode fromExitCode(int code) {
+        return LOOKUP.getOrDefault(code, UNDEFINED);
     }
 }
