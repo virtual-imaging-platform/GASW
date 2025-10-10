@@ -127,6 +127,7 @@ function checkBosh {
         pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --user boutiques
         if [ $? != 0 ]; then
           error "pip install boutiques failed"
+          error "Exiting with return value 14"
           exit 14
         else
           export BOSHEXEC="bosh"
@@ -376,6 +377,7 @@ function refresh_token {
     if ! [[ "$exit_code" -eq 0 && "$status_code" -eq 200 ]]; then
       local error_message=$(echo "$refresh_response" | grep -o '"error_description":"[^"]*' | grep -o '[^"]*$')
       error "error while refreshing the token: exit=${exit_code}, status=${status_code}, message: ${error_message}"
+      error "Exiting with return value 52"
       exit 52
     fi
 
@@ -422,6 +424,7 @@ function wait_for_token {
   if [[ -z "${token}" ]]; then
     echo "Token refreshing is taking too long. Aborting the process."
     stopRefreshingToken
+    error "Exiting with return value 50"
     exit 50
   fi
 }
@@ -638,6 +641,7 @@ function downloadShanoirFile {
   if [[ "${attempts}" -ge 3 ]]; then
     error "3 failures at downloading, stop trying and stop the job"
     stopRefreshingToken
+    error "Exiting with return value 51"
     exit 51
   fi
 
@@ -653,6 +657,7 @@ function downloadShanoirFile {
     if [[ $(echo -n "$searchResult" | grep -c '^') -ne 1 ]]; then
       error "too many or none nifti file (.nii or .nii.gz) in shanoir zip, supporting only 1"
       stopRefreshingToken
+      error "Exiting with return value 13"
       exit 13
     fi
     mv "$searchResult" "$fileName"
@@ -666,6 +671,7 @@ function validateDownload {
   if [ $? != 0 ]; then
     echo "$1"
     echo "ERROR_DL - Download was not successful "
+    error "Exiting with return value 30"
     exit 30
   fi
 }
@@ -802,17 +808,20 @@ function performExec {
         local imgtag=$(echo "$image" | cut -d: -f2)
         if [ -z "$imgname" ] || [ -z "$imgtag" ]; then
           error "Invalid image name: '$image'"
+          error "Exiting with return value 43"
           exit 43
         fi
         # set imagepath
         imagepath="$containersImagesBasePath/${imgname}-${imgtag}"
         if ! [ -e "$imagepath" ]; then
           error "Image file not found: $imagepath"
+          error "Exiting with return value 44"
           exit 44
         fi
         ;;
       *)
         error "Invalid containersRuntime: '$containersRuntime'"
+        error "Exiting with return value 45"
         exit 45
         ;;
     esac
@@ -849,6 +858,7 @@ function performExec {
     info "Execution time: $((BEFOREUPLOAD - AFTERDOWNLOAD)) seconds"
     stopLog application_execution
     cleanup
+    error "Exiting with return value 40"
     exit 40
   fi
 
@@ -1010,6 +1020,7 @@ function uploadShanoirFile {
   if ! [[ "$exit_code" -eq 0 && "$status_code" -eq 201 ]]; then
     error "error while uploading the file: exit=${exit_code}, status=${status_code}"
     stopRefreshingToken
+    error "Exiting with return value 25"
     exit 25
   fi
 }
@@ -1163,6 +1174,7 @@ EOF
       echo "Directory '$dir_path' successfully created or already exists."
     else
       echo "Failed to create directory '$dir_path'."
+      error "Exiting with return value 12"
       exit 12 # Exit the script with an error status
     fi
   fi
@@ -1286,6 +1298,7 @@ if [ -f "$configurationFile" ]; then
   source "$configurationFile"
 else
   error "Configuration file $configurationFile not found!"
+  error "Exiting with return value 15"
   exit 15
 fi
 
