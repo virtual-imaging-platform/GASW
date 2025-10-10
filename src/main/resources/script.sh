@@ -163,8 +163,8 @@ function checkBosh {
         pipInstallUser boutiques
         if [ $? != 0 ]; then
           error "pip install boutiques failed"
-          error "Exiting with return value 14"
-          exit 14
+          error "Exiting with return value 21"
+          exit 21
         else
           export BOSHEXEC="bosh"
         fi
@@ -241,8 +241,8 @@ function checkGirderClient {
     pipInstallUser girder-client
     if [ $? != 0 ]; then
       error "girder-client not in PATH, and an error occured while trying to install it."
-      error "Exiting with return value 11"
-      exit 11
+      error "Exiting with return value 20"
+      exit 20
     fi
   fi
 }
@@ -420,8 +420,8 @@ function refresh_token {
     if ! [[ "$exit_code" -eq 0 && "$status_code" -eq 200 ]]; then
       local error_message=$(echo "$refresh_response" | grep -o '"error_description":"[^"]*' | grep -o '[^"]*$')
       error "error while refreshing the token: exit=${exit_code}, status=${status_code}, message: ${error_message}"
-      error "Exiting with return value 52"
-      exit 52
+      error "Exiting with return value 61"
+      exit 61
     fi
 
     # setting the new tokens
@@ -467,8 +467,8 @@ function wait_for_token {
   if [[ -z "${token}" ]]; then
     echo "Token refreshing is taking too long. Aborting the process."
     stopRefreshingToken
-    error "Exiting with return value 50"
-    exit 50
+    error "Exiting with return value 60"
+    exit 60
   fi
 }
 
@@ -684,8 +684,8 @@ function downloadShanoirFile {
   if [[ "${attempts}" -ge 3 ]]; then
     error "3 failures at downloading, stop trying and stop the job"
     stopRefreshingToken
-    error "Exiting with return value 51"
-    exit 51
+    error "Exiting with return value 42"
+    exit 42
   fi
 
   if [[ $format = "zipped_nii" ]]; then
@@ -700,8 +700,8 @@ function downloadShanoirFile {
     if [[ $(echo -n "$searchResult" | grep -c '^') -ne 1 ]]; then
       error "too many or none nifti file (.nii or .nii.gz) in shanoir zip, supporting only 1"
       stopRefreshingToken
-      error "Exiting with return value 13"
-      exit 13
+      error "Exiting with return value 41"
+      exit 41
     fi
     mv "$searchResult" "$fileName"
     rm -rf $TMP_UNZIP_DIR
@@ -714,8 +714,8 @@ function validateDownload {
   if [ $? != 0 ]; then
     echo "$1"
     echo "ERROR_DL - Download was not successful "
-    error "Exiting with return value 30"
-    exit 30
+    error "Exiting with return value 40"
+    exit 40
   fi
 }
 
@@ -852,21 +852,21 @@ function performExec {
         local imgtag=$(echo "$image" | cut -d: -f2)
         if [ -z "$imgname" ] || [ -z "$imgtag" ]; then
           error "Invalid image name: '$image'"
-          error "Exiting with return value 43"
-          exit 43
+          error "Exiting with return value 51"
+          exit 51
         fi
         # set imagepath
         imagepath="$containersImagesBasePath/${imgname}-${imgtag}"
         if ! [ -e "$imagepath" ]; then
           error "Image file not found: $imagepath"
-          error "Exiting with return value 44"
-          exit 44
+          error "Exiting with return value 52"
+          exit 52
         fi
         ;;
       *)
         error "Invalid containersRuntime: '$containersRuntime'"
-        error "Exiting with return value 45"
-        exit 45
+        error "Exiting with return value 53"
+        exit 53
         ;;
     esac
   fi
@@ -921,8 +921,8 @@ function performExec {
     info "Execution time: $((BEFOREUPLOAD - AFTERDOWNLOAD)) seconds"
     stopLog application_execution
     cleanup
-    error "Exiting with return value 40"
-    exit 40
+    error "Exiting with return value 50"
+    exit 50
   fi
 
   BEFOREUPLOAD=$(date +%s)
@@ -1040,9 +1040,9 @@ function uploadLfnFile {
     DEST=${RESULT}
   done
   if [ "${done}" = "0" ]; then
-    error "ERROR_WRITE_GRID - Cannot copy file ${FILE} to lfn ${LFN}"
-    error "Exiting with return value 21"
-    exit 21
+    error "ERROR_WRITE_LFN - Cannot copy file ${FILE} to lfn ${LFN}"
+    error "Exiting with return value 30"
+    exit 30
   else
     addToCache "$LFN" "$FILE"
   fi
@@ -1083,8 +1083,8 @@ function uploadShanoirFile {
   if ! [[ "$exit_code" -eq 0 && "$status_code" -eq 201 ]]; then
     error "error while uploading the file: exit=${exit_code}, status=${status_code}"
     stopRefreshingToken
-    error "Exiting with return value 25"
-    exit 25
+    error "Exiting with return value 34"
+    exit 34
   fi
 }
 
@@ -1171,8 +1171,8 @@ function uploadGirderFile {
   ${COMMLINE}
   if [ $? != 0 ]; then
     error "ERROR_UPLOAD_GIRDER - Error while uploading girder file"
-    error "Exiting with return value 24"
-    exit 24
+    error "Exiting with return value 33"
+    exit 33
   fi
 }
 
@@ -1207,8 +1207,8 @@ function upload {
 
     if [ -e "$DEST" ]; then
       error "ERROR_RESULT_FILE_EXIST - Result file already exists: $DEST"
-      error "Exiting with return value 23"
-      exit 23
+      error "Exiting with return value 32"
+      exit 32
     fi
 
     if [[ "$FILENAME" == */* ]]; then
@@ -1222,8 +1222,8 @@ function upload {
     mv "$FILENAME" "$DEST"
     if [ $? != 0 ]; then
       error "ERROR_MV_FILE - Error while moving result local file"
-      error "Exiting with return value 22"
-      exit 22
+      error "Exiting with return value 31"
+      exit 31
     fi
   else
     # Extract the path part from the uri.
@@ -1336,8 +1336,8 @@ function performUpload {
       echo "Directory '$dir_path' successfully created or already exists."
     else
       echo "Failed to create directory '$dir_path'."
-      error "Exiting with return value 12"
-      exit 12 # Exit the script with an error status
+      error "Exiting with return value 35"
+      exit 35 # Exit the script with an error status
     fi
   fi
 
@@ -1461,8 +1461,8 @@ if [ -f "$configurationFile" ]; then
   source "$configurationFile"
 else
   error "Configuration file $configurationFile not found!"
-  error "Exiting with return value 15"
-  exit 15
+  error "Exiting with return value 24"
+  exit 24
 fi
 
 # Register custom source script
@@ -1506,11 +1506,16 @@ fi
 mkdir "$DIRNAME"
 if [ $? -eq 0 ]; then
   echo "cd $DIRNAME"
-  cd "$DIRNAME" || exit 7
+  cd "$DIRNAME"
+  if [ $? -eq 0 ]; then
+    error "ERROR_CD_EXEC_DIR - Unable to enter directory $DIRNAME"
+    error "Exiting with return value 23"
+    exit 23
+  fi
 else
-  echo "ERROR_WRITE_LOCAL - Unable to create directory $DIRNAME"
-  echo "Exiting with return value 20"
-  exit 20
+  error "ERROR_CREATE_EXEC_DIR - Unable to create directory $DIRNAME"
+  error "Exiting with return value 22"
+  exit 22
 fi
 
 # Create cache directory
