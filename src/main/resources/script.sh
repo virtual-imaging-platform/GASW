@@ -1511,7 +1511,7 @@ fi
 mkdir "$DIRNAME"
 if [ $? -eq 0 ]; then
   echo "cd $DIRNAME"
-  cd "$DIRNAME"
+  cd "$DIRNAME" || exit
   if [ $? -eq 0 ]; then
     error "ERROR_CD_EXEC_DIR - Unable to enter directory $DIRNAME"
     error "Exiting with return value 23"
