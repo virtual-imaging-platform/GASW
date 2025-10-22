@@ -1511,12 +1511,11 @@ fi
 mkdir "$DIRNAME"
 if [ $? -eq 0 ]; then
   echo "cd $DIRNAME"
-  cd "$DIRNAME" || exit
-  if [ $? -eq 0 ]; then
+  cd "$DIRNAME" || {
     error "ERROR_CD_EXEC_DIR - Unable to enter directory $DIRNAME"
     error "Exiting with return value 23"
     exit 23
-  fi
+  }
 else
   error "ERROR_CREATE_EXEC_DIR - Unable to create directory $DIRNAME"
   error "Exiting with return value 22"
