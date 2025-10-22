@@ -32,6 +32,9 @@
  */
 package fr.insalyon.creatis.gasw;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  * @author Tram Truong Huu, Rafael Ferreira da Silva
@@ -44,10 +47,33 @@ public enum GaswExitCode {
     ERROR_WRITE_LOCAL(7), // error during create execution directory
     ERROR_GET_STD(8), // error during download stderr/out of the application from grid
     ERROR_FILE_NOT_FOUND(3), // error during match result files 
-    EXECUTION_FAILED(6), // execution failed
+    EXECUTION_FAILED_LEGACY(6), // execution failed
     EXECUTION_CANCELED(9),// execution canceled
     EXECUTION_STALLED(10),// execution stalled used in DIRAC execution 
-    UNDEFINED(-1);        // default exit code 
+    UNDEFINED(-1),      // default exit code
+    GIRDER_CLIENT_INSTALL_FAILED(20),
+    BOUTIQUE_INSTALL_FAILED(21),
+    ERROR_CREATE_EXEC_DIR(22),
+    ERROR_CD_EXEC_DIR(23),
+    CONFIG_NOT_FOUND(24),
+    BOUTIQUE_IMPORT_FAILED(25),
+    ERROR_WRITE_LFN(30),
+    ERROR_MV_FILE(31),
+    ERROR_RESULT_FILE_EXIST(32),
+    ERROR_UPLOAD_GIRDER(33),
+    ERROR_UPLOAD_SHANOIR(34),
+    FAILED_CREATE_LOCAL_UPLOAD_DIR(35),
+    ERROR_GIRDER_MKDIR(36),
+    ERROR_SHANOIR_UPLOAD_SUBDIR(37),
+    ERROR_DL(40),
+    INVALID_SHANOIR_NIFTI(41),
+    SHANOIR_DL_FAILED(42),
+    EXECUTION_FAILED(50),
+    SING_INVALID_IMAGE_NAME(51),
+    SING_IMAGE_NOT_FOUND(52),
+    INVALID_CONTAINER_RUNTIME(53),
+    TOKEN_REFRESH_TOO_LONG(60),
+    TOKEN_REFRESH_ERROR(61);
     private int exitCode;
 
     private GaswExitCode(int exitCode) {
@@ -56,5 +82,17 @@ public enum GaswExitCode {
 
     public int getExitCode() {
         return this.exitCode;
+    }
+
+    private static final Map<Integer, GaswExitCode> LOOKUP = new HashMap<>();
+
+    static {
+        for (GaswExitCode e : values()) {
+            LOOKUP.put(e.exitCode, e);
+        }
+    }
+
+    public static GaswExitCode fromExitCode(int code) {
+        return LOOKUP.getOrDefault(code, UNDEFINED);
     }
 }
