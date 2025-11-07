@@ -162,8 +162,9 @@ function checkBosh {
         info "bosh not found, trying to install it"
         pipInstallUser boutiques
         if [ $? != 0 ]; then
-          error "pip install boutiques failed"
-          exit 1
+          error "BOUTIQUE_INSTALL_FAILED - pip install boutiques failed"
+          error "Exiting with return value 21"
+          exit 21
         else
           export BOSHEXEC="bosh"
         fi
@@ -178,10 +179,13 @@ function checkBosh {
   else # if bosh CVMFS works fine
     export BOSHEXEC="$boshCVMFSPath/bosh"
   fi
-  # also check that "import boutiques" works (see getOutputFilenames)
-  if ! python -c "import boutiques"; then
-    error "import boutiques fails"
-    exit 1
+  # Get the python interpreter used by bosh,
+  # and check that "import boutiques" works, for use in getOutputFilenames.
+  export BOSHPYTHON=$(head -n1 "$(which "$BOSHEXEC")" | tail -c +3)
+  if ! "$BOSHPYTHON" -c "import boutiques"; then
+    error "BOUTIQUE_IMPORT_FAILED - import boutiques fails"
+    error "Exiting with return value 25"
+    exit 25
   fi
 }
 
@@ -237,9 +241,9 @@ function checkGirderClient {
   if ! command -v girder-client; then
     pipInstallUser girder-client
     if [ $? != 0 ]; then
-      error "girder-client not in PATH, and an error occured while trying to install it."
-      error "Exiting with return value 1"
-      exit 1
+      error "GIRDER_CLIENT_INSTALL_FAILED - girder-client not in PATH, and an error occured while trying to install it."
+      error "Exiting with return value 20"
+      exit 20
     fi
   fi
 }
@@ -416,8 +420,9 @@ function refresh_token {
 
     if ! [[ "$exit_code" -eq 0 && "$status_code" -eq 200 ]]; then
       local error_message=$(echo "$refresh_response" | grep -o '"error_description":"[^"]*' | grep -o '[^"]*$')
-      error "error while refreshing the token: exit=${exit_code}, status=${status_code}, message: ${error_message}"
-      exit 1
+      error "TOKEN_REFRESH_ERROR - error while refreshing the token: exit=${exit_code}, status=${status_code}, message: ${error_message}"
+      error "Exiting with return value 61"
+      exit 61
     fi
 
     # setting the new tokens
@@ -461,9 +466,10 @@ function wait_for_token {
 
   # Check the token after the timeout
   if [[ -z "${token}" ]]; then
-    echo "Token refreshing is taking too long. Aborting the process."
+    echo "TOKEN_REFRESH_TOO_LONG - Token refreshing is taking too long. Aborting the process."
     stopRefreshingToken
-    exit 1
+    error "Exiting with return value 60"
+    exit 60
   fi
 }
 
@@ -677,9 +683,10 @@ function downloadShanoirFile {
   done
 
   if [[ "${attempts}" -ge 3 ]]; then
-    error "3 failures at downloading, stop trying and stop the job"
+    error "SHANOIR_DL_FAILED - 3 failures at downloading, stop trying and stop the job"
     stopRefreshingToken
-    exit 1
+    error "Exiting with return value 42"
+    exit 42
   fi
 
   if [[ $format = "zipped_nii" ]]; then
@@ -692,9 +699,10 @@ function downloadShanoirFile {
     searchResult=$(find $TMP_UNZIP_DIR -name '*.nii.gz' -o -name '*.nii')
     # doing this trick instead of using "wc -l" because it fails when there is no result
     if [[ $(echo -n "$searchResult" | grep -c '^') -ne 1 ]]; then
-      error "too many or none nifti file (.nii or .nii.gz) in shanoir zip, supporting only 1"
+      error "INVALID_SHANOIR_NIFTI - too many or none nifti file (.nii or .nii.gz) in shanoir zip, supporting only 1"
       stopRefreshingToken
-      exit 1
+      error "Exiting with return value 41"
+      exit 41
     fi
     mv "$searchResult" "$fileName"
     rm -rf $TMP_UNZIP_DIR
@@ -706,8 +714,9 @@ function downloadShanoirFile {
 function validateDownload {
   if [ $? != 0 ]; then
     echo "$1"
-    echo "Exiting with return value 1"
-    exit 1
+    echo "ERROR_DL - Download was not successful "
+    error "Exiting with return value 40"
+    exit 40
   fi
 }
 
@@ -843,19 +852,22 @@ function performExec {
         local imgname=$(echo "$image" | cut -d: -f1)
         local imgtag=$(echo "$image" | cut -d: -f2)
         if [ -z "$imgname" ] || [ -z "$imgtag" ]; then
-          error "Invalid image name: '$image'"
-          exit 1
+          error "SING_INVALID_IMAGE_NAME - Invalid image name: '$image'"
+          error "Exiting with return value 51"
+          exit 51
         fi
         # set imagepath
         imagepath="$containersImagesBasePath/${imgname}-${imgtag}"
         if ! [ -e "$imagepath" ]; then
-          error "Image file not found: $imagepath"
-          exit 1
+          error "SING_IMAGE_NOT_FOUND - Image file not found: $imagepath"
+          error "Exiting with return value 52"
+          exit 52
         fi
         ;;
       *)
-        error "Invalid containersRuntime: '$containersRuntime'"
-        exit 1
+        error "INVALID_CONTAINER_RUNTIME - Invalid containersRuntime: '$containersRuntime'"
+        error "Exiting with return value 53"
+        exit 53
         ;;
     esac
   fi
@@ -905,12 +917,13 @@ function performExec {
 
   # Check if execution was successful
   if [ $? -ne 0 ]; then
-    error "Exiting with return value 6"
+    error "EXECUTION_FAILED - execution was not successful"
     BEFOREUPLOAD=$(date +%s)
     info "Execution time: $((BEFOREUPLOAD - AFTERDOWNLOAD)) seconds"
     stopLog application_execution
     cleanup
-    exit 6
+    error "Exiting with return value 50"
+    exit 50
   fi
 
   BEFOREUPLOAD=$(date +%s)
@@ -1028,9 +1041,9 @@ function uploadLfnFile {
     DEST=${RESULT}
   done
   if [ "${done}" = "0" ]; then
-    error "Cannot copy file ${FILE} to lfn ${LFN}"
-    error "Exiting with return value 2"
-    exit 2
+    error "ERROR_WRITE_LFN - Cannot copy file ${FILE} to lfn ${LFN}"
+    error "Exiting with return value 30"
+    exit 30
   else
     addToCache "$LFN" "$FILE"
   fi
@@ -1069,9 +1082,10 @@ function uploadShanoirFile {
   rm -f shanoir_upload_response.json
 
   if ! [[ "$exit_code" -eq 0 && "$status_code" -eq 201 ]]; then
-    error "error while uploading the file: exit=${exit_code}, status=${status_code}"
+    error "ERROR_UPLOAD_SHANOIR - error while uploading the file: exit=${exit_code}, status=${status_code}"
     stopRefreshingToken
-    exit 1
+    error "Exiting with return value 34"
+    exit 34
   fi
 }
 
@@ -1096,8 +1110,9 @@ function girderMkdir {
     # Check if directory exists
     local status_code=$(curl -s --write-out "%{http_code}" -o "$response" -H "Girder-Token: $token" -X GET "$apiUrl/folder?parentType=folder&parentId=$parentId&name=$itemname")
     if [ "$status_code" != 200 ]; then
-      error "Error while checking girder directory (HTTP: $status_code)"
-      exit 1
+      error "ERROR_GIRDER_MKDIR - Error while checking girder directory (HTTP: $status_code)"
+      error "Exiting with return value 36"
+      exit 36
     fi
     # Get ".[0]._id" in response: a non-empty value means the directory exists
     local childId=$(python -c 'import sys,json;v=json.load(sys.stdin);print(v[0].get("_id") if type(v) is list and len(v)>0 and type(v[0]) is dict and "_id" in v[0] else "")' < "$response")
@@ -1108,14 +1123,16 @@ function girderMkdir {
       info "girderMkdir: creating directory $itemname"
       status_code=$(curl -s --write-out "%{http_code}" -o "$response" -H "Girder-Token: $token" -X POST "$apiUrl/folder?parentType=folder&parentId=$parentId&name=$itemname&reuseExisting=true" -d "")
       if [ "$status_code" != 200 ]; then
-        error "Error while creating girder directory (HTTP: $status_code)"
-        exit 1
+        error "ERROR_GIRDER_MKDIR - Error while creating girder directory (HTTP: $status_code)"
+        error "Exiting with return value 36"
+        exit 36
       fi
       # Get "._id" in response: id of the newly created directory
       childId=$(python -c 'import sys,json;v=json.load(sys.stdin);print(v.get("_id") if type(v) is dict and "_id" in v else "")' < "$response")
       if [ -z "$childId" ]; then
-        error "Error while creating girder directory (HTTP: $status_code, response: $(cat "$response"))"
-        exit 1
+        error "ERROR_GIRDER_MKDIR - Error while creating girder directory (HTTP: $status_code, response: $(cat "$response"))"
+        error "Exiting with return value 36"
+        exit 36
       fi
     else
       info "girderMkdir: directory $itemname already exists, reusing"
@@ -1157,9 +1174,9 @@ function uploadGirderFile {
   echo "uploadGirderFile, command line is ${COMMLINE}"
   ${COMMLINE}
   if [ $? != 0 ]; then
-    error "Error while uploading girder file"
-    error "Exiting with return value 1"
-    exit 1
+    error "ERROR_UPLOAD_GIRDER - Error while uploading girder file"
+    error "Exiting with return value 33"
+    exit 33
   fi
 }
 
@@ -1177,8 +1194,9 @@ function upload {
   # The pattern must NOT be put between quotation marks.
   if [[ ${RES_DIR_URI} == shanoir:/* ]]; then
     if [[ "$FILENAME" == */* ]]; then
-      error "Unsupported subdirectory in filename for shanoir upload"
-      exit 1
+      error "ERROR_SHANOIR_UPLOAD_SUBDIR - Unsupported subdirectory in filename for shanoir upload"
+      error "Exiting with return value 37"
+      exit 37
     fi
     if [ "$REFRESHING_JOB_STARTED" == false ]; then
       refresh_token "$RES_DIR_URI" &
@@ -1193,9 +1211,9 @@ function upload {
     local DEST="${RES_DIR}/${FILENAME}"
 
     if [ -e "$DEST" ]; then
-      error "Result file already exists: $DEST"
-      error "Exiting with return value 1"
-      exit 1
+      error "ERROR_RESULT_FILE_EXIST - Result file already exists: $DEST"
+      error "Exiting with return value 32"
+      exit 32
     fi
 
     if [[ "$FILENAME" == */* ]]; then
@@ -1208,9 +1226,9 @@ function upload {
     fi
     mv "$FILENAME" "$DEST"
     if [ $? != 0 ]; then
-      error "Error while moving result local file."
-      error "Exiting with return value 1"
-      exit 1
+      error "ERROR_MV_FILE - Error while moving result local file"
+      error "Exiting with return value 31"
+      exit 31
     fi
   else
     # Extract the path part from the uri.
@@ -1276,7 +1294,7 @@ function getOutputFilenames {
   local provenanceFile="$1"
   local descriptorFile="$2"
   local invocationFile="$3"
-  python <<EOF
+  "$BOSHPYTHON" <<EOF
 import json, sys, os, boutiques
 def getPathTemplate(outputs,name):
     if(type(outputs) is dict and name in outputs):
@@ -1322,8 +1340,9 @@ function performUpload {
     if [ -d "$dir_path" ]; then
       echo "Directory '$dir_path' successfully created or already exists."
     else
-      echo "Failed to create directory '$dir_path'."
-      exit 1 # Exit the script with an error status
+      echo "FAILED_CREATE_LOCAL_UPLOAD_DIR - Failed to create directory '$dir_path'."
+      error "Exiting with return value 35"
+      exit 35 # Exit the script with an error status
     fi
   fi
 
@@ -1446,8 +1465,9 @@ if [ -f "$configurationFile" ]; then
   # shellcheck disable=SC1090
   source "$configurationFile"
 else
-  error "Configuration file $configurationFile not found!"
-  exit 1
+  error "CONFIG_NOT_FOUND - Configuration file $configurationFile not found!"
+  error "Exiting with return value 24"
+  exit 24
 fi
 
 # Register custom source script
@@ -1491,11 +1511,15 @@ fi
 mkdir "$DIRNAME"
 if [ $? -eq 0 ]; then
   echo "cd $DIRNAME"
-  cd "$DIRNAME" || exit 7
+  cd "$DIRNAME" || {
+    error "ERROR_CD_EXEC_DIR - Unable to enter directory $DIRNAME"
+    error "Exiting with return value 23"
+    exit 23
+  }
 else
-  echo "Unable to create directory $DIRNAME"
-  echo "Exiting with return value 7"
-  exit 7
+  error "ERROR_CREATE_EXEC_DIR - Unable to create directory $DIRNAME"
+  error "Exiting with return value 22"
+  exit 22
 fi
 
 # Create cache directory
