@@ -5,7 +5,8 @@
 
     <!-- size limited and minimum rolling : 1 file -->
     <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-      <maxFileSize>100MB</maxFileSize>
+      <checkIncrement>1 millisecond</checkIncrement> <!-- only for test -->
+      <maxFileSize>1KB</maxFileSize>
     </triggeringPolicy>
     <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
       <fileNamePattern>workflow-%i.out</fileNamePattern>
@@ -24,7 +25,8 @@
 
     <!-- size limited and minimum rolling : 1 file -->
     <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-      <maxFileSize>100MB</maxFileSize>
+      <checkIncrement>1 millisecond</checkIncrement> <!-- only for test -->
+      <maxFileSize>1KB</maxFileSize>
     </triggeringPolicy>
     <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
       <fileNamePattern>workflow-%i.err</fileNamePattern>
