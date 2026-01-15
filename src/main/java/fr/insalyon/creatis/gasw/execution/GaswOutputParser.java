@@ -177,7 +177,6 @@ public abstract class GaswOutputParser extends Thread {
             boolean isAppExec = false;
             boolean isInputDownload = false;
             boolean isResultUpload = false;
-            boolean isAfterExec = false;
             String lfcHost = "";
 
             try {
@@ -190,8 +189,7 @@ public abstract class GaswOutputParser extends Thread {
                     if (line.contains("<application_execution>")) {
                         isAppExec = true;
                     } else if (line.contains("</application_execution>")) {
-                        isAppExec = false;
-                        isAfterExec = true;
+                        isAppExec = false;;
                     } else if (isAppExec) {
                         appStdOutWriter.write(line + "\n");
                         appStdOutBuf.append(line).append("\n");
@@ -214,7 +212,7 @@ public abstract class GaswOutputParser extends Thread {
                         int uploadTime = Integer.parseInt(lineSplitted[lineSplitted.length - 2]);
                         job.setEnd(addDate(job.getUpload(), Calendar.SECOND, uploadTime));
 
-                    } else if (line.contains("Exiting with return value") && isAfterExec) {
+                    } else if (line.contains("Exiting with return value")) {
                         String[] errmsg = line.split("\\s+");
                         exitCode = Integer.parseInt(errmsg[errmsg.length - 1]);
                         job.setExitCode(exitCode);
