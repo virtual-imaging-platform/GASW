@@ -906,8 +906,32 @@ function performExec {
       # within the container. This overlay is a one-time use, and will be
       # removed in cleanup(). It requires bosh >= 0.5.30.
       local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
+
       # Pass all options to bosh
       boshopts+=("--container-opts" "${conopts}--overlay $overlayfolder")
+
+      local settings_file="../settings.json"
+
+      if [ -f "$settings_file" ]; then
+        #extract the last match of containers.runtime, cleaning up spaces
+        local runtime_type=$(grep "containers.runtime" "$settings_file" | tail -n 1 | cut -d'=' -f2 | xargs)
+        
+        #check if runtime is specifically set to your encrypted format
+        if [ "$runtime_type" = "encrypted-singularity" ]; then
+          # Extract the encryption key path, cleaning up spaces
+          local pem_key=$(grep "containers.runtime.encryption-key" "$settings_file" | cut -d'=' -f2 | xargs)
+
+          # ensure the key file actually exists on the disk
+          if [ -n "$pem_key" ] && [ -f "$pem_key" ]; then
+            info "Encrypted Singularity detected. Adding --pem-path option."
+            boshopts+=("--pem-path" "$pem_key")
+          else
+            error "ENCRYPTION_KEY_ERROR - Encryption is enabled but PEM key file was not found at: '$pem_key'"
+            cleanup
+            exit 54
+          fi
+        fi
+      fi
       ;;
   esac
 
