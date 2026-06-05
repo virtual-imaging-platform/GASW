@@ -34,20 +34,28 @@ package fr.insalyon.creatis.gasw.execution;
 
 import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswException;
-import fr.insalyon.creatis.gasw.GaswInput;
 import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
+import org.springframework.stereotype.Component;
 
+import java.util.List;
+
+@Component
 public class ExecutorFactory {
 
-    public static ExecutorPlugin getExecutor(GaswInput gaswInput) throws GaswException {
+    private final GaswConfiguration config;
+    private final List<ExecutorPlugin> executorPlugins;
 
-        String executorName = GaswConfiguration.getInstance().getDefaultExecutor();
+    public ExecutorFactory(GaswConfiguration config, List<ExecutorPlugin> executorPlugins) {
+        this.config = config;
+        this.executorPlugins = executorPlugins;
+    }
 
-        for (ExecutorPlugin executor : GaswConfiguration.getInstance().getExecutorPlugins()) {
-            if (executor.getName().equalsIgnoreCase(executorName)) {
-                return executor;
-            }
-        }
-        throw new GaswException("There is no executor available for '" + executorName + "'.");
+    public ExecutorPlugin getExecutor() throws GaswException {
+        String executorName = config.getDefaultExecutor();
+        return executorPlugins.stream()
+                .filter(e -> e.getName().equalsIgnoreCase(executorName))
+                .findFirst()
+                .orElseThrow(() ->
+                        new GaswException("There is no executor available for '" + executorName + "'."));
     }
 }

@@ -1,17 +1,11 @@
 package fr.insalyon.creatis.gasw.parser.output;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
-
 import java.io.File;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -19,67 +13,153 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import ch.qos.logback.classic.Logger;
+import fr.insalyon.creatis.gasw.GaswConfiguration;
+import fr.insalyon.creatis.gasw.GaswNotification;
+import fr.insalyon.creatis.gasw.dao.JobDAO;
+import fr.insalyon.creatis.gasw.dao.JobMinorStatusDAO;
+import fr.insalyon.creatis.gasw.dao.NodeDAO;
+import fr.insalyon.creatis.gasw.dao.hibernate.JobData;
+import fr.insalyon.creatis.gasw.dao.hibernate.JobMinorStatusData;
+import fr.insalyon.creatis.gasw.dao.hibernate.NodeData;
+import fr.insalyon.creatis.gasw.execution.GaswParsingContext;
+import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.slf4j.LoggerFactory;
+import org.mockito.Mockito;
 
-import ch.qos.logback.classic.Logger;
-
-import org.h2.jdbcx.JdbcDataSource;
-
-import fr.insalyon.creatis.gasw.GaswConfiguration;
-import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.execution.GaswStatus;
-import fr.insalyon.creatis.gasw.plugin.DatabasePlugin;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.*;
+import org.springframework.orm.hibernate5.HibernateTransactionManager;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.junit.jupiter.api.AfterEach;
 
+import javax.sql.DataSource;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringJUnitConfig(classes = GaswOutputParserTest.TestConfig.class)
+@TestPropertySource(locations = "classpath:application-test.properties")
 public class GaswOutputParserTest {
-    private static final Logger logger = (Logger) LoggerFactory.getLogger(GaswOutputParserTest.class);
+    private final Logger logger = (Logger) LoggerFactory.getLogger(getClass());
 
-    @Mock
-    private DatabasePlugin databasePlugin;
+    @Configuration
+    @EnableTransactionManagement
+    static class TestConfig {
 
-    private GaswConfiguration config;
+        @Bean
+        public DataSource dataSource() {
+            org.springframework.jdbc.datasource.DriverManagerDataSource ds =
+                    new org.springframework.jdbc.datasource.DriverManagerDataSource();
+            ds.setDriverClassName("org.h2.Driver");
+            ds.setUrl("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE"
+                    + ";INIT=CREATE SCHEMA IF NOT EXISTS test");
+            ds.setUsername("test");
+            ds.setPassword("pass");
+            return ds;
+        }
+
+        @Bean
+        public LocalSessionFactoryBean sessionFactory() {
+            LocalSessionFactoryBean factoryBean = new LocalSessionFactoryBean();
+            Properties hibernateProperties = new Properties();
+
+            hibernateProperties.setProperty("hibernate.default_schema", "test");
+            hibernateProperties.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
+            hibernateProperties.setProperty("hibernate.hbm2ddl.auto", "create-drop");
+            hibernateProperties.setProperty("hibernate.show_sql", "false");
+
+            factoryBean.setDataSource(dataSource());
+            factoryBean.setHibernateProperties(hibernateProperties);
+            factoryBean.setPackagesToScan("fr.insalyon.creatis.gasw.bean");
+
+            return factoryBean;
+        }
+
+        @Bean
+        public PlatformTransactionManager transactionManager(SessionFactory sessionFactory) {
+            return new HibernateTransactionManager(sessionFactory);
+        }
+
+        @Bean
+        public JobData jobData(SessionFactory sessionFactory) {
+            return new JobData(sessionFactory);
+        }
+
+        @Bean
+        public JobMinorStatusDAO jobMinorStatusDAO(SessionFactory sessionFactory) {
+            return new JobMinorStatusData(sessionFactory); // your @Repository impl
+        }
+
+        @Bean
+        public NodeDAO nodeDAO(SessionFactory sessionFactory) {
+            return new NodeData(sessionFactory); // your @Repository impl
+        }
+
+        @Bean
+        @Primary
+        public GaswConfiguration gaswConfiguration() {
+            return new GaswConfiguration();
+        }
+
+        @Bean
+        public GaswNotification gaswNotification() {
+            return Mockito.mock(GaswNotification.class);
+        }
+
+        @Bean
+        public List<ListenerPlugin> listenerPlugins() {
+            return Collections.emptyList();
+        }
+
+        @Bean
+        public DumpOutputParser dumpOutputParser(
+                GaswConfiguration gaswConfiguration,
+                GaswNotification gaswNotification,
+                JobDAO jobData,
+                JobMinorStatusDAO jobMinorStatusDAO,
+                NodeDAO nodeDAO,
+                List<ListenerPlugin> listenerPlugins) {
+            return new DumpOutputParser(gaswConfiguration, gaswNotification,
+                    jobData, jobMinorStatusDAO, nodeDAO, listenerPlugins);
+        }
+
+    }
+
+    @Autowired
+    private JobDAO jobData;
+
+    @Autowired
+    private DumpOutputParser dumpOutputParser;
+
     private MemoryAppender appender;
 
     @BeforeEach
-    public void mockDB() throws GaswException, SQLException {
-        GaswConfiguration.setStrict(false);
-        config =  GaswConfiguration.getInstance();
-        MockitoAnnotations.openMocks(this);
+    public void configureAppender() {
+        appender = new MemoryAppender();
+        logger.addAppender(appender);
+        appender.start();
+    }
 
-        when(databasePlugin.getConnectionUrl()).thenReturn("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE");
-        when(databasePlugin.getDriverClass()).thenReturn("org.h2.Driver");
-        when(databasePlugin.getHibernateDialect()).thenReturn("org.hibernate.dialect.H2Dialect");
-        when(databasePlugin.getName()).thenReturn("test");
-        when(databasePlugin.getPassword()).thenReturn("pass");
-        when(databasePlugin.getSchema()).thenReturn("test");
-        when(databasePlugin.getUserName()).thenReturn("test");
-
-        JdbcDataSource source = new JdbcDataSource();
-        source.setPassword(databasePlugin.getPassword());
-        source.setUser(databasePlugin.getUserName());
-        source.setUrl(databasePlugin.getConnectionUrl());
-
-        try (Connection connection = source.getConnection()) {
-            try (Statement stmt = connection.createStatement()) {
-                stmt.execute("CREATE SCHEMA IF NOT EXISTS " + databasePlugin.getSchema());
-            }
-        }
-
-        config.setDbPlugin(databasePlugin);
-        config.loadHibernate();
-        assertTrue(config.getSessionFactory() != null);
+    @AfterEach
+    public void cleanupAppender() {
+        logger.detachAppender(appender);
+        appender.stop();
     }
 
     /**
      * For this test, we try to stress the system by creating multi-threads output parser at the same time,
      * this ensure the realiability of the parser and also hibernate.
-     * The custom appender is used to capture logger.error used in some function instead 
+     * The custom appender is used to capture logger.error used in some function instead
      * of catching exception (because they are catched in sublayers and not rethrown)
      */
     @Test
@@ -89,35 +169,30 @@ public class GaswOutputParserTest {
         List<Callable<Void>> callables = new ArrayList<>();
         List<Future<Void>> parsers = new ArrayList<>();
 
-        Job job = new Job("test", "test_sim", GaswStatus.CREATED, "echo", "coucou", "a,b,c", "Local");
+        Job job = new Job("test", "test_sim", GaswStatus.CREATED, "echo", "test-job.sh", "a,b,c", "Local");
         job.setDownload(new Date());
-
-        DAOFactory.getDAOFactory().getJobDAO().add(job);
+        jobData.add(job);
 
         for (int i = 0; i < tSize; i++) {
-            callables.add(createCallable("test", "src/test/resources/execA.out"));
+            callables.add(createCallable(job, "src/test/resources/execA.out"));
         }
 
-        configureAppender();
         parsers = service.invokeAll(callables);
+        service.shutdown();
+        assertTrue(service.awaitTermination(30, TimeUnit.SECONDS), "Threads did not finish in time");
         for (Future<Void> parser : parsers) {
             assertDoesNotThrow(() -> parser.get(10, TimeUnit.SECONDS));
         }
 
-    assertFalse(appender.getLogMessages().stream().anyMatch(msg -> msg.contains("Error parsing stdout")));
+        assertFalse(appender.getLogMessages().stream().anyMatch(msg -> msg.contains("Error parsing stdout")));
     }
 
-    public Callable<Void> createCallable(String jobID, String filePath) {
+    private Callable<Void> createCallable(Job job, String filePath) {
         return () -> {
-            DumpOutputParser parser = new DumpOutputParser(jobID);
-
-            parser.parseStdout(new File(filePath)); 
+            GaswParsingContext context = new GaswParsingContext(job);
+            dumpOutputParser.parseStdout(new File(filePath), context);
             return null;
         };
     }
 
-    public void configureAppender() {
-        appender = new MemoryAppender();
-        logger.addAppender(appender);
-    }
 }

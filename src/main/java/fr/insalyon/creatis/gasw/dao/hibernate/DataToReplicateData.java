@@ -42,27 +42,26 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+@Repository
 public class DataToReplicateData implements DataToReplicateDAO {
 
-    private static final Logger logger = LoggerFactory.getLogger(DataToReplicate.class);
-    private SessionFactory sessionFactory;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private final SessionFactory sessionFactory;
 
     public DataToReplicateData(SessionFactory sessionFactory) {
-        
         this.sessionFactory = sessionFactory;
     }
     
     @Override
-    public synchronized void add(DataToReplicate dataToReplicate) throws DAOException {
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.merge(dataToReplicate);
-            session.getTransaction().commit();
-
+    @Transactional
+    public void add(DataToReplicate dataToReplicate) throws DAOException {
+        try {
+            sessionFactory.getCurrentSession().merge(dataToReplicate);
         } catch (HibernateException ex) {
             logger.error("Error while adding", ex);
             throw new DAOException(ex);
@@ -70,13 +69,10 @@ public class DataToReplicateData implements DataToReplicateDAO {
     }
 
     @Override
-    public synchronized void update(DataToReplicate dataToReplicate) throws DAOException {
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.merge(dataToReplicate);
-            session.getTransaction().commit();
-
+    @Transactional
+    public void update(DataToReplicate dataToReplicate) throws DAOException {
+        try {
+            sessionFactory.getCurrentSession().merge(dataToReplicate);
         } catch (HibernateException ex) {
             logger.error("Error while updating", ex);
             throw new DAOException(ex);
@@ -84,30 +80,23 @@ public class DataToReplicateData implements DataToReplicateDAO {
     }
     
     @Override
-    public synchronized void remove(DataToReplicate dataToReplicate) throws DAOException {
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.remove(dataToReplicate);
-            session.getTransaction().commit();
-
+    @Transactional
+    public void remove(DataToReplicate dataToReplicate) throws DAOException {
+        try {
+            sessionFactory.getCurrentSession().remove(dataToReplicate);
         } catch (HibernateException ex) {
-            logger.error("Error whice removing", ex);
+            logger.error("Error while removing", ex);
             throw new DAOException(ex);
         }
     }
     
     @Override
-    public synchronized List<DataToReplicate> get() throws DAOException {
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            List<DataToReplicate> list = session.createNamedQuery("DataToReplicate.list", DataToReplicate.class)
+    @Transactional(readOnly = true)
+    public List<DataToReplicate> get() throws DAOException {
+        try {
+            return sessionFactory.getCurrentSession()
+                    .createNamedQuery("DataToReplicate.list", DataToReplicate.class)
                     .list();
-            session.getTransaction().commit();
-
-            return list;
-
         } catch (HibernateException ex) {
             logger.error("Error while retrieving", ex);
             throw new DAOException(ex);

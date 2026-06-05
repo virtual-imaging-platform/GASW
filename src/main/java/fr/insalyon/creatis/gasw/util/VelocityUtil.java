@@ -55,7 +55,7 @@ import org.apache.velocity.runtime.resource.util.StringResourceRepository;
 
 public class VelocityUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(VelocityUtil.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private static volatile VelocityEngine ve;
     private Template template;
     private VelocityContext context;

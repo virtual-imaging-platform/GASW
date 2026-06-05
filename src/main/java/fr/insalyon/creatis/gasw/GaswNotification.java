@@ -35,120 +35,64 @@
 package fr.insalyon.creatis.gasw;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
-public class GaswNotification extends Thread {
+@Service
+public class GaswNotification {
 
-    private static final Logger logger = LoggerFactory.getLogger(GaswNotification.class);
-    private static GaswNotification instance;
-    private Notification notification;
-    private Object client;
-    private volatile List<GaswOutput> finishedJobs;
-    private volatile Map<String, GaswOutput> instanceErrorJobs;
-    private volatile boolean gettingOutputs;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public synchronized static GaswNotification getInstance() {
+    private final Queue<GaswOutput> finishedJobs;
+    private final Map<String, GaswOutput> instanceErrorJobs;
 
-        if (instance == null) {
-            instance = new GaswNotification();
-        }
-        return instance;
+    private Runnable onJobsFinished;
+
+    public GaswNotification() {
+        this.finishedJobs = new ConcurrentLinkedQueue<>();
+        this.instanceErrorJobs = new ConcurrentHashMap<>();
     }
 
-    private GaswNotification() {
+    @Scheduled(fixedDelayString = "#{@gaswConfiguration.defaultSleeptime / 2}", timeUnit = TimeUnit.SECONDS)
+    private void notifyIfReady() {
+        if (finishedJobs.isEmpty() || onJobsFinished == null) return;
 
-        this.finishedJobs = new ArrayList<GaswOutput>();
-        this.gettingOutputs = false;
-        this.instanceErrorJobs =  new HashMap<>();
+        logger.debug("New tasks have finished execution. Notifying client...");
+        onJobsFinished.run();
     }
 
-    /**
-     * Sets the client to be notified when jobs are completed.
-     *
-     * @param client
-     */
-    public void setClient(Object client) {
-        this.client = client;
-        notification = new Notification();
-        notification.start();
+    public void setOnJobsFinished(Runnable callback) {
+        this.onJobsFinished = callback;
     }
 
-    public synchronized void addFinishedJob(GaswOutput finishedJob) {
-        this.finishedJobs.add(finishedJob);
+    public void addFinishedJob(GaswOutput finishedJob) {
+        finishedJobs.add(finishedJob);
     }
 
     public List<GaswOutput> getFinishedJobs() {
-        gettingOutputs = true;
-        List<GaswOutput> outputsList = new ArrayList<GaswOutput>();
-
-        synchronized (finishedJobs) {
-            for (GaswOutput output : finishedJobs) {
-                outputsList.add(output);
-            }
-            finishedJobs = new ArrayList<GaswOutput>();
+        List<GaswOutput> outputsList = new ArrayList<>();
+        GaswOutput job;
+        while ((job = finishedJobs.poll()) != null) {
+            outputsList.add(job);
         }
 
         return outputsList;
     }
 
-    public synchronized void addErrorJob(GaswOutput errorJob) {
-        if (errorJob.getStdErr() != null) {
-            String instanceId = errorJob.getJobID();
-            if (this.instanceErrorJobs.containsKey(instanceId)) {
-                this.instanceErrorJobs.replace(instanceId,errorJob);
-            } else {
-                this.instanceErrorJobs.put(instanceId,errorJob);
-            }
-        }
+    public void addErrorJob(GaswOutput errorJob) {
+        if (errorJob.getStdErr() == null) { return; }
+
+        instanceErrorJobs.merge(errorJob.getJobID(), errorJob, (oldValue, newValue) -> newValue);
     }
 
     public GaswOutput getGaswOutputFromLastFailedJob(String instanceId) {
-        if (this.instanceErrorJobs.containsKey(instanceId)) {
-            return this.instanceErrorJobs.get(instanceId);
-        }
-        return null;
-    }
-
-    public void waitForNotification() {
-        gettingOutputs = false;
-    }
-
-
-    public void terminate() {
-        notification.terminate();
-    }
-
-    private class Notification extends Thread {
-        private boolean stop = false;
-
-        @Override
-        public void run() {
-
-            while (!stop) {
-
-                if (!gettingOutputs && finishedJobs != null && !finishedJobs.isEmpty()) {
-                    logger.debug("New tasks have finished execution. Notifying client...");
-                    synchronized (client) {
-                        client.notify();
-                    }
-                }
-                try {
-                    sleep(GaswConfiguration.getInstance().getDefaultSleeptime() / 2);
-                } catch (GaswException ex) {
-                    logger.error("Error:", ex);
-                } catch (InterruptedException ex) {
-                    logger.error("Error:", ex);
-                }
-            }
-        }
-
-        public void terminate() {
-            stop = true;
-        }
+        return instanceErrorJobs.get(instanceId);
     }
 }

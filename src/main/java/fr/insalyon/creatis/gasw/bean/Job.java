@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import jakarta.persistence.*;
-import org.hibernate.annotations.Index;
 
 /**
  *
@@ -59,7 +58,12 @@ import org.hibernate.annotations.Index;
     @NamedQuery(name = "Job.getJobsByFileName", query = "FROM Job j WHERE j.fileName = :fileName"),
     @NamedQuery(name = "Job.getInvocationsByCommand", query = "SELECT DISTINCT j.invocationID FROM Job j WHERE j.command = :command")
             })
-@Table(name = "Jobs")
+@Table(
+        name = "Jobs",
+        indexes = {
+            @Index(name = "paramIndex", columnList = "parameters"),
+            @Index(name = "invocationIndex", columnList = "invocation_id")
+    })
 public class Job {
 
     private String id;
@@ -320,7 +324,6 @@ public class Job {
     }
 
     @Column(name = "parameters", length = 10000)
-    @Index(name = "paramIndex")
     public String getParameters() {
         return parameters;
     }
@@ -375,7 +378,6 @@ public class Job {
     }
 
     @Column(name = "invocation_id")
-    @Index(name = "invocationIndex")
     public int getInvocationID() {
         return invocationID;
     }

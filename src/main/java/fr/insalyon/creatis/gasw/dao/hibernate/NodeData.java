@@ -40,27 +40,26 @@ import fr.insalyon.creatis.gasw.dao.NodeDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+@Repository
 public class NodeData implements NodeDAO {
 
-    private static final Logger logger = LoggerFactory.getLogger(NodeData.class);
-    private SessionFactory sessionFactory;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private final SessionFactory sessionFactory;
 
     public NodeData(SessionFactory sessionFactory) {
-
         this.sessionFactory = sessionFactory;
     }
 
     @Override
+    @Transactional
     public void add(Node node) throws DAOException {
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.merge(node);
-            session.getTransaction().commit();
-
+        try {
+            sessionFactory.getCurrentSession().merge(node);
         } catch (HibernateException ex) {
             logger.error("Error while adding", ex);
             throw new DAOException(ex);
@@ -68,18 +67,14 @@ public class NodeData implements NodeDAO {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Node getNodeBySiteAndNodeName(String site, String nodeName) throws DAOException {
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            Node node = session.createNamedQuery("Node.findBySiteAndNodeName", Node.class)
+        try {
+            return sessionFactory.getCurrentSession()
+                    .createNamedQuery("Node.findBySiteAndNodeName", Node.class)
                     .setParameter("siteName", site)
                     .setParameter("nodeName", nodeName)
                     .uniqueResult();
-            session.getTransaction().commit();
-
-            return node;
-
         } catch (HibernateException ex) {
             logger.error("Error while retrieving", ex);
             throw new DAOException(ex);

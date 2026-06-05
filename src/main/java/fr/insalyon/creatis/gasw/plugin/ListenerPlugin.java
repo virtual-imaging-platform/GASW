@@ -38,26 +38,21 @@ import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
-import java.util.List;
-import net.xeoh.plugins.base.Plugin;
-
 /**
  *
  * @author Rafael Silva
  */
-public interface ListenerPlugin extends Plugin {
+public interface ListenerPlugin {
 
-    public String getPluginName();
+    public String getName();
 
     /**
-     * Gets a list of persistent classes to be loaded in Hibernate.
+     * Gets the name of the package containing the classes to be loaded in Hibernate.
      *
-     * @return List of persistent classes
+     * @return Gets the entity package name
      * @throws GaswException
      */
-    public List<Class> getPersistentClasses() throws GaswException;
-    
-    public void load() throws GaswException;
+    public String getEntityPackage() throws GaswException;
 
     public void jobSubmitted(Job job) throws GaswException;
 

@@ -35,113 +35,89 @@ package fr.insalyon.creatis.gasw.execution;
 import fr.insalyon.creatis.gasw.*;
 import fr.insalyon.creatis.gasw.bean.*;
 import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.dao.DAOFactory;
+import fr.insalyon.creatis.gasw.dao.JobDAO;
+import fr.insalyon.creatis.gasw.dao.JobMinorStatusDAO;
+import fr.insalyon.creatis.gasw.dao.NodeDAO;
 import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class GaswOutputParser extends Thread {
+public abstract class GaswOutputParser {
 
-    private static final Logger logger = LoggerFactory.getLogger(GaswOutputParser.class);
-    protected Job job;
-    protected File appStdOut;
-    protected File appStdErr;
-    protected BufferedWriter appStdOutWriter;
-    protected BufferedWriter appStdErrWriter;
-    protected List<Data> dataList;
-    protected Map<String, URI> uploadedResults;
-    protected StringBuilder inputsDownloadErrBuf;
-    protected StringBuilder resultsUploadErrBuf;
-    protected StringBuilder appStdOutBuf;
-    protected StringBuilder appStdErrBuf;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Executor executor = Executors.newFixedThreadPool(10);
 
-    public GaswOutputParser(String jobID) {
-        try {
-            this.job = DAOFactory.getDAOFactory().getJobDAO().getJobByID(jobID);
+    protected final GaswConfiguration config;
+    protected final GaswNotification gaswNotification;
+    protected final JobDAO jobDAO;
+    protected final JobMinorStatusDAO jobMinorStatusDAO;
+    protected final NodeDAO nodeDAO;
+    protected final List<ListenerPlugin> listenerPlugins;
 
-            this.appStdOut = getAppStdFile(GaswConstants.OUT_APP_EXT, GaswConstants.OUT_ROOT);
-            this.appStdErr = getAppStdFile(GaswConstants.ERR_APP_EXT, GaswConstants.ERR_ROOT);
 
-            this.appStdOutWriter = new BufferedWriter(new FileWriter(appStdOut));
-            this.appStdErrWriter = new BufferedWriter(new FileWriter(appStdErr));
-
-            this.inputsDownloadErrBuf = new StringBuilder();
-            this.resultsUploadErrBuf = new StringBuilder();
-            this.appStdOutBuf = new StringBuilder();
-            this.appStdErrBuf = new StringBuilder();
-
-            this.dataList = new ArrayList<Data>();
-            this.uploadedResults = null;
-
-        } catch (IOException | DAOException ex) {
-            closeBuffers();
-            logger.error("Error creating std out/err " +
-                    "files and buffers for {}", jobID, ex);
-        }
+    protected GaswOutputParser(GaswConfiguration config, GaswNotification gaswNotification,
+                               JobDAO jobDAO, JobMinorStatusDAO jobMinorStatusDAO, NodeDAO nodeDAO, List<ListenerPlugin> listenerPlugins) {
+        this.config = config;
+        this.gaswNotification = gaswNotification;
+        this.jobDAO = jobDAO;
+        this.jobMinorStatusDAO = jobMinorStatusDAO;
+        this.nodeDAO = nodeDAO;
+        this.listenerPlugins = listenerPlugins;
     }
 
-    private void closeBuffers() {
-        try {
-            if (appStdOutWriter != null) {
-                appStdOutWriter.close();
-            }
-            if (appStdErrWriter != null) {
-                appStdErrWriter.close();
-            }
-        } catch (IOException ex) {
-            logger.error("Error closing buffers", ex);
-        }
-    }
-
-    @Override
-    public void run() {
-        try {
-            GaswOutput gaswOutput = getGaswOutput();
-
-            for (ListenerPlugin listener : GaswConfiguration.getInstance().getListenerPlugins()) {
-                try {
-                    listener.jobFinished(gaswOutput);
-                } catch (Exception ex) {
-                    logger.warn("Error ", ex);
-                }
-            }
-            // the job is marked as replicating, because it could be
-            // replicated in case of error
-            // remove this flag if it is not replicated after all
+    public void run(GaswParsingContext context) {
+        executor.execute(() -> {
             try {
-                // do not resubmit a job that was deliberately cancelled/killed
-                if (gaswOutput.getExitCode() == GaswExitCode.SUCCESS || gaswOutput.getExitCode() == GaswExitCode.EXECUTION_CANCELED || job.isBeingKilled()) {
-                    job.setReplicating(false);
-                    DAOFactory.getDAOFactory().getJobDAO().update(job);
-                } else {
-                    int retries = DAOFactory.getDAOFactory().getJobDAO().getFailedJobsByInvocationID(job.getInvocationID()).size() - 1;
-                    if (retries < GaswConfiguration.getInstance().getDefaultRetryCount()) {
-                        logger.warn("Job [{}] finished as \"{}\" (retried {} times).", job.getId(), job.getStatus().name(), retries);
-                        resubmit();
-                    } else {
-                        logger.warn("Job [{}] finished as \"{}\": holding job (max retries reached).", job.getId(), job.getStatus().name());
-                        if (job.getStatus() == GaswStatus.ERROR) {
-                            job.setStatus(GaswStatus.ERROR_HELD);
-                        } else if (job.getStatus() == GaswStatus.STALLED) {
-                            job.setStatus(GaswStatus.STALLED_HELD);
-                        }
-                        job.setReplicating(false);
-                        DAOFactory.getDAOFactory().getJobDAO().update(job);
-                    }
-                    GaswNotification.getInstance().addErrorJob(gaswOutput);
-                    return;
-                }
-            } catch (DAOException | GaswException ex) {
-                logger.error("Error finalising job {}", job.getId(), ex);
-            }
-            GaswNotification.getInstance().addFinishedJob(gaswOutput);
+                GaswOutput gaswOutput = getGaswOutput(context);
 
-        } catch (GaswException ex) {
-            logger.error("Error processing output for job {}", job.getId(), ex);
-        }
+                for (ListenerPlugin listener : listenerPlugins) {
+                    try {
+                        listener.jobFinished(gaswOutput);
+                    } catch (Exception ex) {
+                        logger.warn("Error ", ex);
+                    }
+                }
+                // the job is marked as replicating, because it could be
+                // replicated in case of error
+                // remove this flag if it is not replicated after all
+                try {
+                    // do not resubmit a job that was deliberately cancelled/killed
+                    if (gaswOutput.getExitCode() == GaswExitCode.SUCCESS || gaswOutput.getExitCode() == GaswExitCode.EXECUTION_CANCELED || context.getJob().isBeingKilled()) {
+                        context.getJob().setReplicating(false);
+                        jobDAO.update(context.getJob());
+                    } else {
+                        int retries = jobDAO.getFailedJobsByInvocationID(context.getJob().getInvocationID()).size() - 1;
+                        if (retries < config.getDefaultRetryCount()) {
+                            logger.warn("Job [{}] finished as \"{}\" (retried {} times).", context.getJob().getId(), context.getJob().getStatus().name(), retries);
+                            resubmit();
+                        } else {
+                            logger.warn("Job [{}] finished as \"{}\": holding job (max retries reached).", context.getJob().getId(), context.getJob().getStatus().name());
+                            if (context.getJob().getStatus() == GaswStatus.ERROR) {
+                                context.getJob().setStatus(GaswStatus.ERROR_HELD);
+                            } else if (context.getJob().getStatus() == GaswStatus.STALLED) {
+                                context.getJob().setStatus(GaswStatus.STALLED_HELD);
+                            }
+                            context.getJob().setReplicating(false);
+                            jobDAO.update(context.getJob());
+                        }
+                        gaswNotification.addErrorJob(gaswOutput);
+                        return;
+                    }
+                } catch (DAOException | GaswException ex) {
+                    logger.error("Error finalising job {}", context.getJob().getId(), ex);
+                }
+                gaswNotification.addFinishedJob(gaswOutput);
+
+            } catch (GaswException ex) {
+                logger.error("Error processing output for job {}", context.getJob().getId(), ex);
+            }
+        });
     }
 
     /**
@@ -151,23 +127,19 @@ public abstract class GaswOutputParser extends Thread {
      * respectively.
      * @throws GaswException
      */
-    public abstract GaswOutput getGaswOutput() throws GaswException;
+    public abstract GaswOutput getGaswOutput(GaswParsingContext context) throws GaswException;
 
-    protected abstract void resubmit() throws GaswException;
+    protected void resubmit() throws GaswException {};
 
-    /**
-     * We use synchronized keyword in case of multiples jobs ending together (at the same time),
-     * it cause an issue if hibernate try to merge/add the same job inside the db
-     */
-    protected int parseStdOut(File stdOut) {
+    protected int parseStdOut(File stdOut, GaswParsingContext context) throws IOException {
         int exitCode = -1;
 
         try {
-            if (job.getQueued() == null) {
-                job.setQueued(job.getCreation());
+            if (context.getJob().getQueued() == null) {
+                context.getJob().setQueued(context.getJob().getCreation());
             }
-            if (job.getDownload() == null) {
-                job.setDownload(job.getQueued());
+            if (context.getJob().getDownload() == null) {
+                context.getJob().setDownload(context.getJob().getQueued());
             }
 
             Node node = new Node();
@@ -191,31 +163,31 @@ public abstract class GaswOutputParser extends Thread {
                     } else if (line.contains("</application_execution>")) {
                         isAppExec = false;;
                     } else if (isAppExec) {
-                        appStdOutWriter.write(line + "\n");
-                        appStdOutBuf.append(line).append("\n");
+                        context.getAppStdOutWriter().write(line + "\n");
+                        context.getAppStdOutBuf().append(line).append("\n");
                     }
 
                     // General Output
                     if (line.contains("Input download time:")) {
                         int downloadTime = Integer.parseInt(lineSplitted[lineSplitted.length - 2]);
-                        job.setRunning(addDate(job.getDownload(), Calendar.SECOND, downloadTime));
+                        context.getJob().setRunning(addDate(context.getJob().getDownload(), Calendar.SECOND, downloadTime));
 
                     } else if (line.contains("Execution time:")) {
 
-                        if (job.getRunning() == null) {
-                            job.setRunning(job.getDownload());
+                        if (context.getJob().getRunning() == null) {
+                            context.getJob().setRunning(context.getJob().getDownload());
                         }
                         int executionTime = Integer.parseInt(lineSplitted[lineSplitted.length - 2]);
-                        job.setUpload(addDate(job.getRunning(), Calendar.SECOND, executionTime));
+                        context.getJob().setUpload(addDate(context.getJob().getRunning(), Calendar.SECOND, executionTime));
 
                     } else if (line.contains("Results upload time:")) {
                         int uploadTime = Integer.parseInt(lineSplitted[lineSplitted.length - 2]);
-                        job.setEnd(addDate(job.getUpload(), Calendar.SECOND, uploadTime));
+                        context.getJob().setEnd(addDate(context.getJob().getUpload(), Calendar.SECOND, uploadTime));
 
                     } else if (line.contains("Exiting with return value")) {
                         String[] errmsg = line.split("\\s+");
                         exitCode = Integer.parseInt(errmsg[errmsg.length - 1]);
-                        job.setExitCode(exitCode);
+                        context.getJob().setExitCode(exitCode);
 
                     } else if (line.startsWith("===== uname =====")) {
                         line = scanner.nextLine();
@@ -267,12 +239,11 @@ public abstract class GaswOutputParser extends Thread {
 
                     } else if (line.startsWith("<file_download") && isInputDownload) {
                         String downloadedFile = line.substring(line.indexOf("=") + 1, line.length() - 1);
-                        dataList.add(new Data(downloadedFile, Data.Type.Input));
-                        logger.info("Adding input {} for job {}", downloadedFile, job.getId());
+                        context.addData(new Data(downloadedFile, Data.Type.Input));
+                        logger.info("Adding input {} for job {}", downloadedFile, context.getJob().getId());
 
                     } else if (line.startsWith("<results_upload>")) {
                         isResultUpload = true;
-                        uploadedResults = new HashMap<String, URI>();
 
                     } else if (line.startsWith("</results_upload>")) {
                         isResultUpload = false;
@@ -293,9 +264,9 @@ public abstract class GaswOutputParser extends Thread {
                                 ? new URI("file://" + uploadedFile)
                                 : new URI("lfn://" + lfcHost + uploadedFile);
                         }
-                        uploadedResults.put(outputId, uri);
-                        dataList.add(new Data(uri.toString(), Data.Type.Output));
-                        logger.info("Adding output {} {} for job {}" + outputId, uri, job.getId());
+                        context.putUploadedResult(outputId, uri);
+                        context.addData(new Data(uri.toString(), Data.Type.Output));
+                        logger.info("Adding output {} {} for job {}" + outputId, uri, context.getJob().getId());
                     }
                 }
             } catch (Exception ex) {
@@ -303,34 +274,33 @@ public abstract class GaswOutputParser extends Thread {
             } finally {
                 scanner.close();
             }
-            appStdOutWriter.close();
+            context.getAppStdOutWriter().close();
 
-            DAOFactory factory = DAOFactory.getDAOFactory();
             if (nodeID.getSiteName() != null && nodeID.getNodeName() != null) {
                 node.setNodeID(nodeID);
-                factory.getNodeDAO().add(node);
-                job.setNode(node);
+                nodeDAO.add(node);
+                context.getJob().setNode(node);
             }
 
             // Parse checkpoint
-            parseCheckpoint();
+            parseCheckpoint(context);
 
             // Update Job
-            job.setData(dataList);
-            if (job.getEnd() == null) {
-                job.setEnd(new Date());
+            context.getJob().setData(context.getDataList());
+            if (context.getJob().getEnd() == null) {
+                context.getJob().setEnd(new Date());
             }
 
-            factory.getJobDAO().update(job);
+            jobDAO.update(context.getJob());
 
         } catch (DAOException | IOException ex) {
-            closeBuffers();
+            context.closeBuffers();
             logger.error("Error parsing stdout {}", stdOut.getAbsolutePath(), ex);
         }
         return exitCode;
     }
 
-    protected int parseStdErr(File stdErr, int exitCode) {
+    protected int parseStdErr(File stdErr, int exitCode, GaswParsingContext context) throws IOException {
         try {
             Scanner scanner = new Scanner(new FileInputStream(stdErr));
 
@@ -370,70 +340,67 @@ public abstract class GaswOutputParser extends Thread {
                         isUploadTest = false;
 
                     } else if (isAppExec) {
-                        appStdErrWriter.write(line + "\n");
-                        appStdErrBuf.append(line).append("\n");
+                        context.getAppStdErrWriter().write(line + "\n");
+                        context.getAppStdErrBuf().append(line).append("\n");
 
                     } else if (isInputsDownload) {
-                        inputsDownloadErrBuf.append(line).append("\n");
+                        context.getInputsDownloadErrBuf().append(line).append("\n");
 
                     } else if (isResultsUpload) {
-                        resultsUploadErrBuf.append(line).append("\n");
+                        context.getResultsUploadErrBuf().append(line).append("\n");
 
                     } else if (isUploadTest) {
-                        resultsUploadErrBuf.append(line).append("\n");
+                        context.getResultsUploadErrBuf().append(line).append("\n");
                     }
 
                     if (line.contains("Exiting with return value")) {
                         String[] errmsg = line.split("\\s+");
                         exitCode = Integer.valueOf(errmsg[errmsg.length - 1]).intValue();
-                        job.setExitCode(exitCode);
+                        context.getJob().setExitCode(exitCode);
                     }
                 }
             } finally {
                 scanner.close();
             }
-            appStdErrWriter.close();
-            DAOFactory.getDAOFactory().getJobDAO().update(job);
+            context.getAppStdErrWriter().close();
+            jobDAO.update(context.getJob());
 
         } catch (DAOException | IOException ex) {
-            closeBuffers();
+            context.closeBuffers();
             logger.error("Error parsing stderr {}", stdErr.getAbsolutePath(), ex);
 
         }
         return exitCode;
     }
 
-    protected void parseNonStdOut(int exitCode) {
+    protected void parseNonStdOut(int exitCode, GaswParsingContext context) throws IOException {
 
         try {
-            job.setEnd(new Date());
-            DAOFactory factory = DAOFactory.getDAOFactory();
+            context.getJob().setEnd(new Date());
 
-            for (JobMinorStatus minorStatus : factory.getJobMinorStatusDAO().getExecutionMinorStatus(job.getId())) {
+            for (JobMinorStatus minorStatus : jobMinorStatusDAO.getExecutionMinorStatus(context.getJob().getId())) {
                 switch (minorStatus.getStatus()) {
                     case Application:
-                        job.setRunning(minorStatus.getDate());
+                        context.getJob().setRunning(minorStatus.getDate());
                         break;
                     case Outputs:
-                        job.setUpload(minorStatus.getDate());
+                        context.getJob().setUpload(minorStatus.getDate());
                 }
             }
-            parseCheckpoint();
-            job.setExitCode(exitCode);
-            factory.getJobDAO().update(job);
+            parseCheckpoint(context);
+            context.getJob().setExitCode(exitCode);
+            jobDAO.update(context.getJob());
 
         } catch (DAOException ex) {
-            closeBuffers();
+            context.closeBuffers();
             logger.error("Error parsing NonStdOut", ex);
         }
     }
 
-    private void parseCheckpoint() {
+    private void parseCheckpoint(GaswParsingContext context) throws IOException {
 
         try {
-            DAOFactory factory = DAOFactory.getDAOFactory();
-
-            List<JobMinorStatus> list = factory.getJobMinorStatusDAO().getCheckpoints(job.getId());
+            List<JobMinorStatus> list = jobMinorStatusDAO.getCheckpoints(context.getJob().getId());
 
             if (!list.isEmpty()) {
                 int sumCheckpointInit = 0;
@@ -461,23 +428,23 @@ public abstract class GaswOutputParser extends Thread {
                     }
                 }
 
-                job.setCheckpointInit(sumCheckpointInit);
-                job.setCheckpointUpload(sumCheckpointUpload);
+                context.getJob().setCheckpointInit(sumCheckpointInit);
+                context.getJob().setCheckpointUpload(sumCheckpointUpload);
             }
         } catch (DAOException ex) {
-            closeBuffers();
+            context.closeBuffers();
             logger.error("Error parsing checkpoints", ex);
         }
     }
 
-    protected File saveFile(String extension, String dir, String content) {
+    protected File saveFile(String extension, String dir, String content, GaswParsingContext context) {
         FileWriter fstream = null;
         try {
             File stdDir = new File(dir);
             if (!stdDir.exists()) {
                 stdDir.mkdir();
             }
-            File stdFile = new File(dir + "/" + job.getFileName() + ".sh" + extension);
+            File stdFile = new File(dir + "/" + context.getJob().getFileName() + ".sh" + extension);
             fstream = new FileWriter(stdFile);
             BufferedWriter out = new BufferedWriter(fstream);
             out.write(content);
@@ -497,8 +464,8 @@ public abstract class GaswOutputParser extends Thread {
         return null;
     }
 
-    protected File moveAppFile(File source, String extension, String dir) {
-        File dest = getAppStdFile(extension, dir);
+    protected File moveAppFile(File source, String extension, String dir, GaswParsingContext context) {
+        File dest = context.getAppStdFile(extension, dir);
         if (source.exists()) {
             source.renameTo(dest);
         } else {
@@ -507,41 +474,13 @@ public abstract class GaswOutputParser extends Thread {
         return dest;
     }
 
-    protected File moveProvenanceFile(String sourceDir) {
-        String provenanceFileName = getAppStdFileName(GaswConstants.PROVENANCE_EXT);
+    protected File moveProvenanceFile(String sourceDir, GaswParsingContext context) {
+        String provenanceFileName = context.getAppStdFileName(GaswConstants.PROVENANCE_EXT);
         return moveAppFile(
                 new File(sourceDir, provenanceFileName),
                 GaswConstants.PROVENANCE_EXT,
-                GaswConstants.PROVENANCE_ROOT);
-    }
-
-    protected File getAppStdFile(String extension, String dir) {
-        File stdDir = new File(dir);
-
-        if (!stdDir.exists()) {
-            stdDir.mkdirs();
-        }
-        return new File(dir + "/" + getAppStdFileName(extension));
-    }
-
-    protected String getAppStdFileName(String extension) {
-        return job.getFileName() + ".sh" + extension;
-    }
-
-    protected String getInputsDownloadErr() {
-        return inputsDownloadErrBuf.toString();
-    }
-
-    protected String getResultsUploadErr() {
-        return resultsUploadErrBuf.toString();
-    }
-
-    protected String getAppStdErr() {
-        return appStdErrBuf.toString();
-    }
-
-    protected String getAppStdOut() {
-        return appStdOutBuf.toString();
+                GaswConstants.PROVENANCE_ROOT,
+                context);
     }
 
     private Date addDate(Date dateToBeAdded, int field, int amount) {

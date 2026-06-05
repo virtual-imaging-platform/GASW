@@ -43,26 +43,20 @@ import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswConstants;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
-import fr.insalyon.creatis.gasw.execution.GaswMinorStatusServiceGenerator;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public class MoteurliteConfigGenerator {
 
-    private static MoteurliteConfigGenerator instance;
-    private GaswConfiguration conf;
+    private final GaswConfiguration conf;
 
-    public synchronized static MoteurliteConfigGenerator getInstance() throws GaswException {
-        if (instance == null) {
-            instance = new MoteurliteConfigGenerator();
-        }
-        return instance;
-    }
-
-    private MoteurliteConfigGenerator() throws GaswException {
-        conf = GaswConfiguration.getInstance();
+    public MoteurliteConfigGenerator(GaswConfiguration config) throws GaswException {
+        conf = config;
     }
 
     // Generates the configuration based on the input and minor status service
-    public Map<String, String> generateConfig(GaswInput gaswInput, GaswMinorStatusServiceGenerator minorStatusService)
+    public Map<String, String> generateConfig(GaswInput gaswInput)
             throws IOException {
         Map<String, String> config = new HashMap<>();
         if (gaswInput.getExecutableName() != null) {

@@ -42,27 +42,26 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+@Repository
 public class JobMinorStatusData implements JobMinorStatusDAO {
 
-    private static final Logger logger = LoggerFactory.getLogger(JobMinorStatusData.class);
-    private SessionFactory sessionFactory;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private final SessionFactory sessionFactory;
 
     public JobMinorStatusData(SessionFactory sessionFactory) {
-
         this.sessionFactory = sessionFactory;
     }
 
     @Override
+    @Transactional
     public void add(JobMinorStatus jobMinorStatus) throws DAOException {
-
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.merge(jobMinorStatus);
-            session.getTransaction().commit();
-
+        try {
+            sessionFactory.getCurrentSession().merge(jobMinorStatus);
         } catch (HibernateException ex) {
             logger.error("Error while adding", ex);
             throw new DAOException(ex);
@@ -70,20 +69,16 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<JobMinorStatus> getCheckpoints(String jobID) throws DAOException {
-
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            List<JobMinorStatus> list = session.createNamedQuery("MinorStatus.findCheckpointById", JobMinorStatus.class)
+        try {
+            return sessionFactory.getCurrentSession()
+                    .createNamedQuery("MinorStatus.findCheckpointById", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
                     .setParameter("checkpointInit", GaswMinorStatus.CheckPoint_Init)
                     .setParameter("checkpointUpload", GaswMinorStatus.CheckPoint_Upload)
                     .setParameter("checkpointEnd", GaswMinorStatus.CheckPoint_Upload)
                     .list();
-            session.getTransaction().commit();
-
-            return list;
-
         } catch (HibernateException ex) {
             logger.error("Error while retrieving checkpoints", ex);
             throw new DAOException(ex);
@@ -91,11 +86,11 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<JobMinorStatus> getExecutionMinorStatus(String jobID) throws DAOException {
-
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            List<JobMinorStatus> list = session.createNamedQuery("MinorStatus.findExecutionById", JobMinorStatus.class)
+        try {
+            return sessionFactory.getCurrentSession()
+                    .createNamedQuery("MinorStatus.findExecutionById", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
                     .setParameter("start", GaswMinorStatus.Started)
                     .setParameter("background", GaswMinorStatus.Background)
@@ -104,10 +99,6 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
                     .setParameter("output", GaswMinorStatus.Outputs)
                     .setParameter("finished", GaswMinorStatus.Finished)
                     .list();
-            session.getTransaction().commit();
-
-            return list;
-
         } catch (HibernateException ex) {
             logger.error("Error while retrieving minorstatus", ex);
             throw new DAOException(ex);
@@ -115,20 +106,18 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long getDateDiff(String jobID, GaswMinorStatus start, 
             GaswMinorStatus end) throws DAOException {
-
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            List<JobMinorStatus> list = session.createNamedQuery("MinorStatus.dateDiff", JobMinorStatus.class)
+        try {
+            List<JobMinorStatus> list = sessionFactory.getCurrentSession()
+                    .createNamedQuery("MinorStatus.dateDiff", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
                     .setParameter("start", start)
                     .setParameter("end", end)
                     .list();
-            session.close();
             
             return Math.abs(list.get(1).getDate().getTime() - list.get(0).getDate().getTime());
-
         } catch (HibernateException ex) {
             logger.error("Error while retrieving date diff", ex);
             throw new DAOException(ex);

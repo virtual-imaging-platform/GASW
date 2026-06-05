@@ -36,32 +36,29 @@ import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.JobDAO;
-import fr.insalyon.creatis.gasw.dao.NodeDAO;
 import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class GaswMonitor extends Thread {
+public abstract class GaswMonitor {
 
-    private static final Logger logger = LoggerFactory.getLogger(GaswMonitor.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private volatile static int INVOCATION_ID = 1;
-    protected JobDAO jobDAO;
-    protected NodeDAO nodeDAO;
+    private final GaswConfiguration config;
+    private final JobDAO jobDAO;
+    private final List<ListenerPlugin> listenerPlugins;
 
-    protected GaswMonitor() {
-        try {
-            jobDAO = DAOFactory.getDAOFactory().getJobDAO();
-            nodeDAO = DAOFactory.getDAOFactory().getNodeDAO();
+    private static final AtomicInteger INVOCATION_ID = new AtomicInteger(1);
 
-        } catch (DAOException ex) {
-            // do nothing
-        }
+    public GaswMonitor(GaswConfiguration config, JobDAO jobDAO, List<ListenerPlugin> listenerPlugins) {
+        this.config = config;
+        this.jobDAO = jobDAO;
+        this.listenerPlugins = listenerPlugins;
     }
 
     protected synchronized void add(Job job) throws GaswException {
@@ -72,14 +69,14 @@ public abstract class GaswMonitor extends Thread {
             if (!list.isEmpty()) {
                 job.setInvocationID(list.get(0).getInvocationID());
             } else {
-                job.setInvocationID(INVOCATION_ID++);
+                job.setInvocationID(INVOCATION_ID.getAndIncrement());
             }
 
             job.setCreation(new Date());
             jobDAO.add(job);
 
             // Listeners notification
-            for (ListenerPlugin listener : GaswConfiguration.getInstance().getListenerPlugins()) {
+            for (ListenerPlugin listener : listenerPlugins) {
                 listener.jobSubmitted(job);
             }
 
@@ -88,19 +85,13 @@ public abstract class GaswMonitor extends Thread {
         }
     }
 
-    /**
-     * Adds a job to be monitored. It should constructs a Job object and invoke
-     * the protected method add(job).
-     */
-    public abstract void add(String jobID, String symbolicName, String fileName,
-            String parameters) throws GaswException;
 
     /**
      * Updates the job status and notifies listeners.
      */
     protected void updateStatus(Job job) throws GaswException, DAOException {
 
-        for (ListenerPlugin listener : GaswConfiguration.getInstance().getListenerPlugins()) {
+        for (ListenerPlugin listener : listenerPlugins) {
             listener.jobStatusChanged(job);
         }
         jobDAO.update(job);
@@ -148,6 +139,13 @@ public abstract class GaswMonitor extends Thread {
         return jobDAO.getNumberOfCompletedJobsByInvocationID(job.getInvocationID()) > 0;
     }
 
+    public abstract void start();
+    public abstract void terminate();
+    /**
+     * Adds a job to be monitored. It should constructs a Job object and invoke
+     * the protected method add(job).
+     */
+    protected abstract void add(String jobID, String symbolicName, String fileName, String parameters) throws GaswException;
     protected abstract void kill(Job job);
     protected abstract void reschedule(Job job);
     protected abstract void replicate(Job job);

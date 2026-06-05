@@ -35,13 +35,12 @@
 package fr.insalyon.creatis.gasw.plugin;
 
 import fr.insalyon.creatis.gasw.GaswException;
-import net.xeoh.plugins.base.Plugin;
 
 /**
  *
  * @author Rafael Silva
  */
-public interface DatabasePlugin extends Plugin {
+public interface DatabasePlugin {
 
     /**
      * Gets the name of the plugin.
@@ -49,15 +48,6 @@ public interface DatabasePlugin extends Plugin {
      * @return 
      */
     public String getName();
-
-    /**
-     * This is the first method invoked by GASW. This method is called when GASW 
-     * is loading its configuration. It is useful to load plugin properties from 
-     * the configuration file.
-     * 
-     * @throws GaswException 
-     */
-    public void load() throws GaswException;
 
     /**
      * Gets the database schema name.
