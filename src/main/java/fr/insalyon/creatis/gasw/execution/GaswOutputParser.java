@@ -368,7 +368,6 @@ public abstract class GaswOutputParser {
         } catch (DAOException | IOException ex) {
             context.closeBuffers();
             logger.error("Error parsing stderr {}", stdErr.getAbsolutePath(), ex);
-
         }
         return exitCode;
     }

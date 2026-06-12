@@ -100,7 +100,7 @@ public class FailOver {
         }
     }
 
-    public synchronized void addData(URI uri) {
+    public void addData(URI uri) {
         try {
             String scheme = uri.getScheme();
             if (scheme == null || (!scheme.equalsIgnoreCase("file")
@@ -113,7 +113,7 @@ public class FailOver {
         }
     }
 
-    public synchronized void addData(List<URI> uris) {
+    public void addData(List<URI> uris) {
         for (URI uri : uris) {
             addData(uri);
         }

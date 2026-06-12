@@ -70,7 +70,7 @@ public abstract class GaswSubmit {
         this.moteurliteConfigGenerator = moteurliteConfigGenerator;
     }
 
-    protected String submit(GaswInput gaswInput) {
+    public String submit(GaswInput gaswInput) {
         if (this.config.isFailOverEnabled()) {
             this.failOver.addData(gaswInput.getDownloads());
         }

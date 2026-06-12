@@ -18,30 +18,26 @@ import java.util.Map;
 public class GaswParsingContext {
 
     private final Job job;
-
-    private final File appStdOut;
-    private final File appStdErr;
-
-    private BufferedWriter appStdOutWriter;
-    private BufferedWriter appStdErrWriter;
-
-    private List<Data> dataList;
-    private Map<String, URI> uploadedResults;
-
-    private StringBuilder inputsDownloadErrBuf;
-    private StringBuilder resultsUploadErrBuf;
-    private StringBuilder appStdOutBuf;
-    private StringBuilder appStdErrBuf;
+    private final File appStdOutFile;
+    private final File appStdErrFile;
+    private final BufferedWriter appStdOutWriter;
+    private final BufferedWriter appStdErrWriter;
+    private final List<Data> dataList;
+    private final Map<String, URI> uploadedResults;
+    private final StringBuilder inputsDownloadErrBuf;
+    private final StringBuilder resultsUploadErrBuf;
+    private final StringBuilder appStdOutBuf;
+    private final StringBuilder appStdErrBuf;
 
     public GaswParsingContext(Job job) throws IOException {
         try {
-            this.job =job;
+            this.job = job;
 
-            this.appStdOut = getAppStdFile(GaswConstants.OUT_APP_EXT, GaswConstants.OUT_ROOT);
-            this.appStdErr = getAppStdFile(GaswConstants.ERR_APP_EXT, GaswConstants.ERR_ROOT);
+            this.appStdOutFile = getAppStdFile(GaswConstants.OUT_APP_EXT, GaswConstants.OUT_ROOT);
+            this.appStdErrFile = getAppStdFile(GaswConstants.ERR_APP_EXT, GaswConstants.ERR_ROOT);
 
-            appStdOutWriter = new BufferedWriter(new FileWriter(this.appStdOut));
-            appStdErrWriter = new BufferedWriter(new FileWriter(this.appStdErr));
+            appStdOutWriter = new BufferedWriter(new FileWriter(this.appStdOutFile));
+            appStdErrWriter = new BufferedWriter(new FileWriter(this.appStdErrFile));
 
             inputsDownloadErrBuf = new StringBuilder();
             resultsUploadErrBuf = new StringBuilder();
@@ -49,7 +45,7 @@ public class GaswParsingContext {
             appStdErrBuf = new StringBuilder();
 
             dataList = new ArrayList<>();
-            uploadedResults = null;
+            uploadedResults = new HashMap<>();
 
         } catch (IOException e) {
             closeBuffers();
@@ -68,6 +64,14 @@ public class GaswParsingContext {
         } catch (IOException e) {
             throw new IOException("Error closing buffers", e);
         }
+    }
+
+    public File getAppStdOutFile() {
+        return appStdOutFile;
+    }
+
+    public File getAppStdErrFile() {
+        return appStdErrFile;
     }
 
     public File getAppStdFile(String extension, String dir) {
@@ -136,11 +140,11 @@ public class GaswParsingContext {
         dataList.add(data);
     }
 
-    public void putUploadedResult(String id, URI uri) {
-        if (uploadedResults == null) {
-            uploadedResults = new HashMap<>();
-        }
+    public Map<String, URI> getUploadedResults() {
+        return uploadedResults;
+    }
 
+    public void putUploadedResult(String id, URI uri) {
         uploadedResults.put(id, uri);
     }
 }

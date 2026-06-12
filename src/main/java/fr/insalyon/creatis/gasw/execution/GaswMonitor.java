@@ -40,6 +40,7 @@ import fr.insalyon.creatis.gasw.dao.JobDAO;
 import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -61,10 +62,10 @@ public abstract class GaswMonitor {
         this.listenerPlugins = listenerPlugins;
     }
 
-    protected synchronized void add(Job job) throws GaswException {
+    @Transactional
+    protected void add(Job job) throws GaswException {
         try {
             // Defining invocation ID
-
             List<Job> list = jobDAO.getByFileName(job.getFileName());
             if (!list.isEmpty()) {
                 job.setInvocationID(list.get(0).getInvocationID());

@@ -67,20 +67,14 @@ public class JobData implements JobDAO {
         }
     }
 
-    /**
-     * Synchronized keyword for multi-threading context cause SQL Constraints violations issues
-     * due to unsynchronization of requests
-     */
     @Override
     @Transactional
     public void update(Job job) throws DAOException {
-        synchronized (sessionFactory) {
-            try {
-                sessionFactory.getCurrentSession().merge(job);
-            } catch (HibernateException ex) {
-                logger.error("Error while updateing", ex);
-                throw new DAOException(ex);
-            }
+        try {
+            sessionFactory.getCurrentSession().merge(job);
+        } catch (HibernateException ex) {
+            logger.error("Error while updating", ex);
+            throw new DAOException(ex);
         }
     }
 
