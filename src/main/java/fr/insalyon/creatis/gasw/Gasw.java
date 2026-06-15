@@ -98,8 +98,8 @@ public class Gasw {
         }
     }
 
-    public void setNotificationClient(Runnable onJobsFinished) {
-        gaswNotification.setOnJobsFinished(onJobsFinished);
+    public void setNotificationClient(Object client) {
+        gaswNotification.setNotificationClient(client);
     }
 
     public String submit(GaswInput gaswInput) throws GaswException {
