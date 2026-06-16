@@ -749,8 +749,8 @@ function downloadURI {
     fi
   fi
 
-  if [[ ${URI_LOWER} == http://* ]]; then
-    curl --insecure -O "$URI"
+  if [[ ${URI_LOWER} == https://* ]] || [[ ${URI_LOWER} == http://* ]]; then
+    curl -O "$URI"
     validateDownload "Cannot download HTTP file"
   fi
 
