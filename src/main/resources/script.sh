@@ -750,7 +750,7 @@ function downloadURI {
   fi
 
   if [[ ${URI_LOWER} == https://* ]] || [[ ${URI_LOWER} == http://* ]]; then
-    curl -O "$URI"
+    curl -L -O "$URI"
     validateDownload "Cannot download HTTP file"
   fi
 
