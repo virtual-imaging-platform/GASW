@@ -777,7 +777,30 @@ function downloadURI {
     fi
   fi
 }
+# performDownload: handle top-level download execution step
+function performDownload {
+  startLog inputs_download
 
+  # Create a file to disable watchdog CPU wallclock check
+  touch ../DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
+
+  # Iterate over each URL in the 'downloads' array
+  for download in ${downloads}; do
+    # Remove leading and trailing whitespace
+    local download="$(echo -e "${download}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    # Process the URL using downloadURI function
+    downloadURI "$download"
+  done
+
+  # Change permissions of all files in the directory
+  chmod 755 -- *
+  # Record the timestamp after downloads
+  AFTERDOWNLOAD=$(date +%s)
+
+  stopLog inputs_download
+}
+
+## exec helper
 # performExec: handle top-level application execution step
 function performExec {
   startLog application_execution
