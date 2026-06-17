@@ -778,31 +778,6 @@ function downloadURI {
   fi
 }
 
-# performDownload: handle top-level download execution step
-function performDownload {
-  startLog inputs_download
-
-  # Create a file to disable watchdog CPU wallclock check
-  touch ../DISABLE_WATCHDOG_CPU_WALLCLOCK_CHECK
-
-  # Iterate over each URL in the 'downloads' array
-  for download in ${downloads}; do
-    # Remove leading and trailing whitespace
-    local download="$(echo -e "${download}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-    # Process the URL using downloadURI function
-    downloadURI "$download"
-  done
-
-  # Change permissions of all files in the directory
-  chmod 755 -- *
-  # Record the timestamp after downloads
-  AFTERDOWNLOAD=$(date +%s)
-
-  stopLog inputs_download
-}
-
-## exec helpers
-
 # performExec: handle top-level application execution step
 function performExec {
   startLog application_execution
@@ -828,6 +803,8 @@ function performExec {
   boshopts+=("--provenance" "{\"jobid\":\"$DIRNAME\"}")
   boshopts+=("-v" "$PWD/../cache:$PWD/../cache")
   boshopts+=("-v" "$tmpfolder:/tmp")
+  
+  # MODIFICATION : Utilisation directe du fichier d'invocation original
   boshopts+=("-v" "$PWD/../inv/$invocationJsonFilename:$PWD/input_params.json")
 
   # Compute imagepath and select the real containerType
@@ -844,7 +821,7 @@ function performExec {
         containerType="docker"
         boshopts+=("--force-docker")
         ;;
-      singularity)
+      singularity|encrypted-singularity)
         containerType="singularity"
         boshopts+=("--force-singularity")
         # get image base name and tag from descriptor
@@ -906,32 +883,30 @@ function performExec {
       # within the container. This overlay is a one-time use, and will be
       # removed in cleanup(). It requires bosh >= 0.5.30.
       local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
+      
+      # MODIFICATION : Gestion de la clé de chiffrement pour le mode encrypted-singularity
+      local final_container_opts=""
+      if [ "$containersRuntime" = "encrypted-singularity" ]; then
+        local pem_key="${containersRuntimeEncryptedKey}"
 
-      # Pass all options to bosh
-      boshopts+=("--container-opts" "${conopts}--overlay $overlayfolder")
-
-      local settings_file="../settings.json"
-
-      if [ -f "$settings_file" ]; then
-        #extract the last match of containers.runtime, cleaning up spaces
-        local runtime_type=$(grep "containers.runtime" "$settings_file" | tail -n 1 | cut -d'=' -f2 | xargs)
-        
-        #check if runtime is specifically set to your encrypted format
-        if [ "$runtime_type" = "encrypted-singularity" ]; then
-          # Extract the encryption key path, cleaning up spaces
-          local pem_key=$(grep "containers.runtime.encryption-key" "$settings_file" | cut -d'=' -f2 | xargs)
-
-          # ensure the key file actually exists on the disk
-          if [ -n "$pem_key" ] && [ -f "$pem_key" ]; then
-            info "Encrypted Singularity detected. Adding --pem-path option."
-            boshopts+=("--pem-path" "$pem_key")
-          else
-            error "ENCRYPTION_KEY_ERROR - Encryption is enabled but PEM key file was not found at: '$pem_key'"
-            cleanup
-            exit 54
-          fi
+        if [ -z "$pem_key" ]; then
+          error "ENCRYPTION_KEY_ERROR - containersRuntimeEncryptedKey is empty"
+          error "Exiting with return value 54"
+          exit 54
         fi
+
+        if [ ! -f "$pem_key" ]; then
+          error "ENCRYPTION_KEY_ERROR - missing PEM: $pem_key"
+          error "Exiting with return value 54"
+          exit 54
+        fi
+
+        final_container_opts="--pem-path $pem_key"
       fi
+
+      local container_opts
+      container_opts=$(echo "${conopts}--overlay $overlayfolder $final_container_opts" | xargs)
+      boshopts+=("--container-opts" "$container_opts")
       ;;
   esac
 
@@ -955,9 +930,6 @@ function performExec {
 
   info "Execution time was $((BEFOREUPLOAD - AFTERDOWNLOAD))s"
 }
-
-## upload helpers
-
 # nSEs: count the number of storage elements in the list
 function nSEs {
   local i=0
@@ -966,8 +938,6 @@ function nSEs {
   done
   return $i
 }
-
-# getAndRemoveSE: get and remove a storage element from the list by its index
 function getAndRemoveSE {
   local index="$1"
   local i=0
@@ -1481,6 +1451,7 @@ if [ -f "$configurationFile" ]; then
   singularityPath=
   containersCVMFSPath=
   containersRuntime=
+  containersRuntimeEncryptedKey=
   containersImagesBasePath=
   nrep=
   boutiquesProvenanceDir=
