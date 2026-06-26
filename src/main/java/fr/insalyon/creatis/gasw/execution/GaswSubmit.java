@@ -150,7 +150,6 @@ public abstract class GaswSubmit {
         FileWriter fstream = new FileWriter(filePath);
         BufferedWriter out = new BufferedWriter(fstream);
         out.write(contents);
-        out.flush();
         out.close();
         fstream.close();
     }

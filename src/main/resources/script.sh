@@ -827,7 +827,6 @@ function performExec {
   boshopts+=("-v" "$PWD/../cache:$PWD/../cache")
   boshopts+=("-v" "$tmpfolder:/tmp")
   
-  # MODIFICATION : Utilisation directe du fichier d'invocation original
   boshopts+=("-v" "$PWD/../inv/$invocationJsonFilename:$PWD/input_params.json")
 
   # Compute imagepath and select the real containerType
@@ -907,29 +906,32 @@ function performExec {
       # removed in cleanup(). It requires bosh >= 0.5.30.
       local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
       
-      # MODIFICATION : Gestion de la clé de chiffrement pour le mode encrypted-singularity
-      local final_container_opts=""
+      # Initialize options with base container options and the required overlay
+      local final_container_opts="${conopts} --overlay $overlayfolder"
+
+      #  encryption key for encrypted-singularity mode
       if [ "$containersRuntime" = "encrypted-singularity" ]; then
         local pem_key="${containersRuntimeEncryptedKey}"
 
         if [ -z "$pem_key" ]; then
-          error "ENCRYPTION_KEY_ERROR - containersRuntimeEncryptedKey is empty"
+          error "ENCRYPTION_KEY_ERROR - containersRuntimeEncryptedKey is empty on server ${SERVER_NAME:-unknown_server}"
           error "Exiting with return value 54"
           exit 54
         fi
 
         if [ ! -f "$pem_key" ]; then
-          error "ENCRYPTION_KEY_ERROR - missing PEM: $pem_key"
+          error "ENCRYPTION_KEY_ERROR - missing PEM: $pem_key on server ${SERVER_NAME:-unknown_server}"
           error "Exiting with return value 54"
           exit 54
         fi
 
-        final_container_opts="--pem-path $pem_key"
+        #  append the PEM path flag with proper spacing
+        final_container_opts="${final_container_opts} --pem-path $pem_key"
       fi
 
-      local container_opts
-      container_opts=$(echo "${conopts}--overlay $overlayfolder $final_container_opts" | xargs)
-      boshopts+=("--container-opts" "$container_opts")
+      final_container_opts=$(echo "$final_container_opts" | xargs)
+      boshopts+=("--container-opts" "$final_container_opts")
+      
       ;;
   esac
 
@@ -953,6 +955,9 @@ function performExec {
 
   info "Execution time was $((BEFOREUPLOAD - AFTERDOWNLOAD))s"
 }
+
+## upload helpers
+
 # nSEs: count the number of storage elements in the list
 function nSEs {
   local i=0
@@ -961,6 +966,8 @@ function nSEs {
   done
   return $i
 }
+
+# getAndRemoveSE: get and remove a storage element from the list by its index
 function getAndRemoveSE {
   local index="$1"
   local i=0
