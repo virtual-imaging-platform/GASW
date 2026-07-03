@@ -37,10 +37,11 @@ package fr.insalyon.creatis.gasw.dao.hibernate;
 import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.SEEntryPointsDAO;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.hibernate.HibernateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hibernate.HibernateException;
-import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,17 +50,15 @@ public class SEEntryPointData implements SEEntryPointsDAO {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final SessionFactory sessionFactory;
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    public SEEntryPointData(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
-    
     @Override
     @Transactional
     public void add(SEEntryPoint seEntryPoint) throws DAOException {
         try {
-            sessionFactory.getCurrentSession().merge(seEntryPoint);
+            entityManager
+                    .merge(seEntryPoint);
         } catch (HibernateException ex) {
             logger.error("Error while adding", ex);
             throw new DAOException(ex);
@@ -70,10 +69,10 @@ public class SEEntryPointData implements SEEntryPointsDAO {
     @Transactional(readOnly = true)
     public SEEntryPoint getByHostName(String hostname) throws DAOException {
         try {
-            return sessionFactory.getCurrentSession()
+            return entityManager
                     .createNamedQuery("EntryPoints.findByHostname", SEEntryPoint.class)
                     .setParameter("hostname", hostname)
-                    .uniqueResult();
+                    .getSingleResult();
         } catch (HibernateException ex) {
             logger.error("Error while retrieving", ex);
             throw new DAOException(ex);

@@ -37,7 +37,6 @@ import fr.insalyon.creatis.gasw.bean.SEEntryPointID;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.SEEntryPointsDAO;
 import fr.insalyon.creatis.gasw.execution.ExecutorFactory;
-import fr.insalyon.creatis.gasw.execution.FailOver;
 import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
 
 import java.io.BufferedReader;
@@ -52,6 +51,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -83,12 +84,24 @@ public class Gasw {
         }
     }
 
+    // Log loaded plugins after all beans creation
+    @EventListener(ContextRefreshedEvent.class)
+    public void logPlugins() {
+        executorPlugins.forEach(p ->
+                logger.info("Loaded executor plugin '{}' version '{}'",
+                        p.getName(), p.getClass().getPackage().getImplementationVersion()));
+        listenerPlugins.forEach(p ->
+                logger.info("Loaded listener plugin '{}' version '{}'",
+                        p.getName(), p.getClass().getPackage().getImplementationVersion()));
+    }
+
     @PreDestroy
     public void terminate() throws GaswException {
         terminate(false);
     }
 
     public void terminate(boolean force) throws GaswException {
+        gaswNotification.terminate();
         for (ExecutorPlugin executorPlugin : executorPlugins) {
             executorPlugin.terminate(force);
         }
@@ -121,10 +134,10 @@ public class Gasw {
 
             BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String s = null;
-            String cout = "";
+            StringBuilder cout = new StringBuilder();
 
             while ((s = r.readLine()) != null) {
-                cout += s;
+                cout.append(s);
                 if (s.startsWith("- Service: httpg://")) {
                     try {
                         URI service = new URI(s.split(" ")[2]);
@@ -146,7 +159,7 @@ public class Gasw {
             process.waitFor();
 
             if (process.exitValue() != 0) {
-                logger.error(cout);
+                logger.error(cout.toString());
                 throw new GaswException("Unable to load SEs entry points.");
             }
         } catch (InterruptedException ex) {

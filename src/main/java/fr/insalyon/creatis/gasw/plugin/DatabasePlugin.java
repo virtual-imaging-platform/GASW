@@ -50,20 +50,12 @@ public interface DatabasePlugin {
     public String getName();
 
     /**
-     * Gets the name of the package containing the classes to be loaded in Hibernate.
-     *
-     * @return Gets the entity package name
-     * @throws GaswException
-     */
-    public String getEntityPackage() throws GaswException;
-
-    /**
      * Gets the database schema name.
      * 
      * @return
      * @throws GaswException 
      */
-    public String getSchema() throws GaswException;
+    public String getSchema();
 
     /**
      * Gets the JDBC driver.
@@ -71,7 +63,7 @@ public interface DatabasePlugin {
      * @return
      * @throws GaswException 
      */
-    public String getDriverClass() throws GaswException;
+    public String getDriverClass();
 
     /**
      * Gets the JDBC connection URL.
@@ -79,7 +71,7 @@ public interface DatabasePlugin {
      * @return
      * @throws GaswException 
      */
-    public String getConnectionUrl() throws GaswException;
+    public String getConnectionUrl();
 
     /**
      * Gets the hibernate dialect.
@@ -89,7 +81,7 @@ public interface DatabasePlugin {
      * @return
      * @throws GaswException 
      */
-    public String getHibernateDialect() throws GaswException;
+    public String getHibernateDialect();
 
     /**
      * Gets the database username.
@@ -97,7 +89,7 @@ public interface DatabasePlugin {
      * @return
      * @throws GaswException 
      */
-    public String getUserName() throws GaswException;
+    public String getUserName();
 
     /**
      * Gets the database password.
@@ -105,5 +97,5 @@ public interface DatabasePlugin {
      * @return
      * @throws GaswException 
      */
-    public String getPassword() throws GaswException;
+    public String getPassword();
 }

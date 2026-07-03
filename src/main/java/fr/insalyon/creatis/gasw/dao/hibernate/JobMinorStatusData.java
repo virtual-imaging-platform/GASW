@@ -38,30 +38,30 @@ import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.JobMinorStatusDAO;
 import fr.insalyon.creatis.gasw.execution.GaswMinorStatus;
-import java.util.List;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.hibernate.HibernateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hibernate.HibernateException;
-import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Repository
 public class JobMinorStatusData implements JobMinorStatusDAO {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final SessionFactory sessionFactory;
-
-    public JobMinorStatusData(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     @Transactional
     public void add(JobMinorStatus jobMinorStatus) throws DAOException {
         try {
-            sessionFactory.getCurrentSession().merge(jobMinorStatus);
+            entityManager
+                    .merge(jobMinorStatus);
         } catch (HibernateException ex) {
             logger.error("Error while adding", ex);
             throw new DAOException(ex);
@@ -72,13 +72,13 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
     @Transactional(readOnly = true)
     public List<JobMinorStatus> getCheckpoints(String jobID) throws DAOException {
         try {
-            return sessionFactory.getCurrentSession()
+            return entityManager
                     .createNamedQuery("MinorStatus.findCheckpointById", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
                     .setParameter("checkpointInit", GaswMinorStatus.CheckPoint_Init)
                     .setParameter("checkpointUpload", GaswMinorStatus.CheckPoint_Upload)
                     .setParameter("checkpointEnd", GaswMinorStatus.CheckPoint_Upload)
-                    .list();
+                    .getResultList();
         } catch (HibernateException ex) {
             logger.error("Error while retrieving checkpoints", ex);
             throw new DAOException(ex);
@@ -89,7 +89,7 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
     @Transactional(readOnly = true)
     public List<JobMinorStatus> getExecutionMinorStatus(String jobID) throws DAOException {
         try {
-            return sessionFactory.getCurrentSession()
+            return entityManager
                     .createNamedQuery("MinorStatus.findExecutionById", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
                     .setParameter("start", GaswMinorStatus.Started)
@@ -98,7 +98,7 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
                     .setParameter("application", GaswMinorStatus.Application)
                     .setParameter("output", GaswMinorStatus.Outputs)
                     .setParameter("finished", GaswMinorStatus.Finished)
-                    .list();
+                    .getResultList();
         } catch (HibernateException ex) {
             logger.error("Error while retrieving minorstatus", ex);
             throw new DAOException(ex);
@@ -107,16 +107,16 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
 
     @Override
     @Transactional(readOnly = true)
-    public long getDateDiff(String jobID, GaswMinorStatus start, 
-            GaswMinorStatus end) throws DAOException {
+    public long getDateDiff(String jobID, GaswMinorStatus start,
+                            GaswMinorStatus end) throws DAOException {
         try {
-            List<JobMinorStatus> list = sessionFactory.getCurrentSession()
+            List<JobMinorStatus> list = entityManager
                     .createNamedQuery("MinorStatus.dateDiff", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
                     .setParameter("start", start)
                     .setParameter("end", end)
-                    .list();
-            
+                    .getResultList();
+
             return Math.abs(list.get(1).getDate().getTime() - list.get(0).getDate().getTime());
         } catch (HibernateException ex) {
             logger.error("Error while retrieving date diff", ex);

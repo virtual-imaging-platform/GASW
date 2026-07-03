@@ -144,9 +144,9 @@ public abstract class GaswMonitor {
     public abstract void terminate();
     /**
      * Adds a job to be monitored. It should constructs a Job object and invoke
-     * the protected method add(job).
+     * the public method add(job).
      */
-    protected abstract void add(String jobID, String symbolicName, String fileName, String parameters) throws GaswException;
+    public abstract void add(String jobID, String symbolicName, String fileName, String parameters) throws GaswException;
     protected abstract void kill(Job job);
     protected abstract void reschedule(Job job);
     protected abstract void replicate(Job job);

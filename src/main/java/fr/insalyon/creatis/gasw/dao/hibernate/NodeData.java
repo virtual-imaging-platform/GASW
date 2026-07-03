@@ -37,10 +37,11 @@ package fr.insalyon.creatis.gasw.dao.hibernate;
 import fr.insalyon.creatis.gasw.bean.Node;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.NodeDAO;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.hibernate.HibernateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hibernate.HibernateException;
-import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,17 +50,15 @@ public class NodeData implements NodeDAO {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final SessionFactory sessionFactory;
-
-    public NodeData(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     @Transactional
     public void add(Node node) throws DAOException {
         try {
-            sessionFactory.getCurrentSession().merge(node);
+            entityManager
+                    .merge(node);
         } catch (HibernateException ex) {
             logger.error("Error while adding", ex);
             throw new DAOException(ex);
@@ -70,11 +69,11 @@ public class NodeData implements NodeDAO {
     @Transactional(readOnly = true)
     public Node getNodeBySiteAndNodeName(String site, String nodeName) throws DAOException {
         try {
-            return sessionFactory.getCurrentSession()
+            return entityManager
                     .createNamedQuery("Node.findBySiteAndNodeName", Node.class)
                     .setParameter("siteName", site)
                     .setParameter("nodeName", nodeName)
-                    .uniqueResult();
+                    .getSingleResult();
         } catch (HibernateException ex) {
             logger.error("Error while retrieving", ex);
             throw new DAOException(ex);

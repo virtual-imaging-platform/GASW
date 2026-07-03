@@ -39,7 +39,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
-@PropertySource("classpath:application.properties")
+@PropertySource("classpath:gasw.properties")
 public class GaswConfiguration {
     // Final properties
     private final String executionPath = new File("").getAbsolutePath();
@@ -73,7 +73,7 @@ public class GaswConfiguration {
     private String boshCVMFSPath;
     @Value("${gasw.boutiques.file-name}")
     private String boutiquesFileName;
-    @Value("${gasw.containers.provenance-dir}")
+    @Value("${gasw.boutiques.provenance-dir}")
     private String boutiquesProvenanceDir;
     // Containers stuff
     @Value("${gasw.containers.runtime}")
@@ -98,7 +98,7 @@ public class GaswConfiguration {
     @Value("${gasw.failover.max-retry}")
     private int failOverMaxRetry;
     //MIN_AVG_DOWNLOAD_THROUGHPUT for the lcg-c* SEND_RECEIVE_TIMEOUT
-    @Value("${gasw.min-avg-download-throughput}")
+    @Value("${gasw.download.min-avg-throughput}")
     private int minAvgDownloadThroughput;
     // Minor Status Service
     @Value("${gasw.minor-status.enabled}")
@@ -108,7 +108,7 @@ public class GaswConfiguration {
     private String sourceScript;
 
     public int getDefaultSleeptime() {
-        return defaultSleeptimeSeconds * 1000;
+        return defaultSleeptimeSeconds;
     }
 
     public String getSimulationID() {

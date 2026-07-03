@@ -34,7 +34,6 @@
  */
 package fr.insalyon.creatis.gasw.plugin;
 
-import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswOutput;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
@@ -46,21 +45,13 @@ public interface ListenerPlugin {
 
     public String getName();
 
-    /**
-     * Gets the name of the package containing the classes to be loaded in Hibernate.
-     *
-     * @return Gets the entity package name
-     * @throws GaswException
-     */
-    public String getEntityPackage() throws GaswException;
+    public void jobSubmitted(Job job);
 
-    public void jobSubmitted(Job job) throws GaswException;
+    public void jobFinished(GaswOutput gaswOutput);
 
-    public void jobFinished(GaswOutput gaswOutput) throws GaswException;
+    public void jobStatusChanged(Job job);
 
-    public void jobStatusChanged(Job job) throws GaswException;
+    public void jobMinorStatusReported(JobMinorStatus jobMinorStatus);
 
-    public void jobMinorStatusReported(JobMinorStatus jobMinorStatus) throws GaswException;
-
-    public void terminate() throws GaswException;
+    public void terminate();
 }

@@ -32,9 +32,7 @@
  */
 package fr.insalyon.creatis.gasw.execution;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -70,7 +68,7 @@ public abstract class GaswSubmit {
         this.moteurliteConfigGenerator = moteurliteConfigGenerator;
     }
 
-    public String submit(GaswInput gaswInput) {
+    public String submit(GaswInput gaswInput, GaswMonitor gaswMonitor) {
         if (this.config.isFailOverEnabled()) {
             this.failOver.addData(gaswInput.getDownloads());
         }
@@ -152,11 +150,7 @@ public abstract class GaswSubmit {
      * @throws IOException
      */
     private void writeToFile(String filePath, String contents) throws IOException {
-        FileWriter fstream = new FileWriter(filePath);
-        BufferedWriter out = new BufferedWriter(fstream);
-        out.write(contents);
-        out.close();
-        fstream.close();
+        Files.writeString(Path.of(filePath), contents);
     }
 
     private void publishConfiguration(String jobId, Map<String, String> config) throws IOException {

@@ -35,27 +35,35 @@ package fr.insalyon.creatis.gasw.execution;
 import fr.insalyon.creatis.gasw.GaswConfiguration;
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-public class ExecutorFactory {
+public class ExecutorFactory implements ApplicationContextAware {
 
     private final GaswConfiguration config;
-    private final List<ExecutorPlugin> executorPlugins;
+    private ApplicationContext applicationContext;
 
-    public ExecutorFactory(GaswConfiguration config, List<ExecutorPlugin> executorPlugins) {
+    public ExecutorFactory(GaswConfiguration config) {
         this.config = config;
-        this.executorPlugins = executorPlugins;
     }
 
     public ExecutorPlugin getExecutor() throws GaswException {
         String executorName = config.getDefaultExecutor();
-        return executorPlugins.stream()
-                .filter(e -> e.getName().equalsIgnoreCase(executorName))
-                .findFirst()
-                .orElseThrow(() ->
-                        new GaswException("There is no executor available for '" + executorName + "'."));
+        return applicationContext.getBeansOfType(ExecutorPlugin.class).values()
+            .stream()
+            .filter(plugin -> plugin.getName().equalsIgnoreCase(executorName))
+            .findFirst()
+            .orElseThrow(() ->
+                    new GaswException("There is no executor available for '" + executorName + "'."));
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 }

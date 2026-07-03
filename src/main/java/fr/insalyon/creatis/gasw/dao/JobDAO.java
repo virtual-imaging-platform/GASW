@@ -32,6 +32,7 @@
  */
 package fr.insalyon.creatis.gasw.dao;
 
+import fr.insalyon.creatis.gasw.bean.Data;
 import fr.insalyon.creatis.gasw.bean.Job;
 import fr.insalyon.creatis.gasw.execution.GaswStatus;
 import java.util.List;
@@ -73,4 +74,6 @@ public interface JobDAO {
     public List<Job> getByFileName(String filename) throws DAOException;
 
     public List<Integer> getInvocationsByCommand(String command) throws DAOException;
+
+    public List<Job> getActiveJobsByCommand(String command) throws DAOException;
 }

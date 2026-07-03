@@ -39,6 +39,9 @@ import jakarta.persistence.*;
  * @author Rafael Ferreira da Silva
  */
 @Entity
+@NamedNativeQueries({
+    @NamedNativeQuery(name = "Data.upsertData", query = "MERGE INTO Data (data_path, data_type) KEY(data_path) VALUES (?, ?)"),
+})
 @NamedQueries({
     @NamedQuery(name = "Data.findByPath", query = "FROM Data d WHERE d.dataPath = :path")
 })

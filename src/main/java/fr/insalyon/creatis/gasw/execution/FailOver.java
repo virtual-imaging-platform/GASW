@@ -161,9 +161,7 @@ public class FailOver {
             } catch (IOException ex) {
                 logger.warn("IOException:", ex);
             } finally {
-                if (process != null) {
-                    close(process);
-                }
+                GaswUtil.closeProcess(logger, process);
                 if (br != null) {
                     try {
                         br.close();
@@ -210,9 +208,7 @@ public class FailOver {
             throw new GaswException(ex);
 
         } finally {
-            if (process != null) {
-                close(process);
-            }
+            GaswUtil.closeProcess(logger, process);
             if (br != null) {
                 try {
                     br.close();
@@ -244,24 +240,5 @@ public class FailOver {
         };
 
         return source;
-    }
-
-    private void close(Process process) {
-
-        close(process.getOutputStream());
-        close(process.getInputStream());
-        close(process.getErrorStream());
-        process.destroy();
-    }
-
-    private void close(Closeable c) {
-
-        if (c != null) {
-            try {
-                c.close();
-            } catch (IOException ex) {
-                // ignored
-            }
-        }
     }
 }

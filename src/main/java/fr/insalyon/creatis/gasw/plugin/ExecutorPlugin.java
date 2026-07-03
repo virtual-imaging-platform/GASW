@@ -49,14 +49,6 @@ public interface ExecutorPlugin {
     public String getName();
 
     /**
-     * Gets the name of the package containing the classes to be loaded in Hibernate.
-     *
-     * @return Gets the entity package name
-     * @throws GaswException
-     */
-    public String getEntityPackage() throws GaswException;
-
-    /**
      * Submits the job with the specified inputs.
      *
      * @param gaswInput Job inputs

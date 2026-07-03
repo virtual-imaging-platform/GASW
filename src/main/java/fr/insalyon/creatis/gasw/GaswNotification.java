@@ -54,6 +54,7 @@ public class GaswNotification {
     private final Map<String, GaswOutput> instanceErrorJobs;
 
     private Object notificationClient;
+    private boolean stop = false;
 
     public GaswNotification() {
         this.finishedJobs = new ConcurrentLinkedQueue<>();
@@ -62,6 +63,7 @@ public class GaswNotification {
 
     @Scheduled(fixedDelayString = "#{@gaswConfiguration.defaultSleeptime / 2}", timeUnit = TimeUnit.SECONDS)
     private void notifyIfReady() {
+        if (stop) return;
         if (finishedJobs.isEmpty() || notificationClient == null) return;
 
         logger.debug("New tasks have finished execution. Notifying client...");
@@ -97,5 +99,9 @@ public class GaswNotification {
 
     public GaswOutput getGaswOutputFromLastFailedJob(String instanceId) {
         return instanceErrorJobs.get(instanceId);
+    }
+
+    public void terminate() {
+        stop = true;
     }
 }

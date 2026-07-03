@@ -33,91 +33,99 @@
 package fr.insalyon.creatis.gasw.execution;
 
 import fr.insalyon.creatis.gasw.*;
-import fr.insalyon.creatis.gasw.bean.*;
-import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.dao.JobDAO;
-import fr.insalyon.creatis.gasw.dao.JobMinorStatusDAO;
-import fr.insalyon.creatis.gasw.dao.NodeDAO;
+import fr.insalyon.creatis.gasw.bean.Data;
+import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
+import fr.insalyon.creatis.gasw.bean.Node;
+import fr.insalyon.creatis.gasw.bean.NodeID;
+import fr.insalyon.creatis.gasw.dao.*;
 import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
-import java.io.*;
-import java.net.URI;
-import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Scanner;
 
 public abstract class GaswOutputParser {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Executor executor = Executors.newFixedThreadPool(10);
 
     protected final GaswConfiguration config;
     protected final GaswNotification gaswNotification;
     protected final JobDAO jobDAO;
     protected final JobMinorStatusDAO jobMinorStatusDAO;
     protected final NodeDAO nodeDAO;
+    protected final DataDAO dataDAO;
     protected final List<ListenerPlugin> listenerPlugins;
 
-
-    protected GaswOutputParser(GaswConfiguration config, GaswNotification gaswNotification,
-                               JobDAO jobDAO, JobMinorStatusDAO jobMinorStatusDAO, NodeDAO nodeDAO, List<ListenerPlugin> listenerPlugins) {
+    public GaswOutputParser(GaswConfiguration config, GaswNotification gaswNotification,
+                               JobDAO jobDAO, JobMinorStatusDAO jobMinorStatusDAO,
+                               NodeDAO nodeDAO, DataDAO dataDAO, List<ListenerPlugin> listenerPlugins) {
         this.config = config;
         this.gaswNotification = gaswNotification;
         this.jobDAO = jobDAO;
         this.jobMinorStatusDAO = jobMinorStatusDAO;
         this.nodeDAO = nodeDAO;
+        this.dataDAO = dataDAO;
         this.listenerPlugins = listenerPlugins;
     }
 
     public void run(GaswParsingContext context) {
-        executor.execute(() -> {
-            try {
-                GaswOutput gaswOutput = getGaswOutput(context);
+        try {
+            GaswOutput gaswOutput = getGaswOutput(context);
 
-                for (ListenerPlugin listener : listenerPlugins) {
-                    try {
-                        listener.jobFinished(gaswOutput);
-                    } catch (Exception ex) {
-                        logger.warn("Error ", ex);
-                    }
-                }
-                // the job is marked as replicating, because it could be
-                // replicated in case of error
-                // remove this flag if it is not replicated after all
+            for (ListenerPlugin listener : listenerPlugins) {
                 try {
-                    // do not resubmit a job that was deliberately cancelled/killed
-                    if (gaswOutput.getExitCode() == GaswExitCode.SUCCESS || gaswOutput.getExitCode() == GaswExitCode.EXECUTION_CANCELED || context.getJob().isBeingKilled()) {
+                    listener.jobFinished(gaswOutput);
+                } catch (Exception ex) {
+                    logger.warn("Error ", ex);
+                }
+            }
+            // the job is marked as replicating, because it could be
+            // replicated in case of error
+            // remove this flag if it is not replicated after all
+            try {
+                // do not resubmit a job that was deliberately cancelled/killed
+                if (gaswOutput.getExitCode() == GaswExitCode.SUCCESS
+                        || gaswOutput.getExitCode() == GaswExitCode.EXECUTION_CANCELED
+                        || context.getJob().isBeingKilled()) {
+                    context.getJob().setReplicating(false);
+                    jobDAO.update(context.getJob());
+                } else {
+                    // Processing error job here to avoid error throwing before it's labeled as error
+                    gaswNotification.addErrorJob(gaswOutput);
+                    int retries = jobDAO.getFailedJobsByInvocationID(context.getJob().getInvocationID()).size() - 1;
+                    if (retries < config.getDefaultRetryCount()) {
+                        logger.warn("Job [{}] finished as \"{}\" (retried {} times).",
+                                context.getJob().getId(), context.getJob().getStatus().name(), retries);
+                        resubmit();
+                    } else {
+                        logger.warn("Job [{}] finished as \"{}\": holding job (max retries reached).",
+                                context.getJob().getId(), context.getJob().getStatus().name());
+                        if (context.getJob().getStatus() == GaswStatus.ERROR) {
+                            context.getJob().setStatus(GaswStatus.ERROR_HELD);
+                        } else if (context.getJob().getStatus() == GaswStatus.STALLED) {
+                            context.getJob().setStatus(GaswStatus.STALLED_HELD);
+                        }
                         context.getJob().setReplicating(false);
                         jobDAO.update(context.getJob());
-                    } else {
-                        int retries = jobDAO.getFailedJobsByInvocationID(context.getJob().getInvocationID()).size() - 1;
-                        if (retries < config.getDefaultRetryCount()) {
-                            logger.warn("Job [{}] finished as \"{}\" (retried {} times).", context.getJob().getId(), context.getJob().getStatus().name(), retries);
-                            resubmit();
-                        } else {
-                            logger.warn("Job [{}] finished as \"{}\": holding job (max retries reached).", context.getJob().getId(), context.getJob().getStatus().name());
-                            if (context.getJob().getStatus() == GaswStatus.ERROR) {
-                                context.getJob().setStatus(GaswStatus.ERROR_HELD);
-                            } else if (context.getJob().getStatus() == GaswStatus.STALLED) {
-                                context.getJob().setStatus(GaswStatus.STALLED_HELD);
-                            }
-                            context.getJob().setReplicating(false);
-                            jobDAO.update(context.getJob());
-                        }
-                        gaswNotification.addErrorJob(gaswOutput);
-                        return;
                     }
-                } catch (DAOException | GaswException ex) {
-                    logger.error("Error finalising job {}", context.getJob().getId(), ex);
+                    return;
                 }
-                gaswNotification.addFinishedJob(gaswOutput);
-
-            } catch (GaswException ex) {
-                logger.error("Error processing output for job {}", context.getJob().getId(), ex);
+            } catch (DAOException | GaswException ex) {
+                logger.error("Error finalising job {}", context.getJob().getId(), ex);
             }
-        });
+            gaswNotification.addFinishedJob(gaswOutput);
+        } catch (GaswException ex) {
+            logger.error("Error processing output for job {}", context.getJob().getId(), ex);
+        }
     }
 
     /**
@@ -129,7 +137,7 @@ public abstract class GaswOutputParser {
      */
     public abstract GaswOutput getGaswOutput(GaswParsingContext context) throws GaswException;
 
-    protected void resubmit() throws GaswException {};
+    protected void resubmit() throws GaswException {}
 
     protected int parseStdOut(File stdOut, GaswParsingContext context) throws IOException {
         int exitCode = -1;
@@ -161,7 +169,7 @@ public abstract class GaswOutputParser {
                     if (line.contains("<application_execution>")) {
                         isAppExec = true;
                     } else if (line.contains("</application_execution>")) {
-                        isAppExec = false;;
+                        isAppExec = false;
                     } else if (isAppExec) {
                         context.getAppStdOutWriter().write(line + "\n");
                         context.getAppStdOutBuf().append(line).append("\n");
@@ -261,12 +269,12 @@ public abstract class GaswOutputParser {
                             uri = new URI(uploadedFile);
                         } else {
                             uri = lfcHost.isEmpty()
-                                ? new URI("file://" + uploadedFile)
-                                : new URI("lfn://" + lfcHost + uploadedFile);
+                                    ? new URI("file://" + uploadedFile)
+                                    : new URI("lfn://" + lfcHost + uploadedFile);
                         }
                         context.putUploadedResult(outputId, uri);
                         context.addData(new Data(uri.toString(), Data.Type.Output));
-                        logger.info("Adding output {} {} for job {}" + outputId, uri, context.getJob().getId());
+                        logger.info("Adding output {} {} for job {}", outputId, uri, context.getJob().getId());
                     }
                 }
             } catch (Exception ex) {
@@ -284,6 +292,11 @@ public abstract class GaswOutputParser {
 
             // Parse checkpoint
             parseCheckpoint(context);
+
+            // Upsert Data rows before attaching them to the Job, to avoid unique constraint violations
+            for (Data d : context.getDataList()) {
+                dataDAO.upsertData(d);
+            }
 
             // Update Job
             context.getJob().setData(context.getDataList());
@@ -437,30 +450,15 @@ public abstract class GaswOutputParser {
     }
 
     protected File saveFile(String extension, String dir, String content, GaswParsingContext context) {
-        FileWriter fstream = null;
+        Path path = Path.of(dir, context.getJob().getFileName() + ".sh" + extension);
         try {
-            File stdDir = new File(dir);
-            if (!stdDir.exists()) {
-                stdDir.mkdir();
-            }
-            File stdFile = new File(dir + "/" + context.getJob().getFileName() + ".sh" + extension);
-            fstream = new FileWriter(stdFile);
-            BufferedWriter out = new BufferedWriter(fstream);
-            out.write(content);
-            out.close();
-
-            return stdFile;
-
+            Files.createDirectories(path.getParent());
+            Files.writeString(path, content);
+            return path.toFile();
         } catch (IOException ex) {
-            logger.error("Error:", ex);
-        } finally {
-            try {
-                fstream.close();
-            } catch (IOException ex) {
-                logger.error("Error:", ex);
-            }
+            logger.error("Error writing file {}", path, ex);
+            return null;
         }
-        return null;
     }
 
     protected File moveAppFile(File source, String extension, String dir, GaswParsingContext context) {
