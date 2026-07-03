@@ -44,4 +44,6 @@
     <appender-ref ref="GASW_LOG"/>
     <appender-ref ref="GASW_ERROR"/>
   </root>
+
+  <logger name="org.hibernate.orm.connections.pooling" level="WARN"/>
 </configuration>

@@ -44,14 +44,14 @@ import java.util.Map;
  */
 public class GaswOutput {
 
-    private String jobID;
-    private GaswExitCode exitCode;
-    private String exitMessage;
-    private Map<String, URI> uploadedResults;
-    private File appStdOut;
-    private File appStdErr;
-    private File stdOut;
-    private File stdErr;
+    private final String jobID;
+    private final GaswExitCode exitCode;
+    private final String exitMessage;
+    private final Map<String, URI> uploadedResults;
+    private final File appStdOut;
+    private final File appStdErr;
+    private final File stdOut;
+    private final File stdErr;
 
     /**
      * Creates an output object.

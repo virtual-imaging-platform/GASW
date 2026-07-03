@@ -34,14 +34,12 @@ package fr.insalyon.creatis.gasw.plugin;
 
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
-import java.util.List;
-import net.xeoh.plugins.base.Plugin;
 
 /**
  *
  * @author Rafael Ferreira da Silva
  */
-public interface ExecutorPlugin extends Plugin {
+public interface ExecutorPlugin {
 
     /**
      * Gets the executor name.
@@ -51,28 +49,13 @@ public interface ExecutorPlugin extends Plugin {
     public String getName();
 
     /**
-     * Prepares the executor to submit a job with the specified inputs.
+     * Submits the job with the specified inputs.
      *
      * @param gaswInput Job inputs
-     * @throws GaswException
-     */
-    public void load(GaswInput gaswInput) throws GaswException;
-
-    /**
-     * Gets a list of persistent classes to be loaded in Hibernate.
-     *
-     * @return List of persistent classes
-     * @throws GaswException
-     */
-    public List<Class> getPersistentClasses() throws GaswException;
-
-    /**
-     * Submits the job.
-     *
      * @return Job identification
      * @throws GaswException
      */
-    public String submit() throws GaswException;
+    public String submit(GaswInput gaswInput) throws GaswException;
 
     /**
      * Finalizes the executor.

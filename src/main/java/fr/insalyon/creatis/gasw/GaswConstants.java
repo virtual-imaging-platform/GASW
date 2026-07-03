@@ -38,39 +38,8 @@ package fr.insalyon.creatis.gasw;
  */
 public class GaswConstants {
 
-    // Configuration File Labels
-    public static final String LAB_DEFAULT_BACKGROUD_SCRIPT = "default.background.script";
-    public static final String LAB_DEFAULT_CPUTIME = "default.cputime";
-    public static final String LAB_DEFAULT_ENVIRONMENT = "default.environment";
-    public static final String LAB_DEFAULT_EXECUTOR = "default.executor";
-    public static final String LAB_DEFAULT_REQUIREMENTS = "default.requirements";
-    public static final String LAB_DEFAULT_RETRY_COUNT = "default.retry.count";
-    public static final String LAB_DEFAULT_SLEEPTIME = "default.sleeptime";
-    public static final String LAB_DEFAULT_TIMEOUT = "default.timeout";
-    public static final String LAB_FAILOVER_ENABLED = "failover.server.enabled";
-    public static final String LAB_FAILOVER_HOME = "failover.server.home";
-    public static final String LAB_FAILOVER_HOST = "failover.server.host";
-    public static final String LAB_FAILOVER_PORT = "failover.server.port";
-    public static final String LAB_FAILOVER_RETRY = "failover.max.retry";
-    public static final String LAB_MINORSTATUS_ENABLED = "minorstatus.service.enabled";
-    public static final String LAB_SOURCE_SCRIPT = "source.script";
-    public static final String LAB_PLUGIN_DB = "plugin.db";
-    public static final String LAB_PLUGIN_EXECUTOR = "plugin.executor";
-    public static final String LAB_PLUGIN_LISTENER = "plugin.listener";
-    public static final String LAB_VO_DEFAULT_SE = "vo.default.se";
-    public static final String LAB_VO_NAME = "vo.name";
-    public static final String LAB_VO_USE_CLOSE_SE = "vo.use.close.se";
-    public static final String LAB_BOSH_CVMFS_PATH = "bosh.cvmfs.path";
-    public static final String LAB_SINGULARITY_PATH = "singularity.path";
-    public static final String LAB_CONTAINERS_CVMFS_PATH = "containers.cvmfs.path";
-    public static final String LAB_UDOCKER_TAG = "udocker.tag";
-    public static final String LAB_BOUTIQUES_PROV_DIR = "boutiques.provenance.dir";
-    public static final String LAB_BOUTIQUES_FILE_NAME = "boutiques.filename";
-    public static final String LAB_CONTAINERS_RUNTIME = "containers.runtime";
-    public static final String LAB_CONTAINERS_IMAGES_BASEPATH = "containers.images.basepath";
     // timeouts used in lcg-c*
     //public static final int SEND_RECEIVE_TIMEOUT = 900;
-    public static final String LAB_MIN_AVG_DOWNLOAD_THROUGHPUT = "min.avg.download.throughput";
     public static final int CONNECT_TIMEOUT = 10;
     public static final int BDII_TIMEOUT = 10;
     public static final int SRM_TIMEOUT = 30;
@@ -82,15 +51,12 @@ public class GaswConstants {
     public static final String PROVENANCE_ROOT = "./provenance";
     public static final String CACHE_DIR = "${BASEDIR}/cache";
     public static final String CACHE_FILE = "cache.txt";
-    public static final String PROVENANCE_FILE = "provenance.json";
     // Extensions
     public static final String OUT_EXT = ".out";
     public static final String OUT_APP_EXT = ".app" + OUT_EXT;
     public static final String ERR_EXT = ".err";
     public static final String ERR_APP_EXT = ".app" + ERR_EXT;
     public static final String PROVENANCE_EXT = ".provenance.json";
-    // Environment Variables
-    public static final String ENV_EXECUTOR = "executor";
     // moteur-lite constants
     public static final int numberOfReplicas = 1;
     public static final String INVOCATION_DIR = "./inv";

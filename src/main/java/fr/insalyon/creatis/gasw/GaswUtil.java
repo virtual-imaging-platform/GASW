@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 public class GaswUtil {
 
     private static final int[] times = {0, 10, 30, 45, 60, 90, 150, 300, 600, 900};
+    private static final Pattern uriPattern = Pattern.compile("^\\w+:/{1,3}[^/]");
 
     public static int sleep(Logger logger, String message, int index)
             throws InterruptedException {
@@ -75,16 +76,38 @@ public class GaswUtil {
         return new BufferedReader(new InputStreamReader(process.getInputStream()));
     }
 
-    public static void closeProcess(Process process) throws IOException {
-        process.getOutputStream().close();
-        process.getInputStream().close();
-        process.getErrorStream().close();
-        process = null;
+    public static void closeProcess(Logger logger, Process process) {
+        if (process == null) {
+            return;
+        }
+
+        try {
+            process.getOutputStream().close();
+        } catch (IOException ex) {
+            logger.warn("Failed to close process output stream", ex);
+        }
+
+        try {
+            process.getInputStream().close();
+        } catch (IOException ex) {
+            logger.warn("Failed to close process input stream", ex);
+        }
+
+        try {
+            process.getErrorStream().close();
+        } catch (IOException ex) {
+            logger.warn("Failed to close process error stream", ex);
+        }
+
+        process.destroy();
     }
 
-    private static final Pattern uriPattern =
-        Pattern.compile("^\\w+:/{1,3}[^/]");
     public static boolean isUri(String s) {
         return uriPattern.matcher(s).find();
+    }
+
+    public static String getBaseName(String name) {
+        int dot = name.lastIndexOf('.');
+        return dot == -1 ? name : name.substring(0, dot);
     }
 }

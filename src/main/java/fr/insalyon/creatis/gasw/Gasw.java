@@ -32,70 +32,143 @@
  */
 package fr.insalyon.creatis.gasw;
 
+import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
+import fr.insalyon.creatis.gasw.bean.SEEntryPointID;
+import fr.insalyon.creatis.gasw.dao.DAOException;
+import fr.insalyon.creatis.gasw.dao.SEEntryPointsDAO;
 import fr.insalyon.creatis.gasw.execution.ExecutorFactory;
-import fr.insalyon.creatis.gasw.execution.FailOver;
 import fr.insalyon.creatis.gasw.plugin.ExecutorPlugin;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
+
+import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Service;
 
+@Service
 public class Gasw {
-    private static final Logger logger = LoggerFactory.getLogger(Gasw.class);
-    private static Gasw instance;
-    private GaswNotification notification;
 
-    /**
-     * Gets a default instance of GASW.
-     *
-     * @return Instance of GASW
-     */
-    public synchronized static Gasw getInstance() throws GaswException {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-        if (instance == null) {
-            instance = new Gasw();
-        }
-        return instance;
+    private final GaswConfiguration config;
+    private final GaswNotification gaswNotification;
+    private final ExecutorFactory executorFactory;
+    private final SEEntryPointsDAO seEntryPointsDAO;
+    private final List<ExecutorPlugin> executorPlugins;
+    private final List<ListenerPlugin> listenerPlugins;
+
+    public Gasw(GaswConfiguration config, GaswNotification gaswNotification, ExecutorFactory executorFactory,
+                SEEntryPointsDAO seEntryPointsDAO, List<ExecutorPlugin> executorPlugins, List<ListenerPlugin> listenerPlugins) {
+        this.config = config;
+        this.gaswNotification = gaswNotification;
+        this.executorFactory = executorFactory;
+        this.seEntryPointsDAO = seEntryPointsDAO;
+        this.executorPlugins = executorPlugins;
+        this.listenerPlugins = listenerPlugins;
     }
 
-    private Gasw() throws GaswException {
+    @PostConstruct
+    public void init() throws GaswException {
+        if (config.isFailOverEnabled()) {
+            loadSEEntryPoints();
+        }
+    }
+
+    // Log loaded plugins after all beans creation
+    @EventListener(ContextRefreshedEvent.class)
+    public void logPlugins() {
+        executorPlugins.forEach(p ->
+                logger.info("Loaded executor plugin '{}' version '{}'",
+                        p.getName(), p.getClass().getPackage().getImplementationVersion()));
+        listenerPlugins.forEach(p ->
+                logger.info("Loaded listener plugin '{}' version '{}'",
+                        p.getName(), p.getClass().getPackage().getImplementationVersion()));
+    }
+
+    @PreDestroy
+    public void terminate() throws GaswException {
+        terminate(false);
+    }
+
+    public void terminate(boolean force) throws GaswException {
+        gaswNotification.terminate();
+        for (ExecutorPlugin executorPlugin : executorPlugins) {
+            executorPlugin.terminate(force);
+        }
+
+        for (ListenerPlugin listenerPlugin : listenerPlugins) {
+            listenerPlugin.terminate();
+        }
+    }
+
+    public void setNotificationClient(Object client) {
+        gaswNotification.setNotificationClient(client);
+    }
+
+    public String submit(GaswInput gaswInput) throws GaswException {
+        return executorFactory.getExecutor().submit(gaswInput);
+    }
+
+    public List<GaswOutput> getFinishedJobs() {
+        return gaswNotification.getFinishedJobs();
+    }
+
+    private void loadSEEntryPoints() throws GaswException {
         try {
-            logger.info("Initializing GASW.");
-            GaswConfiguration.getInstance().loadHibernate();
+            logger.info("Loading SEs entry points.");
+            ProcessBuilder builder = new ProcessBuilder("lcg-info", "--list-service",
+                    "--vo", config.getVoName(), "--attrs", "ServiceEndpoint");
 
-            notification = GaswNotification.getInstance();
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
 
-        } catch (IllegalArgumentException ex) {
+            BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String s = null;
+            StringBuilder cout = new StringBuilder();
+
+            while ((s = r.readLine()) != null) {
+                cout.append(s);
+                if (s.startsWith("- Service: httpg://")) {
+                    try {
+                        URI service = new URI(s.split(" ")[2]);
+                        seEntryPointsDAO.add(
+                                new SEEntryPoint(new SEEntryPointID(
+                                        service.getHost(), service.getPort()),
+                                        service.getPath()));
+
+                    } catch (URISyntaxException ex) {
+                        logger.warn("Unable to read end point from: {}", s);
+                    } catch (DAOException ex) {
+                        if (!ex.getMessage().contains("duplicate key value")) {
+                            logger.warn("Unable to save end point: {}", ex.getMessage());
+                        }
+                    }
+                }
+            }
+            r.close();
+            process.waitFor();
+
+            if (process.exitValue() != 0) {
+                logger.error(cout.toString());
+                throw new GaswException("Unable to load SEs entry points.");
+            }
+        } catch (InterruptedException ex) {
+            logger.error("Error:", ex);
+            throw new GaswException(ex);
+
+        } catch (IOException ex) {
+            logger.error("Error:", ex);
             throw new GaswException(ex);
         }
-    }
-
-    public synchronized void setNotificationClient(Object client) {
-        notification.setClient(client);
-    }
-
-    public synchronized String submit(GaswInput gaswInput) throws GaswException {
-
-        ExecutorPlugin executor = ExecutorFactory.getExecutor(gaswInput);
-        executor.load(gaswInput);
-        return executor.submit();
-    }
-
-    public synchronized List<GaswOutput> getFinishedJobs() {
-        return notification.getFinishedJobs();
-    }
-
-    public synchronized void waitForNotification() {
-        notification.waitForNotification();
-    }
-
-    public synchronized void terminate(boolean force) throws GaswException {
-        notification.terminate();
-
-        if (GaswConfiguration.getInstance().isFailOverEnabled()) {
-            FailOver.getInstance().terminate();
-        }
-
-        GaswConfiguration.getInstance().terminate(force);
     }
 }

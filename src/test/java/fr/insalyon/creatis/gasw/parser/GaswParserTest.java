@@ -6,43 +6,29 @@ import java.net.URISyntaxException;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DisplayName("GaswParser URI handling tests")
 class GaswParserTest {
 
-    @Test
-    @DisplayName("URI with 3 slashes")
-    public void uriGetPathGetNameTripleSlash() throws URISyntaxException {
-        String value = "girder:///control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69";
+    @ParameterizedTest
+    @DisplayName("URI test with different number of slashes")
+    @CsvSource({
+            "girder:///control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69, control_3DT1.nii",
+            "girder:/control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69, control_3DT1.nii",
+            "girder://control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69, ''"
+    })
+    void uriPathExtraction(String value, String expected) throws URISyntaxException {
+        URI uri = new URI(value);
 
-        URI valueURI = new URI(value);
-        String res = new File(valueURI.getPath()).getName();
+        String path = uri.getPath();
+        String result = (path == null) ? "" : new java.io.File(path).getName();
 
-        assertEquals("control_3DT1.nii", res);
-    }
-
-    @Test
-    @DisplayName("URI with 1 slash")
-    public void uriGetPathGetNameSingleSlash() throws URISyntaxException {
-        String value = "girder:/control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69";
-
-        URI valueURI = new URI(value);
-        String res = new File(valueURI.getPath()).getName();
-
-        assertEquals("control_3DT1.nii", res);
-    }
-
-    @Test
-    @DisplayName("URI with 2 slashes has no file")
-    public void uriGetPathGetNameDouleSlash() throws URISyntaxException {
-        String value = "girder://control_3DT1.nii?apiurl=http://localhost:8080/api/v1&fileId=5ae1a8fc371210092e0d2936&token=TFT2FdxP9hzM7WKsidBjMJMmN69";
-
-        URI valueURI = new URI(value);
-        String res = new File(valueURI.getPath()).getName();
-
-        assertEquals("", res);
+        assertEquals(expected, result);
     }
 
     @Test

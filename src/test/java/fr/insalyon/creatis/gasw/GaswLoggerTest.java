@@ -58,7 +58,7 @@ public class GaswLoggerTest {
         // assert the size is only configured twice (stdout and stderr)
         Assertions.assertEquals(2, testConfig.stream().filter(line -> line.trim().startsWith("<maxFileSize>")).count());
         testConfig = testConfig.stream().map(line -> {
-            if ( ! line.trim().startsWith("<maxFileSize>")) {
+            if (!line.trim().startsWith("<maxFileSize>")) {
                 return line;
             }
             return line.replace("1KB", "100MB");
@@ -71,7 +71,7 @@ public class GaswLoggerTest {
     public void testLogFileSizeLimit() throws IOException, InterruptedException {
         Logger logger = LoggerFactory.getLogger(Gasw.class);
         // 100 log lines should take around 10KB
-        for (int i = 0; i<100; i++) {
+        for (int i = 0; i < 100; i++) {
             // wait a little because logback has a timeout and do not verify the size if the logs are too close
             // in logback-test.xml, logcback si configured to test every millisecond
             Thread.sleep(2);
@@ -86,7 +86,7 @@ public class GaswLoggerTest {
     public void cleanLogFiles() throws IOException, JoranException {
         try (Stream<Path> stream = Files.list(Paths.get(""))) {
             stream
-                    .filter(file -> ! Files.isDirectory(file))
+                    .filter(file -> !Files.isDirectory(file))
                     .filter(file -> file.getFileName().toString().startsWith("workflow"))
                     .forEach(f -> {
                         System.out.println("deleting : " + f.getFileName());
@@ -112,7 +112,7 @@ public class GaswLoggerTest {
         List<Path> logFiles;
         try (Stream<Path> stream = Files.list(Paths.get(""))) {
             logFiles = stream
-                    .filter(file -> ! Files.isDirectory(file))
+                    .filter(file -> !Files.isDirectory(file))
                     .filter(file -> file.getFileName().toString().startsWith("workflow"))
                     .collect(Collectors.toList());
 

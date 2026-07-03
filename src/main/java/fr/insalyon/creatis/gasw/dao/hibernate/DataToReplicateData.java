@@ -37,32 +37,30 @@ package fr.insalyon.creatis.gasw.dao.hibernate;
 import fr.insalyon.creatis.gasw.bean.DataToReplicate;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DataToReplicateDAO;
-
-import java.util.List;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.hibernate.HibernateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
+@Repository
 public class DataToReplicateData implements DataToReplicateDAO {
 
-    private static final Logger logger = LoggerFactory.getLogger(DataToReplicate.class);
-    private SessionFactory sessionFactory;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public DataToReplicateData(SessionFactory sessionFactory) {
-        
-        this.sessionFactory = sessionFactory;
-    }
-    
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Override
-    public synchronized void add(DataToReplicate dataToReplicate) throws DAOException {
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.merge(dataToReplicate);
-            session.getTransaction().commit();
-
+    @Transactional
+    public void add(DataToReplicate dataToReplicate) throws DAOException {
+        try {
+            entityManager
+                    .merge(dataToReplicate);
         } catch (HibernateException ex) {
             logger.error("Error while adding", ex);
             throw new DAOException(ex);
@@ -70,44 +68,36 @@ public class DataToReplicateData implements DataToReplicateDAO {
     }
 
     @Override
-    public synchronized void update(DataToReplicate dataToReplicate) throws DAOException {
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.merge(dataToReplicate);
-            session.getTransaction().commit();
-
+    @Transactional
+    public void update(DataToReplicate dataToReplicate) throws DAOException {
+        try {
+            entityManager
+                    .merge(dataToReplicate);
         } catch (HibernateException ex) {
             logger.error("Error while updating", ex);
             throw new DAOException(ex);
         }
     }
-    
-    @Override
-    public synchronized void remove(DataToReplicate dataToReplicate) throws DAOException {
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.remove(dataToReplicate);
-            session.getTransaction().commit();
 
+    @Override
+    @Transactional
+    public void remove(DataToReplicate dataToReplicate) throws DAOException {
+        try {
+            entityManager
+                    .remove(dataToReplicate);
         } catch (HibernateException ex) {
-            logger.error("Error whice removing", ex);
+            logger.error("Error while removing", ex);
             throw new DAOException(ex);
         }
     }
-    
+
     @Override
-    public synchronized List<DataToReplicate> get() throws DAOException {
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            List<DataToReplicate> list = session.createNamedQuery("DataToReplicate.list", DataToReplicate.class)
-                    .list();
-            session.getTransaction().commit();
-
-            return list;
-
+    @Transactional(readOnly = true)
+    public List<DataToReplicate> get() throws DAOException {
+        try {
+            return entityManager
+                    .createNamedQuery("DataToReplicate.list", DataToReplicate.class)
+                    .getResultList();
         } catch (HibernateException ex) {
             logger.error("Error while retrieving", ex);
             throw new DAOException(ex);

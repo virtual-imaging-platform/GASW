@@ -32,9 +32,7 @@
  */
 package fr.insalyon.creatis.gasw.execution;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -54,27 +52,31 @@ import fr.insalyon.creatis.gasw.script.MoteurliteConfigGenerator;
 
 public abstract class GaswSubmit {
 
-    private static final Logger logger = LoggerFactory.getLogger(GaswSubmit.class);
-    protected GaswInput gaswInput;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private final GaswConfiguration config;
+    private final FailOver failOver;
+    private final MoteurliteConfigGenerator moteurliteConfigGenerator;
+
     protected String scriptName;
     protected String jdlName;
-    protected GaswMinorStatusServiceGenerator minorStatusServiceGenerator;
 
 
-    public GaswSubmit(GaswInput gaswInput, GaswMinorStatusServiceGenerator minorStatusServiceGenerator)
-            throws GaswException {
-
-        this.gaswInput = gaswInput;
-        this.minorStatusServiceGenerator = minorStatusServiceGenerator;
-
-        if (GaswConfiguration.getInstance().isFailOverEnabled()) {
-            FailOver.getInstance().addData(gaswInput.getDownloads());
-        }
+    public GaswSubmit(GaswConfiguration config, FailOver failOver, MoteurliteConfigGenerator moteurliteConfigGenerator) {
+        this.config = config;
+        this.failOver = failOver;
+        this.moteurliteConfigGenerator = moteurliteConfigGenerator;
     }
 
-    public abstract String submit() throws GaswException;
+    public String submit(GaswInput gaswInput, GaswMonitor gaswMonitor) {
+        if (this.config.isFailOverEnabled()) {
+            this.failOver.addData(gaswInput.getDownloads());
+        }
 
-    protected String generateScript() throws GaswException {
+        return scriptName;
+    }
+
+    protected String generateScript(GaswInput gaswInput) throws GaswException {
         try {
             String scriptName;
 
@@ -82,14 +84,14 @@ public abstract class GaswSubmit {
             logger.info("MoteurLite is enabled, generating Moteurlite-specific script.");
             
             // Generate the Moteurlite-specific configuration
-            Map<String, String> configMoteurlite = MoteurliteConfigGenerator.getInstance().generateConfig(gaswInput, minorStatusServiceGenerator);
+            Map<String, String> configMoteurlite = moteurliteConfigGenerator.generateConfig(gaswInput);
             
             // Publish the configuration and invocation
             publishConfiguration(gaswInput.getJobId(), configMoteurlite);
             publishInvocation(gaswInput.getJobId(), gaswInput.getInvocationString());
             
             // Publish the script itself
-            scriptName = publishMoteurLiteScript();
+            scriptName = publishMoteurLiteScript(gaswInput.getJobId());
     
             return scriptName;
             
@@ -99,17 +101,16 @@ public abstract class GaswSubmit {
         }
     }
 
-    private String publishMoteurLiteScript() throws IOException, GaswException {
+    private String publishMoteurLiteScript(String jobId) throws IOException, GaswException {
         prepareScriptDir();
     
         try {
             // If MoteurLite is enabled, use the jobId as the script name
-            String fileName = gaswInput.getJobId();
-            Path destScriptFile = Paths.get(GaswConstants.SCRIPT_ROOT, fileName);
+            Path destScriptFile = Paths.get(GaswConstants.SCRIPT_ROOT, jobId);
             try (InputStream is = getClass().getClassLoader().getResourceAsStream("script.sh")) {
                 Files.copy(is, destScriptFile, StandardCopyOption.REPLACE_EXISTING);
             }     
-            return fileName;
+            return jobId;
         } catch (Exception e) {
             logger.error("Error getting script file from classpath", e);
             throw new GaswException(e);
@@ -149,11 +150,7 @@ public abstract class GaswSubmit {
      * @throws IOException
      */
     private void writeToFile(String filePath, String contents) throws IOException {
-        FileWriter fstream = new FileWriter(filePath);
-        BufferedWriter out = new BufferedWriter(fstream);
-        out.write(contents);
-        out.close();
-        fstream.close();
+        Files.writeString(Path.of(filePath), contents);
     }
 
     private void publishConfiguration(String jobId, Map<String, String> config) throws IOException {

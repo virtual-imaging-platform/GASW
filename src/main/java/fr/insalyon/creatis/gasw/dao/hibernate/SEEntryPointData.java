@@ -37,30 +37,28 @@ package fr.insalyon.creatis.gasw.dao.hibernate;
 import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.SEEntryPointsDAO;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.hibernate.HibernateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+@Repository
 public class SEEntryPointData implements SEEntryPointsDAO {
 
-    private static final Logger logger = LoggerFactory.getLogger(SEEntryPointData.class);
-    private SessionFactory sessionFactory;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public SEEntryPointData(SessionFactory sessionFactory) {
-        
-        this.sessionFactory = sessionFactory;
-    }
-    
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Override
-    public synchronized void add(SEEntryPoint seEntryPoint) throws DAOException {
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.merge(seEntryPoint);
-            session.getTransaction().commit();
-
+    @Transactional
+    public void add(SEEntryPoint seEntryPoint) throws DAOException {
+        try {
+            entityManager
+                    .merge(seEntryPoint);
         } catch (HibernateException ex) {
             logger.error("Error while adding", ex);
             throw new DAOException(ex);
@@ -68,17 +66,13 @@ public class SEEntryPointData implements SEEntryPointsDAO {
     }
 
     @Override
-    public synchronized SEEntryPoint getByHostName(String hostname) throws DAOException {
-        
-        
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            SEEntryPoint entryPoint = session.createNamedQuery("EntryPoints.findByHostname", SEEntryPoint.class)
-                    .setParameter("hostname", hostname).uniqueResult();
-            session.getTransaction().commit();
-
-            return entryPoint;
-
+    @Transactional(readOnly = true)
+    public SEEntryPoint getByHostName(String hostname) throws DAOException {
+        try {
+            return entityManager
+                    .createNamedQuery("EntryPoints.findByHostname", SEEntryPoint.class)
+                    .setParameter("hostname", hostname)
+                    .getSingleResult();
         } catch (HibernateException ex) {
             logger.error("Error while retrieving", ex);
             throw new DAOException(ex);

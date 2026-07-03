@@ -38,31 +38,30 @@ import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.JobMinorStatusDAO;
 import fr.insalyon.creatis.gasw.execution.GaswMinorStatus;
-import java.util.List;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.hibernate.HibernateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
+@Repository
 public class JobMinorStatusData implements JobMinorStatusDAO {
 
-    private static final Logger logger = LoggerFactory.getLogger(JobMinorStatusData.class);
-    private SessionFactory sessionFactory;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public JobMinorStatusData(SessionFactory sessionFactory) {
-
-        this.sessionFactory = sessionFactory;
-    }
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
+    @Transactional
     public void add(JobMinorStatus jobMinorStatus) throws DAOException {
-
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            session.merge(jobMinorStatus);
-            session.getTransaction().commit();
-
+        try {
+            entityManager
+                    .merge(jobMinorStatus);
         } catch (HibernateException ex) {
             logger.error("Error while adding", ex);
             throw new DAOException(ex);
@@ -70,20 +69,16 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<JobMinorStatus> getCheckpoints(String jobID) throws DAOException {
-
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            List<JobMinorStatus> list = session.createNamedQuery("MinorStatus.findCheckpointById", JobMinorStatus.class)
+        try {
+            return entityManager
+                    .createNamedQuery("MinorStatus.findCheckpointById", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
                     .setParameter("checkpointInit", GaswMinorStatus.CheckPoint_Init)
                     .setParameter("checkpointUpload", GaswMinorStatus.CheckPoint_Upload)
                     .setParameter("checkpointEnd", GaswMinorStatus.CheckPoint_Upload)
-                    .list();
-            session.getTransaction().commit();
-
-            return list;
-
+                    .getResultList();
         } catch (HibernateException ex) {
             logger.error("Error while retrieving checkpoints", ex);
             throw new DAOException(ex);
@@ -91,11 +86,11 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<JobMinorStatus> getExecutionMinorStatus(String jobID) throws DAOException {
-
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            List<JobMinorStatus> list = session.createNamedQuery("MinorStatus.findExecutionById", JobMinorStatus.class)
+        try {
+            return entityManager
+                    .createNamedQuery("MinorStatus.findExecutionById", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
                     .setParameter("start", GaswMinorStatus.Started)
                     .setParameter("background", GaswMinorStatus.Background)
@@ -103,11 +98,7 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
                     .setParameter("application", GaswMinorStatus.Application)
                     .setParameter("output", GaswMinorStatus.Outputs)
                     .setParameter("finished", GaswMinorStatus.Finished)
-                    .list();
-            session.getTransaction().commit();
-
-            return list;
-
+                    .getResultList();
         } catch (HibernateException ex) {
             logger.error("Error while retrieving minorstatus", ex);
             throw new DAOException(ex);
@@ -115,20 +106,18 @@ public class JobMinorStatusData implements JobMinorStatusDAO {
     }
 
     @Override
-    public long getDateDiff(String jobID, GaswMinorStatus start, 
-            GaswMinorStatus end) throws DAOException {
-
-        try (Session session = sessionFactory.openSession()) {
-            session.beginTransaction();
-            List<JobMinorStatus> list = session.createNamedQuery("MinorStatus.dateDiff", JobMinorStatus.class)
+    @Transactional(readOnly = true)
+    public long getDateDiff(String jobID, GaswMinorStatus start,
+                            GaswMinorStatus end) throws DAOException {
+        try {
+            List<JobMinorStatus> list = entityManager
+                    .createNamedQuery("MinorStatus.dateDiff", JobMinorStatus.class)
                     .setParameter("jobId", jobID)
                     .setParameter("start", start)
                     .setParameter("end", end)
-                    .list();
-            session.close();
-            
-            return Math.abs(list.get(1).getDate().getTime() - list.get(0).getDate().getTime());
+                    .getResultList();
 
+            return Math.abs(list.get(1).getDate().getTime() - list.get(0).getDate().getTime());
         } catch (HibernateException ex) {
             logger.error("Error while retrieving date diff", ex);
             throw new DAOException(ex);

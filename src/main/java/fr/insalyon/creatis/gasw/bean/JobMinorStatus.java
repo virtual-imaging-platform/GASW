@@ -37,7 +37,6 @@ package fr.insalyon.creatis.gasw.bean;
 import fr.insalyon.creatis.gasw.execution.GaswMinorStatus;
 import java.util.Date;
 import jakarta.persistence.*;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  *
@@ -74,8 +73,7 @@ public class JobMinorStatus {
     }
 
     @Id
-    @GeneratedValue(generator = "increment")
-    @GenericGenerator(name = "increment", strategy = "increment")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     public int getStatusId() {
         return statusId;
     }

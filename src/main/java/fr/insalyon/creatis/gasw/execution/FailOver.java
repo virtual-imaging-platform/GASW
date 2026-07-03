@@ -40,7 +40,6 @@ import fr.insalyon.creatis.gasw.GaswUtil;
 import fr.insalyon.creatis.gasw.bean.DataToReplicate;
 import fr.insalyon.creatis.gasw.bean.SEEntryPoint;
 import fr.insalyon.creatis.gasw.dao.DAOException;
-import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.dao.DataToReplicateDAO;
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -52,66 +51,56 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import fr.insalyon.creatis.gasw.dao.SEEntryPointsDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
-public class FailOver extends Thread {
+@Service
+public class FailOver {
 
-    private static final Logger logger = LoggerFactory.getLogger(FailOver.class);
-    private static FailOver instance;
-    private volatile boolean stop = false;
-    private DataToReplicateDAO dataToReplicateDAO;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public synchronized static FailOver getInstance() {
-        if (instance == null) {
-            instance = new FailOver();
-            instance.start();
-        }
-        return instance;
+    private final GaswConfiguration config;
+    private final DataToReplicateDAO dataToReplicateDAO;
+    private final SEEntryPointsDAO seEntryPointDAO;
+
+    public FailOver(GaswConfiguration config, DataToReplicateDAO dataToReplicateDAO, SEEntryPointsDAO seEntryPointDAO) {
+        this.config = config;
+        this.dataToReplicateDAO = dataToReplicateDAO;
+        this.seEntryPointDAO = seEntryPointDAO;
     }
 
-    private FailOver() {
+    @Scheduled(fixedDelayString = "${gasw.default.sleep-time}", timeUnit = TimeUnit.SECONDS)
+    private void run() {
+        if (!config.isFailOverEnabled()) { return; }
         try {
-            dataToReplicateDAO = DAOFactory.getDAOFactory().getDataToReplicateDAO();
-        } catch (DAOException ex) {
-            logger.error("Unable to start Fail Over thread.");
-        }
-    }
+            for (DataToReplicate data : dataToReplicateDAO.get()) {
+                try {
+                    replicate(data.getUrl());
+                    dataToReplicateDAO.remove(data);
 
-    @Override
-    public void run() {
-        try {
-            while (!stop) {
+                } catch (GaswException ex) {
 
-                for (DataToReplicate data : dataToReplicateDAO.get()) {
-                    try {
-                        replicate(data.getUrl());
+                    if (data.getRetries() + 1 < config.getFailOverMaxRetry()) {
+                        data.setRetries(data.getRetries() + 1);
+                        data.setEventDate(new Date());
+                        dataToReplicateDAO.update(data);
+                    } else {
+                        logger.warn("Achieved data max attempts to reply '{}'.", data.getUrl().getPath());
                         dataToReplicateDAO.remove(data);
-
-                    } catch (GaswException ex) {
-
-                        if (data.getRetries() + 1 < GaswConfiguration.getInstance().getFailOverMaxRetry()) {
-                            data.setRetries(data.getRetries() + 1);
-                            data.setEventDate(new Date());
-                            dataToReplicateDAO.update(data);
-                        } else {
-                            logger.warn("Achieved data max attempts to reply '{}'.", data.getUrl().getPath());
-                            dataToReplicateDAO.remove(data);
-                        }
                     }
                 }
-                Thread.sleep(GaswConfiguration.getInstance().getDefaultSleeptime());
             }
         } catch (DAOException ex) {
-            // do nothing
-        } catch (GaswException ex) {
-            // do nothing
-        } catch (InterruptedException ex) {
-            logger.error("InterruptedException: ",ex);
+            logger.error("DAOException: ",ex);
         }
     }
 
-    public synchronized void addData(URI uri) {
+    public void addData(URI uri) {
         try {
             String scheme = uri.getScheme();
             if (scheme == null || (!scheme.equalsIgnoreCase("file")
@@ -124,14 +113,10 @@ public class FailOver extends Thread {
         }
     }
 
-    public synchronized void addData(List<URI> uris) {
+    public void addData(List<URI> uris) {
         for (URI uri : uris) {
             addData(uri);
         }
-    }
-
-    public synchronized void terminate() {
-        this.stop = true;
     }
 
     private void replicate(URI uri) throws GaswException {
@@ -139,7 +124,7 @@ public class FailOver extends Thread {
         List<URI> replicas = getReplicas(uri);
 
         for (URI replica : replicas) {
-            if (replica.getHost().equals(GaswConfiguration.getInstance().getFailOverHost())) {
+            if (replica.getHost().equals(config.getFailOverHost())) {
                 return;
             }
         }
@@ -176,9 +161,7 @@ public class FailOver extends Thread {
             } catch (IOException ex) {
                 logger.warn("IOException:", ex);
             } finally {
-                if (process != null) {
-                    close(process);
-                }
+                GaswUtil.closeProcess(logger, process);
                 if (br != null) {
                     try {
                         br.close();
@@ -225,9 +208,7 @@ public class FailOver extends Thread {
             throw new GaswException(ex);
 
         } finally {
-            if (process != null) {
-                close(process);
-            }
+            GaswUtil.closeProcess(logger, process);
             if (br != null) {
                 try {
                     br.close();
@@ -239,19 +220,19 @@ public class FailOver extends Thread {
         return replicas;
     }
 
-    private String getDestinationSURL() throws GaswException {
+    private String getDestinationSURL() {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-        return "srm://" + GaswConfiguration.getInstance().getFailOverHost()
-                + ":" + GaswConfiguration.getInstance().getFailOverPort()
-                + "/srm/managerv2?SFN=" + GaswConfiguration.getInstance().getFailOverHome()
+        return "srm://" + config.getFailOverHost()
+                + ":" + config.getFailOverPort()
+                + "/srm/managerv2?SFN=" + config.getFailOverHome()
                 + "/" + sdf.format(new Date()) + "/file-" + UUID.randomUUID();
     }
 
     private String[] getSourceTypeAndSURL(String host, String path) throws DAOException {
 
-        SEEntryPoint ep = DAOFactory.getDAOFactory().getSEEntryPointDAO().getByHostName(host);
+        SEEntryPoint ep = seEntryPointDAO.getByHostName(host);
         String[] source = new String[]{
             ep.getHome().contains("managerv1") ? "srmv1" : "srmv2",
             "srm://" + ep.getId().getHostname() + ":" + ep.getId().getPort()
@@ -259,24 +240,5 @@ public class FailOver extends Thread {
         };
 
         return source;
-    }
-
-    private void close(Process process) {
-
-        close(process.getOutputStream());
-        close(process.getInputStream());
-        close(process.getErrorStream());
-        process.destroy();
-    }
-
-    private void close(Closeable c) {
-
-        if (c != null) {
-            try {
-                c.close();
-            } catch (IOException ex) {
-                // ignored
-            }
-        }
     }
 }

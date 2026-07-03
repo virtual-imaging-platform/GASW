@@ -35,13 +35,12 @@
 package fr.insalyon.creatis.gasw.plugin;
 
 import fr.insalyon.creatis.gasw.GaswException;
-import net.xeoh.plugins.base.Plugin;
 
 /**
  *
  * @author Rafael Silva
  */
-public interface DatabasePlugin extends Plugin {
+public interface DatabasePlugin {
 
     /**
      * Gets the name of the plugin.
@@ -51,21 +50,12 @@ public interface DatabasePlugin extends Plugin {
     public String getName();
 
     /**
-     * This is the first method invoked by GASW. This method is called when GASW 
-     * is loading its configuration. It is useful to load plugin properties from 
-     * the configuration file.
-     * 
-     * @throws GaswException 
-     */
-    public void load() throws GaswException;
-
-    /**
      * Gets the database schema name.
      * 
      * @return
      * @throws GaswException 
      */
-    public String getSchema() throws GaswException;
+    public String getSchema();
 
     /**
      * Gets the JDBC driver.
@@ -73,7 +63,7 @@ public interface DatabasePlugin extends Plugin {
      * @return
      * @throws GaswException 
      */
-    public String getDriverClass() throws GaswException;
+    public String getDriverClass();
 
     /**
      * Gets the JDBC connection URL.
@@ -81,7 +71,7 @@ public interface DatabasePlugin extends Plugin {
      * @return
      * @throws GaswException 
      */
-    public String getConnectionUrl() throws GaswException;
+    public String getConnectionUrl();
 
     /**
      * Gets the hibernate dialect.
@@ -91,7 +81,7 @@ public interface DatabasePlugin extends Plugin {
      * @return
      * @throws GaswException 
      */
-    public String getHibernateDialect() throws GaswException;
+    public String getHibernateDialect();
 
     /**
      * Gets the database username.
@@ -99,7 +89,7 @@ public interface DatabasePlugin extends Plugin {
      * @return
      * @throws GaswException 
      */
-    public String getUserName() throws GaswException;
+    public String getUserName();
 
     /**
      * Gets the database password.
@@ -107,5 +97,5 @@ public interface DatabasePlugin extends Plugin {
      * @return
      * @throws GaswException 
      */
-    public String getPassword() throws GaswException;
+    public String getPassword();
 }
