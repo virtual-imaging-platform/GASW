@@ -799,6 +799,9 @@ function performDownload {
 
   stopLog inputs_download
 }
+
+## exec helper
+# performExec: handle top-level application execution step
 function performExec {
   startLog application_execution
 
@@ -896,32 +899,32 @@ function performExec {
       conopts="$conopts --name ${docker_container_name}"
       boshopts+=("--container-opts" "$conopts")
       ;;
-      singularity)
+    singularity)
         checkSingularity
-      # Set an overlay dir to allow filesystem writes to any user-writable dir
-      # within the container. This overlay is a one-time use, and will be
-      # removed in cleanup(). It requires bosh >= 0.5.30.
+        # Set an overlay dir to allow filesystem writes to any user-writable dir
+        # within the container. This overlay is a one-time use, and will be
+        # removed in cleanup(). It requires bosh >= 0.5.30.
         local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
         
-        #Initialize options with base container options and the required overlay
+        # Initialize options with base container options and the required overlay
         conopts="${conopts} --overlay $overlayfolder"
 
         if [ "$containersRuntime" = "encrypted-singularity" ]; then
-          local pem_key="${containersRuntimeEncryptedKey}"
+            local pem_key="${containersRuntimeEncryptedKey}"
 
-          if [ -z "$pem_key" ]; then
-            error "ENCRYPTION_KEY_ERROR - containersRuntimeEncryptedKey is empty on server ${SERVER_NAME:-unknown_server}"
-            error "Exiting with return value 54"
-            exit 54
-          fi
+            if [ -z "$pem_key" ]; then
+                error "ENCRYPTION_KEY_ERROR - containersRuntimeEncryptedKey is empty on server ${SERVER_NAME:-unknown_server}"
+                error "Exiting with return value 54"
+                exit 54
+            fi
 
-          if [ ! -f "$pem_key" ]; then
-            error "ENCRYPTION_KEY_ERROR - missing PEM: $pem_key on server ${SERVER_NAME:-unknown_server}"
-            error "Exiting with return value 54"
-            exit 54
-          fi
+            if [ ! -f "$pem_key" ]; then
+                error "ENCRYPTION_KEY_ERROR - missing PEM: $pem_key on server ${SERVER_NAME:-unknown_server}"
+                error "Exiting with return value 54"
+                exit 54
+            fi
 
-          conopts="$conopts --pem-path $pem_key"
+            conopts="$conopts --pem-path $pem_key"
         fi
 
         conopts=$(echo "$conopts" | xargs)
