@@ -799,9 +799,6 @@ function performDownload {
 
   stopLog inputs_download
 }
-
-## exec helper
-# performExec: handle top-level application execution step
 function performExec {
   startLog application_execution
 
@@ -899,41 +896,38 @@ function performExec {
       conopts="$conopts --name ${docker_container_name}"
       boshopts+=("--container-opts" "$conopts")
       ;;
-    singularity)
-      checkSingularity
+      singularity)
+        checkSingularity
       # Set an overlay dir to allow filesystem writes to any user-writable dir
       # within the container. This overlay is a one-time use, and will be
       # removed in cleanup(). It requires bosh >= 0.5.30.
-      local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
-      
-      # Initialize options with base container options and the required overlay
-      local final_container_opts="${conopts} --overlay $overlayfolder"
+        local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
+        
+        #Initialize options with base container options and the required overlay
+        conopts="${conopts} --overlay $overlayfolder"
 
-      #  encryption key for encrypted-singularity mode
-      if [ "$containersRuntime" = "encrypted-singularity" ]; then
-        local pem_key="${containersRuntimeEncryptedKey}"
+        if [ "$containersRuntime" = "encrypted-singularity" ]; then
+          local pem_key="${containersRuntimeEncryptedKey}"
 
-        if [ -z "$pem_key" ]; then
-          error "ENCRYPTION_KEY_ERROR - containersRuntimeEncryptedKey is empty on server ${SERVER_NAME:-unknown_server}"
-          error "Exiting with return value 54"
-          exit 54
+          if [ -z "$pem_key" ]; then
+            error "ENCRYPTION_KEY_ERROR - containersRuntimeEncryptedKey is empty on server ${SERVER_NAME:-unknown_server}"
+            error "Exiting with return value 54"
+            exit 54
+          fi
+
+          if [ ! -f "$pem_key" ]; then
+            error "ENCRYPTION_KEY_ERROR - missing PEM: $pem_key on server ${SERVER_NAME:-unknown_server}"
+            error "Exiting with return value 54"
+            exit 54
+          fi
+
+          conopts="$conopts --pem-path $pem_key"
         fi
 
-        if [ ! -f "$pem_key" ]; then
-          error "ENCRYPTION_KEY_ERROR - missing PEM: $pem_key on server ${SERVER_NAME:-unknown_server}"
-          error "Exiting with return value 54"
-          exit 54
-        fi
-
-        #  append the PEM path flag with proper spacing
-        final_container_opts="${final_container_opts} --pem-path $pem_key"
-      fi
-
-      final_container_opts=$(echo "$final_container_opts" | xargs)
-      boshopts+=("--container-opts" "$final_container_opts")
-      
-      ;;
-  esac
+        conopts=$(echo "$conopts" | xargs)
+        boshopts+=("--container-opts" "$conopts")
+        ;;
+    esac
 
   # Execute the command
   info "Running bosh:" "$BOSHEXEC" exec launch "${boshopts[@]}" "../$boutiquesFilename" "../inv/$invocationJsonFilename"
@@ -956,7 +950,6 @@ function performExec {
   info "Execution time was $((BEFOREUPLOAD - AFTERDOWNLOAD))s"
 }
 
-## upload helpers
 
 # nSEs: count the number of storage elements in the list
 function nSEs {
