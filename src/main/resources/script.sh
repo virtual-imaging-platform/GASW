@@ -919,7 +919,7 @@ function performExec {
             fi
 
             if [ ! -f "$pem_key" ]; then
-                error "ENCRYPTION_KEY_ERROR - missing PEM: $pem_key "
+                error "ENCRYPTION_KEY_ERROR - missing PEM"
                 error "Exiting with return value 54"
                 exit 54
             fi
