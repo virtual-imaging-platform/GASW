@@ -913,13 +913,13 @@ function performExec {
             local pem_key="${containersRuntimeEncryptedKey}"
 
             if [ -z "$pem_key" ]; then
-                error "ENCRYPTION_KEY_ERROR - containersRuntimeEncryptedKey is empty on server ${SERVER_NAME:-unknown_server}"
+                error "ENCRYPTION_KEY_ERROR - containersRuntimeEncryptedKey is empty "
                 error "Exiting with return value 54"
                 exit 54
             fi
 
             if [ ! -f "$pem_key" ]; then
-                error "ENCRYPTION_KEY_ERROR - missing PEM: $pem_key on server ${SERVER_NAME:-unknown_server}"
+                error "ENCRYPTION_KEY_ERROR - missing PEM: $pem_key "
                 error "Exiting with return value 54"
                 exit 54
             fi
@@ -927,7 +927,6 @@ function performExec {
             conopts="$conopts --pem-path $pem_key"
         fi
 
-        conopts=$(echo "$conopts" | xargs)
         boshopts+=("--container-opts" "$conopts")
         ;;
     esac
