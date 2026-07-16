@@ -73,7 +73,6 @@ public abstract class GaswSubmit {
     }
 
     public abstract String submit() throws GaswException;
-
     protected String generateScript() throws GaswException {
         try {
             String scriptName;
@@ -87,7 +86,6 @@ public abstract class GaswSubmit {
             // Publish the configuration and invocation
             publishConfiguration(gaswInput.getJobId(), configMoteurlite);
             publishInvocation(gaswInput.getJobId(), gaswInput.getInvocationString());
-            
             // Publish the script itself
             scriptName = publishMoteurLiteScript();
     

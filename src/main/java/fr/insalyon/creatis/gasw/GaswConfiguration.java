@@ -102,7 +102,8 @@ public class GaswConfiguration {
     // Containers stuff
     private String containersRuntime;
     private String containersImagesBasePath;
-    // Failover Server
+    private String containersRuntimeEncryptedKey;
+    // Failover Serveri
     private boolean failOverEnabled;
     private String failOverHost;
     private int failOverPort;
@@ -172,7 +173,8 @@ public class GaswConfiguration {
 
             containersRuntime = getRequiredString(config, GaswConstants.LAB_CONTAINERS_RUNTIME);
             containersImagesBasePath = config.getString(GaswConstants.LAB_CONTAINERS_IMAGES_BASEPATH,"\"/cvmfs/biomed.egi.eu/vip/singularity\""); // path on singularity images. Should be provided by config
-
+            containersRuntimeEncryptedKey = config.getString(GaswConstants.LAB_CONTAINERS_RUNTIME_ENCRYPTED_KEY, ""); 
+           
             failOverEnabled = config.getBoolean(GaswConstants.LAB_FAILOVER_ENABLED, false);
             failOverHost = config.getString(GaswConstants.LAB_FAILOVER_HOST, "localhost");
             failOverPort = config.getInt(GaswConstants.LAB_FAILOVER_PORT, 8446);
@@ -449,6 +451,7 @@ public class GaswConfiguration {
     public String getContainersImagesBasePath() {
         return containersImagesBasePath;
     }
+   
 
     public String getUdockerTag() {
         return udockerTag;
@@ -493,4 +496,8 @@ public class GaswConfiguration {
     public void setDbPlugin(DatabasePlugin databasePlugin) {
         dbPlugin = databasePlugin;
     }
+
+    public String getContainersRuntimeEncryptedKey() {
+        return containersRuntimeEncryptedKey;
+        }
 }
