@@ -749,8 +749,8 @@ function downloadURI {
     fi
   fi
 
-  if [[ ${URI_LOWER} == http://* ]]; then
-    curl --insecure -O "$URI"
+  if [[ ${URI_LOWER} == https://* ]] || [[ ${URI_LOWER} == http://* ]]; then
+    curl -L -O "$URI"
     validateDownload "Cannot download HTTP file"
   fi
 
@@ -777,7 +777,6 @@ function downloadURI {
     fi
   fi
 }
-
 # performDownload: handle top-level download execution step
 function performDownload {
   startLog inputs_download
@@ -801,8 +800,7 @@ function performDownload {
   stopLog inputs_download
 }
 
-## exec helpers
-
+## exec helper
 # performExec: handle top-level application execution step
 function performExec {
   startLog application_execution
@@ -828,6 +826,7 @@ function performExec {
   boshopts+=("--provenance" "{\"jobid\":\"$DIRNAME\"}")
   boshopts+=("-v" "$PWD/../cache:$PWD/../cache")
   boshopts+=("-v" "$tmpfolder:/tmp")
+  
   boshopts+=("-v" "$PWD/../inv/$invocationJsonFilename:$PWD/input_params.json")
 
   # Compute imagepath and select the real containerType
@@ -844,7 +843,7 @@ function performExec {
         containerType="docker"
         boshopts+=("--force-docker")
         ;;
-      singularity)
+      singularity|encrypted-singularity)
         containerType="singularity"
         boshopts+=("--force-singularity")
         # get image base name and tag from descriptor
@@ -901,15 +900,36 @@ function performExec {
       boshopts+=("--container-opts" "$conopts")
       ;;
     singularity)
-      checkSingularity
-      # Set an overlay dir to allow filesystem writes to any user-writable dir
-      # within the container. This overlay is a one-time use, and will be
-      # removed in cleanup(). It requires bosh >= 0.5.30.
-      local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
-      # Pass all options to bosh
-      boshopts+=("--container-opts" "${conopts}--overlay $overlayfolder")
-      ;;
-  esac
+        checkSingularity
+        # Set an overlay dir to allow filesystem writes to any user-writable dir
+        # within the container. This overlay is a one-time use, and will be
+        # removed in cleanup(). It requires bosh >= 0.5.30.
+        local overlayfolder=$(mktemp -d -p "$PWD" "overlay-XXXXXX")
+        
+        # Initialize options with base container options and the required overlay
+        conopts="${conopts} --overlay $overlayfolder"
+
+        if [ "$containersRuntime" = "encrypted-singularity" ]; then
+            local pem_key="${containersRuntimeEncryptedKey}"
+
+            if [ -z "$pem_key" ]; then
+                error "ENCRYPTION_KEY_ERROR - containersRuntimeEncryptedKey is empty "
+                error "Exiting with return value 54"
+                exit 54
+            fi
+
+            if [ ! -f "$pem_key" ]; then
+                error "ENCRYPTION_KEY_ERROR - missing PEM"
+                error "Exiting with return value 54"
+                exit 54
+            fi
+
+            conopts="$conopts --pem-path $pem_key"
+        fi
+
+        boshopts+=("--container-opts" "$conopts")
+        ;;
+    esac
 
   # Execute the command
   info "Running bosh:" "$BOSHEXEC" exec launch "${boshopts[@]}" "../$boutiquesFilename" "../inv/$invocationJsonFilename"
@@ -932,7 +952,6 @@ function performExec {
   info "Execution time was $((BEFOREUPLOAD - AFTERDOWNLOAD))s"
 }
 
-## upload helpers
 
 # nSEs: count the number of storage elements in the list
 function nSEs {
@@ -1457,6 +1476,7 @@ if [ -f "$configurationFile" ]; then
   singularityPath=
   containersCVMFSPath=
   containersRuntime=
+  containersRuntimeEncryptedKey=
   containersImagesBasePath=
   nrep=
   boutiquesProvenanceDir=

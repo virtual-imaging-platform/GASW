@@ -80,6 +80,7 @@ public class MoteurliteConfigGenerator {
             config.put("singularityPath", conf.getSingularityPath());
             config.put("containersCVMFSPath", conf.getContainersCVMFSPath());
             config.put("containersRuntime", conf.getContainersRuntime());
+            config.put("containersRuntimeEncryptedKey", conf.getContainersRuntimeEncryptedKey());
             config.put("containersImagesBasePath", conf.getContainersImagesBasePath());
             config.put("udockerTag", conf.getUdockerTag());
             config.put("simulationID", conf.getSimulationID());
