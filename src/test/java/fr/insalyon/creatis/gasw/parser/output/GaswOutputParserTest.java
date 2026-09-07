@@ -89,7 +89,7 @@ public class GaswOutputParserTest {
         List<Callable<Void>> callables = new ArrayList<>();
         List<Future<Void>> parsers = new ArrayList<>();
 
-        Job job = new Job("test", "test_sim", GaswStatus.CREATED, "echo", "coucou", "a,b,c", "Local");
+        Job job = new Job("test", "test_sim", GaswStatus.CREATED, "echo", "coucou", "a,b,c", "Local", "1000");
         job.setDownload(new Date());
 
         DAOFactory.getDAOFactory().getJobDAO().add(job);
@@ -104,7 +104,7 @@ public class GaswOutputParserTest {
             assertDoesNotThrow(() -> parser.get(10, TimeUnit.SECONDS));
         }
 
-    assertFalse(appender.getLogMessages().stream().anyMatch(msg -> msg.contains("Error parsing stdout")));
+        assertFalse(appender.getLogMessages().stream().anyMatch(msg -> msg.contains("Error parsing stdout")));
     }
 
     public Callable<Void> createCallable(String jobID, String filePath) {

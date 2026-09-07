@@ -32,16 +32,38 @@
  */
 package fr.insalyon.creatis.gasw.execution;
 
-import fr.insalyon.creatis.gasw.*;
-import fr.insalyon.creatis.gasw.bean.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import fr.insalyon.creatis.gasw.GaswConfiguration;
+import fr.insalyon.creatis.gasw.GaswConstants;
+import fr.insalyon.creatis.gasw.GaswException;
+import fr.insalyon.creatis.gasw.GaswExitCode;
+import fr.insalyon.creatis.gasw.GaswNotification;
+import fr.insalyon.creatis.gasw.GaswOutput;
+import fr.insalyon.creatis.gasw.GaswUtil;
+import fr.insalyon.creatis.gasw.bean.Data;
+import fr.insalyon.creatis.gasw.bean.Job;
+import fr.insalyon.creatis.gasw.bean.JobMinorStatus;
+import fr.insalyon.creatis.gasw.bean.Node;
+import fr.insalyon.creatis.gasw.bean.NodeID;
 import fr.insalyon.creatis.gasw.dao.DAOException;
 import fr.insalyon.creatis.gasw.dao.DAOFactory;
 import fr.insalyon.creatis.gasw.plugin.ListenerPlugin;
-import java.io.*;
-import java.net.URI;
-import java.util.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class GaswOutputParser extends Thread {
 
@@ -207,17 +229,15 @@ public abstract class GaswOutputParser extends Thread {
                         }
                         int executionTime = Integer.parseInt(lineSplitted[lineSplitted.length - 2]);
                         job.setUpload(addDate(job.getRunning(), Calendar.SECOND, executionTime));
-
+                        job.setExecutionTimeSlurm(executionTime + " seconds");
                     } else if (line.contains("Results upload time:")) {
                         int uploadTime = Integer.parseInt(lineSplitted[lineSplitted.length - 2]);
                         job.setEnd(addDate(job.getUpload(), Calendar.SECOND, uploadTime));
-
                     } else if (line.contains("Exiting with return value")) {
                         String[] errmsg = line.split("\\s+");
                         exitCode = Integer.parseInt(errmsg[errmsg.length - 1]);
                         job.setExitCode(exitCode);
-
-                    } else if (line.startsWith("===== uname =====")) {
+                     }else if (line.startsWith("===== uname =====")) {
                         line = scanner.nextLine();
                         nodeID.setNodeName(line.split(" ")[1]);
 
