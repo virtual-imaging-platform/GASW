@@ -32,12 +32,28 @@
  */
 package fr.insalyon.creatis.gasw.bean;
 
-import fr.insalyon.creatis.gasw.execution.GaswStatus;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import jakarta.persistence.*;
+
 import org.hibernate.annotations.Index;
+import fr.insalyon.creatis.gasw.execution.GaswStatus;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 /**
  *
@@ -57,8 +73,9 @@ import org.hibernate.annotations.Index;
     @NamedQuery(name = "Job.getFailedByCommand", query = "FROM Job j WHERE j.command = :command AND (status = :error OR status = :stalled OR status = :error_held OR status = :stalled_held)"),
     @NamedQuery(name = "Job.getJobsByCommand", query = "FROM Job j WHERE j.command = :command"),
     @NamedQuery(name = "Job.getJobsByFileName", query = "FROM Job j WHERE j.fileName = :fileName"),
-    @NamedQuery(name = "Job.getInvocationsByCommand", query = "SELECT DISTINCT j.invocationID FROM Job j WHERE j.command = :command")
-            })
+    @NamedQuery(name = "Job.getInvocationsByCommand", query = "SELECT DISTINCT j.invocationID FROM Job j WHERE j.command = :command"),
+    @NamedQuery(name = "job.getexecutionTimeSlurmByCommand", query = "SELECT j.executionTimeSlurm FROM Job j WHERE j.command = :command")
+})
 @Table(name = "Jobs")
 public class Job {
 
@@ -85,55 +102,49 @@ public class Job {
     private List<Data> data;
     private int invocationID;
     private String diracSite;
+    private Long slurmExecTime;
+    private String executionTimeSlurm;
 
     public Job() {
+        this.data = new ArrayList<Data>();
     }
 
     /**
-     *
-     * @param id
-     * @param simulationID
-     * @param status
-     * @param command
-     * @param fileName
-     * @param parameters
-     * @param executor
      */
     public Job(String id, String simulationID, GaswStatus status, String command,
             String fileName, String parameters, String executor) {
 
         this(id, simulationID, status, -1, "", null, null, null, null, null,
                 null, null, command, fileName, parameters, executor, 
-                new ArrayList<Data>(), -1,null);
+                new ArrayList<Data>(), -1, null, null, null);
     }
 
     /**
-     *
-     * @param id
-     * @param simulationID
-     * @param status
-     * @param exitCode
-     * @param exitMessage
-     * @param creation
-     * @param queued
-     * @param download
-     * @param running
-     * @param upload
-     * @param end
-     * @param node
-     * @param command
-     * @param fileName
-     * @param parameters
-     * @param executor
-     * @param data
-     * @param invocationID
-     * @param diracSite
+     */
+    public Job(String id, String simulationID, GaswStatus status, String command,
+            String fileName, String parameters, String executor, String executionTimeSlurm) {
+
+        this(id, simulationID, status, -1, "", null, null, null, null, null,
+                null, null, command, fileName, parameters, executor, 
+                new ArrayList<Data>(), -1, null, null, executionTimeSlurm);
+    }
+    /**
+     */
+    public Job(String id, String simulationID, GaswStatus status, String command,
+            String fileName, String parameters, String executor, Long slurmExecTime) {
+
+        this(id, simulationID, status, -1, "", null, null, null, null, null,
+                null, null, command, fileName, parameters, executor, 
+                new ArrayList<Data>(), -1, null, slurmExecTime, null);
+    }
+    /**
+     * Constructeur complet (JPA)
      */
     public Job(String id, String simulationID, GaswStatus status, int exitCode,
             String exitMessage, Date creation, Date queued, Date download,
             Date running, Date upload, Date end, Node node, String command,
             String fileName, String parameters, String executor, List<Data> data,
-            int invocationID, String diracSite) {
+            int invocationID, String diracSite, Long slurmExecTime, String executionTimeSlurm) {
 
         this.id = id;
         this.simulationID = simulationID;
@@ -151,11 +162,13 @@ public class Job {
         this.fileName = fileName;
         this.parameters = parameters;
         this.executor = executor;
-        this.data = data;
+        this.data = data != null ? data : new ArrayList<Data>();
         this.invocationID = invocationID;
         this.isReplicating = false;
         this.isBeingKilled = false;
         this.diracSite = diracSite;
+        this.slurmExecTime = slurmExecTime;
+        this.executionTimeSlurm = executionTimeSlurm;
     }
 
     @Id
@@ -310,6 +323,10 @@ public class Job {
         return command;
     }
 
+    public void setCommand(String command) {
+        this.command = command;
+    }
+
     @Column(name = "file_name")
     public String getFileName() {
         return fileName;
@@ -323,6 +340,10 @@ public class Job {
     @Index(name = "paramIndex")
     public String getParameters() {
         return parameters;
+    }
+
+    public void setParameters(String parameters) {
+        this.parameters = parameters;
     }
 
     @Column(name = "checkpoint_init")
@@ -341,14 +362,6 @@ public class Job {
 
     public void setCheckpointUpload(int checkpointUpload) {
         this.checkpointUpload = checkpointUpload;
-    }
-
-    public void setCommand(String command) {
-        this.command = command;
-    }
-
-    public void setParameters(String parameters) {
-        this.parameters = parameters;
     }
 
     @Column(name = "executor")
@@ -382,5 +395,23 @@ public class Job {
 
     public void setInvocationID(int invocationID) {
         this.invocationID = invocationID;
+    }
+
+    @Column(name = "slurm_exec_time")
+    public Long getSlurmExecTime() {
+        return slurmExecTime;
+    }
+
+    public void setSlurmExecTime(Long slurmExecTime) {
+        this.slurmExecTime = slurmExecTime;
+    }
+
+    @Column(name = "execution_time_slurm")
+    public String getExecutionTimeSlurm() {
+        return executionTimeSlurm;
+    }
+
+    public void setExecutionTimeSlurm(String executionTimeSlurm) {
+        this.executionTimeSlurm = executionTimeSlurm;
     }
 }

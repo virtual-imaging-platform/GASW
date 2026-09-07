@@ -357,4 +357,27 @@ public class JobData implements JobDAO {
             throw new DAOException(ex);
         }
     }
+    @Override
+    public List<String> getExecutionTimeSlurmByCommand(String command) throws DAOException {
+
+        try (Session session = sessionFactory.openSession()) {
+
+            session.beginTransaction();
+
+            List<String> list = session
+                    .createNamedQuery("job.getexecutionTimeSlurmByCommand", String.class)
+                    .setParameter("command", command)
+                    .list();
+
+            session.getTransaction().commit();
+
+            return list;
+
+        } catch (HibernateException ex) {
+
+            logger.error("Error while retrieving execution time Slurm by command", ex);
+
+            throw new DAOException(ex);
+        }
+    }
 }

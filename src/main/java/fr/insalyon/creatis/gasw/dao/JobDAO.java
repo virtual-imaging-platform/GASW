@@ -73,4 +73,6 @@ public interface JobDAO {
     public List<Job> getByFileName(String filename) throws DAOException;
 
     public List<Integer> getInvocationsByCommand(String command) throws DAOException;
+
+    public List<String> getExecutionTimeSlurmByCommand(String command) throws DAOException;
 }

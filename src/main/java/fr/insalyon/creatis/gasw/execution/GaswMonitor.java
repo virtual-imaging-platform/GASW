@@ -153,4 +153,8 @@ public abstract class GaswMonitor extends Thread {
     protected abstract void replicate(Job job);
     protected abstract void killReplicas(Job job);
     protected abstract void resume(Job job);
+
+    public List<String> getExecutionTimeSlurmByCommand(String command) throws DAOException {
+    return jobDAO.getExecutionTimeSlurmByCommand(command);
+}
 }
