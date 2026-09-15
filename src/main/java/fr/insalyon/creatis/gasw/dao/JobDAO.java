@@ -74,5 +74,5 @@ public interface JobDAO {
 
     public List<Integer> getInvocationsByCommand(String command) throws DAOException;
 
-    public List<String> getExecutionTimeSlurmByCommand(String command) throws DAOException;
+    // public List<String> getExecutionTimeSlurmByCommand(String command) throws DAOException;
 }

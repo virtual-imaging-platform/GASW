@@ -229,7 +229,7 @@ public abstract class GaswOutputParser extends Thread {
                         }
                         int executionTime = Integer.parseInt(lineSplitted[lineSplitted.length - 2]);
                         job.setUpload(addDate(job.getRunning(), Calendar.SECOND, executionTime));
-                        job.setExecutionTimeSlurm(executionTime + " seconds");
+                        // job.setExecutionTimeSlurm(executionTime + " seconds");
                     } else if (line.contains("Results upload time:")) {
                         int uploadTime = Integer.parseInt(lineSplitted[lineSplitted.length - 2]);
                         job.setEnd(addDate(job.getUpload(), Calendar.SECOND, uploadTime));
