@@ -662,7 +662,7 @@ function downloadShanoirFile {
   local converterId=$(echo "$URI" | sed -r 's/^.*[?&]converterId=([^&]*)(&.*)?$/\1/i')
 
   COMMAND(){
-    curl --write-out '%{http_code}' -o "$fileName" --request GET "$apiUrl/$resourceId?format=$format&converterId=$converterId" --header "Authorization: Bearer $token"
+    curl --keepalive-time 10 --write-out '%{http_code}' -o "$fileName" --request GET "$apiUrl/$resourceId?format=$format&converterId=$converterId" --header "Authorization: Bearer $token"
   }
 
   local attempts=0
