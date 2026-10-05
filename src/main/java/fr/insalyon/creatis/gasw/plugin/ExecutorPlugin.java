@@ -34,7 +34,9 @@ package fr.insalyon.creatis.gasw.plugin;
 
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
+
 import java.util.List;
+
 import net.xeoh.plugins.base.Plugin;
 
 /**
@@ -80,4 +82,12 @@ public interface ExecutorPlugin extends Plugin {
      * @throws GaswException
      */
     public void terminate(boolean force) throws GaswException;
+     /**
+     * Gets execution metrics for the job, if available.
+     *
+     * @param batchJobId Job identification
+     * @return Map of metrics, or null if not available
+     * @throws GaswException
+     */
+
 }

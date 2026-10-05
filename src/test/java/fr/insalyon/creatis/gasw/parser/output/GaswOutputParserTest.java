@@ -104,7 +104,7 @@ public class GaswOutputParserTest {
             assertDoesNotThrow(() -> parser.get(10, TimeUnit.SECONDS));
         }
 
-    assertFalse(appender.getLogMessages().stream().anyMatch(msg -> msg.contains("Error parsing stdout")));
+        assertFalse(appender.getLogMessages().stream().anyMatch(msg -> msg.contains("Error parsing stdout")));
     }
 
     public Callable<Void> createCallable(String jobID, String filePath) {
