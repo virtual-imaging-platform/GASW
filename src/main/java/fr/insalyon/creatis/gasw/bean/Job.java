@@ -107,8 +107,8 @@ public class Job {
     private List<Data> data;
     private int invocationID;
     private String diracSite;
-    // private Long slurmExecTime;
-    // private String executionTimeSlurm;
+    private Map<JobMetric, String> metrics = new HashMap<>();
+
 
     public Job() {
         this.data = new ArrayList<Data>();
@@ -446,24 +446,6 @@ public class Job {
         this.invocationID = invocationID;
     }
 
-    // @Column(name = "slurm_exec_time")
-    // public Long getSlurmExecTime() {
-    //     return slurmExecTime;
-    // }
-
-    // public void setSlurmExecTime(Long slurmExecTime) {
-    //     this.slurmExecTime = slurmExecTime;
-    // }
-
-    // @Column(name = "execution_time_slurm")
-    // public String getExecutionTimeSlurm() {
-    //     return executionTimeSlurm;
-    // }
-
-    // public void setExecutionTimeSlurm(String executionTimeSlurm) {
-    //     this.executionTimeSlurm = executionTimeSlurm;
-    // }
-    private Map<JobMetric, String> metrics = new HashMap<>();
 
     @ElementCollection
     @MapKeyEnumerated(EnumType.STRING)

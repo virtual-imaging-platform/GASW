@@ -89,7 +89,7 @@ public class GaswOutputParserTest {
         List<Callable<Void>> callables = new ArrayList<>();
         List<Future<Void>> parsers = new ArrayList<>();
 
-        Job job = new Job("test", "test_sim", GaswStatus.CREATED, "echo", "coucou", "a,b,c", "Local", "1000");
+        Job job = new Job("test", "test_sim", GaswStatus.CREATED, "echo", "coucou", "a,b,c", "Local");
         job.setDownload(new Date());
 
         DAOFactory.getDAOFactory().getJobDAO().add(job);

@@ -521,7 +521,7 @@ public abstract class GaswOutputParser extends Thread {
         File dest = getAppStdFile(extension, dir);
         if (source.exists()) {
             source.renameTo(dest);
-        } else {
+        }else {
             logger.warn("Missing output file : " + source);
         }
         return dest;
@@ -533,6 +533,14 @@ public abstract class GaswOutputParser extends Thread {
                 new File(sourceDir, provenanceFileName),
                 GaswConstants.PROVENANCE_EXT,
                 GaswConstants.PROVENANCE_ROOT);
+    }
+    
+    protected File moveMetricsFile(String sourceDir) {
+        String metricsFileName = getAppStdFileName(GaswConstants.METRICS_EXT);
+        return moveAppFile(
+                new File(sourceDir, metricsFileName),
+                GaswConstants.METRICS_EXT,
+                GaswConstants.OUT_ROOT);
     }
 
     protected File getAppStdFile(String extension, String dir) {

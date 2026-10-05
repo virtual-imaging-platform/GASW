@@ -34,10 +34,8 @@ package fr.insalyon.creatis.gasw.plugin;
 
 import fr.insalyon.creatis.gasw.GaswException;
 import fr.insalyon.creatis.gasw.GaswInput;
-import fr.insalyon.creatis.gasw.bean.JobMetric;
 
 import java.util.List;
-import java.util.Map;
 
 import net.xeoh.plugins.base.Plugin;
 
@@ -91,7 +89,5 @@ public interface ExecutorPlugin extends Plugin {
      * @return Map of metrics, or null if not available
      * @throws GaswException
      */
-    public default Map<JobMetric, String> getMetrics(String batchJobId) throws GaswException {
-        return null;
-    }
+
 }
