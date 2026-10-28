@@ -47,6 +47,8 @@ public class GaswConstants {
     public static final String LAB_DEFAULT_RETRY_COUNT = "default.retry.count";
     public static final String LAB_DEFAULT_SLEEPTIME = "default.sleeptime";
     public static final String LAB_DEFAULT_TIMEOUT = "default.timeout";
+    public static final String LAB_FALLBACK_RETRY_THRESHOLD = "fallback.retry.threshold";
+    public static final String LAB_FALLBACK_RESOURCES = "fallback.resources";
     public static final String LAB_FAILOVER_ENABLED = "failover.server.enabled";
     public static final String LAB_FAILOVER_HOME = "failover.server.home";
     public static final String LAB_FAILOVER_HOST = "failover.server.host";

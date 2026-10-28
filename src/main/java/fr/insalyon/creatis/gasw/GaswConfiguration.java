@@ -39,6 +39,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.ArrayList;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -88,6 +89,9 @@ public class GaswConfiguration {
     private int defaultTimeout;
     private int defaultSleeptime;
     private int defaultCPUTime;
+    // Fallback Properties
+    private int fallbackRetryThreshold;
+    private List<String> fallbackResources;
     // Virtual Organization
     private String voName;
     private String voDefaultSE;
@@ -159,6 +163,8 @@ public class GaswConfiguration {
             defaultTimeout = config.getInt(GaswConstants.LAB_DEFAULT_TIMEOUT, 100000);
             defaultSleeptime = config.getInt(GaswConstants.LAB_DEFAULT_SLEEPTIME, 20) * 1000;
             defaultCPUTime = config.getInt(GaswConstants.LAB_DEFAULT_CPUTIME, 1800);
+            fallbackRetryThreshold = config.getInt(GaswConstants.LAB_FALLBACK_RETRY_THRESHOLD, 3);
+            fallbackResources = loadFallbackResources(config);
 
             voName = config.getString(GaswConstants.LAB_VO_NAME, "biomed");
             voDefaultSE = config.getString(GaswConstants.LAB_VO_DEFAULT_SE, "SBG-disk");
@@ -200,6 +206,7 @@ public class GaswConfiguration {
             config.setProperty(GaswConstants.LAB_DEFAULT_TIMEOUT, defaultTimeout);
             config.setProperty(GaswConstants.LAB_DEFAULT_SLEEPTIME, defaultSleeptime / 1000);
             config.setProperty(GaswConstants.LAB_DEFAULT_CPUTIME, defaultCPUTime);
+            config.setProperty(GaswConstants.LAB_FALLBACK_RETRY_THRESHOLD, fallbackRetryThreshold);
 
             config.setProperty(GaswConstants.LAB_VO_NAME, voName);
             config.setProperty(GaswConstants.LAB_VO_DEFAULT_SE, voDefaultSE);
@@ -239,6 +246,19 @@ public class GaswConfiguration {
         } else {
             return config.getString(key);
         }
+    }
+
+    private List<String> loadFallbackResources(PropertiesConfiguration config) {
+        List<Object> resourcesList = config.getList(GaswConstants.LAB_FALLBACK_RESOURCES, new ArrayList<>());
+        List<String> resources = new ArrayList<>();
+        for (Object obj : resourcesList) {
+            if (obj == null) continue;
+
+            resources.add(obj.toString());
+        }
+
+        logger.info("Loaded fallback resources: {}", resources);
+        return resources;
     }
 
     private void loadPlugins() throws GaswException {
@@ -407,6 +427,10 @@ public class GaswConfiguration {
     public int getDefaultCPUTime() {
         return defaultCPUTime;
     }
+
+    public int getFallbackRetryThreshold() { return fallbackRetryThreshold; }
+
+    public List<String> getFallbackResources() { return fallbackResources; }
 
     public String getDefaultEnvironment() {
         return defaultEnvironment;
