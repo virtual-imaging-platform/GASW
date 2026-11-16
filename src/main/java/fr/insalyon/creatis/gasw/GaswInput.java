@@ -94,6 +94,10 @@ public class GaswInput {
         this.uploadURI = uploadURI;
     }
 
+    public void setJobId(String jobId) {
+        this.jobId = jobId;
+    }
+
     public List<URI> getDownloads() {
         return downloads;
     }

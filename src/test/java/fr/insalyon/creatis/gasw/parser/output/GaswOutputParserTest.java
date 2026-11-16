@@ -72,7 +72,7 @@ public class GaswOutputParserTest {
         }
 
         config.setDbPlugin(databasePlugin);
-        config.loadHibernate();
+        config.initializeRuntime();
         assertTrue(config.getSessionFactory() != null);
     }
 

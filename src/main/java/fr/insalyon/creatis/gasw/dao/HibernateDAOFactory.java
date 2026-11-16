@@ -67,6 +67,7 @@ public class HibernateDAOFactory extends DAOFactory {
     @Override
     public void close() {
         sessionFactory.close();
+        instance = null;
     }
 
     public SessionFactory getSessionFactory() {

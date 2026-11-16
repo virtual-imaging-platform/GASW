@@ -72,6 +72,10 @@ public abstract class GaswSubmit {
         }
     }
 
+    public GaswInput getGaswInput() {
+        return gaswInput;
+    }
+
     public abstract String submit() throws GaswException;
     protected String generateScript() throws GaswException {
         try {

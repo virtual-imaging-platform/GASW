@@ -44,6 +44,7 @@ public class Gasw {
     private static final Logger logger = LoggerFactory.getLogger(Gasw.class);
     private static Gasw instance;
     private GaswNotification notification;
+    private GaswConfiguration configuration;
 
     /**
      * Gets a default instance of GASW.
@@ -61,8 +62,8 @@ public class Gasw {
     private Gasw() throws GaswException {
         try {
             logger.info("Initializing GASW.");
-            GaswConfiguration.getInstance().loadHibernate();
-
+            configuration = GaswConfiguration.getInstance();
+            configuration.initializeRuntime();
             notification = GaswNotification.getInstance();
 
         } catch (IllegalArgumentException ex) {
@@ -92,10 +93,10 @@ public class Gasw {
     public synchronized void terminate(boolean force) throws GaswException {
         notification.terminate();
 
-        if (GaswConfiguration.getInstance().isFailOverEnabled()) {
+        if (configuration.isFailOverEnabled()) {
             FailOver.getInstance().terminate();
         }
 
-        GaswConfiguration.getInstance().terminate(force);
+        configuration.terminate(force);
     }
 }

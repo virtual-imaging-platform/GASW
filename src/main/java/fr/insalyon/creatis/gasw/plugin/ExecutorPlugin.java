@@ -75,6 +75,13 @@ public interface ExecutorPlugin extends Plugin {
     public String submit() throws GaswException;
 
     /**
+     * Gets the GaswInput used for this executor.
+     *
+     * @return GaswInput
+     */
+    public GaswInput getGaswInput();
+
+    /**
      * Finalizes the executor.
      *
      * @throws GaswException
