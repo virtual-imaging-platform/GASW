@@ -750,8 +750,10 @@ function downloadURI {
   fi
 
   if [[ ${URI_LOWER} == https://* ]] || [[ ${URI_LOWER} == http://* ]]; then
-    curl -L -O "$URI"
+	#Be careful, if a file with the same name already exists it will fail:)
+	filename=$(curl -sS -w '%{filename_effective}' -LJO "$URI")
     validateDownload "Cannot download HTTP file"
+	echo "Downloaded filename: $filename"
   fi
 
   if [[ ${URI_LOWER} == girder:/* ]]; then
